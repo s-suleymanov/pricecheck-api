@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PriceCheck • Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="PriceCheck Dashboard: product view with history, cross store offers, variant specs, integrity forensics, observation log, coverage, exports.">
+  <link rel="icon" type="image/png" href="../logo/logo.png">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    :root { --dash-sidebar: 360px; }
+    body { overflow-x:hidden; }
+
+    /* Shell */
+    .wrap { max-width:1250px; margin:0 auto; padding:30px 24px 90px; }
+    .grid-shell { display:grid; grid-template-columns:minmax(0,1fr) var(--dash-sidebar); gap:28px; align-items:start; }
+    @media (max-width:1100px){ .grid-shell { grid-template-columns:1fr; } }
+
+    /* Type */
+    h1 { font-size:clamp(34px,6vw,56px); font-weight:500; letter-spacing:-.01em; margin:10px 0 16px; }
+    h2 { font-size:clamp(22px,3.2vw,28px); font-weight:600; margin:0 0 10px; }
+    h3 { font-size:clamp(18px,2.6vw,22px); font-weight:600; margin:0 0 8px; }
+    p  { margin:0 0 8px; }
+    .muted { color:var(--muted); font-size:.95rem; }
+    .mono { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.95rem; }
+
+    /* Card */
+    .card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+    @media (max-width:900px){ .grid2,.grid3,.grid4 { grid-template-columns:1fr; } }
+
+    /* Controls */
+    .controls { display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:center; margin:8px 0 16px; }
+    .controls input[type="search"] { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border:1px solid var(--line); border-radius:10px; background:#fff; cursor:pointer; user-select:none; }
+    .pill { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:999px; padding:8px 12px; font-size:14px; background:#fff; cursor:pointer; user-select:none; }
+
+    /* KPI tiles */
+    .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+    .kpi { background:#f9fafb; border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+    .kpi .big { font-size:clamp(22px,4.6vw,32px); font-weight:700; }
+    .kpi .small { color:#6b7280; font-size:.95rem; }
+
+    /* Offers list */
+    .offer { display:grid; grid-template-columns:120px 1fr auto; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); }
+    .offer:last-child { border-bottom:none; }
+    .badge { display:inline-block; font-size:.82rem; padding:3px 8px; border-radius:999px; border:1px solid var(--line); background:#fff; }
+    .ok { color:#065f46; background:#ecfdf5; border-color:#a7f3d0; }
+    .warn { color:#92400e; background:#fffbeb; border-color:#fde68a; }
+    .info { color:#1e3a8a; background:#eff6ff; border-color:#bfdbfe; }
+
+    /* Chart */
+    .chart { width:100%; height:200px; display:block; }
+    .legend { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:6px; }
+    .swatch { display:inline-block; width:12px; height:12px; border-radius:2px; background:var(--accent-b); }
+    .swatch.alt { background:var(--accent-c); }
+
+    /* Tables */
+    table { width:100%; border-collapse:collapse; }
+    th, td { border-bottom:1px solid var(--line); padding:10px 8px; text-align:left; vertical-align:top; }
+
+    /* Sidebar */
+    .sticky { position:sticky; top:16px; }
+    .bars { display:grid; gap:8px; }
+    .bar { display:grid; grid-template-columns:110px 1fr 50px; align-items:center; gap:8px; }
+    .track { height:10px; border-radius:999px; background:#f3f4f6; overflow:hidden; }
+    .fill { height:100%; width:0%; background:linear-gradient(90deg,var(--accent-a),var(--accent-b)); }
+    .links-list { padding-left:0; list-style:none; margin:6px 0 0; }
+    .links-list li { margin:8px 0; }
+
+    /* Details toggle */
+    details { border:1px solid var(--line); border-radius:12px; padding:12px 12px 6px; background:#f9fafb; }
+    details[open] { background:#fff; }
+
+    /* Small helpers */
+    .spaced { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+    .muted-note { margin-top:8px; color:var(--muted); font-size:.92rem; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="nav">
+    <div class="nav__row">
+      <div class="logo-head">
+        <img src="../logo/logo.png" alt="PriceCheck logo" class="logo">
+        <div class="brand">
+          <span class="wordmark">PriceCheck</span>
+          <span class="edition">0.8.4 Beta</span>
+        </div>
+      </div>
+      <nav class="links" aria-label="Primary">
+        <a href="/privacy/">Privacy</a>
+        <a class="active" href="/dashboard/">Dashboard</a>
+        <a href="../">Overview</a>
+        <a href="/research/">Research</a>
+        <a href="/insights/">Insights</a>
+      </nav>
+      <a class="btn btn--outline" href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en">Add to Chrome</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1>Dashboard</h1>
+
+    <!-- Controls -->
+    <section class="card">
+      <div class="controls">
+        <input id="query" type="search" placeholder="Paste a product URL or enter UPC, ASIN, TCIN, or SKU" aria-label="Product query">
+        <button id="load" class="btn">Load</button>
+        <button id="share" class="pill">Copy share link</button>
+      </div>
+      <p class="muted" style="margin-top:6px">
+        Examples:
+        <button class="pill" data-demo="mx3s">MX Master 3S</button>
+        <button class="pill" data-demo="airpods">AirPods Pro 2</button>
+      </p>
+    </section>
+
+    <section class="grid-shell" style="margin-top:18px">
+      <!-- MAIN -->
+      <div>
+        <!-- Product header -->
+        <section class="card" id="productHeader">
+          <div class="grid2">
+            <div>
+              <h2 id="pTitle">Select a product</h2>
+              <p class="muted" id="pSubtitle">Enter a link or ID to start.</p>
+              <div class="muted mono" id="pIds"></div>
+              <div style="margin-top:10px">
+                <label class="muted" for="variant">Variant</label>
+                <select id="variant" style="display:block; width:260px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit"></select>
+              </div>
+            </div>
+            <div>
+              <img id="pImg" src="" alt="Product image" style="width:100%; max-width:340px; border-radius:12px; border:1px solid var(--line); display:none">
+            </div>
+          </div>
+        </section>
+
+        <!-- KPIs -->
+        <section class="card" style="margin-top:16px">
+          <div class="kpis">
+            <div class="kpi"><div class="small">Current price</div><div class="big" id="kCurrent">NA</div><div class="small muted" id="kStore"></div></div>
+            <div class="kpi"><div class="small">Typical low 90d</div><div class="big" id="kTypical">NA</div><div class="small muted" id="kTypicalNote"></div></div>
+            <div class="kpi"><div class="small">30d low</div><div class="big" id="kLow30">NA</div><div class="small muted" id="kLow30Date"></div></div>
+            <div class="kpi"><div class="small">Deal integrity</div><div class="big" id="kIntegrity">NA</div><div class="small muted">strike claim status</div></div>
+          </div>
+        </section>
+
+        <!-- Price history -->
+        <section class="card" style="margin-top:16px">
+          <div class="spaced">
+            <h2 style="margin:0">Price history</h2>
+            <div>
+              <button class="pill" data-range="7">7d</button>
+              <button class="pill" data-range="30">30d</button>
+              <button class="pill" data-range="90">90d</button>
+              <button class="pill" id="downloadCsv">Download CSV</button>
+            </div>
+          </div>
+          <svg id="chart" class="chart" viewBox="0 0 700 200" preserveAspectRatio="none" role="img" aria-label="Price history chart"></svg>
+          <div class="legend"><span class="swatch"></span><span class="muted">Current price</span> <span class="swatch alt" style="margin-left:10px"></span><span class="muted">Typical low</span></div>
+        </section>
+
+        <!-- Cross store offers -->
+        <section class="card" style="margin-top:16px">
+          <div class="spaced">
+            <h2 style="margin:0">Cross store offers</h2>
+            <div>
+              <button class="pill" id="sortTotal">Sort by total</button>
+              <button class="pill" id="copyCheapest">Copy cheapest link</button>
+            </div>
+          </div>
+          <div id="offers"></div>
+          <p class="muted-note" id="offersNote"></p>
+        </section>
+
+        <!-- Variant Specs Matrix -->
+        <section class="card" style="margin-top:16px">
+          <h2>Variant specs matrix</h2>
+          <div class="muted" style="margin-bottom:8px">Differences are highlighted to prevent fake variant deals.</div>
+          <div id="specsMatrix"></div>
+        </section>
+
+        <!-- Deal Integrity Forensics -->
+        <section class="card" style="margin-top:16px">
+          <h2>Deal integrity forensics</h2>
+          <details id="forensics">
+            <summary class="muted">Open details</summary>
+            <ul id="forensicsList" class="links-list" style="margin-top:6px"></ul>
+          </details>
+          <p class="muted-note">We compare claimed strikes to observed history on the exact variant. Bad anchor price or wrong variant gets flagged.</p>
+        </section>
+
+        <!-- Observation Log -->
+        <section class="card" style="margin-top:16px">
+          <div class="spaced">
+            <h2 style="margin:0">Observation log</h2>
+            <button class="pill" id="downloadObs">Download log CSV</button>
+          </div>
+          <table>
+            <thead><tr><th>Time</th><th>Store</th><th>Price</th><th>Status</th><th>Note</th></tr></thead>
+            <tbody id="obsBody"></tbody>
+          </table>
+          <p class="muted-note">Times are observed_at from your collector. Use this to spot stale or flaky feeds.</p>
+        </section>
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside>
+        <div class="sticky">
+          <section class="card">
+            <h3>Coverage snapshot</h3>
+            <div class="bars" id="coverage">
+              <!-- rows injected -->
+            </div>
+            <p class="muted-note">Share is based on lowest total count within last 24h and feed freshness.</p>
+          </section>
+
+          <section class="card" style="margin-top:16px">
+            <h3>Store links</h3>
+            <ul class="links-list" id="storeLinks">
+              <!-- links injected -->
+            </ul>
+          </section>
+
+          <section class="card" style="margin-top:16px">
+            <h3>PriceMatch Playbook</h3>
+            <p class="muted">If eligible, contact the higher priced retailer and use this script.</p>
+            <textarea id="pmScript" rows="6" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px; font:inherit"></textarea>
+            <div class="spaced" style="margin-top:8px">
+              <button class="btn" id="copyPm">Copy script</button>
+              <span class="muted" id="pmNote"></span>
+            </div>
+          </section>
+
+          <!-- We have your back -->
+          <section class="card" style="margin-top:16px">
+            <h3>PriceCheck Intelligence</h3>
+            <p class="muted">Pick what you need. We prep the words and links for you.</p>
+            <div class="grid2" style="margin-top:6px">
+              <button class="btn" id="actMatch">Ask for a match</button>
+              <button class="btn" id="actRefund">Post purchase refund</button>
+            </div>
+            <button class="btn" id="actFlag" style="margin-top:8px;width:100%">Flag a shady listing</button>
+            <p class="muted" id="actNote" style="margin-top:6px"></p>
+          </section>
+
+
+          <section class="card" style="margin-top:16px">
+            <h3>Notes</h3>
+            <ul class="links-list">
+              <li>Exact variant matching only. Bundles and open box are shown as tags for clarity.</li>
+              <li>Totals are base plus ship plus tax where available. Location can change tax.</li>
+              <li>Use the Observation log to debug stale integrators.</li>
+            </ul>
+          </section>
+
+          
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      const $ = (s, ctx=document)=>ctx.querySelector(s);
+      const $$ = (s, ctx=document)=>Array.from(ctx.querySelectorAll(s));
+      const fmt = new Intl.NumberFormat(undefined,{style:'currency',currency:'USD'});
+
+      // Demo data to replace with live API
+      const sampleData = {
+        mx3s: {
+          title: 'Logitech MX Master 3S - Graphite',
+          subtitle: 'Advanced wireless mouse',
+          image: 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=800&auto=format',
+          variant: ['Graphite', 'Pale Gray'],
+          ids: { upc:'097855205940', asin:'B09H1YHV15', tcin:'88299859', wal:'102832944', bby:'6503967' },
+          kpis: { current:69.99, store:'Target', typical:72.00, typicalNote:'weekend lows common', low30:64.99, low30Date:'Oct 27', integrity:'Pass' },
+          history: makeHistory(90, 79.99, [10, 0, 4, -6, 8, -3, -10, 5]),
+          offers: [
+            { store:'Target', price:69.99, ship:0, tax:0.095, url:'https://www.target.com/p/-/A-88299859', tags:['retail'], notes:'Dip window Fri to Sun' },
+            { store:'Best Buy', price:74.99, ship:0, tax:0.095, url:'https://www.bestbuy.com/site/6503967.p', tags:['member'], notes:'Member price appears' },
+            { store:'Amazon', price:72.89, ship:0, tax:0.095, url:'https://www.amazon.com/dp/B09H1YHV15', tags:['retail'], notes:'Coupon may apply' },
+            { store:'Walmart', price:73.50, ship:0, tax:0.095, url:'#', tags:['third party'], notes:'3P excluded from integrity' }
+          ],
+          specs: [
+            { variant:'Graphite', dpi:'8000', sensor:'Darkfield', weight:'141 g', color:'Graphite', conn:'BT, Bolt' },
+            { variant:'Pale Gray', dpi:'8000', sensor:'Darkfield', weight:'141 g', color:'Pale Gray', conn:'BT, Bolt' }
+          ],
+          integrityReasons: [
+            'Strike is consistent with last 90 days for exact UPC',
+            'Variant matches Graphite - no spec mismatch detected',
+            'Anchor price validated by prior observed highs'
+          ],
+          observed: [
+            { t: minsAgo(30), store:'Target', price:69.99, status:'ok', note:'Sale live' },
+            { t: minsAgo(45), store:'Amazon', price:72.89, status:'ok', note:'Coupon view on page' },
+            { t: minsAgo(120), store:'Best Buy', price:74.99, status:'ok', note:'Member price' },
+            { t: minsAgo(200), store:'Walmart', price:73.50, status:'ok', note:'3P excluded' }
+          ]
+        },
+        airpods: {
+          title: 'Apple AirPods Pro 2 USB-C',
+          subtitle: 'Active Noise Cancellation',
+          image: 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?q=80&w=800&auto=format',
+          variant: ['USB-C'],
+          ids: { upc:'019425391284', asin:'B0CHX1R1H3', tcin:'84938301', wal:'123456789', bby:'6537401' },
+          kpis: { current:189.99, store:'Best Buy', typical:199.00, typicalNote:'member stacks sometimes', low30:179.99, low30Date:'Oct 26', integrity:'Pass' },
+          history: makeHistory(90, 219.00, [0, -5, 8, -12, 6, -3, 4, -9]),
+          offers: [
+            { store:'Best Buy', price:189.99, ship:0, tax:0.095, url:'https://www.bestbuy.com/site/6537401.p', tags:['member'], notes:'Member only' },
+            { store:'Amazon', price:194.00, ship:0, tax:0.095, url:'https://www.amazon.com/dp/B0CHX1R1H3', tags:['retail'], notes:'Coupon sometimes' },
+            { store:'Target', price:199.99, ship:0, tax:0.095, url:'https://www.target.com/p/-/A-84938301', tags:['retail'], notes:'Gift card promos excluded' }
+          ],
+          specs: [
+            { variant:'USB-C', anc:'Yes', case:'USB-C', weight:'5.3 g bud', color:'White', warranty:'1y' }
+          ],
+          integrityReasons: [
+            'Member price matches prior verified lows',
+            'Strike is lower than 60 day median',
+            'No variant mislabel detected'
+          ],
+          observed: [
+            { t: minsAgo(10), store:'Best Buy', price:189.99, status:'ok', note:'Member price live' },
+            { t: minsAgo(55), store:'Amazon', price:194.00, status:'ok', note:'Coupon view' },
+            { t: minsAgo(140), store:'Target', price:199.99, status:'ok', note:'No gift card' }
+          ]
+        }
+      };
+
+      // State
+      const state = { key:null, data:null, range:30 };
+
+      // Controls
+      $('#load').addEventListener('click', ()=> loadQuery($('#query').value.trim()));
+      document.addEventListener('click', (e)=>{
+        const r = e.target.closest('[data-range]');
+        if(r){ state.range = +r.dataset.range; drawChart(); }
+        const d = e.target.closest('[data-demo]');
+        if(d){ hydrate(d.dataset.demo); }
+      });
+
+      document.addEventListener('click', (e)=>{
+        if(e.target && e.target.id === 'actMatch'){
+          const msg = buildMatchMsg();
+          if(!msg){ note('Load a product first.'); return; }
+          copyText(msg); note('Copied match message.');
+        }
+        if(e.target && e.target.id === 'actRefund'){
+          const msg = buildRefundMsg();
+          if(!msg){ note('Load a product first.'); return; }
+          copyText(msg); note('Copied refund request.');
+        }
+        if(e.target && e.target.id === 'actFlag'){
+          const msg = buildFlagMsg();
+          if(!msg){ note('Load a product first.'); return; }
+          copyText(msg); note('Copied report text.');
+        }
+      });
+
+
+      $('#share').addEventListener('click', ()=>{
+        const url = new URL(location.href);
+        if(state.key){ url.searchParams.set('p', state.key); }
+        navigator.clipboard.writeText(url.toString());
+        flip('#share','Copied','Copy share link',1000);
+      });
+
+      $('#sortTotal').addEventListener('click', ()=> renderOffers(true));
+      $('#copyCheapest').addEventListener('click', ()=>{
+        const cheap = getCheapestOffer();
+        if(!cheap) return;
+        navigator.clipboard.writeText(cheap.url);
+        flip('#copyCheapest','Copied','Copy cheapest link',1000);
+      });
+
+      $('#downloadCsv').addEventListener('click', downloadHistoryCsv);
+      $('#downloadObs').addEventListener('click', downloadObsCsv);
+      $('#copyPm').addEventListener('click', ()=>{
+        const ta = $('#pmScript');
+        ta.select(); document.execCommand('copy');
+        $('#pmNote').textContent = 'Copied';
+        setTimeout(()=>$('#pmNote').textContent='',1000);
+      });
+
+      // Parse URL param p for demo
+      const urlP = new URLSearchParams(location.search).get('p');
+      if(urlP && sampleData[urlP]) hydrate(urlP);
+
+      // Parser for common store URLs and IDs
+      function loadQuery(text){
+        if(!text) return;
+        if(/amazon\.com\/.+\/dp\/(\w{10})/i.test(text)) return hydrateById('asin', RegExp.$1);
+        if(/target\.com\/.+\/(?:-|A-)?(\d{8})/i.test(text)) return hydrateById('tcin', RegExp.$1);
+        if(/bestbuy\.com\/.+\/(\d{6,8})/i.test(text)) return hydrateById('bby', RegExp.$1);
+        if(/walmart\.com\/.+\/(\d{6,12})/i.test(text)) return hydrateById('wal', RegExp.$1);
+        if(/^\d{12}$/.test(text)) return hydrateById('upc', text);
+        if(/^\w{10}$/.test(text)) return hydrateById('asin', text);
+        $('#pTitle').textContent = 'Could not parse. Try a full URL or an exact ID.';
+      }
+
+      function note(t){
+        const n = document.getElementById('actNote'); if(!n) return;
+        n.textContent = t;
+        setTimeout(()=>{ n.textContent=''; }, 1200);
+      }
+      function copyText(s){
+        const ta = document.createElement('textarea');
+        ta.value = s; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+      }
+      function cheapestOfferWithTotals(){
+        if(!state.data || !state.data.offers || !state.data.offers.length) return null;
+        return state.data.offers
+          .map(o=>({ ...o, total:o.price + (o.ship||0) + o.price*(o.tax||0) }))
+          .sort((a,b)=>a.total - b.total)[0];
+      }
+      function storeWithCurrentPrice(){
+        // use kpis.store if present, else fall back to the first offer
+        const s = state?.data?.kpis?.store || (state?.data?.offers?.[0]?.store);
+        return s || 'Retailer';
+      }
+
+      /* Short, human messages that say we are on your side. No walls of text. */
+      function buildMatchMsg(){
+        if(!state.data) return null;
+        const d = state.data;
+        const ids = d.ids || {};
+        const cheap = cheapestOfferWithTotals();
+        if(!cheap) return `I would like a price match for ${d.title}. Please review the competing offer.`;
+        return [
+          `Hello. I would like a price match for ${d.title}.`,
+          `Competitor: ${cheap.store} ~ $${cheap.total.toFixed(2)} ${cheap.url ? '('+cheap.url+')' : ''}`,
+          `This is the same item. IDs: UPC ${ids.upc||'NA'} ASIN ${ids.asin||'NA'} TCIN ${ids.tcin||'NA'} SKU ${ids.bby||'NA'}.`,
+          `Please match this price. Thank you.`
+        ].join('\n');
+      }
+
+      function buildRefundMsg(){
+        if(!state.data) return null;
+        const d = state.data;
+        const store = storeWithCurrentPrice();
+        const cheap = cheapestOfferWithTotals();
+        return [
+          `Hello. I recently bought ${d.title} from ${store}. I saw a lower price and would like a post purchase adjustment.`,
+          `Order number: [enter]`,
+          `Purchase date: [enter]`,
+          `Lower price: ${cheap ? `${cheap.store} ~ $${cheap.total.toFixed(2)} ${cheap.url ? '('+cheap.url+')' : ''}` : '[enter link]'}`,
+          `Please process the adjustment or advise next steps. Thank you.`
+        ].join('\n');
+      }
+
+      function buildFlagMsg(){
+        if(!state.data) return null;
+        const d = state.data;
+        const typical = d?.kpis?.typical ?? null;
+        // pick any risky looking offer: third party or missing link or 20 percent under typical
+        const pick = (d.offers||[]).find(o=>{
+          const tags = (o.tags||[]).map(x=>x.toLowerCase());
+          const riskyTag = tags.includes('third party') || tags.includes('3p');
+          const badLink = !o.url || o.url === '#';
+          const bigGap = typeof typical === 'number' ? ((typical - o.price)/Math.max(typical,1)) >= 0.20 : false;
+          return riskyTag || badLink || bigGap;
+        });
+        if(!pick){
+          return `Please review a suspicious listing for ${d.title}. I believe it may be a marketplace seller or mispriced bundle.`;
+        }
+        const reasons = [];
+        const tags = (pick.tags||[]).map(x=>x.toLowerCase());
+        if(tags.includes('third party') || tags.includes('3p')) reasons.push('third party marketplace');
+        if(!pick.url || pick.url === '#') reasons.push('missing or placeholder link');
+        if(typeof typical === 'number' && ((typical - pick.price)/Math.max(typical,1)) >= 0.20) reasons.push('price far under typical');
+        return [
+          `Please review this listing for ${d.title}. It looks risky.`,
+          `Store: ${pick.store} Link: ${pick.url||'NA'}`,
+          `Reason: ${reasons.join(', ') || 'potential mismatch'}`,
+          `Thank you.`
+        ].join('\n');
+      }
+
+
+      function hydrateById(kind, value){
+        const hit = Object.entries(sampleData).find(([k,v])=>{
+          return v.ids && String(v.ids[kind]||'').toLowerCase() === String(value).toLowerCase();
+        });
+        if(hit){ hydrate(hit[0]); return; }
+        $('#pTitle').textContent = 'No demo for this id. Replace with live API.';
+      }
+
+      function hydrate(key){
+        const data = sampleData[key];
+        state.key = key; state.data = data; state.range = 30;
+
+        // Header
+        $('#pTitle').textContent = data.title;
+        $('#pSubtitle').textContent = data.subtitle || '';
+        $('#pIds').textContent = `UPC ${data.ids.upc||''}  •  ASIN ${data.ids.asin||''}  •  TCIN ${data.ids.tcin||''}  •  itemId ${data.ids.wal||''}  •  SKU ${data.ids.bby||''}`;
+        const img = $('#pImg');
+        if(data.image){ img.src = data.image; img.style.display = 'block'; }
+
+        // Variant selector
+        const sel = $('#variant'); sel.innerHTML = '';
+        (data.variant||['Default']).forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+
+        // KPIs
+        $('#kCurrent').textContent = fmt.format(data.kpis.current);
+        $('#kStore').textContent = `at ${data.kpis.store}`;
+        $('#kTypical').textContent = fmt.format(data.kpis.typical);
+        $('#kTypicalNote').textContent = data.kpis.typicalNote||'';
+        $('#kLow30').textContent = fmt.format(data.kpis.low30);
+        $('#kLow30Date').textContent = data.kpis.low30Date ? `on ${data.kpis.low30Date}` : '';
+        $('#kIntegrity').textContent = data.kpis.integrity;
+
+        // Chart
+        drawChart();
+
+        // Offers
+        renderOffers(false);
+
+        // Specs
+        renderSpecsMatrix();
+
+        // Forensics
+        renderForensics();
+
+        // Observation log
+        renderObs();
+
+        // Coverage snapshot
+        renderCoverage();
+
+        // Store links
+        renderStoreLinks();
+
+        // Price match script
+        buildPmScript();
+      }
+
+      function renderOffers(sortByTotal){
+        const offers = $('#offers'); offers.innerHTML = '';
+        if(!state.data) return;
+        const arr = state.data.offers.map(o=>{
+          const total = o.price + (o.ship||0) + o.price * (o.tax||0);
+          return { ...o, total };
+        });
+        if(sortByTotal) arr.sort((a,b)=>a.total - b.total);
+
+        arr.forEach(o=>{
+          const tagText = (o.tags||[]).map(t=>`<span class="badge ${t==='member'?'info':t==='third party'?'warn':'ok'}">${t}</span>`).join(' ');
+          const row = document.createElement('div'); row.className = 'offer';
+          row.innerHTML = `
+            <div>
+              <strong>${o.store}</strong>
+              <div class="muted">${tagText||''}</div>
+            </div>
+            <div class="muted">Base ${fmt.format(o.price)} • Ship ${fmt.format(o.ship||0)} • Tax ${(o.tax||0)*100}% • ${o.notes||''}</div>
+            <div><a class="btn" href="${o.url}" target="_blank" rel="noopener">${fmt.format(o.total)}</a></div>
+          `;
+          offers.appendChild(row);
+        });
+        $('#offersNote').textContent = 'Totals shown here are estimates. Exact tax can change by ZIP. Third party offers are tagged and excluded from integrity.';
+      }
+
+      function renderSpecsMatrix(){
+        const wrap = $('#specsMatrix'); wrap.innerHTML = '';
+        if(!state.data || !state.data.specs || state.data.specs.length === 0){ wrap.textContent = 'No specs available.'; return; }
+        const specs = state.data.specs;
+        // Collect all keys
+        const keys = Array.from(new Set(specs.flatMap(s=>Object.keys(s)))).filter(k=>k!=='variant');
+        // Determine differences
+        const diffs = {};
+        keys.forEach(k=>{
+          const values = new Set(specs.map(s=>String(s[k]||'')));
+          diffs[k] = values.size > 1;
+        });
+        // Build table
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        const hrow = document.createElement('tr');
+        hrow.innerHTML = `<th>Spec</th>${specs.map(s=>`<th>${s.variant}</th>`).join('')}`;
+        thead.appendChild(hrow);
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        keys.forEach(k=>{
+          const tr = document.createElement('tr');
+          const label = `<td>${k}</td>`;
+          const cells = specs.map(s=>{
+            const v = s[k] ?? '';
+            const mark = diffs[k] ? ' style="background:#fffbeb"' : '';
+            return `<td${mark}>${v}</td>`;
+          }).join('');
+          tr.innerHTML = label + cells;
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        wrap.appendChild(table);
+      }
+
+      function renderForensics(){
+        const ul = $('#forensicsList'); ul.innerHTML = '';
+        if(!state.data) return;
+        (state.data.integrityReasons||[]).forEach(r=>{
+          const li = document.createElement('li');
+          li.textContent = r;
+          ul.appendChild(li);
+        });
+      }
+
+      function renderObs(){
+        const body = $('#obsBody'); body.innerHTML='';
+        if(!state.data) return;
+        state.data.observed
+          .slice()
+          .sort((a,b)=>b.t - a.t)
+          .forEach(o=>{
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td class="mono">${new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(o.t)}</td>
+              <td>${o.store}</td>
+              <td>${fmt.format(o.price)}</td>
+              <td>${o.status}</td>
+              <td class="muted">${o.note||''}</td>
+            `;
+            body.appendChild(tr);
+          });
+      }
+
+      function renderCoverage(){
+        const div = $('#coverage'); div.innerHTML = '';
+        if(!state.data) return;
+        const now = Date.now();
+        const byStore = {};
+        state.data.observed.forEach(o=>{
+          byStore[o.store] = byStore[o.store] || { last:o.t, count:0 };
+          byStore[o.store].last = o.t > byStore[o.store].last ? o.t : byStore[o.store].last;
+          byStore[o.store].count++;
+        });
+        const stores = ['Amazon','Target','Walmart','Best Buy'];
+        stores.forEach(name=>{
+          const info = byStore[name] || { last:0, count:0 };
+          const ageMin = info.last ? Math.round((now - info.last.getTime())/60000) : null;
+          const freshness = ageMin==null ? 0 : Math.max(0, 100 - Math.min(100, ageMin)); // crude freshness score
+          const row = document.createElement('div');
+          row.className = 'bar';
+          row.innerHTML = `
+            <div>${name}</div>
+            <div class="track"><div class="fill" style="width:${freshness}%"></div></div>
+            <div>${ageMin==null ? 'NA' : ageMin+'m'}</div>
+          `;
+          div.appendChild(row);
+        });
+        // animate fills
+        $$('.fill', div).forEach(f=>{
+          const w = f.style.width;
+          f.style.width = '0%';
+          requestAnimationFrame(()=>{ f.style.transition='width .9s ease'; f.style.width = w; });
+        });
+      }
+
+      function renderStoreLinks(){
+        const ul = $('#storeLinks'); ul.innerHTML='';
+        if(!state.data) return;
+        const ids = state.data.ids || {};
+        const rows = [
+          ['Amazon', ids.asin ? `https://www.amazon.com/dp/${ids.asin}` : ''],
+          ['Target', ids.tcin ? `https://www.target.com/p/-/A-${ids.tcin}` : ''],
+          ['Walmart', ids.wal ? `https://www.walmart.com/ip/${ids.wal}` : ''],
+          ['Best Buy', ids.bby ? `https://www.bestbuy.com/site/${ids.bby}.p` : '']
+        ];
+        rows.forEach(([name, href])=>{
+          const li = document.createElement('li');
+          li.innerHTML = href ? `<a class="btn" href="${href}" target="_blank" rel="noopener">Open ${name}</a>` : `<span class="muted">No ${name} id</span>`;
+          ul.appendChild(li);
+        });
+      }
+
+      function buildPmScript(){
+        const data = state.data; if(!data) return;
+        const cheapest = getCheapestOffer();
+        const higher = data.offers.slice().sort((a,b)=>a.price - b.price)[1]; // naive next higher
+        const ids = data.ids || {};
+        const script = cheapest ? (
+`Hello, I would like a price match for ${data.title}.
+Competitor: ${cheapest.store} at ${fmt.format(cheapest.price)} - link: ${cheapest.url}
+Your price: ${higher ? fmt.format(higher.price) : 'NA'}
+Identifiers: UPC ${ids.upc||'NA'} ASIN ${ids.asin||'NA'} TCIN ${ids.tcin||'NA'} SKU ${ids.bby||'NA'}
+This is the same variant as shown in the attached link. Thank you.`) : 'Load offers to generate a script.';
+        $('#pmScript').value = script;
+      }
+
+      function getCheapestOffer(){
+        if(!state.data || !state.data.offers || state.data.offers.length === 0) return null;
+        const arr = state.data.offers.map(o=>({ ...o, total:o.price + (o.ship||0) + o.price*(o.tax||0) }));
+        arr.sort((a,b)=>a.total - b.total);
+        return arr[0];
+      }
+
+      function drawChart(){
+        const svg = $('#chart'); svg.innerHTML = '';
+        if(!state.data) return;
+        const days = state.range;
+        const series = state.data.history.slice(-days);
+        const xs = series.map((_,i)=>i);
+        const ys = series.map(p=>p.p);
+        const ls = series.map(p=>p.low);
+        const xmin=0, xmax=xs.length-1;
+        const ymin=Math.min(...ys, ...ls)*0.98;
+        const ymax=Math.max(...ys, ...ls)*1.02;
+        const W=700, H=200, L=30, R=10, T=10, B=24;
+        const sx = i => L + (i-xmin)/(xmax-xmin||1) * (W-L-R);
+        const sy = v => H-B - (v-ymin)/(ymax-ymin||1) * (H-B-T);
+
+        // grid
+        const gy = [0,.25,.5,.75,1].map(t=>ymin + t*(ymax-ymin));
+        gy.forEach(g=>{
+          svg.insertAdjacentHTML('beforeend', `<line x1="${L}" y1="${sy(g)}" x2="${W-R}" y2="${sy(g)}" stroke="#e5e7eb" stroke-width="1" />`);
+        });
+
+        // price area + line
+        const path = series.map((p,i)=>`${i?'L':'M'}${sx(i)},${sy(p.p)}`).join(' ');
+        svg.insertAdjacentHTML('beforeend', `<path d="${path} L ${sx(xmax)},${sy(ymin)} L ${sx(xmin)},${sy(ymin)} Z" fill="rgba(92,124,255,0.08)" />`);
+        svg.insertAdjacentHTML('beforeend', `<path d="${path}" fill="none" stroke="var(--accent-b)" stroke-width="2" />`);
+
+        // typical low line
+        const lowPath = series.map((p,i)=>`${i?'L':'M'}${sx(i)},${sy(p.low)}`).join(' ');
+        svg.insertAdjacentHTML('beforeend', `<path d="${lowPath}" fill="none" stroke="var(--accent-c)" stroke-width="2" stroke-dasharray="4 4" />`);
+      }
+
+      // CSV exports
+      function downloadHistoryCsv(){
+        if(!state.data) return;
+        const rows = [['date','price','typical_low']];
+        state.data.history.forEach(p=>{
+          rows.push([p.t.toISOString(), p.p.toFixed(2), p.low.toFixed(2)]);
+        });
+        downloadCsv(rows, `${slug(state.data.title)}_history.csv`);
+      }
+
+      function downloadObsCsv(){
+        if(!state.data) return;
+        const rows = [['time','store','price','status','note']];
+        state.data.observed.forEach(o=>{
+          rows.push([o.t.toISOString(), o.store, o.price.toFixed(2), o.status, (o.note||'').replace(/,/g,';')]);
+        });
+        downloadCsv(rows, `${slug(state.data.title)}_observations.csv`);
+      }
+
+      function downloadCsv(rows, name){
+        const csv = rows.map(r=>r.map(v=>String(v)).join(',')).join('\n');
+        const blob = new Blob([csv], {type:'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+
+      // Helpers
+      function makeHistory(days, start, shocks){
+        const out=[]; let v=start; const today=new Date();
+        for(let i=days-1;i>=0;i--){
+          const d=new Date(today); d.setDate(today.getDate()-i);
+          const shock = shocks[i % shocks.length] || 0;
+          const drift = (Math.sin(i/6)*0.4);
+          v = Math.max(20, v + drift + shock*0.02);
+          out.push({ t:d, p:+v.toFixed(2), low:+Math.min(v*0.98, v-1).toFixed(2) });
+        }
+        return out;
+      }
+      function minsAgo(n){ const d=new Date(); d.setMinutes(d.getMinutes()-n); return d; }
+      function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+      function flip(sel,on,off,ms){ const el=$(sel); const txt=el.textContent; el.textContent=on; setTimeout(()=>el.textContent=off||txt,ms||1000); }
+    })();
+  </script>
+</body>
+</html>
