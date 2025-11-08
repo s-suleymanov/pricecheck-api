@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PriceCheck • Market Research</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" type="image/png" href="../logo/logo.png">
+  <meta name="description" content="PriceCheck Research. Product market overview with gainers, losers, heatmaps, retailer indices, and leaderboards.">
+  <style>
+    .wrap{max-width:1180px;padding:30px 24px 80px;margin:0 auto}
+    h1{font-size:clamp(34px,6vw,56px);font-weight:500;letter-spacing:-.01em;margin:10px 0 16px}
+    h2{font-size:clamp(22px,3.5vw,30px);font-weight:600;margin:24px 0 12px}
+    h3{font-size:clamp(18px,2.8vw,22px);font-weight:600;margin:12px 0 8px}
+    .grid{display:grid;gap:22px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .grid-4{grid-template-columns:repeat(4,1fr)}
+    .card{background:#f9fafb;border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+    .kpi .big{font-size:clamp(22px,4.5vw,32px);font-weight:700}
+    .kpi .small{color:#6b7280;font-size:.95rem}
+    .table{width:100%;border-collapse:collapse;font-size:1.02rem}
+    .table th,.table td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;vertical-align:top}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem}
+    .note{color:#6b7280;font-size:.96rem}
+    .badge{display:inline-block;font-size:.82rem;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:#fff}
+    .ok{color:#065f46;background:#ecfdf5;border-color:#a7f3d0}
+    .warn{color:#92400e;background:#fffbeb;border-color:#fde68a}
+    .muted{color:#6b7280}
+    .tape{display:flex;gap:18px;overflow-x:auto;padding:8px;border:1px solid var(--line);border-radius:12px;background:#fff;position: sticky;top:100px}
+    .ticker{white-space:nowrap;font-size:0.98rem}
+    .gain{color:#065f46}
+    .lose{color:#92400e}
+    .search{display:flex;gap:8px;align-items:center}
+    .search input{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:1rem}
+    .heat{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+    .heat .cell{border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
+    .hot{background:#ecfdf5}
+    .cold{background:#fffbeb}
+    @media (max-width:1100px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.heat{grid-template-columns:repeat(3,1fr)}}
+  </style>
+</head>
+<body>
+  <!-- Header identical to your file. Only the active link is Research. -->
+  <header class="nav">
+    <div class="nav__row">
+      <div class="logo-head">
+        <img src="../logo/logo.png" alt="PriceCheck Logo" class="logo">
+        <div class="brand">
+          <span class="wordmark">PriceCheck</span>
+          <span class="edition">0.8.4 Beta</span>
+        </div>
+      </div>
+      <nav class="links" aria-label="Primary">
+        <a href="/privacy/">Privacy</a>
+        <a href="/dashboard/">Dashboard</a>
+        <a href="../">Overview</a>
+        <a class="active" href="/research/">Research</a>
+        <a href="/insights/">Insights</a>
+      </nav>
+      <a class="btn btn--outline" href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en">Add to Chrome</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1>Market Research</h1>
+
+    <!-- Market tape like a stock ticker -->
+    <div class="tape" aria-label="market tape">
+      <div class="ticker"><strong>HEADPHONES</strong> <span class="gain">+1.9%</span></div>
+      <div class="ticker"><strong>KEYBOARDS</strong> <span class="gain">+3.2%</span></div>
+      <div class="ticker"><strong>CONSOLES</strong> <span class="lose">+0.6%</span></div>
+      <div class="ticker"><strong>SMART HOME</strong> <span class="gain">+0.4%</span></div>
+      <div class="ticker"><strong>WEARABLES</strong> <span class="lose">+1.1%</span></div>
+      <div class="ticker"><strong>MONITORS</strong> <span class="gain">+2.5%</span></div>
+    </div>
+
+    <!-- Indices row -->
+    <section class="card" style="margin:16px 0 24px">
+      <h2>Indices</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="small">PC 100 Index</div><div class="big gain">+1.2%</div><div class="small muted">basket of top tracked products</div></div>
+        <div class="kpi"><div class="small">Electronics Index</div><div class="big gain">+2.0%</div><div class="small muted">median change week over week</div></div>
+        <div class="kpi"><div class="small">Deal honesty</div><div class="big">88%</div><div class="small muted">strike valid share</div></div>
+        <div class="kpi"><div class="small">Lowest not on Amazon</div><div class="big">39%</div><div class="small muted">of cross store matches</div></div>
+      </div>
+    </section>
+
+    <!-- Search bar for ticker style lookups -->
+    <section class="card" style="margin:0 0 24px">
+      <div class="search">
+        <input type="text" placeholder="Search a product name, model, or UPC. Example: 097855205940 or MX Master 3S" aria-label="Search products">
+        <a class="btn" href="/dashboard/">Open in Dashboard</a>
+      </div>
+      <p class="note" style="margin-top:10px">Search opens the live view in your dashboard. This page shows market indices and research leaderboards.</p>
+    </section>
+
+    <!-- Gainers and Losers -->
+    <section class="grid grid-2">
+      <div class="card">
+        <h2>Top gainers</h2>
+        <table class="table">
+          <thead><tr><th>Product</th><th>Category</th><th>Change</th><th>Cheapest</th></tr></thead>
+          <tbody>
+            <tr><td>Razer BlackWidow V4</td><td>Keyboards</td><td class="ok">−18%</td><td>Target</td></tr>
+            <tr><td>Sony WH‑1000XM5</td><td>Headphones</td><td class="ok">−15%</td><td>Best Buy</td></tr>
+            <tr><td>Ring Doorbell 4</td><td>Smart Home</td><td class="ok">−12%</td><td>Walmart</td></tr>
+            <tr><td>Logitech MX Master 3S</td><td>Peripherals</td><td class="ok">−10%</td><td>Target</td></tr>
+            <tr><td>Apple iPad 10th Gen</td><td>Tablets</td><td class="ok">−8%</td><td>Amazon</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>Top losers</h2>
+        <table class="table">
+          <thead><tr><th>Product</th><th>Category</th><th>Change</th><th>Cheapest</th></tr></thead>
+          <tbody>
+            <tr><td>PS5 Slim</td><td>Consoles</td><td class="warn">+9%</td><td>Walmart</td></tr>
+            <tr><td>Apple Watch Series 10</td><td>Wearables</td><td class="warn">+6%</td><td>Best Buy</td></tr>
+            <tr><td>GoPro Hero 12</td><td>Cameras</td><td class="warn">+5%</td><td>Amazon</td></tr>
+            <tr><td>Kindle Paperwhite</td><td>Tablets</td><td class="warn">+4%</td><td>Amazon</td></tr>
+            <tr><td>Oculus Quest 3</td><td>VR</td><td class="warn">+3%</td><td>Target</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Category heatmap like sector map -->
+    <section class="card" style="margin:24px 0">
+      <h2>Category heatmap</h2>
+      <div class="heat">
+        <div class="cell hot">Headphones<br><span class="ok">−9%</span></div>
+        <div class="cell hot">Keyboards<br><span class="ok">−12%</span></div>
+        <div class="cell hot">Monitors<br><span class="ok">−5%</span></div>
+        <div class="cell cold">Consoles<br><span class="warn">+3%</span></div>
+        <div class="cell">Smart Home<br><span class="ok">−2%</span></div>
+        <div class="cell">Cameras<br><span class="warn">+1%</span></div>
+        <div class="cell">Laptops<br><span class="ok">−3%</span></div>
+        <div class="cell">Storage<br><span class="ok">−4%</span></div>
+        <div class="cell">Wearables<br><span class="warn">+1%</span></div>
+        <div class="cell">Accessories<br><span class="ok">−2%</span></div>
+        <div class="cell">Printers<br><span class="ok">−1%</span></div>
+        <div class="cell">Routers<br><span class="ok">−2%</span></div>
+      </div>
+      <p class="note" style="margin-top:10px">Percent shows median weekly change by category.</p>
+    </section>
+
+    <!-- Retailer indices like exchange comparison -->
+    <section class="card" style="margin:0 0 24px">
+      <h2>Retailer indices</h2>
+      <div class="grid grid-4">
+        <div class="card"><h3>Amazon</h3><p>Cheapest share 33%</p><p>Volatility High</p><p>Deal honesty 87%</p></div>
+        <div class="card"><h3>Target</h3><p>Cheapest share 29%</p><p>Volatility Medium</p><p>Deal honesty 92%</p></div>
+        <div class="card"><h3>Walmart</h3><p>Cheapest share 26%</p><p>Volatility Medium</p><p>Deal honesty 89%</p></div>
+        <div class="card"><h3>Best Buy</h3><p>Cheapest share 28%</p><p>Volatility Medium</p><p>Deal honesty 94%</p></div>
+      </div>
+    </section>
+
+    <!-- NEW: Cheapest share leaderboard -->
+    <section class="card" style="margin:0 0 24px">
+      <h2>Cheapest share leaderboard</h2>
+      <table class="table">
+        <thead><tr><th>Category</th><th>Lowest retailer</th><th>Cheapest share</th><th>Runner up</th></tr></thead>
+        <tbody>
+          <tr><td>Headphones</td><td>Best Buy</td><td>36%</td><td>Amazon 31%</td></tr>
+          <tr><td>Keyboards</td><td>Amazon</td><td>40%</td><td>Target 27%</td></tr>
+          <tr><td>Monitors</td><td>Walmart</td><td>33%</td><td>Best Buy 30%</td></tr>
+          <tr><td>Smart Home</td><td>Walmart</td><td>35%</td><td>Amazon 28%</td></tr>
+          <tr><td>Wearables</td><td>Best Buy</td><td>32%</td><td>Target 30%</td></tr>
+          <tr><td>Storage</td><td>Amazon</td><td>42%</td><td>Best Buy 29%</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Share is the percent of sampled matches where the retailer is strictly the lowest after coupons.</p>
+    </section>
+
+    <!-- NEW: Deal integrity breakdown -->
+    <section class="card" style="margin:0 0 24px">
+      <h2>Deal integrity by retailer</h2>
+      <table class="table">
+        <thead><tr><th>Retailer</th><th>Pass rate</th><th>Lookback window</th><th>Common failure reason</th></tr></thead>
+        <tbody>
+          <tr><td>Amazon</td><td>87%</td><td>30 day</td><td>short reset window</td></tr>
+          <tr><td>Target</td><td>92%</td><td>30 day</td><td>promo excludes variant</td></tr>
+          <tr><td>Walmart</td><td>89%</td><td>30 day</td><td>third party drop</td></tr>
+          <tr><td>Best Buy</td><td>94%</td><td>30 day</td><td>open box mixed in</td></tr>
+        </tbody>
+      </table>
+      <p class="note">A deal passes if the strike price claims are consistent with the observed price history in the window.</p>
+    </section>
+
+    <!-- NEW: Price match responsiveness -->
+    <section class="card" style="margin:0 0 24px">
+      <h2>Price match responsiveness</h2>
+      <table class="table">
+        <thead><tr><th>Retailer</th><th>Median hours to match</th><th>90th percentile</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Amazon</td><td>6.2 h</td><td>18.4 h</td><td>fast on top sellers</td></tr>
+          <tr><td>Target</td><td>10.1 h</td><td>28.7 h</td><td>weekend lag</td></tr>
+          <tr><td>Walmart</td><td>9.5 h</td><td>25.2 h</td><td>third party noise</td></tr>
+          <tr><td>Best Buy</td><td>7.4 h</td><td>20.3 h</td><td>member price first</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Measured on exact product matches with identical variants and tax rules.</p>
+    </section>
+
+    <!-- NEW: Volatility map -->
+    <section class="card" style="margin:0 0 24px">
+      <h2>Volatility map</h2>
+      <table class="table">
+        <thead><tr><th>Category</th><th>Weekly sigma</th><th>Level</th><th>Comment</th></tr></thead>
+        <tbody>
+          <tr><td>Headphones</td><td>4.6%</td><td><span class="badge ok">Medium</span></td><td>coupon driven swings</td></tr>
+          <tr><td>Keyboards</td><td>5.8%</td><td><span class="badge ok">Medium</span></td><td>flash sales common</td></tr>
+          <tr><td>Monitors</td><td>7.2%</td><td><span class="badge warn">High</span></td><td>bundle and size mix</td></tr>
+          <tr><td>Consoles</td><td>2.1%</td><td><span class="badge">Low</span></td><td>inventory steady</td></tr>
+          <tr><td>Storage</td><td>8.0%</td><td><span class="badge warn">High</span></td><td>promo cycles frequent</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Sigma is the standard deviation of weekly price change for the category basket.</p>
+    </section>
+
+  </main>
+</body>
+</html>

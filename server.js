@@ -1,108 +1,97 @@
+// server.js
+const path = require('path');
 const express = require('express');
 const { Pool } = require('pg');
 
 const app = express();
 app.use(express.static('public'));
 
+app.get('/warm', async (req, res) => {
+  try {
+    const t0 = Date.now();
+    await pool.query('select 1');
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, ms: Date.now() - t0 });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false });
+  }
+});
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // your Neon uri
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-function money(cents) {
-  if (cents == null) return '';
-  return `$${(cents / 100).toFixed(2)}`;
-}
-
+// -------------- helpers --------------
 function isLikelyUPC(s) {
   return /^[0-9\s-]+$/.test(s || '');
 }
-
 function normalizePrefix(raw) {
   const s = String(raw || '').trim();
   const i = s.indexOf(':');
   if (i === -1) return { prefix: null, val: s };
   return { prefix: s.slice(0, i).toLowerCase(), val: s.slice(i + 1).trim() };
 }
+function normStoreName(s) {
+  const k = String(s || '').trim().toLowerCase();
+  if (k === 'best buy') return 'bestbuy';
+  return k;
+}
 
-// Resolve incoming key to { asin, upc }
-// Uses your asins, listings, and price_history tables.
+// -------------- key resolution --------------
 async function resolveKey(client, rawKey) {
   const { prefix, val } = normalizePrefix(rawKey);
   const key = val;
 
-  // Helper lookups
   const findByAsin = async (asin) => {
     const r = await client.query(
-      `select asin, upc from asins where upper(btrim(asin)) = upper(btrim($1)) limit 1`,
+      `select asin, upc
+         from asins
+        where upper(btrim(asin)) = upper(btrim($1))
+        limit 1`,
       [asin]
     );
-    if (r.rowCount) return r.rows[0];
-    return null;
+    return r.rowCount ? r.rows[0] : null;
   };
 
   const findByUpc = async (upcInput) => {
-    // prefer asins first, else listings
+    // Prefer asins first
     let r = await client.query(
       `select asin, upc
-       from asins
-       where norm_upc(upc) = norm_upc($1)
-       limit 1`,
+         from asins
+        where norm_upc(upc) = norm_upc($1)
+        limit 1`,
       [upcInput]
     );
     if (r.rowCount) return r.rows[0];
 
+    // Fall back to listings
     r = await client.query(
       `select upc
-       from listings
-       where norm_upc(upc) = norm_upc($1)
-       order by current_price_observed_at desc nulls last
-       limit 1`,
+         from listings
+        where norm_upc(upc) = norm_upc($1)
+        order by current_price_observed_at desc nulls last, created_at desc nulls last
+        limit 1`,
       [upcInput]
     );
-    if (r.rowCount) return { asin: null, upc: r.rows[0].upc };
-
-    // last resort: price_history
-    r = await client.query(
-      `select upc
-       from price_history
-       where norm_upc(upc) = norm_upc($1)
-       order by observed_at desc
-       limit 1`,
-      [upcInput]
-    );
-    if (r.rowCount) return { asin: null, upc: r.rows[0].upc };
-
-    return null;
+    return r.rowCount ? { asin: null, upc: r.rows[0].upc } : null;
   };
 
   const findUpcByStoreSku = async (store, sku) => {
-    let r = await client.query(
+    const r = await client.query(
       `select upc
-       from listings
-       where lower(btrim(store)) = lower(btrim($1))
-         and norm_sku(store_sku) = norm_sku($2)
-       order by current_price_observed_at desc nulls last
-       limit 1`,
+         from listings
+        where lower(btrim(store)) = lower(btrim($1))
+          and norm_sku(store_sku) = norm_sku($2)
+        order by current_price_observed_at desc nulls last, created_at desc nulls last
+        limit 1`,
       [store, sku]
     );
-    if (r.rowCount) return r.rows[0].upc;
-
-    r = await client.query(
-      `select upc
-       from price_history
-       where lower(btrim(store)) = lower(btrim($1))
-         and norm_sku(store_sku) = norm_sku($2)
-       order by observed_at desc
-       limit 1`,
-      [store, sku]
-    );
-    if (r.rowCount) return r.rows[0].upc;
-
-    return null;
+    return r.rowCount ? r.rows[0].upc : null;
   };
 
-  // 1) Explicit prefixes
+  // explicit prefixes
   if (prefix === 'asin') {
     const row = await findByAsin(key);
     if (row) return row;
@@ -113,210 +102,327 @@ async function resolveKey(client, rawKey) {
   }
   if (prefix === 'bby' || prefix === 'bestbuy' || prefix === 'sku') {
     const upc = await findUpcByStoreSku('bestbuy', key);
-    if (upc) return await findByUpc(upc) || { asin: null, upc };
+    if (upc) return (await findByUpc(upc)) || { asin: null, upc };
   }
   if (prefix === 'walmart' || prefix === 'wal') {
     const upc = await findUpcByStoreSku('walmart', key);
-    if (upc) return await findByUpc(upc) || { asin: null, upc };
+    if (upc) return (await findByUpc(upc)) || { asin: null, upc };
   }
   if (prefix === 'target' || prefix === 'tcin') {
     const upc = await findUpcByStoreSku('target', key);
-    if (upc) return await findByUpc(upc) || { asin: null, upc };
+    if (upc) return (await findByUpc(upc)) || { asin: null, upc };
   }
 
-  // 2) No prefix - try ASIN
+  // no prefix
   let row = await findByAsin(key);
   if (row) return row;
 
-  // 3) No prefix - if it looks like UPC, try UPC
   if (isLikelyUPC(key)) {
     row = await findByUpc(key);
     if (row) return row;
   }
 
-  // 4) No prefix - try as store_sku across stores
   for (const st of ['bestbuy', 'walmart', 'target']) {
     const upc = await findUpcByStoreSku(st, key);
-    if (upc) return await findByUpc(upc) || { asin: null, upc };
+    if (upc) return (await findByUpc(upc)) || { asin: null, upc };
   }
 
   return null;
 }
 
-// Pull latest prices:
-// - Amazon from asins.current_price_* (fallback to price_history if null)
-// - Other stores from listings.current_price_* for the UPC
-// - Fill any missing store with v_latest_price
+// -------------- latest offers (asins + listings) --------------
 async function getLatestOffers(client, keyInfo) {
   const { asin, upc } = keyInfo;
   const offers = [];
-  const seenStores = new Set();
 
-  // Amazon
+  // Amazon from asins
   if (asin || upc) {
     const rA = await client.query(
-      `select a.asin, a.current_price_cents, a.current_price_observed_at
-       from asins a
-       where ($1::text is not null and upper(btrim(a.asin)) = upper(btrim($1)))
-          or ($2::text is not null and norm_upc(a.upc) = norm_upc($2))
-       order by a.current_price_observed_at desc nulls last
-       limit 1`,
+      `select asin,
+              current_price_cents,
+              current_price_observed_at,
+              created_at,
+              upc,
+              variant_label
+         from asins
+        where ($1::text is not null and upper(btrim(asin)) = upper(btrim($1)))
+           or ($2::text is not null and norm_upc(upc) = norm_upc($2))
+        order by current_price_observed_at desc nulls last, created_at desc nulls last
+        limit 1`,
       [asin, upc]
     );
     if (rA.rowCount) {
-      const row = rA.rows[0];
-      // try to get URL and title from latest price_history for that ASIN
-      const rPH = await client.query(
-        `select url, title, price_cents, observed_at
-         from price_history
-         where lower(btrim(store)) = 'amazon'
-           and asin = $1
-         order by observed_at desc
-         limit 1`,
-        [row.asin]
-      );
-
+      const a = rA.rows[0];
       offers.push({
         store: 'amazon',
-        store_sku: row.asin,
-        url: rPH.rowCount ? rPH.rows[0].url : null,
-        title: rPH.rowCount ? rPH.rows[0].title : null,
-        price_cents: row.current_price_cents ?? (rPH.rowCount ? rPH.rows[0].price_cents : null),
-        observed_at: row.current_price_observed_at ?? (rPH.rowCount ? rPH.rows[0].observed_at : null)
+        store_sku: a.asin,
+        url: null,
+        title: null,
+        price_cents: a.current_price_cents ?? null,
+        observed_at: a.current_price_observed_at ?? a.created_at ?? null,
+        variant_label: a.variant_label || null
       });
-      seenStores.add('amazon');
     }
   }
 
   // Other stores from listings by UPC
   if (upc) {
     const rL = await client.query(
-      `select store, store_sku, url, current_price_cents, current_price_observed_at
-       from listings
-       where norm_upc(upc) = norm_upc($1)`,
+      `select store, store_sku, url,
+              current_price_cents,
+              current_price_observed_at,
+              created_at,
+              variant_label
+         from listings
+        where norm_upc(upc) = norm_upc($1)`,
       [upc]
     );
     for (const row of rL.rows) {
       offers.push({
-        store: row.store.toLowerCase(),
+        store: normStoreName(row.store),
         store_sku: row.store_sku,
         url: row.url,
         title: null,
         price_cents: row.current_price_cents,
-        observed_at: row.current_price_observed_at
+        observed_at: row.current_price_observed_at ?? row.created_at ?? null,
+        variant_label: row.variant_label || null
       });
-      seenStores.add(row.store.toLowerCase());
     }
   }
 
-  // Fallback: v_latest_price for any missing or empty price
-  // For non Amazon in v_latest_price, the "store_sku" column actually holds UPC in your definition
-  const rV = await client.query(
-    `select store, asin, store_sku, url, title, price_cents, observed_at
-     from v_latest_price
-     where
-       ($1::text is not null and store = 'amazon' and asin = $1)
-       or ($2::text is not null and store <> 'amazon' and norm_upc(store_sku) = norm_upc($2))`,
-    [asin, upc]
-  );
-
-  // Merge fallback where we do not already have a store or price
-  for (const row of rV.rows) {
-    const st = row.store.toLowerCase();
-    const existing = offers.find(o => o.store === st);
-    if (!existing || existing.price_cents == null) {
-      const merged = existing || { store: st };
-      merged.store_sku = st === 'amazon' ? row.asin : row.store_sku; // note: for non Amazon this is UPC
-      merged.url = row.url ?? merged.url ?? null;
-      merged.title = row.title ?? merged.title ?? null;
-      merged.price_cents = merged.price_cents ?? row.price_cents ?? null;
-      merged.observed_at = merged.observed_at ?? row.observed_at ?? null;
-      if (!existing) offers.push(merged);
-    }
-  }
-
-  // Sort by store name for display
+  // Stable order
   offers.sort((a, b) => a.store.localeCompare(b.store));
   return offers;
 }
 
-function pageHtml(identity, offers) {
-  const hdr = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PriceCheck Dashboard</title>
-<style>
-  body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter, Roboto, Helvetica, Arial; margin: 24px; color: #111; }
-  .wrap { max-width: 860px; margin: 0 auto; }
-  h1 { margin: 0 0 8px; font-size: 24px; }
-  .muted { color: #6b7280; font-size: 14px; margin-bottom: 16px; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #eaecef; }
-  th { font-weight: 600; font-size: 14px; }
-  td a { text-decoration: none; color: #1f6feb; }
-  .price { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
-</style>
-</head>
-<body>
-<div class="wrap">
-<h1>PriceCheck Dashboard</h1>
-<div class="muted">
-  ${identity.asin ? `ASIN ${identity.asin}` : ''}
-  ${identity.asin && identity.upc ? ' • ' : ''}${identity.upc ? `UPC ${identity.upc}` : ''}
-</div>
-<table>
-  <thead><tr><th>Store</th><th>SKU</th><th>Price</th><th>Seen</th><th>Link</th></tr></thead>
-  <tbody>
-`;
-  const rows = offers.map(o => `
-<tr>
-  <td>${o.store}</td>
-  <td>${o.store_sku ?? ''}</td>
-  <td class="price">${o.price_cents != null ? money(o.price_cents) : ''}</td>
-  <td>${o.observed_at ? new Date(o.observed_at).toLocaleString() : ''}</td>
-  <td>${o.url ? `<a href="${o.url}" target="_blank" rel="noopener">Open</a>` : ''}</td>
-</tr>`).join('');
-  const ftr = `
-  </tbody>
-</table>
-</div>
-</body>
-</html>`;
-  return hdr + rows + ftr;
+// -------------- variants: all ASINs sharing the same model_number, with specs --------------
+async function getVariantsForKey(client, keyInfo) {
+  const { asin, upc } = keyInfo;
+
+  // 1) find model_number for the resolved key
+  let model = null;
+
+  if (asin) {
+    const r = await client.query(
+      `select model_number
+         from asins
+        where upper(btrim(asin)) = upper(btrim($1))
+        limit 1`,
+      [asin]
+    );
+    if (r.rowCount) model = (r.rows[0].model_number || '').trim() || null;
+  }
+
+  if (!model && upc) {
+    const r = await client.query(
+      `select model_number
+         from asins
+        where norm_upc(upc) = norm_upc($1)
+          and model_number is not null
+          and btrim(model_number) <> ''
+        order by created_at desc nulls last
+        limit 1`,
+      [upc]
+    );
+    if (r.rowCount) model = (r.rows[0].model_number || '').trim() || null;
+  }
+
+  // 2) pull all ASINs under that model_number
+  if (model) {
+    const r2 = await client.query(
+      `select
+          asin,
+          coalesce(nullif(btrim(variant_label), ''), asin) as variant_label,
+          category,
+          brand,
+          model_number,
+          model_name
+        from asins
+       where btrim(model_number) = btrim($1)
+       order by variant_label nulls last, asin`,
+      [model]
+    );
+    return r2.rows;
+  }
+
+  // 3) fallbacks (still include specs)
+  if (upc) {
+    const r3 = await client.query(
+      `select
+          asin,
+          coalesce(nullif(btrim(variant_label), ''), asin) as variant_label,
+          category,
+          brand,
+          model_number,
+          model_name
+        from asins
+       where norm_upc(upc) = norm_upc($1)
+       order by variant_label nulls last, asin`,
+      [upc]
+    );
+    return r3.rows;
+  }
+
+  if (asin) {
+    const r4 = await client.query(
+      `select
+          asin,
+          coalesce(nullif(btrim(variant_label), ''), asin) as variant_label,
+          category,
+          brand,
+          model_number,
+          model_name
+        from asins
+       where upper(btrim(asin)) = upper(btrim($1))
+       limit 1`,
+      [asin]
+    );
+    return r4.rows;
+  }
+
+  return [];
 }
 
-// GET /dashboard/:key
-app.get('/dashboard/:key', async (req, res) => {
-  const client = await pool.connect();
-  try {
-    const rawKey = req.params.key;
-    const info = await resolveKey(client, rawKey);
-    if (!info) {
-      res.status(404).send(`<p>No match for "${rawKey}". Try prefixes like asin:..., upc:..., bby:..., walmart:..., tcin:...</p>`);
-      return;
-    }
-    const offers = await getLatestOffers(client, info);
-    const html = pageHtml({ asin: info.asin, upc: info.upc }, offers);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
-  } catch (e) {
-    console.error(e);
-    res.status(500).send('Server error');
-  } finally {
-    client.release();
+// -------------- observation log = price_history + current snapshots --------------
+async function getObservations(client, keyInfo) {
+  const { asin, upc } = keyInfo;
+
+  const rows = [];
+  const seen = new Set();
+  const add = (r) => {
+    if (!r.t) return;
+    const key = [
+      r.store || '',
+      r.asin || r.store_sku || r.upc || '',
+      r.price_cents == null ? '' : String(r.price_cents),
+      new Date(r.t).toISOString()
+    ].join('|');
+    if (seen.has(key)) return;
+    seen.add(key);
+    rows.push(r);
+  };
+
+  // 1) price_history rows
+  const params = [];
+  const where = [];
+  if (asin) {
+    params.push(asin);
+    where.push(`(lower(btrim(store)) = 'amazon' and upper(btrim(asin)) = upper(btrim($${params.length})))`);
   }
+  if (upc) {
+    params.push(upc);
+    where.push(`(norm_upc(upc) = norm_upc($${params.length}))`);
+  }
+
+  if (where.length) {
+    const q = `
+      select
+        lower(btrim(store)) as store,
+        asin,
+        upc,
+        store_sku,
+        price_cents,
+        observed_at,
+        url,
+        title
+      from price_history
+      where ${where.join(' or ')}
+      order by observed_at desc
+      limit 1000
+    `;
+    const r = await client.query(q, params);
+    for (const ph of r.rows) {
+      add({
+        t: ph.observed_at,
+        created_at: ph.observed_at,
+        store: normStoreName(ph.store),
+        store_sku: ph.store === 'amazon' ? ph.asin : ph.store_sku,
+        price_cents: ph.price_cents,
+        url: ph.url,
+        title: ph.title,
+        asin: ph.asin,
+        upc: ph.upc,
+        note: ''
+      });
+    }
+  }
+
+  // 2) current snapshot from asins
+  if (asin || upc) {
+    const rA = await client.query(
+      `select asin, upc,
+              current_price_cents,
+              coalesce(current_price_observed_at, created_at) as observed_at
+         from asins
+        where ($1::text is not null and upper(btrim(asin)) = upper(btrim($1)))
+           or ($2::text is not null and norm_upc(upc) = norm_upc($2))`,
+      [asin, upc]
+    );
+    for (const a of rA.rows) {
+      add({
+        t: a.observed_at,
+        created_at: a.observed_at,
+        store: 'amazon',
+        store_sku: a.asin,
+        price_cents: a.current_price_cents,
+        url: null,
+        title: null,
+        asin: a.asin,
+        upc: a.upc,
+        note: ''
+      });
+    }
+  }
+
+  // 3) current snapshot from listings by UPC
+  if (upc) {
+    const rL = await client.query(
+      `select store, store_sku, upc, url,
+              current_price_cents,
+              coalesce(current_price_observed_at, created_at) as observed_at
+         from listings
+        where norm_upc(upc) = norm_upc($1)`,
+      [upc]
+    );
+    for (const l of rL.rows) {
+      add({
+        t: l.observed_at,
+        created_at: l.observed_at,
+        store: normStoreName(l.store),
+        store_sku: l.store_sku,
+        price_cents: l.current_price_cents,
+        url: l.url,
+        title: null,
+        asin: null,
+        upc: l.upc,
+        note: ''
+      });
+    }
+  }
+
+  // Sort newest first and cap
+  rows.sort((a, b) => new Date(b.t).getTime() - new Date(a.t).getTime());
+  return rows.slice(0, 300);
+}
+
+// -------------- routes --------------
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard', 'index.html'));
 });
 
-// Optional JSON API
 app.get('/v1/compare/:key', async (req, res) => {
   const client = await pool.connect();
   try {
     const info = await resolveKey(client, req.params.key);
     if (!info) return res.status(404).json({ error: 'not_found' });
-    const offers = await getLatestOffers(client, info);
-    res.json({ identity: info, offers });
+
+    const [offers, variants, observed] = await Promise.all([
+      getLatestOffers(client, info),
+      getVariantsForKey(client, info),
+      getObservations(client, info)
+    ]);
+
+    res.json({ identity: info, variants, offers, observed });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'server_error' });
@@ -325,6 +431,7 @@ app.get('/v1/compare/:key', async (req, res) => {
   }
 });
 
+// -------------- boot --------------
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);
