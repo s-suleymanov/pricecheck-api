@@ -63,7 +63,7 @@
     .links-list li { margin:8px 0; }
 
     /* Details toggle */
-    details { border:1px solid var(--line); border-radius:12px; padding:12px 12px 6px; background:#f9fafb; }
+    details { border:1px solid var(--line); border-radius:12px; padding:12px 12px; background:#f9fafb; }
     details[open] { background:#fff; }
 
     /* Small helpers */
