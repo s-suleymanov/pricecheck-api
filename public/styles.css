@@ -71,7 +71,7 @@ body{
 
 .pc-feature__text{max-width:720px}
 .pc-h2{margin:0 0 10px;font-size:clamp(28px,3.6vw,44px);line-height:1.05;letter-spacing:-.01em;font-weight:500}
-.pc-lead{margin:0 0 14px;color:#555;font-size:clamp(16px,2vw,20px)}
+.pc-lead{margin:0 0 14px;color:#555;font-size:20px}
 .pc-points{margin:10px 0 0;padding-left:18px;color:#222}
 .pc-points li{margin:6px 0; font-size: 20px;}
 
