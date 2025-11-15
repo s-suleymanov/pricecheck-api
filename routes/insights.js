@@ -7,6 +7,10 @@ const router = express.Router();
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const CSV_PATH = path.join(DATA_DIR, 'alerts.csv');
 
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
 function ensureDataFile(){
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(CSV_PATH)){
