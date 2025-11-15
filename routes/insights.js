@@ -1,58 +1,61 @@
 // routes/insights.js
-const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
+
 const router = express.Router();
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const CSV_PATH = path.join(DATA_DIR, 'alerts.csv');
+// Only handle alerts.csv here
+const dataDir       = path.join(__dirname, '..', 'data');
+const alertsCsvPath = path.join(dataDir, 'alerts.csv');
 
+// Make sure data directory exists on local and Render
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-function ensureDataFile(){
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(CSV_PATH)){
-    fs.writeFileSync(
-      CSV_PATH,
-      'created_at_utc,channel,recipient,query,target_price_cents,page_url,created_client_at\n',
-      'utf8'
-    );
-  }
-}
-
-// page (static file)
-router.get('/insights', (_req, res) => {
+// Serve the Insights page
+router.get('/insights', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'insights', 'index.html'));
 });
 
-// api to save alerts
+// PriceAlert API - writes one row to alerts.csv
 router.post('/api/alerts', (req, res) => {
   try {
-    ensureDataFile();
+    const {
+      channel,
+      recipient,
+      query,
+      target_price_cents,
+      page_url,
+      created_client_at
+    } = req.body || {};
 
-    const { channel, recipient, query, target_price_cents, page_url, created_client_at } = req.body || {};
-
-    if (!recipient || !query || !(Number.isInteger(target_price_cents) && target_price_cents > 0)){
-      return res.status(400).json({ error: 'invalid_input' });
+    if (!recipient || !query || !target_price_cents) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const row = [
-      new Date().toISOString(),
-      (channel || '').replace(/[\n\r,]/g,' ').trim(),
-      (recipient || '').replace(/[\n\r,]/g,' ').trim(),
-      (query || '').replace(/[\n\r,]/g,' ').trim(),
-      String(target_price_cents),
-      (page_url || '').replace(/[\n\r,]/g,' ').trim(),
-      (created_client_at || '').replace(/[\n\r,]/g,' ').trim()
-    ].join(',') + '\n';
+    const now = new Date().toISOString();
 
-    fs.appendFileSync(CSV_PATH, row, 'utf8');
-    return res.json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ error: 'server_error' });
+    const csvRow = [
+      now,
+      channel || '',
+      recipient || '',
+      query || '',
+      target_price_cents || '',
+      page_url || '',
+      created_client_at || ''
+    ]
+      .map(v => `"${String(v).replace(/"/g, '""')}"`)
+      .join(',') + '\n';
+
+    // This will create alerts.csv if it does not exist
+    fs.appendFileSync(alertsCsvPath, csvRow, 'utf8');
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error saving alert', err);
+    res.status(500).json({ error: 'Internal error' });
   }
 });
 
