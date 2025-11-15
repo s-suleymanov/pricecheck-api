@@ -8,6 +8,7 @@ const router = express.Router();
 // Only handle alerts.csv here
 const dataDir       = path.join(__dirname, '..', 'data');
 const alertsCsvPath = path.join(dataDir, 'alerts.csv');
+const insightsPath  = path.join(dataDir, 'insights.json');
 
 // Make sure data directory exists on local and Render
 if (!fs.existsSync(dataDir)) {
@@ -68,6 +69,25 @@ router.get('/api/alerts/debug-raw', (req, res) => {
     }
     res.type('text/plain').send(data || 'Empty alerts.csv');
   });
+});
+
+function loadInsights(){
+  try {
+    if (fs.existsSync(insightsPath)) {
+      const raw = fs.readFileSync(insightsPath, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err) {
+    console.error('Error reading insights.json', err);
+  }
+  // Fallback so UI does not break
+  return [];
+}
+
+router.get('/api/insights/posts', (req, res) => {
+  const posts = loadInsights();
+  res.json(posts);
 });
 
 module.exports = router;

@@ -133,7 +133,7 @@
   // Load posts.json and render
   async function loadLibrary(){
     try{
-      const res = await fetch('/insights/library/posts.json', { cache:'no-cache' });
+      const res = await fetch('/api/insights/posts', { cache:'no-cache' });
       if(!res.ok) throw new Error('manifest load failed');
       state.posts = await res.json();
       renderLibrary();
