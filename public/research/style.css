@@ -1,0 +1,33 @@
+ .wrap{max-width:1250px;padding:30px 24px 80px;margin:0 auto}
+    h1{font-size:clamp(34px,6vw,56px);font-weight:500;letter-spacing:-.01em;margin:10px 0 16px}
+    h2{font-size:clamp(22px,3.5vw,30px);font-weight:600;margin:24px 0 12px}
+    h3{font-size:clamp(18px,2.8vw,22px);font-weight:600;margin:12px 0 8px}
+    .grid{display:grid;gap:22px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .grid-4{grid-template-columns:repeat(4,1fr)}
+    .card{background:#f9fafb;border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+    .kpi .big{font-size:clamp(22px,4.5vw,32px);font-weight:700}
+    .kpi .small{color:#6b7280;font-size:.95rem}
+    .table{width:100%;border-collapse:collapse;font-size:1.02rem}
+    .table th,.table td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;vertical-align:top}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem}
+    .note{color:#6b7280;font-size:.96rem}
+    .badge{display:inline-block;font-size:.82rem;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:#fff}
+    .ok{color:#065f46;background:#ecfdf5;border-color:#a7f3d0}
+    .warn{color:#92400e;background:#fffbeb;border-color:#fde68a}
+    .muted{color:#6b7280}
+    .tape{display:flex;gap:18px;overflow-x:auto;padding:8px;border:1px solid var(--line);border-radius:12px;background:#fff;position: sticky;top:100px}
+    .ticker{white-space:nowrap;font-size:0.98rem}
+    .gain{color:#065f46}
+    .lose{color:#92400e}
+    .btn:hover{color: white;background-color: black;}
+    .search{display:flex;gap:8px;align-items:center}
+    .search input{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:1rem}
+    .heat{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+    .heat .cell{border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
+    .hot{background:#ecfdf5}
+    .cold{background:#fffbeb}
+    @media (max-width:1100px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.heat{grid-template-columns:repeat(3,1fr)}}

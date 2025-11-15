@@ -7,6 +7,8 @@
   <meta name="description" content="PriceCheck Market Insight: real-time consumer signals like Buy or Wait, Doorbuster Reality Check, pattern watch, and total cost math.">
   <link rel="icon" type="image/png" href="../logo/logo.png">
   <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="/insights/insights.js" defer></script>
 
   <!-- Open Graph / Twitter -->
   <meta property="og:title" content="PriceCheck Market Insights">
@@ -14,95 +16,8 @@
   <meta property="og:type" content="website">
   <meta property="og:image" content="../logo/og-cover.png">
   <meta name="twitter:card" content="summary_large_image">
-
-  <style>
-    :root{
-      --surface:#f9fafb;        /* section surface */
-      --surface-2:#f3f4f6;      /* tape + tracks */
-      --ink:#111;
-      --muted:#6b7280;
-      --line:#eaecef;
-      --accent-a:#32c1b1;
-      --accent-b:#5c7cff;
-    }
-
-    .sticky-cta .ins-card {
-        margin-bottom: 16px;
-    }
-
-    /* Page */
-    body{overflow-x:hidden;background:#fff;color:var(--ink)}
-    .ins-wrap{max-width:1180px;margin:0 auto;padding:30px 24px 90px}
-    h1{font-size:clamp(34px,6vw,56px);font-weight:500;letter-spacing:-.01em;margin:10px 0 16px}
-    h2{font-size:clamp(22px,3.2vw,28px);margin:0 0 10px;font-weight:600}
-    h3{font-size:clamp(18px,2.6vw,22px);margin:0 0 8px;font-weight:600}
-    p{margin:0 0 8px}
-    .ins-muted{color:var(--muted);font-size:.95rem}
-
-    /* Layout */
-    .ins-shell{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:28px;align-items:start}
-    @media (max-width:1100px){.ins-shell{grid-template-columns:1fr}}
-
-    /* Section vs Tile cards */
-    .ins-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:0 1px 2px rgba(17,24,39,.06)}
-    .ins-card .tile{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;box-shadow:0 1px 1px rgba(17,24,39,.04)}
-    .ins-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .ins-grid3{display:grid;gap:16px}
-    @media (max-width:900px){.ins-grid2{grid-template-columns:1fr}}
-
-    /* Controls bar */
-    .ins-controls{position:sticky;top:100px;z-index:5;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;box-shadow:0 1px 2px rgba(17,24,39,.06);margin-bottom:18px}
-    .ins-controls__left{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .ins-pills{display:flex;gap:8px;flex-wrap:wrap}
-    .ins-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:14px;background:#fff;cursor:pointer;user-select:none}
-    .ins-pill[aria-pressed="true"]{background:#111;color:#fff;border-color:#111}
-    .ins-search{min-width:260px;display:flex;gap:8px;align-items:center}
-    .ins-search input,.ins-sort select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
-    .ins-sort{display:flex;gap:8px;align-items:center}
-
-    /* Tape */
-    .ins-tape{display:flex;gap:18px;overflow-x:auto;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);scroll-snap-type:x mandatory}
-    .ins-tape__item{white-space:nowrap;font-size:.98rem;scroll-snap-align:start}
-
-    /* Tables */
-    .ins-table{width:100%;border-collapse:collapse}
-    .ins-table th,.ins-table td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;vertical-align:top}
-
-    /* Badges */
-    .badge{display:inline-block;font-size:.82rem;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:#fff}
-    .ok{color:#065f46;background:#ecfdf5;border-color:#a7f3d0}
-    .warn{color:#92400e;background:#fffbeb;border-color:#fde68a}
-    .info{color:#1e3a8a;background:#eff6ff;border-color:#bfdbfe}
-
-    /* Meter */
-    .meter{display:inline-grid;grid-template-columns:repeat(5,1fr);gap:3px;align-items:center}
-    .meter span{display:block;height:10px;background:#e5e7eb;border-radius:3px}
-    .meter span.active{background:linear-gradient(90deg,var(--accent-a),var(--accent-b))}
-
-    /* Sidebar */
-    aside .pc-points{padding-left:0;list-style:none;margin:6px 0 0}
-    aside .pc-points li{position:relative;font-size:15px;line-height:1.45;margin:8px 0;padding-left:16px}
-    aside .pc-points li::before{content:"";position:absolute;left:6px;top:.66em;width:5px;height:5px;border-radius:999px;background:#9ca3af}
-    .bars{display:grid;gap:8px}
-    .bar{display:grid;grid-template-columns:110px 1fr 50px;align-items:center;gap:8px}
-    .track{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
-    .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent-a),var(--accent-b))}
-    .sticky-cta{position:sticky;top:96px}
-
-    /* Library cards click + hover */
-    .ci-post{cursor:pointer}
-    .ci-post:hover{background:#fff}
-
-    /* Calculator */
-    .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .calc-grid input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}
-    .calc-total{font-size:22px;font-weight:700}
-
-    /* Small interactions */
-    button:hover{background:#f9fafb}
-    #alertQuery,#alertTarget{border-radius:999px;padding:8px 12px;border:1px solid var(--line);background:#fff}
-  </style>
 </head>
+
 <body>
   <!-- Header -->
   <header class="nav">
@@ -111,7 +26,7 @@
         <img src="../logo/logo.png" alt="PriceCheck logo" class="logo">
         <div class="brand">
           <span class="wordmark">PriceCheck</span>
-          <span class="edition">0.8.4 Beta</span>
+          <span class="edition">0.8.5 Beta</span>
         </div>
       </div>
       <nav class="links" aria-label="Primary">
@@ -174,38 +89,7 @@
         <button class="ins-pill type-pill" data-type="blogs">Blogs</button>
       </div>
 
-      <div class="ins-grid2" id="libraryGrid">
-        <article class="tile ci-post" data-type="research" role="button" tabindex="0">
-          <h3>Holiday Price Scoreboard</h3>
-          <p class="ins-muted">Cheapest share and deal integrity by category.</p>
-          <div class="ins-meta"><span>Research</span><span> • 9 min</span></div>
-        </article>
-        <article class="tile ci-post" data-type="guides" role="button" tabindex="0">
-          <h3>Best time to buy AirPods Pro 2</h3>
-          <p class="ins-muted">Seasonality patterns and alert set up.</p>
-          <div class="ins-meta"><span>Guide</span><span> • 6 min</span></div>
-        </article>
-        <article class="tile ci-post" data-type="news" role="button" tabindex="0">
-          <h3>MX Master 3S weekend dips</h3>
-          <p class="ins-muted">Repeatable 20 percent pattern at Target.</p>
-          <div class="ins-meta"><span>News</span><span> • 3 min</span></div>
-        </article>
-        <article class="tile ci-post" data-type="data" role="button" tabindex="0">
-          <h3>Headphones Q4 sample CSV</h3>
-          <p class="ins-muted">UPC, SKU, price, observed at.</p>
-          <div class="ins-meta"><span>Dataset</span></div>
-        </article>
-        <article class="tile ci-post" data-type="markets" role="button" tabindex="0">
-          <h3>Retailer leaderboard</h3>
-          <p class="ins-muted">Cheapest share by category this week.</p>
-          <div class="ins-meta"><span>Markets</span></div>
-        </article>
-        <article class="tile ci-post" data-type="blogs" role="button" tabindex="0">
-          <h3>How we validate strike prices</h3>
-          <p class="ins-muted">Short read on method choices.</p>
-          <div class="ins-meta"><span>Blog</span><span> • Docs</span></div>
-        </article>
-      </div>
+      <div class="ins-grid2" id="libraryGrid"></div>
     </section>
 
     <section class="ins-shell">
@@ -329,16 +213,20 @@
             <p class="ins-muted" style="margin-top:8px">From today sample. See Research for method.</p>
           </section>
 
-          <section class="ins-card">
-            <h3>PriceAlert</h3>
-            <p class="ins-muted">Create a target price alert. We will email you when it hits.</p>
-            <div class="ins-grid3">
-              <input id="alertQuery" type="text" placeholder="Product or UPC">
-              <input id="alertTarget" type="number" inputmode="decimal" placeholder="Target price">
-            </div>
-            <button class="ins-pill" id="buildAlert" style="margin-top:10px">Build alert email</button>
-            <p class="ins-muted" id="alertResult" style="margin-top:8px"></p>
-          </section>
+        <section class="ins-card">
+          <h3>PriceAlert</h3>
+          <p class="ins-muted">Create a target price alert. We will email or message you when it hits.</p>
+
+          <div class="ins-grid3">
+            <textarea class="ins-grid3-txt" id="alertEmail" rows="1" placeholder="Email or Phone Number" autocomplete="email"></textarea>
+            <input class="ins-grid3-txt" id="alertQuery" type="text" placeholder="Product or UPC" autocomplete="off">
+            <input class="ins-grid3-txt" id="alertTarget" type="number" inputmode="decimal" placeholder="Target Price">
+          </div>
+
+          <button class="ins-pill" id="saveAlert" style="margin-top:10px">Save alert</button>
+          <p class="ins-muted" id="alertResult" style="margin-top:8px"></p>
+        </section>
+
 
           <section class="ins-card">
             <h3>Definitions</h3>
@@ -353,138 +241,5 @@
       </aside>
     </section>
   </main>
-
-  <footer style="max-width:1180px;margin:40px auto 70px;padding:0 24px;color:var(--muted);font-size:.95rem">
-    <span id="lastUpdated">Updated just now</span>
-  </footer>
-
-  <script>
-    (function(){
-      const $ = (s, ctx=document) => ctx.querySelector(s);
-      const $$ = (s, ctx=document) => Array.from(ctx.querySelectorAll(s));
-
-      // URL state
-      const params = new URLSearchParams(location.search);
-      const state = {
-        topic: params.get('topic') || 'all',
-        q: params.get('q') || '',
-        range: params.get('range') || 'today',
-        type: params.get('type') || 'all'
-      };
-      const updateURL = () => {
-        const p = new URLSearchParams();
-        if(state.topic !== 'all') p.set('topic', state.topic);
-        if(state.q) p.set('q', state.q);
-        if(state.range !== 'today') p.set('range', state.range);
-        if(state.type !== 'all') p.set('type', state.type);
-        const qs = p.toString();
-        history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
-      };
-
-      // Topic pills
-      const topicBtns = $$('.topic');
-      function setTopic(t){
-        state.topic = t; updateURL();
-        topicBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.topic===t ? 'true' : 'false'));
-        filterTables(); filterLibrary();
-      }
-      topicBtns.forEach(b => b.addEventListener('click', () => setTopic(b.dataset.topic)));
-
-      // Type pills
-      const typePills = $$('.type-pill');
-      function setType(t){
-        state.type = t; updateURL();
-        typePills.forEach(b => b.setAttribute('aria-pressed', b.dataset.type===t ? 'true' : 'false'));
-        filterLibrary();
-      }
-      typePills.forEach(b => b.addEventListener('click', () => setType(b.dataset.type)));
-
-      // Search and range
-      const qInput = $('#q');
-      const rangeSel = $('#range');
-      qInput.value = state.q;
-      rangeSel.value = state.range;
-
-      qInput.addEventListener('input', ()=>{
-        state.q = qInput.value.trim();
-        updateURL(); filterTables(); filterLibrary();
-      });
-
-      rangeSel.addEventListener('change', ()=>{
-        state.range = rangeSel.value;
-        updateURL(); // hook into data feed later
-      });
-
-      // Filters
-      function filterTables(){
-        const term = state.q.toLowerCase();
-        ['#buywait','#doorbuster'].forEach(id => {
-          $$(id+' tbody tr').forEach(tr => {
-            const topicOk = state.topic==='all' || (tr.dataset.topic||'').toLowerCase().includes(state.topic);
-            const text = tr.textContent.toLowerCase();
-            const qOk = !term || text.includes(term);
-            tr.style.display = (topicOk && qOk) ? '' : 'none';
-          });
-        });
-      }
-
-      function filterLibrary(){
-        const term = state.q.toLowerCase();
-        $$('#library .ci-post').forEach(card => {
-          const typeOk = state.type==='all' || (card.dataset.type||'')===state.type;
-          const topicOk = state.topic==='all' || (card.dataset.topic||'').toLowerCase().includes(state.topic);
-          const text = card.textContent.toLowerCase();
-          const qOk = !term || text.includes(term);
-          card.style.display = (typeOk && topicOk && qOk) ? '' : 'none';
-        });
-      }
-
-      // Animate bars
-      $$('.fill').forEach(f=>{
-        const w = f.style.width;
-        f.style.width = '0%';
-        requestAnimationFrame(()=>{
-          f.style.transition = 'width .9s ease';
-          f.style.width = w;
-        });
-      });
-
-      // Calculator
-      const fmt = new Intl.NumberFormat(undefined,{style:'currency',currency:'USD'});
-      function recalc(){
-        const base = parseFloat($('#base').value || '0');
-        const coupon = parseFloat($('#coupon').value || '0');
-        const ship = parseFloat($('#ship').value || '0');
-        const tax = parseFloat($('#tax').value || '0');
-        const net = Math.max(0, base - coupon);
-        const total = net + ship + (net * (tax/100));
-        $('#total').textContent = 'All-in: ' + fmt.format(total);
-        const save = base + ship + (base*(tax/100)) - total;
-        $('#savings').textContent = save>0 ? ('You save ' + fmt.format(save)) : '';
-      }
-      ['base','coupon','ship','tax'].forEach(id => $('#'+id).addEventListener('input', recalc));
-      recalc();
-
-      // Alert builder
-      $('#buildAlert').addEventListener('click', ()=>{
-        const q = ($('#alertQuery').value||'').trim();
-        const t = ($('#alertTarget').value||'').trim();
-        if(!q || !t){ $('#alertResult').textContent = 'Enter a product or UPC and a target price.'; return; }
-        const subject = encodeURIComponent('Price alert request');
-        const body = encodeURIComponent(`Please create an alert for:\nQuery: ${q}\nTarget price: ${t}\nWindow: ${state.range}`);
-        const href = `mailto:support@pricechecktool.com?subject=${subject}&body=${body}`;
-        $('#alertResult').innerHTML = `<a href="${href}">Open email</a> to confirm your alert.`;
-      });
-
-      // Last updated
-      const dt = new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(new Date());
-      $('#lastUpdated').textContent = 'Updated ' + dt;
-
-      // Init
-      updateURL();
-      if(state.topic!=='all') setTopic(state.topic); else { filterTables(); filterLibrary(); }
-      if(state.type!=='all') setType(state.type);
-    })();
-  </script>
 </body>
 </html>

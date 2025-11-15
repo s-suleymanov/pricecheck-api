@@ -30,7 +30,7 @@ body{
 .links a.active{border-bottom:2px solid #111}
 .btn{
   display:inline-flex; align-items:center; justify-content:center; text-decoration:none;
-  border-radius:999px; padding:10px 20px; font-weight:600;
+  border-radius:999px; padding:10px 29px; font-weight:600;
   border:1px solid #111; color:#111; background:#fff;
 }
 .btn--outline:hover{background:#111; color:#fff}
@@ -57,6 +57,17 @@ body{
   padding:14px 22px; border-radius:24px; box-shadow:0 6px 24px rgba(0,0,0,.12);
 }
 .btn--lg{font-size:20px; padding:18px 28px; border-radius:30px}
+.btn--lg{
+  font-size:20px; padding:18px 28px; border-radius:30px;
+  transition: box-shadow .25s ease, transform .15s ease;
+}
+
+.btn--lg:hover,
+.btn--lg:focus-visible{
+  box-shadow:
+    0 0 0 4px rgba(255,220,120,.30),   /* even ring */
+    0 0 16px 7px rgba(255,200,80,.35); /* ambient glow */
+}
 
 .logo {
     width: 50px;
@@ -135,7 +146,7 @@ body{
 .use__grid{
   display:grid;
   grid-template-columns:repeat(3, 1fr);
-  gap:48px;
+  gap:100px;
 }
 .use__icon{
   width:60px; height:60px; display:block; margin-bottom:18px;
@@ -168,6 +179,10 @@ body{
 .say__rail{
   display:flex; gap:28px; overflow-x:auto; padding:4px;
   scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+}
+
+em {
+  font-style: normal;
 }
 .say__card{
   flex:0 0 520px; 
