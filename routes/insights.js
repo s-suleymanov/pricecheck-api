@@ -59,4 +59,15 @@ router.post('/api/alerts', (req, res) => {
   }
 });
 
+// TEMP debug route: show alerts.csv as plain text
+router.get('/api/alerts/debug-raw', (req, res) => {
+  fs.readFile(alertsCsvPath, 'utf8', (err, data) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send('No alerts file yet or cannot read.');
+    }
+    res.type('text/plain').send(data || 'Empty alerts.csv');
+  });
+});
+
 module.exports = router;
