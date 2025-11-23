@@ -1,81 +1,81 @@
 {
   "tape": [
-    { "symbol": "HEADPHONES",  "change_pct": -3.5 },
-    { "symbol": "KEYBOARDS",   "change_pct": -1.8 },
-    { "symbol": "CONSOLES",    "change_pct": 1.9 },
-    { "symbol": "SMART HOME",  "change_pct": -4.7 },
-    { "symbol": "WEARABLES",   "change_pct": -0.9 },
-    { "symbol": "MONITORS",    "change_pct": -2.4 }
+    { "symbol": "HEADPHONES",  "change_pct": -5.9 },
+    { "symbol": "KEYBOARDS",   "change_pct": -3.2 },
+    { "symbol": "CONSOLES",    "change_pct":  2.4 },
+    { "symbol": "SMART HOME",  "change_pct": -6.8 },
+    { "symbol": "WEARABLES",   "change_pct": -2.1 },
+    { "symbol": "MONITORS",    "change_pct": -4.3 }
   ],
 
   "indices": {
-    "pc100_change_pct": -1.1,
-    "electronics_change_pct": -1.9,
-    "deal_honesty_pct": 89,
-    "lowest_not_amazon_pct": 51
+    "pc100_change_pct":       -3.0,
+    "electronics_change_pct": -3.7,
+    "deal_honesty_pct":        91,
+    "lowest_not_amazon_pct":   48
   },
 
   "gainers": [
-    { "title": "Razer BlackWidow V4",   "category": "Keyboards",   "store": "target",  "change_pct": -16.3 },
-    { "title": "Sony WH-1000XM5",       "category": "Headphones",  "store": "bestbuy", "change_pct": -14.8 },
-    { "title": "Ring Doorbell 4",       "category": "Smart Home",  "store": "walmart", "change_pct": -11.4 },
-    { "title": "Logitech MX Master 3S", "category": "Peripherals", "store": "target",  "change_pct": -8.1 },
-    { "title": "Apple iPad 10th Gen",   "category": "Tablets",     "store": "amazon",  "change_pct": -7.2 }
+    { "title": "Bose QuietComfort Ultra",      "category": "Headphones",   "store": "amazon",  "change_pct": -18.7 },
+    { "title": "Logitech G Pro X TKL",         "category": "Keyboards",    "store": "bestbuy", "change_pct": -15.4 },
+    { "title": "Nintendo Switch OLED Bundle",  "category": "Consoles",     "store": "target",  "change_pct": -13.2 },
+    { "title": "Echo Show 8 (3rd Gen)",        "category": "Smart Home",   "store": "amazon",  "change_pct": -12.5 },
+    { "title": "Samsung Odyssey G7 32\"",      "category": "Monitors",     "store": "walmart", "change_pct": -10.1 }
   ],
 
   "losers": [
-    { "title": "PS5 Slim",              "category": "Consoles",    "store": "walmart", "change_pct": 5.1 },
-    { "title": "Apple Watch Series 10", "category": "Wearables",   "store": "bestbuy", "change_pct": 4.5 },
-    { "title": "GoPro Hero 12",         "category": "Cameras",     "store": "amazon",  "change_pct": 3.8 },
-    { "title": "Kindle Paperwhite",     "category": "Tablets",     "store": "amazon",  "change_pct": 2.7 },
-    { "title": "Oculus Quest 3",        "category": "VR",          "store": "target",  "change_pct": 2.1 }
+    { "title": "PS5 Slim Digital",             "category": "Consoles",     "store": "amazon",  "change_pct":  4.3 },
+    { "title": "Apple Watch Series 10 LTE",    "category": "Wearables",    "store": "target",  "change_pct":  3.9 },
+    { "title": "Meta Quest 3 512GB",           "category": "VR",           "store": "bestbuy", "change_pct":  3.2 },
+    { "title": "Canon EOS R50 Kit",           "category": "Cameras",      "store": "walmart", "change_pct":  2.6 },
+    { "title": "Kindle Scribe 64GB",          "category": "Tablets",      "store": "amazon",  "change_pct":  2.0 }
   ],
 
   "heatmap": [
-    { "category": "Headphones",  "change_pct": -3.5 },
-    { "category": "Keyboards",   "change_pct": -1.8 },
-    { "category": "Monitors",    "change_pct": -2.4 },
-    { "category": "Consoles",    "change_pct": 1.9 },
-    { "category": "Smart Home",  "change_pct": -4.7 },
-    { "category": "Cameras",     "change_pct": -1.2 },
-    { "category": "Laptops",     "change_pct": -3.1 },
-    { "category": "Storage",     "change_pct": -4.1 },
-    { "category": "Wearables",   "change_pct": -0.9 },
-    { "category": "Accessories", "change_pct": -0.7 },
-    { "category": "Printers",    "change_pct": -0.2 },
-    { "category": "Routers",     "change_pct": -0.6 }
+    { "category": "Headphones",  "change_pct": -5.9 },
+    { "category": "Keyboards",   "change_pct": -3.2 },
+    { "category": "Monitors",    "change_pct": -4.3 },
+    { "category": "Consoles",    "change_pct":  2.4 },
+    { "category": "Smart Home",  "change_pct": -6.8 },
+    { "category": "Cameras",     "change_pct": -2.0 },
+    { "category": "Laptops",     "change_pct": -3.9 },
+    { "category": "Storage",     "change_pct": -4.7 },
+    { "category": "Wearables",   "change_pct": -2.1 },
+    { "category": "Accessories", "change_pct": -1.3 },
+    { "category": "Printers",    "change_pct": -0.8 },
+    { "category": "Routers",     "change_pct": -1.1 }
   ],
 
   "share": [
     {
       "category": "Headphones",
-      "lowest":    { "store": "Best Buy", "share_pct": 34 },
-      "runner_up": { "store": "Amazon",   "share_pct": 30 }
+      "lowest":    { "store": "Best Buy", "share_pct": 33 },
+      "runner_up": { "store": "Amazon",   "share_pct": 31 }
     },
     {
       "category": "Keyboards",
-      "lowest":    { "store": "Amazon",   "share_pct": 38 },
-      "runner_up": { "store": "Target",   "share_pct": 29 }
-    },
-    {
-      "category": "Monitors",
-      "lowest":    { "store": "Walmart",  "share_pct": 31 },
-      "runner_up": { "store": "Best Buy", "share_pct": 30 }
-    },
-    {
-      "category": "Smart Home",
-      "lowest":    { "store": "Walmart",  "share_pct": 37 },
-      "runner_up": { "store": "Amazon",   "share_pct": 32 }
-    },
-    {
-      "category": "Wearables",
-      "lowest":    { "store": "Best Buy", "share_pct": 30 },
+      "lowest":    { "store": "Amazon",   "share_pct": 36 },
       "runner_up": { "store": "Target",   "share_pct": 30 }
     },
     {
+      "category": "Monitors",
+      "lowest":    { "store": "Walmart",  "share_pct": 32 },
+      "runner_up": { "store": "Best Buy", "share_pct": 29 }
+    },
+    {
+      "category": "Smart Home",
+      "lowest":    { "store": "Amazon",   "share_pct": 35 },
+      "runner_up": { "store": "Walmart",  "share_pct": 34 }
+    },
+    {
+      "category": "Wearables",
+      "lowest":    { "store": "Best Buy", "share_pct": 31 },
+      "runner_up": { "store": "Target",   "share_pct": 29 }
+    },
+    {
       "category": "Storage",
-      "lowest":    { "store": "Amazon",   "share_pct": 44 },
-      "runner_up": { "store": "Best Buy", "share_pct": 27 }
+      "lowest":    { "store": "Amazon",   "share_pct": 43 },
+      "runner_up": { "store": "Best Buy", "share_pct": 28 }
     }
   ]
 }
