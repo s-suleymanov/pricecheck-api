@@ -214,6 +214,66 @@ em {
   line-height: 1.2;
 }
 
+.pc-footer{
+  border-top:1px solid var(--line);
+  background:#083d33;
+  color:rgb(214, 214, 214);
+  font-size:14px;
+}
+
+.pc-footer .pc-wrap{
+  padding:26px 24px 32px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px 32px;
+}
+
+/* Main description */
+.pc-footer p:first-child{
+  margin:0;
+  flex:1 1 260px;
+  max-width:720px;
+  color:rgb(214, 214, 214);
+  line-height:1.5;
+}
+
+/* Link row */
+.pc-footer p:not(:first-child){
+  margin:0;
+  flex:0 0 auto;
+  font-weight:500;
+}
+
+.pc-footer a{
+  color:#e5e7eb;
+  text-decoration:none;
+  opacity:0.85;
+  transition:opacity .15s ease, color .15s ease;
+}
+
+.pc-footer a:hover,
+.pc-footer a:focus-visible{
+  opacity:1;
+  color:var(--paper);
+}
+
+/* Mobile stack */
+@media (max-width:720px){
+  .pc-footer .pc-wrap{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .pc-footer p:not(:first-child){
+    display:inline-flex;
+    gap:14px;
+  }
+}
+
+
 @media (min-width:1100px){
   .say__rail{
     display:grid; grid-template-columns:repeat(4, 1fr); gap:32px; overflow:visible;

@@ -1,0 +1,70 @@
+.partners .pc-wrap{
+  max-width:1180px;
+}
+
+.partners__title{
+  font-size:clamp(30px, 4.8vw, 40px);
+  line-height:1.1;
+  letter-spacing:-.01em;
+  margin:0 0 10px;
+  text-align:left;
+}
+
+.partners__sub{
+  margin:0 0 40px;
+  max-width:720px;
+  color:var(--muted);
+  font-size:16px;
+  line-height:1.5;
+}
+
+.partners__grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:26px;
+}
+
+.partner-card{
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:22px;
+  padding:22px 20px 20px;
+  box-shadow:0 10px 30px rgba(15,23,42,.05);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.partner-card__logo{
+  width:120px;
+  height:40px;
+  object-fit:contain;
+  filter:grayscale(0.1);
+}
+
+.partner-card__name{
+  margin:0;
+  font-size:18px;
+  font-weight:600;
+  letter-spacing:-.01em;
+}
+
+.partner-card__text{
+  margin:0;
+  color:#4b5563;
+  font-size:15px;
+  line-height:1.5;
+}
+
+/* Partners responsive */
+@media (max-width:980px){
+  .partners__grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media (max-width:640px){
+  .partners__grid{
+    grid-template-columns:1fr;
+  }
+}
