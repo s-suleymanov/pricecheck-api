@@ -150,7 +150,6 @@ body{
 }
 .use__icon{
   width:70px; height:70px; display:block; margin-bottom:18px;
-  background: radial-gradient(closest-side, #eef1ff, #ffffff);
   padding:8px; object-fit:contain;
 }
 .use__h3{
