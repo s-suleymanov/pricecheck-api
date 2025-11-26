@@ -105,27 +105,33 @@ async function resolveKey(client, rawKey){
   return null;
 }
 
-// latest offers
-async function getLatestOffers(client, keyInfo){
-  const { asin, upc } = keyInfo;
-  const offers = [];
+  // latest offers
+  async function getLatestOffers(client, keyInfo){
+    const { asin, upc } = keyInfo;
+    const offers = [];
 
-  // Amazon via asins
+ // Amazon via asins
   if (asin || upc){
     const rA = await client.query(
-      `select a.asin, a.current_price_cents, a.current_price_observed_at
-       from asins a
-       where ($1::text is not null and upper(btrim(a.asin)) = upper(btrim($1)))
+      `select a.asin,
+              a.variant_label,
+              a.current_price_cents,
+              a.current_price_observed_at
+        from asins a
+        where ($1::text is not null and upper(btrim(a.asin)) = upper(btrim($1)))
           or ($2::text is not null and norm_upc(a.upc) = norm_upc($2))
-       order by a.current_price_observed_at desc nulls last
-       limit 1`, [asin, upc]
+        order by a.current_price_observed_at desc nulls last
+        limit 1`,
+      [asin, upc]
     );
     if (rA.rowCount){
       const row = rA.rows[0];
       offers.push({
         store: 'amazon',
         store_sku: row.asin,
-        url: null, title: null,
+        url: null,
+        title: null,
+        variant_label: row.variant_label || null,
         price_cents: row.current_price_cents ?? null,
         observed_at: row.current_price_observed_at ?? null
       });
@@ -135,9 +141,15 @@ async function getLatestOffers(client, keyInfo){
   // other stores via listings
   if (upc){
     const rL = await client.query(
-      `select store, store_sku, url, current_price_cents, current_price_observed_at
-       from listings
-       where norm_upc(upc) = norm_upc($1)`, [upc]
+      `select store,
+              store_sku,
+              url,
+              variant_label,
+              current_price_cents,
+              current_price_observed_at
+        from listings
+        where norm_upc(upc) = norm_upc($1)`,
+      [upc]
     );
     for (const row of rL.rows){
       offers.push({
@@ -145,6 +157,7 @@ async function getLatestOffers(client, keyInfo){
         store_sku: row.store_sku,
         url: row.url,
         title: null,
+        variant_label: row.variant_label || null,
         price_cents: row.current_price_cents,
         observed_at: row.current_price_observed_at
       });
