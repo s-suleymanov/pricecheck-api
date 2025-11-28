@@ -96,13 +96,19 @@
   }
 
   function keyFromInput(text){
-    if(!text) return null;
-    const am = text.match(/amazon\.com\/.+\/dp\/(\w{10})/i); if(am) return `asin:${am[1]}`;
-    const tg = text.match(/target\.com\/.+\/(?:-|A-)?(\d{8})/i); if(tg) return `tcin:${tg[1]}`;
-    const bb = text.match(/bestbuy\.com\/.+\/(\d{6,8})/i); if(bb) return `bby:${bb[1]}`;
-    const wm = text.match(/walmart\.com\/.+\/(\d{6,12})/i); if(wm) return `wal:${wm[1]}`;
-    if(/^\d{12}$/.test(text)) return `upc:${text}`;
-    if(/^\w{10}$/.test(text))  return `asin:${text}`;
+    if (!text) return null;
+    const am =
+      text.match(/\/dp\/([A-Z0-9]{10})/i) ||
+      text.match(/\/gp\/product\/([A-Z0-9]{10})/i);
+    if (am) return `asin:${am[1].toUpperCase()}`;
+
+    const tg = text.match(/target\.com\/.+\/(?:-|A-)?(\d{8})/i); if (tg) return `tcin:${tg[1]}`;
+    const bb = text.match(/bestbuy\.com\/.+\/(\d{6,8})/i);      if (bb) return `bby:${bb[1]}`;
+    const wm = text.match(/walmart\.com\/.+\/(\d{6,12})/i);     if (wm) return `wal:${wm[1]}`;
+
+    if (/^\d{12}$/.test(text)) return `upc:${text}`;
+    if (/^\w{10}$/.test(text))  return `asin:${text}`;
+
     return text;
   }
 
