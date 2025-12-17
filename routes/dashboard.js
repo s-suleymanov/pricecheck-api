@@ -6,124 +6,185 @@ const pool = require('../db');
 
 // helpers
 function isLikelyUPC(s){ return /^[0-9\s-]+$/.test(s || ''); }
+function isLikelyPcCode(s){
+  // allow pc_code like PC-000123, AIRPODS-PRO-2-USBC, etc
+  return /^[a-z0-9][a-z0-9_-]{2,}$/i.test(String(s || '').trim());
+}
 function normalizePrefix(raw){
   const s = String(raw || '').trim();
   const i = s.indexOf(':');
   if (i === -1) return { prefix: null, val: s };
   return { prefix: s.slice(0, i).toLowerCase(), val: s.slice(i + 1).trim() };
 }
-function normStoreName(s){ const k = String(s||'').trim().toLowerCase(); return k === 'best buy' ? 'bestbuy' : k; }
+function normStoreName(s){
+  const k = String(s || '').trim().toLowerCase();
+  return k === 'best buy' ? 'bestbuy' : k;
+}
 
 // key resolution
 async function resolveKey(client, rawKey){
   const { prefix, val } = normalizePrefix(rawKey);
   const key = val;
 
-  const findIdentity = async (asin, upc) => {
+  const findIdentity = async (asin, upc, pc_code) => {
     const r = await client.query(
-      `select asin, upc, model_name, model_number, brand, category
+      `select asin, upc, pc_code, model_name, model_number, brand, category, image_url
          from asins
         where (($1::text is not null and upper(btrim(asin)) = upper(btrim($1)))
-            or ($2::text is not null and norm_upc(upc) = norm_upc($2)))
+            or ($2::text is not null and norm_upc(upc) = norm_upc($2))
+            or ($3::text is not null and upper(btrim(pc_code)) = upper(btrim($3))))
         order by current_price_observed_at desc nulls last, created_at desc
         limit 1`,
-      [asin, upc]
+      [asin, upc, pc_code]
     );
-    return r.rowCount ? r.rows[0] : (asin || upc ? { asin, upc } : null);
+    return r.rowCount ? r.rows[0] : ((asin || upc || pc_code) ? { asin, upc, pc_code } : null);
   };
 
   const findByAsin = async (asin) => {
     const r = await client.query(
-      `select asin, upc from asins where upper(btrim(asin)) = upper(btrim($1)) limit 1`, [asin]
+      `select asin, upc, pc_code
+         from asins
+        where upper(btrim(asin)) = upper(btrim($1))
+        order by current_price_observed_at desc nulls last, created_at desc
+        limit 1`,
+      [asin]
     );
     return r.rowCount ? r.rows[0] : null;
   };
 
   const findByUpc = async (upcInput) => {
     let r = await client.query(
-      `select asin, upc from asins where norm_upc(upc) = norm_upc($1) limit 1`, [upcInput]
+      `select asin, upc, pc_code
+         from asins
+        where norm_upc(upc) = norm_upc($1)
+        order by current_price_observed_at desc nulls last, created_at desc
+        limit 1`,
+      [upcInput]
     );
     if (r.rowCount) return r.rows[0];
 
     r = await client.query(
-      `select upc from listings
-       where norm_upc(upc) = norm_upc($1)
-       order by current_price_observed_at desc nulls last
-       limit 1`, [upcInput]
+      `select upc
+         from listings
+        where norm_upc(upc) = norm_upc($1)
+        order by current_price_observed_at desc nulls last, created_at desc
+        limit 1`,
+      [upcInput]
     );
-    if (r.rowCount) return { asin: null, upc: r.rows[0].upc };
+    if (r.rowCount) return { asin: null, upc: r.rows[0].upc, pc_code: null };
 
     return null;
   };
 
+  const findByPcCode = async (pc) => {
+    const r = await client.query(
+      `select asin, upc, pc_code
+         from asins
+        where upper(btrim(pc_code)) = upper(btrim($1))
+        order by current_price_observed_at desc nulls last, created_at desc
+        limit 1`,
+      [pc]
+    );
+    if (r.rowCount) return r.rows[0];
+
+    // fallback: maybe only exists in listings (ex: Apple-only initially)
+    const r2 = await client.query(
+      `select pc_code
+         from listings
+        where upper(btrim(pc_code)) = upper(btrim($1))
+        order by current_price_observed_at desc nulls last, created_at desc
+        limit 1`,
+      [pc]
+    );
+    return r2.rowCount ? { asin: null, upc: null, pc_code: r2.rows[0].pc_code } : null;
+  };
+
   const findUpcByStoreSku = async (store, sku) => {
-    let r = await client.query(
-      `select upc from listings
-       where lower(btrim(store)) = lower(btrim($1))
-         and norm_sku(store_sku) = norm_sku($2)
-       order by current_price_observed_at desc nulls last
-       limit 1`, [store, sku]
+    const r = await client.query(
+      `select upc
+         from listings
+        where lower(btrim(store)) = lower(btrim($1))
+          and norm_sku(store_sku) = norm_sku($2)
+        order by current_price_observed_at desc nulls last, created_at desc
+        limit 1`,
+      [store, sku]
     );
     return r.rowCount ? r.rows[0].upc : null;
   };
 
   // explicit prefixes
-  if (prefix === 'asin') {
+  if (prefix === 'asin'){
     const row = await findByAsin(key);
-    return row ? await findIdentity(row.asin, row.upc) : null;
+    return row ? await findIdentity(row.asin, row.upc, row.pc_code) : null;
   }
-  if (prefix === 'upc')  {
+  if (prefix === 'upc'){
     const row = await findByUpc(key);
-    return row ? await findIdentity(row.asin, row.upc) : null;
+    return row ? await findIdentity(row.asin, row.upc, row.pc_code) : null;
   }
-  if (prefix === 'bby' || prefix === 'bestbuy' || prefix === 'sku') {
+  if (prefix === 'pc' || prefix === 'pc_code' || prefix === 'pccode'){
+    const row = await findByPcCode(key);
+    return row ? await findIdentity(row.asin, row.upc, row.pc_code) : null;
+  }
+
+  if (prefix === 'bby' || prefix === 'bestbuy' || prefix === 'sku'){
     const upc = await findUpcByStoreSku('bestbuy', key);
-    return upc ? await findIdentity(null, upc) : null;
+    return upc ? await findIdentity(null, upc, null) : null;
   }
-  if (prefix === 'walmart' || prefix === 'wal') {
+  if (prefix === 'walmart' || prefix === 'wal'){
     const upc = await findUpcByStoreSku('walmart', key);
-    return upc ? await findIdentity(null, upc) : null;
+    return upc ? await findIdentity(null, upc, null) : null;
   }
-  if (prefix === 'target' || prefix === 'tcin') {
+  if (prefix === 'target' || prefix === 'tcin'){
     const upc = await findUpcByStoreSku('target', key);
-    return upc ? await findIdentity(null, upc) : null;
+    return upc ? await findIdentity(null, upc, null) : null;
   }
 
-  // no prefix
+  // no prefix: try ASIN
   let row = await findByAsin(key);
-  if (row) return await findIdentity(row.asin, row.upc);
+  if (row) return await findIdentity(row.asin, row.upc, row.pc_code);
 
-  if (isLikelyUPC(key)) {
+  // no prefix: try UPC
+  if (isLikelyUPC(key)){
     row = await findByUpc(key);
-    if (row) return await findIdentity(row.asin, row.upc);
+    if (row) return await findIdentity(row.asin, row.upc, row.pc_code);
   }
 
+  // no prefix: try pc_code
+  if (isLikelyPcCode(key)){
+    row = await findByPcCode(key);
+    if (row) return await findIdentity(row.asin, row.upc, row.pc_code);
+  }
+
+  // no prefix: try store_sku for known stores -> resolve to UPC -> identity
   for (const st of ['bestbuy','walmart','target']){
     const upc = await findUpcByStoreSku(st, key);
-    if (upc) return await findIdentity(null, upc);
+    if (upc) return await findIdentity(null, upc, null);
   }
+
   return null;
 }
 
-  // latest offers
-  async function getLatestOffers(client, keyInfo){
-    const { asin, upc } = keyInfo;
-    const offers = [];
+// latest offers
+async function getLatestOffers(client, keyInfo){
+  const { asin, upc, pc_code } = keyInfo;
+  const offers = [];
 
- // Amazon via asins
-  if (asin || upc){
+  // Amazon via asins
+  if (asin || upc || pc_code){
     const rA = await client.query(
       `select a.asin,
               a.variant_label,
               a.current_price_cents,
               a.current_price_observed_at
-        from asins a
+         from asins a
         where ($1::text is not null and upper(btrim(a.asin)) = upper(btrim($1)))
-          or ($2::text is not null and norm_upc(a.upc) = norm_upc($2))
-        order by a.current_price_observed_at desc nulls last
+           or ($2::text is not null and norm_upc(a.upc) = norm_upc($2))
+           or ($3::text is not null and upper(btrim(a.pc_code)) = upper(btrim($3)))
+        order by a.current_price_observed_at desc nulls last, a.created_at desc
         limit 1`,
-      [asin, upc]
+      [asin, upc, pc_code]
     );
+
     if (rA.rowCount){
       const row = rA.rows[0];
       offers.push({
@@ -138,8 +199,8 @@ async function resolveKey(client, rawKey){
     }
   }
 
-  // other stores via listings
-  if (upc){
+  // Other stores (including Apple) via listings by UPC or pc_code
+  if (upc || pc_code){
     const rL = await client.query(
       `select store,
               store_sku,
@@ -147,16 +208,18 @@ async function resolveKey(client, rawKey){
               variant_label,
               current_price_cents,
               current_price_observed_at
-        from listings
-        where norm_upc(upc) = norm_upc($1)`,
-      [upc]
+         from listings
+        where ($1::text is not null and norm_upc(upc) = norm_upc($1))
+           or ($2::text is not null and upper(btrim(pc_code)) = upper(btrim($2)))`,
+      [upc, pc_code]
     );
+
     for (const row of rL.rows){
       offers.push({
         store: normStoreName(row.store),
         store_sku: row.store_sku,
         url: row.url,
-        title: null,
+        title: row.title ?? null,
         variant_label: row.variant_label || null,
         price_cents: row.current_price_cents,
         observed_at: row.current_price_observed_at
@@ -164,70 +227,88 @@ async function resolveKey(client, rawKey){
     }
   }
 
-  // view fallback to fill gaps
-  const rV = await client.query(
-    `select store, asin, store_sku, url, title, price_cents, observed_at
-     from v_latest_price
-     where
-       ($1::text is not null and store = 'amazon' and asin = $1)
-        or
-       ($2::text is not null and store <> 'amazon' and norm_upc(store_sku) = norm_upc($2))`,
-    [asin, upc]
-  );
-  for (const row of rV.rows){
-    const st = normStoreName(row.store);
-    const existing = offers.find(o => o.store === st);
-    if (!existing || existing.price_cents == null){
-      const merged = existing || { store: st };
-      merged.store_sku = st === 'amazon' ? row.asin : row.store_sku;
-      merged.url = row.url ?? merged.url ?? null;
-      merged.title = row.title ?? merged.title ?? null;
-      merged.price_cents = merged.price_cents ?? row.price_cents ?? null;
-      merged.observed_at = merged.observed_at ?? row.observed_at ?? null;
-      if (!existing) offers.push(merged);
+  // Deduplicate by store: keep freshest observed_at, else any non-null price
+  const byStore = new Map();
+  for (const o of offers){
+    const st = o.store;
+    const existing = byStore.get(st);
+    if (!existing){
+      byStore.set(st, o);
+      continue;
+    }
+
+    const tNew = o.observed_at ? new Date(o.observed_at).getTime() : 0;
+    const tOld = existing.observed_at ? new Date(existing.observed_at).getTime() : 0;
+
+    if (tNew > tOld){
+      byStore.set(st, o);
+      continue;
+    }
+
+    if (tNew === tOld){
+      if ((existing.price_cents == null) && (o.price_cents != null)){
+        byStore.set(st, o);
+      }
     }
   }
 
-  offers.sort((a,b)=> a.store.localeCompare(b.store));
-  return offers;
+  const out = Array.from(byStore.values());
+  out.sort((a,b)=> a.store.localeCompare(b.store));
+  return out;
 }
 
-// variants: all ASIN rows that share the anchor model_number (fallback to UPC family)
+// variants: all ASIN rows that share the anchor model_number (fallback to pc_code, then UPC family)
 async function getVariants(client, keyInfo){
-  const { asin, upc } = keyInfo;
+  const { asin, upc, pc_code } = keyInfo;
 
-  // 1) find an anchor row to learn model_number
+  // 1) find an anchor row to learn grouping keys
   let anchor = null;
+
   if (asin){
     const r = await client.query(
-      `select asin, upc, model_name, model_number, brand, category
+      `select asin, upc, pc_code, model_name, model_number, brand, category, image_url
          from asins
         where upper(btrim(asin)) = upper(btrim($1))
         order by current_price_observed_at desc nulls last, created_at desc
-        limit 1`, [asin]
+        limit 1`,
+      [asin]
     );
     if (r.rowCount) anchor = r.rows[0];
   }
+
   if (!anchor && upc){
     const r = await client.query(
-      `select asin, upc, model_name, model_number, brand, category
+      `select asin, upc, pc_code, model_name, model_number, brand, category, image_url
          from asins
         where norm_upc(upc) = norm_upc($1)
         order by current_price_observed_at desc nulls last, created_at desc
-        limit 1`, [upc]
+        limit 1`,
+      [upc]
+    );
+    if (r.rowCount) anchor = r.rows[0];
+  }
+
+  if (!anchor && pc_code){
+    const r = await client.query(
+      `select asin, upc, pc_code, model_name, model_number, brand, category, image_url
+         from asins
+        where upper(btrim(pc_code)) = upper(btrim($1))
+        order by current_price_observed_at desc nulls last, created_at desc
+        limit 1`,
+      [pc_code]
     );
     if (r.rowCount) anchor = r.rows[0];
   }
 
   if (!anchor){
-    return []; // nothing to show
+    return [];
   }
 
-  // 2) prefer grouping by model_number, else by UPC
+  // 2) prefer grouping by model_number, else pc_code, else UPC
   let rows;
   if (anchor.model_number && anchor.model_number.trim() !== ''){
     rows = await client.query(
-      `select asin, variant_label, model_name, model_number, brand, category
+      `select asin, variant_label, model_name, model_number, brand, category, image_url
          from asins
         where model_number is not null
           and btrim(model_number) <> ''
@@ -236,18 +317,34 @@ async function getVariants(client, keyInfo){
           (case when variant_label is null or btrim(variant_label) = '' then 1 else 0 end),
           variant_label nulls last,
           asin
-        limit 200`, [anchor.model_number]
+        limit 200`,
+      [anchor.model_number]
     );
-  } else if (anchor.upc) {
+  } else if (anchor.pc_code && anchor.pc_code.trim() !== ''){
     rows = await client.query(
-      `select asin, variant_label, model_name, model_number, brand, category
+      `select asin, variant_label, model_name, model_number, brand, category, image_url
+         from asins
+        where pc_code is not null
+          and btrim(pc_code) <> ''
+          and upper(btrim(pc_code)) = upper(btrim($1))
+        order by
+          (case when variant_label is null or btrim(variant_label) = '' then 1 else 0 end),
+          variant_label nulls last,
+          asin
+        limit 200`,
+      [anchor.pc_code]
+    );
+  } else if (anchor.upc){
+    rows = await client.query(
+      `select asin, variant_label, model_name, model_number, brand, category, image_url
          from asins
         where norm_upc(upc) = norm_upc($1)
         order by
           (case when variant_label is null or btrim(variant_label) = '' then 1 else 0 end),
           variant_label nulls last,
           asin
-        limit 200`, [anchor.upc]
+        limit 200`,
+      [anchor.upc]
     );
   } else {
     rows = { rows: [] };
@@ -259,53 +356,47 @@ async function getVariants(client, keyInfo){
     model_name: r.model_name,
     model_number: r.model_number,
     brand: r.brand,
-    category: r.category
+    category: r.category,
+    image_url: r.image_url
   }));
 }
 
-// observation log - from asins and listings created_at and current_price_observed_at
+// observation log - from asins and listings created_at
 async function getObservations(client, keyInfo){
-  const { asin, upc } = keyInfo;
-
+  const { asin, upc, pc_code } = keyInfo;
   const rows = [];
 
-  // from asins by asin or upc
-  if (asin){
+  // from asins by asin or upc or pc_code
+  if (asin || upc || pc_code){
     const r = await client.query(
       `select created_at as t, 'amazon' as store, asin as store_sku,
               current_price_cents as price_cents, null as note
-       from asins
-       where upper(btrim(asin)) = upper(btrim($1))
-       order by created_at desc
-       limit 200`, [asin]
-    );
-    rows.push(...r.rows);
-  } else if (upc){
-    const r = await client.query(
-      `select created_at as t, 'amazon' as store, asin as store_sku,
-              current_price_cents as price_cents, null as note
-       from asins
-       where norm_upc(upc) = norm_upc($1)
-       order by created_at desc
-       limit 200`, [upc]
+         from asins
+        where ($1::text is not null and upper(btrim(asin)) = upper(btrim($1)))
+           or ($2::text is not null and norm_upc(upc) = norm_upc($2))
+           or ($3::text is not null and upper(btrim(pc_code)) = upper(btrim($3)))
+        order by created_at desc
+        limit 200`,
+      [asin, upc, pc_code]
     );
     rows.push(...r.rows);
   }
 
-  // from listings by upc
-  if (upc){
+  // from listings by upc OR pc_code (covers Apple)
+  if (upc || pc_code){
     const r = await client.query(
       `select created_at as t, lower(btrim(store)) as store, store_sku,
               current_price_cents as price_cents, null as note
-       from listings
-       where norm_upc(upc) = norm_upc($1)
-       order by created_at desc
-       limit 400`, [upc]
+         from listings
+        where ($1::text is not null and norm_upc(upc) = norm_upc($1))
+           or ($2::text is not null and upper(btrim(pc_code)) = upper(btrim($2)))
+        order by created_at desc
+        limit 400`,
+      [upc, pc_code]
     );
     rows.push(...r.rows);
   }
 
-  // normalize output
   return rows.map(r => ({
     t: r.t,
     store: normStoreName(r.store),

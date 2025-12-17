@@ -19,7 +19,7 @@
         <img src="../logo/logo.png" alt="PriceCheck logo" class="logo">
         <div class="brand">
           <span class="wordmark">PriceCheck</span>
-          <span class="edition">0.8.5 Beta</span>
+          <span class="edition">0.8.6 Beta</span>
         </div>
       </div>
       <nav class="links" aria-label="Primary">
@@ -47,7 +47,7 @@
     <!-- Controls -->
     <section class="card">
       <div class="controls">
-        <input id="query" type="search" placeholder="Paste a product URL or enter UPC, ASIN, TCIN, or SKU" aria-label="Product query">
+        <input id="query" type="search" placeholder="Paste a product URL or enter PC code, UPC, ASIN, TCIN, or SKU" aria-label="Product query">
         <button id="load" class="btn-das">Load</button>
         <button id="share" class="pill">Copy share link</button>
       </div>
@@ -58,12 +58,12 @@
           Logitech Master 3S
         </button>
         <button class="pill"
-          onclick="document.getElementById('query').value='B09BRD98T4';document.getElementById('load').click()">
-          Apple Magic Mouse
-        </button>
-        <button class="pill"
           onclick="document.getElementById('query').value='B0F5HPCLGB';document.getElementById('load').click()">
           Acer OMR266
+        </button>
+        <button class="pill"
+          onclick="document.getElementById('query').value='B0B5BFP5RJ';document.getElementById('load').click()">
+          Apple iPad Air
         </button>
       </p>
     </section>
@@ -84,7 +84,9 @@
               </div>
             </div>
             <div>
-              <img id="pImg" src="" alt="Product image" style="width:100%; max-width:340px; border-radius:12px; border:1px solid var(--line); display:none">
+              <div class="pimg-wrap">
+                <img id="pImg" src="" alt="Product image" loading="lazy" decoding="async" style="display:none">
+              </div>
             </div>
           </div>
         </section>
