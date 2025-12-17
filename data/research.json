@@ -5,14 +5,16 @@
     { "symbol": "CONSOLES",    "change_pct": -1.9 },
     { "symbol": "SMART HOME",  "change_pct": -3.8 },
     { "symbol": "WEARABLES",   "change_pct": -2.1 },
-    { "symbol": "MONITORS",    "change_pct": -3.2 }
+    { "symbol": "MONITORS",    "change_pct": -3.2 },
+    { "symbol": "PHONES",      "change_pct": -2.4 },
+    { "symbol": "TABLETS",     "change_pct": -1.6 }
   ],
 
   "indices": {
-    "pc100_change_pct":       -2.9,
-    "electronics_change_pct": -3.4,
-    "deal_honesty_pct":        84,
-    "lowest_not_amazon_pct":   59
+    "pc100_change_pct":       -3.0,
+    "electronics_change_pct": -3.5,
+    "deal_honesty_pct":        85,
+    "lowest_not_amazon_pct":   61
   },
 
   "gainers": [
@@ -20,7 +22,8 @@
     { "title": "Logitech G915 TKL Lightspeed Wireless",       "category": "Keyboards",  "store": "bestbuy", "change_pct": -23.2 },
     { "title": "PlayStation 5 Slim Spider-Man 2 Bundle",      "category": "Consoles",   "store": "walmart", "change_pct": -20.5 },
     { "title": "Google Nest Learning Thermostat (3rd Gen)",   "category": "Smart Home", "store": "target",  "change_pct": -19.1 },
-    { "title": "LG UltraGear 34\" 165Hz QHD Curved Monitor",  "category": "Monitors",   "store": "amazon",  "change_pct": -18.3 }
+    { "title": "LG UltraGear 34\" 165Hz QHD Curved Monitor",  "category": "Monitors",   "store": "amazon",  "change_pct": -18.3 },
+    { "title": "AirPods Pro (2nd Gen, USB-C)",                "category": "Headphones", "store": "apple",   "change_pct": -9.4 }
   ],
 
   "losers": [
@@ -28,7 +31,8 @@
     { "title": "Apple Watch Series 10 GPS 45mm",       "category": "Wearables", "store": "amazon",  "change_pct": 3.6 },
     { "title": "Meta Quest 3 512GB",                   "category": "VR",        "store": "bestbuy", "change_pct": 3.0 },
     { "title": "Canon EOS R50 Mirrorless Camera Kit",  "category": "Cameras",   "store": "walmart", "change_pct": 2.5 },
-    { "title": "iPad Pro 11\" M4 256GB",               "category": "Tablets",   "store": "amazon",  "change_pct": 2.0 }
+    { "title": "iPad Pro 11\" M4 256GB",               "category": "Tablets",   "store": "amazon",  "change_pct": 2.0 },
+    { "title": "iPhone 16 Pro 128GB (Unlocked)",       "category": "Phones",    "store": "apple",   "change_pct": 1.8 }
   ],
 
   "heatmap": [
@@ -43,14 +47,16 @@
     { "category": "Wearables",   "change_pct": -2.1 },
     { "category": "Accessories", "change_pct": -1.3 },
     { "category": "Printers",    "change_pct": -0.9 },
-    { "category": "Routers",     "change_pct": -1.4 }
+    { "category": "Routers",     "change_pct": -1.4 },
+    { "category": "Phones",      "change_pct": -2.4 },
+    { "category": "Tablets",     "change_pct": -1.6 }
   ],
 
   "share": [
     {
       "category": "Headphones",
-      "lowest":    { "store": "Amazon",   "share_pct": 33 },
-      "runner_up": { "store": "Best Buy", "share_pct": 34 }
+      "lowest":    { "store": "Amazon",   "share_pct": 31 },
+      "runner_up": { "store": "Best Buy", "share_pct": 33 }
     },
     {
       "category": "Keyboards",
@@ -76,6 +82,16 @@
       "category": "Storage",
       "lowest":    { "store": "Amazon",   "share_pct": 44 },
       "runner_up": { "store": "Walmart",  "share_pct": 26 }
+    },
+    {
+      "category": "Phones",
+      "lowest":    { "store": "Apple",    "share_pct": 36 },
+      "runner_up": { "store": "Amazon",   "share_pct": 28 }
+    },
+    {
+      "category": "Tablets",
+      "lowest":    { "store": "Apple",    "share_pct": 32 },
+      "runner_up": { "store": "Best Buy", "share_pct": 27 }
     }
   ]
 }
