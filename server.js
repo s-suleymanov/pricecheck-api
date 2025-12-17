@@ -15,7 +15,7 @@ app.use(require('./routes/research'));
 
 
 // health
-app.get('/healthz', (_req, res) => res.json({ ok: true }));
+app.get('/health', (_req, res) => res.json({ ok: true }));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
