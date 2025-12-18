@@ -89,7 +89,7 @@ p{margin:0 0 8px}
 /* Chart area */
 .chart{
   width:100%;height:200px;display:block;
-  background:repeating-linear-gradient(180deg,#fafafa,#fafafa 24px,#f1f5f9 25px);
+  background:var(--surface);
   border:1px dashed #eef2f7;border-radius:12px
 }
 .legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px}
@@ -112,7 +112,7 @@ tbody tr:hover{background:#fafafa}
 .links-list li{margin:8px 0}
 
 /* Details block */
-details{border:1px solid var(--line);border-radius:12px;padding:12px;background:#f9fafb}
+details{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface)}
 details[open]{background:#fff}
 
 /* Small helpers */
@@ -156,6 +156,21 @@ details[open]{background:#fff}
   gap:8px;
   margin-right: 20px;
 }
+
+.ph-btn{
+  display:block;
+  width:260px;
+  height: 45px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  font:inherit;
+  background:#fff;
+  color:var(--ink);
+  text-align:left;
+  cursor:pointer;
+}
+.ph-btn:hover{ background:#f9fafb; }
 
 .ext-icon{
   width:18px;

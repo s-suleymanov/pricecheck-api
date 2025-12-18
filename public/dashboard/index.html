@@ -82,6 +82,14 @@
                 <label class="muted" for="variant">Variant</label>
                 <select id="variant" style="display:block; width:260px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit"></select>
               </div>
+              <div style="margin-top:10px" id="brandWrap" hidden>
+              <label class="muted">Brand</label>
+                <button id="brandBtn" class="ph-btn" type="button"></button>
+              </div>
+             <div style="margin-top:10px" id="categoryWrap" hidden>
+                <label class="muted">Category</label>
+                <button id="categoryBtn" class="ph-btn" type="button"></button>
+              </div>
             </div>
             <div>
               <div class="pimg-wrap">
@@ -173,7 +181,7 @@
           <section class="card" style="margin-top:16px">
             <h3 style="margin-bottom: 9px;">PriceMatch</h3>
             <p class="muted">If eligible, contact the higher priced retailer and use this script.</p>
-            <textarea id="pmScript" rows="6" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px; font:inherit"></textarea>
+            <textarea id="pmScript" rows="6" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px; font:inherit; background: var(--surface)"></textarea>
             <div class="spaced" style="margin-top:8px">
               <button class="btn-das" id="copyPm">Copy script</button>
               <span class="muted" id="pmNote"></span>

@@ -284,6 +284,21 @@
       img.removeAttribute('src');
       img.style.display = 'none';
     }
+
+    const cur = getCurrentVariant() || {};
+    const brand = (cur.brand || id.brand || '').trim();
+    const category = (cur.category || id.category || '').trim();
+
+    const bw = document.getElementById('brandWrap');
+    const cw = document.getElementById('categoryWrap');
+    const bb = document.getElementById('brandBtn');
+    const cb = document.getElementById('categoryBtn');
+
+    bw.hidden = !brand;
+    if (brand) bb.textContent = brand;
+
+    cw.hidden = !category;
+    if (category) cb.textContent = category;
   }
 
   function cheapestOfferWithPrice(){
@@ -416,7 +431,7 @@ This is the same variant. Please match this price. Thank you.`
       wrap.appendChild(row);
     });
 
-    note.textContent = "PriceCheck does not use affiliate links.";
+    note.textContent = "PriceCheck does not use affiliate or sponsored links.";
   }
 
   function renderVariants(){
