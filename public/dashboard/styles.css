@@ -36,7 +36,7 @@ p{margin:0 0 8px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-@media (max-width:900px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+@media (max-width:500px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
 
 /* Controls */
 .controls{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin:8px 0 12px}
