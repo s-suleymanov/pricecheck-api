@@ -1,3 +1,5 @@
+// dashboard/dashboard.js
+
 (function(){
   const $  = (s, ctx=document)=>ctx.querySelector(s);
   const fmt = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'});

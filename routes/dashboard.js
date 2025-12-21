@@ -62,8 +62,8 @@ async function resolveKey(client, rawKey){
 
   const findByAsin = async (asin) => {
     const r = await client.query(
-      `select asin, upc, pci
-         from asins
+      `select asin, upc, pci, model_number
+        from asins
         where upper(btrim(asin)) = upper(btrim($1))
         order by current_price_observed_at desc nulls last, created_at desc
         limit 1`,
@@ -132,9 +132,31 @@ async function resolveKey(client, rawKey){
   };
 
   if (p === 'asin'){
-    const row = await findByAsin(key);
-    return row ? await findIdentity(row.asin, row.upc, row.pci) : null;
+  const row = await findByAsin(key);
+  if (!row) return null;
+
+  // If we have model_number, identity should come from the model_number group
+  if (row.model_number && String(row.model_number).trim() !== '') {
+    const r2 = await client.query(
+      `select asin, upc, pci, model_name, model_number, brand, category, image_url
+         from asins
+        where model_number is not null
+          and btrim(model_number) <> ''
+          and upper(btrim(model_number)) = upper(btrim($1))
+        order by current_price_observed_at desc nulls last, created_at desc
+        limit 1`,
+      [row.model_number]
+    );
+    if (r2.rowCount) return r2.rows[0];
+
+    // If no group row found, at least return model_number so variants can group
+    return { asin: row.asin, upc: row.upc || null, pci: row.pci || null, model_number: row.model_number };
   }
+
+  // If model_number missing, fall back to old identity strategy
+  return await findIdentity(row.asin, row.upc, row.pci);
+}
+
   if (p === 'upc'){
     const row = await findByUpc(key);
     return row ? await findIdentity(row.asin, row.upc, row.pci) : null;
