@@ -451,7 +451,7 @@
     for (const v of list){
       const opt = document.createElement('option');
       opt.value = v.asin || v.model_number || v.variant_label || 'Variant';
-      opt.textContent = v.variant_label || v.model_number || v.asin || 'Variant';
+      opt.textContent = v.variant_label || 'Default';
       if (v.asin) opt.dataset.asin = v.asin;
 
       const asinU = up(v.asin);
