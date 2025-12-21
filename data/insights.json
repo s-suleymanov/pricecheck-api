@@ -18,5 +18,15 @@
     "minutes": 5,
     "url": "/insights/library/updates/pricecheck-0-8-5/index.html",
     "date": "2025-11-14"
+  },
+  {
+    "slug": "what-products-are-available",
+    "title": "What Products are Available?",
+    "excerpt": "We are working very hard to scrape as much data as possible across various categories. Here are some of the most popular products available in our dataset right now.",
+    "type": "updates",
+    "topic": "Release Notes",
+    "minutes": 5,
+    "url": "/insights/library/blogs/things-to-scrape-next/index.html",
+    "date": "2025-12-21"
   }
 ]
