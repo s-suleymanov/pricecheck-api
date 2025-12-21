@@ -41,25 +41,56 @@
     return s.replace(/\s+/g,'');
   }
 
-  function titleCase(s){ return String(s||'').replace(/\b\w/g, c=>c.toUpperCase()); }
+  function titleCase(input) {
+    const raw = String(input ?? '').trim();
+    if (!raw) return '';
 
-  // ---------- Input parsing ----------
-  function isLikelyPcCode(s){
-    return /^[a-z0-9][a-z0-9_-]{2,}$/i.test(norm(s));
+    // Exact overrides (store keys, brands, acronyms)
+    const key = raw.toLowerCase();
+    const OVERRIDE = {
+      amazon: 'Amazon',
+      target: 'Target',
+      walmart: 'Walmart',
+      bestbuy: 'Best Buy',
+      bby: 'Best Buy',
+      apple: 'Apple',
+      dji: 'DJI',
+      lg: 'LG',
+      sony: 'Sony',
+      asus: 'ASUS',
+      hp: 'HP',
+      dell: 'Dell',
+      bose: 'Bose',
+    };
+    if (OVERRIDE[key]) return OVERRIDE[key];
+
+    // If it already contains any internal capitals or looks like an acronym, leave it alone
+    // Examples: DJI, AirPods, iPhone, USB-C, M2
+    if (/[A-Z].*[A-Z]/.test(raw) || /[a-z].*[A-Z]/.test(raw)) return raw;
+
+    // Basic title case for plain words
+    return raw
+      .split(/\s+/)
+      .map(w => w ? (w[0].toUpperCase() + w.slice(1).toLowerCase()) : w)
+      .join(' ');
+  }
+
+  function isLikelyPci(s){
+  return /^[a-z][a-z0-9_-]{7}$/i.test(norm(s));
   }
 
   function keyFromInput(text){
     if (!text) return null;
     const t = text.trim();
 
-    if (/^(asin|upc|tcin|bby|bestbuy|sku|wal|walmart|target|pc|pc_code|pccode)\s*:/i.test(t)) {
+    if (/^(asin|upc|tcin|bby|bestbuy|sku|wal|walmart|target|pci)\s*:/i.test(t)) {
       const parts = t.split(':');
       const pref = (parts[0] || '').trim().toLowerCase();
       const rest = parts.slice(1).join(':').trim();
       if (!rest) return null;
       if (pref === 'asin') return `asin:${rest.toUpperCase()}`;
       if (pref === 'upc') return `upc:${rest}`;
-      if (pref === 'pc' || pref === 'pc_code' || pref === 'pccode') return `pc:${rest}`;
+      if (pref === 'pci') return `pci:${rest}`;
       return `${pref}:${rest}`;
     }
 
@@ -76,7 +107,7 @@
 
     if (/^\d{12}$/.test(t)) return `upc:${t}`;
     if (/^[A-Z0-9]{10}$/i.test(t)) return `asin:${t.toUpperCase()}`;
-    if (isLikelyPcCode(t)) return `pc:${t}`;
+    if (isLikelyPci(t)) return `pci:${t}`;
 
     return t;
   }
@@ -156,6 +187,7 @@
     const asin = e.target.selectedOptions[0]?.dataset.asin;
     if (asin) {
       state.selectedAsin = asin.toUpperCase();
+      applyKeyToUrl(`asin:${asin}`, 'push');
       run(`asin:${asin}`);
     }
   });
@@ -170,7 +202,7 @@
       toggleLoading(true);
       const res = await fetch(`/api/compare/${encodeURIComponent(key)}`, { headers: { 'Accept': 'application/json' }});
       if(res.status === 404){
-        showMessage(`No match for "${raw}". Try prefixes like asin:..., upc:..., pc:..., bby:..., wal:..., tcin:...`);
+        showMessage(`No match for "${raw}". Try prefixes like asin:..., upc:..., pci:..., bby:..., wal:..., tcin:...`);
         return;
       }
       if(!res.ok){ showMessage('Server error. Try again.'); return; }
@@ -261,7 +293,7 @@
 
     const cur = getCurrentVariant() || {};
     const parts = [];
-    if (id.pc_code) parts.push(`PCI ${id.pc_code}`);
+    if (id.pci) parts.push(`PCI ${id.pci}`);
 
     const vUpc = cur.upc ? cleanUpc(cur.upc) : '';
     const iUpc = id.upc ? cleanUpc(id.upc) : '';
@@ -529,7 +561,7 @@
 
 ${titleCase(best.store || 'Retailer')} is offering the same product for ${money(best.price_cents)}${bestLink ? ` (${bestLink})` : ''}
 
-Identifiers: PC ${id.pc_code || 'NA'}  UPC ${id.upc || 'NA'}  ASIN ${state.selectedAsin || id.asin || 'NA'}
+Identifiers: PCI ${id.pci || 'NA'}  UPC ${id.upc || 'NA'}  ASIN ${state.selectedAsin || id.asin || 'NA'}
 
 This is the same variant. Please match this price. Thank you.`
     ) : 'Load offers to generate a script.';
