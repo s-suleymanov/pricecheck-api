@@ -414,13 +414,13 @@ async function getVariants(client, identity){
     observed_at: r.observed_at ?? null
   }));
 
-  // 1) Try PCI group first
-  if (pci && String(pci).trim() !== ''){
+      // 1) Try PCI group first, BUT only keep it if it actually groups multiple variants
+  if (pci && String(pci).trim() !== '') {
     const rPci = await client.query(
       `select asin, upc, variant_label, model_name, model_number, brand, category, image_url,
               current_price_cents as price_cents,
               current_price_observed_at as observed_at
-         from asins
+        from asins
         where pci is not null
           and btrim(pci) <> ''
           and upper(btrim(pci)) = upper(btrim($1))
@@ -432,11 +432,7 @@ async function getVariants(client, identity){
       [pci]
     );
 
-    // ✅ if it worked, return it
-    if (rPci.rowCount) return mapRows(rPci.rows);
-
-    // ✅ PCI exists (maybe from listings) but ASIN rows not tagged with it
-    // fall through to model_number and then UPC
+    if (rPci.rowCount >= 2) return mapRows(rPci.rows);
   }
 
   // 2) Fallback: model_number group
