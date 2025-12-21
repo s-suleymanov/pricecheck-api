@@ -132,30 +132,9 @@ async function resolveKey(client, rawKey){
   };
 
   if (p === 'asin'){
-  const row = await findByAsin(key);
-  if (!row) return null;
-
-  // If we have model_number, identity should come from the model_number group
-  if (row.model_number && String(row.model_number).trim() !== '') {
-    const r2 = await client.query(
-      `select asin, upc, pci, model_name, model_number, brand, category, image_url
-         from asins
-        where model_number is not null
-          and btrim(model_number) <> ''
-          and upper(btrim(model_number)) = upper(btrim($1))
-        order by current_price_observed_at desc nulls last, created_at desc
-        limit 1`,
-      [row.model_number]
-    );
-    if (r2.rowCount) return r2.rows[0];
-
-    // If no group row found, at least return model_number so variants can group
-    return { asin: row.asin, upc: row.upc || null, pci: row.pci || null, model_number: row.model_number };
+    const row = await findByAsin(key);
+    return row ? await findIdentity(row.asin, row.upc, row.pci) : null;
   }
-
-  // If model_number missing, fall back to old identity strategy
-  return await findIdentity(row.asin, row.upc, row.pci);
-}
 
   if (p === 'upc'){
     const row = await findByUpc(key);
@@ -416,16 +395,28 @@ async function getLatestOffers(client, identity, selected){
   return out;
 }
 
-// variants: prefer grouping by pci, then model_number, then upc
 async function getVariants(client, identity){
   const pci = identity?.pci || null;
   const model_number = identity?.model_number || null;
   const upc = identity?.upc || null;
 
-  let rows = { rows: [] };
+  // helper to map rows consistently
+  const mapRows = (rows) => rows.map(r => ({
+    asin: r.asin,
+    upc: r.upc,
+    variant_label: r.variant_label,
+    model_name: r.model_name,
+    model_number: r.model_number,
+    brand: r.brand,
+    category: r.category,
+    image_url: r.image_url,
+    price_cents: r.price_cents ?? null,
+    observed_at: r.observed_at ?? null
+  }));
 
+  // 1) Try PCI group first
   if (pci && String(pci).trim() !== ''){
-    rows = await client.query(
+    const rPci = await client.query(
       `select asin, upc, variant_label, model_name, model_number, brand, category, image_url,
               current_price_cents as price_cents,
               current_price_observed_at as observed_at
@@ -440,8 +431,17 @@ async function getVariants(client, identity){
         limit 200`,
       [pci]
     );
-  } else if (model_number && String(model_number).trim() !== ''){
-    rows = await client.query(
+
+    // ✅ if it worked, return it
+    if (rPci.rowCount) return mapRows(rPci.rows);
+
+    // ✅ PCI exists (maybe from listings) but ASIN rows not tagged with it
+    // fall through to model_number and then UPC
+  }
+
+  // 2) Fallback: model_number group
+  if (model_number && String(model_number).trim() !== ''){
+    const rModel = await client.query(
       `select asin, upc, variant_label, model_name, model_number, brand, category, image_url,
               current_price_cents as price_cents,
               current_price_observed_at as observed_at
@@ -456,8 +456,13 @@ async function getVariants(client, identity){
         limit 200`,
       [model_number]
     );
-  } else if (upc){
-    rows = await client.query(
+
+    if (rModel.rowCount) return mapRows(rModel.rows);
+  }
+
+  // 3) Fallback: UPC group
+  if (upc){
+    const rUpc = await client.query(
       `select asin, upc, variant_label, model_name, model_number, brand, category, image_url,
               current_price_cents as price_cents,
               current_price_observed_at as observed_at
@@ -470,20 +475,11 @@ async function getVariants(client, identity){
         limit 200`,
       [upc]
     );
+
+    if (rUpc.rowCount) return mapRows(rUpc.rows);
   }
 
-  return rows.rows.map(r => ({
-    asin: r.asin,
-    upc: r.upc,
-    variant_label: r.variant_label,
-    model_name: r.model_name,
-    model_number: r.model_number,
-    brand: r.brand,
-    category: r.category,
-    image_url: r.image_url,
-    price_cents: r.price_cents ?? null,
-    observed_at: r.observed_at ?? null
-  }));
+  return [];
 }
 
 // observation log - also scope correctly
