@@ -246,6 +246,9 @@ details[open]{background:#fff}
   .main-content{
     min-width: 0;
   }
+  html {
+    overflow-x: hidden;
+  }
   .card {
     border-radius: 0;
   }
