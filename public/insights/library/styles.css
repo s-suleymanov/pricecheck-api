@@ -10,3 +10,12 @@
     .btn:hover{color: white;background-color: black;}
     .btn{font-size: 20px;}
     .header-img{width: 100%; border-radius: 20px; border: 1px solid #083d33;}
+    .card{
+        padding: 24px;
+    }
+
+    @media (max-width: 500px){
+        .card{
+            padding: 0;
+        }
+    }

@@ -251,14 +251,24 @@ details[open]{background:#fff}
   }
   .card {
     border-radius: 0;
+    border: 0;
   }
-  .wrap{padding: 0;}
+  .wrap{padding: 0 0 90px 0;}
   h1 {
     text-align: center;
-    margin: 12px 0 14px;
+    margin: 30px 0 14px;
+  }
+  .btn-go {
+    margin-right: 0;
+  }
+  .offer-store{
+    margin-left: 0;
   }
   .controls{
     gap: 10px;
+  }
+  .legend{
+    margin-top: 26px;
   }
   .btn-das{
     height: 47px;
@@ -267,11 +277,19 @@ details[open]{background:#fff}
   .grid-shell{
     gap: 16px;
   }
+  #specsMatrix table th:nth-child(3),
+  #specsMatrix table td:nth-child(3){
+    display: none;
+  }
   #pTitle{
     font-size: 30px;
+    text-align: center;
   }
   #share{
     display: none;
+  }
+  #pSubtitle{
+    text-align: center;
   }
   .kpis{
     grid-template-columns: 1fr;
@@ -286,6 +304,10 @@ details[open]{background:#fff}
   #pImg, .pimg-wrap{
     max-width: none;
   }
+  #pIds{
+    justify-content: center;
+  }
+
 }
 
 @media (max-width:700px){

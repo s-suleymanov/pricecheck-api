@@ -10,28 +10,11 @@
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="styles.css">
   <script src="/dashboard/dashboard.js" defer></script>
+  <script src="/partials/partials.js" defer></script>
 </head>
 <body class="dashboard-page">
-  <!-- Header -->
-  <header class="nav">
-    <div class="nav__row">
-      <div class="logo-head">
-        <img src="../logo/logo.png" alt="PriceCheck logo" class="logo">
-        <div class="brand">
-          <span class="wordmark">PriceCheck</span>
-          <span class="edition">0.8.6 Beta</span>
-        </div>
-      </div>
-      <nav class="links" aria-label="Primary">
-        <a href="/privacy-policy/">Privacy</a>
-        <a class="active" href="/dashboard/">Dashboard</a>
-        <a href="../">Overview</a>
-        <a href="/research/">Research</a>
-        <a href="/insights/">Insights</a>
-      </nav>
-      <a class="btn btn--outline" href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf">Add to Chrome</a>
-    </div>
-  </header>
+
+  <div id="site-header"></div>
 
   <main class="wrap">
     <h1>Dashboard</h1>
@@ -97,7 +80,7 @@
           <div class="kpis">
             <div class="kpi"><div class="small">Lowest price</div><div class="big" id="kCurrent">NA</div><div class="small muted" id="kStore"></div></div>
             <div class="kpi"><div class="small">Typical low 90d</div><div class="big" id="kTypical">NA</div><div class="small muted" id="kTypicalNote"></div></div>
-            <div class="kpi"><div class="small">30d low</div><div class="big" id="kLow30">NA</div><div class="small muted" id="kLow30Date"></div></div>
+            <div class="kpi"><div class="small">Typical low 30d</div><div class="big" id="kLow30">NA</div><div class="small muted" id="kLow30Date"></div></div>
             <div class="kpi"><div class="small">Deal integrity</div><div class="big" id="kIntegrity">NA</div><div class="small muted">strike claim status</div></div>
           </div>
         </section>
@@ -203,6 +186,8 @@
       </aside>
     </section>
   </main>
+
+  <div id="site-footer"></div>
 
 </body>
 </html>

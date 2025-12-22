@@ -480,7 +480,7 @@
           <td class="mono">${new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(new Date(o.t))}</td>
           <td>${titleCase(o.store || '')}</td>
           <td>${typeof o.price_cents === 'number' ? fmt.format(o.price_cents/100) : ''}</td>
-          <td class="muted">${o.note || ''}</td>
+          <td class="muted">Pass</td>
         `;
         body.appendChild(tr);
       });

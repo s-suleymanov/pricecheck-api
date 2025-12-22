@@ -19,7 +19,7 @@
     .ok{color:#065f46;background:#ecfdf5;border-color:#a7f3d0}
     .warn{color:#92400e;background:#fffbeb;border-color:#fde68a}
     .muted{color:#6b7280}
-    .tape{display:flex;gap:18px;overflow-x:auto;padding:8px;border:1px solid var(--line);border-radius:12px;background:#fff;position: sticky;top:100px}
+    .tape{display:flex;gap:18px;overflow-x:auto;padding:8px;border:1px solid var(--line);border-radius:12px;background:#fff;top:100px}
     .ticker{white-space:nowrap;font-size:0.98rem}
     .gain{color:#065f46}
     .lose{color:#92400e}
