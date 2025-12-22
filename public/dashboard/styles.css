@@ -243,6 +243,9 @@ details[open]{background:#fff}
   .grid2, .grid3, .grid4 {
     grid-template-columns:1fr
   }
+  html {
+    overflow-x: hidden;
+  }
   .card {
     border-radius: 0;
   }
