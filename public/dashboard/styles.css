@@ -312,12 +312,15 @@ details[open]{background:#fff}
 
 @media (max-width:700px){
   .kpis{
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
 
   /* hide "Typical low 90d" (2nd KPI) */
   .kpis .kpi:nth-child(2){
+    display: none !important;
+  }
+  .kpis .kpi:nth-child(3){
     display: none !important;
   }
 }
