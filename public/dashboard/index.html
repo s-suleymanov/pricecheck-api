@@ -33,44 +33,37 @@
     </div>
   </header>
 
-  <!-- Mobile-only message -->
-  <div class="mobile-blocker" role="status" aria-live="polite">
-    <div class="mobile-blocker__card">
-      <h2>PriceCheck Dashboard is not supported on mobile</h2>
-      <p>Please use a desktop browser to view prices, variants, and logs.</p>
-    </div>
-  </div>
-
   <main class="wrap">
     <h1>Dashboard</h1>
 
-    <!-- Controls -->
-    <section class="card">
-      <div class="controls">
-        <input id="query" type="search" placeholder="Paste a product URL or enter PC code, UPC, ASIN, TCIN, or SKU" aria-label="Product query">
-        <button id="load" class="btn-das">Load</button>
-        <button id="share" class="pill">Copy share link</button>
-      </div>
-      <p class="muted" style="margin-top:6px">
-        Examples:
-        <button class="pill"
-          onclick="document.getElementById('query').value='B0BKVY4WKT';document.getElementById('load').click()">
-          Logitech Master 3S
-        </button>
-        <button class="pill"
-          onclick="document.getElementById('query').value='B0F5HPCLGB';document.getElementById('load').click()">
-          Acer OMR266
-        </button>
-        <button class="pill"
-          onclick="document.getElementById('query').value='B0DGW57KXJ';document.getElementById('load').click()">
-          Apple Airpods Max
-        </button>
-      </p>
-    </section>
+            <!-- Controls -->
+        <section class="card">
+          <div class="controls">
+            <input id="query" type="search" placeholder="Paste a product URL or enter PC code, UPC, ASIN, TCIN, or SKU" aria-label="Product query">
+            <button id="load" class="btn-das">Load</button>
+            <button id="share" class="pill">Copy share link</button>
+          </div>
+          <p class="muted" style="margin-top:6px">
+            Examples:
+            <button class="pill"
+              onclick="document.getElementById('query').value='B0BKVY4WKT';document.getElementById('load').click()">
+              Logitech Master 3S
+            </button>
+            <button class="pill"
+              onclick="document.getElementById('query').value='B0F5HPCLGB';document.getElementById('load').click()">
+              Acer OMR266
+            </button>
+            <button class="pill"
+              onclick="document.getElementById('query').value='B0DGW57KXJ';document.getElementById('load').click()">
+              Apple Airpods Max
+            </button>
+          </p>
+        </section>
 
     <section class="grid-shell" style="margin-top:18px">
       <!-- MAIN -->
       <div>
+
         <!-- Product header -->
         <section class="card" id="productHeader">
           <div class="grid2">
@@ -80,7 +73,7 @@
               <div class="muted mono" id="pIds"></div>
               <div style="margin-top:10px">
                 <label class="muted" for="variant">Variant</label>
-                <select id="variant" style="display:block; width:260px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit"></select>
+                <select class="variant-dropdown" id="variant"></select>
               </div>
               <div style="margin-top:10px" id="brandWrap" hidden>
               <label class="muted">Brand</label>
@@ -122,7 +115,7 @@
           <p class="muted-note" id="offersNote"></p>
         </section>
 
-           <!-- Price history -->
+        <!-- Price history -->
         <section class="card" style="margin-top:16px">
           <div class="spaced" style="margin-bottom:20px">
             <h2 style="margin:0">Price History</h2>

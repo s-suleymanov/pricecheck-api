@@ -36,7 +36,6 @@ p{margin:0 0 8px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-@media (max-width:500px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
 
 /* Controls */
 .controls{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin:8px 0 12px}
@@ -76,6 +75,15 @@ p{margin:0 0 8px}
 
 /* Product image block */
 #pImg{width:100%;max-width:340px;border-radius:12px;border:1px solid var(--line)}
+
+.variant-dropdown{
+  display:block; 
+  width:260px; 
+  padding:10px 12px; 
+  border:1px solid var(--line); 
+  border-radius:10px; 
+  font:inherit
+}
 
 /* Offers */
 .offer{
@@ -118,19 +126,6 @@ details[open]{background:#fff}
 /* Small helpers */
 .spaced{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .muted-note{color:var(--muted);font-size:.92rem;margin-top: 8px;}
-
-/* Mobile lockout stays the same */
-.mobile-blocker{display:none}
-@media (max-width:880px){
-  body.dashboard-page main{display:none!important}
-  body.dashboard-page .mobile-blocker{display:flex;align-items:center;justify-content:center;padding:24px}
-  body.dashboard-page .mobile-blocker__card{
-    background:var(--paper);color:var(--ink);border-radius:12px;
-    max-width:560px;width:calc(100% - 32px);margin:16px auto 0;padding:18px;border:1px solid var(--line)
-  }
-  body.dashboard-page .mobile-blocker__card h2{margin:0 0 8px;font-size:2.2rem}
-  body.dashboard-page .mobile-blocker__card p{margin:0;color:var(--muted);line-height:1.4;font-size:1.1rem}
-}
 
 /* PriceMatch callout - add class card--pm to that section */
 .card--pm{
@@ -244,4 +239,63 @@ details[open]{background:#fff}
   color: var(--ink);
 }
 
+@media (max-width:500px){
+  .grid2, .grid3, .grid4 {
+    grid-template-columns:1fr
+  }
+  .card {
+    border-radius: 0;
+  }
+  .wrap{padding: 0;}
+  h1 {
+    text-align: center;
+    margin: 12px 0 14px;
+  }
+  .controls{
+    gap: 10px;
+  }
+  .btn-das{
+    height: 47px;
+    font-size: 20px;
+  }
+  .grid-shell{
+    gap: 16px;
+  }
+  #pTitle{
+    font-size: 30px;
+  }
+  #share{
+    display: none;
+  }
+  .kpis{
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .variant-dropdown{
+    width: 100%;
+  }
+  .ph-btn{
+    width: 100%;
+  }
+  #pImg, .pimg-wrap{
+    max-width: none;
+  }
+}
 
+@media (max-width:700px){
+  .kpis{
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  /* hide "Typical low 90d" (2nd KPI) */
+  .kpis .kpi:nth-child(2){
+    display: none !important;
+  }
+}
+
+@media (max-width:570px){
+    p.muted .pill:nth-of-type(3){
+    display: none !important;
+  }
+}

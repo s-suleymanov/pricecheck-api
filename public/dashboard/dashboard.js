@@ -582,8 +582,8 @@ This is the same variant. Please match this price. Thank you.`
       ['variant', 'Variant'],
       ['category', 'Category'],
       ['brand', 'Brand'],
-      ['model_number', 'Model Number'],
-      ['model_name', 'Model Name'],
+      ['model_number', 'Model'],
+      ['model_name', 'Name'],
     ];
 
     const varies = {};
