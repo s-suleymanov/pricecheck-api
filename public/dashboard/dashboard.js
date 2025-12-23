@@ -57,6 +57,7 @@
       bby: 'Best Buy',
       apple: 'Apple',
       dji: 'DJI',
+      segway: 'Segway',
       lg: 'LG',
       sony: 'Sony',
       asus: 'ASUS',
@@ -66,8 +67,6 @@
     };
     if (OVERRIDE[key]) return OVERRIDE[key];
 
-    // If it already contains any internal capitals or looks like an acronym, leave it alone
-    // Examples: DJI, AirPods, iPhone, USB-C, M2
     if (/[A-Z].*[A-Z]/.test(raw) || /[a-z].*[A-Z]/.test(raw)) return raw;
 
     // Basic title case for plain words
@@ -282,13 +281,24 @@
     const v = asinVariant || variants[0] || null;
 
     let title = null;
+
     if (asinVariant) {
       title =
         (asinVariant.model_name && asinVariant.model_name.trim()) ||
         (asinVariant.model_number && asinVariant.model_number.trim()) ||
         null;
     }
-    if (!title) title = 'Cross store offers';
+
+    if (!title) {
+      const fromOffer = (state.offers || [])
+        .map(o => (o?.title ? String(o.title).trim() : ''))
+        .find(t => t);
+
+      if (fromOffer) title = fromOffer;
+    }
+
+    // 3) Last resort
+    if (!title) title = 'Product';
 
     $('#pTitle').textContent = title;
     $('#pSubtitle').textContent = 'Latest prices for this product';
@@ -486,21 +496,31 @@
       });
   }
 
-  function renderCoverage(){
-    const div = $('#coverage');
-    div.innerHTML = '';
+function renderCoverage(){
+  const div = $('#coverage');
+  div.innerHTML = '';
 
-    const order = ['amazon','apple','target','walmart','bestbuy'];
+  const offers = Array.isArray(state.offers) ? state.offers : [];
 
-    const best = {};
-    (state.offers || []).forEach(o => {
-      const st = storeKey(o.store);
-      const p  = (typeof o.price_cents === 'number' && o.price_cents > 0) ? o.price_cents : null;
-      if (!p || !order.includes(st)) return;
-      best[st] = Math.min(best[st] ?? Infinity, p);
-    });
+  const best = {};
+  offers.forEach(o => {
+    const st = storeKey(o.store);
+    const p  = (typeof o.price_cents === 'number' && o.price_cents > 0) ? o.price_cents : null;
+    if (!st || p == null) return;
+    best[st] = Math.min(best[st] ?? Infinity, p);
+  });
 
-    const present = order.filter(st => Number.isFinite(best[st]));
+  const preferred = ['amazon','apple','target','walmart','bestbuy'];
+
+  const seen = new Set();
+  for (const o of offers) {
+    const st = storeKey(o.store);
+    if (st) seen.add(st);
+  }
+
+  const rest = [...seen].filter(s => !preferred.includes(s)).sort();
+  const order = preferred.filter(s => seen.has(s)).concat(rest);
+  const present = order.filter(st => Number.isFinite(best[st]));
 
     if (!present.length){
       order.forEach(st => {

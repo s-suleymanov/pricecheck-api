@@ -324,8 +324,6 @@ async function getLatestOffers(client, identity, selected){
     }
   }
 
-  // 3) Non-Amazon listings:
-  // Pass A: UPC scoped (exact variant)
   if (selected_upc){
     const rUpc = await client.query(
       `select store, store_sku, url, variant_label, title, current_price_cents, current_price_observed_at
@@ -336,7 +334,7 @@ async function getLatestOffers(client, identity, selected){
     rows.push(...rUpc.rows.map(x => ({ ...x, _scope: 'upc' })));
   }
 
-  // Pass B: pci scoped (fallback group match for ANY store)
+  
   if (pci){
     const rPc = await client.query(
       `select store, store_sku, url, variant_label, title, current_price_cents, current_price_observed_at
@@ -365,8 +363,6 @@ async function getLatestOffers(client, identity, selected){
     });
   }
 
-  // 4) Deduplicate by store:
-  // Prefer UPC-scoped over PC-scoped, then freshest observed_at.
   const byStore = new Map();
   for (const o of offers){
     const existing = byStore.get(o.store);
