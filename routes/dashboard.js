@@ -298,7 +298,7 @@ async function getOffersForSelectedVariant(client, selectedKeys) {
 
   const r = await client.query(
     `
-    select store, store_sku, upc, pci, url, title, current_price_cents, current_price_observed_at, created_at
+    select store, store_sku, upc, pci, url, title, offer_tag, current_price_cents, current_price_observed_at, created_at
     from public.listings
     where
       (
@@ -323,6 +323,7 @@ async function getOffersForSelectedVariant(client, selectedKeys) {
       store_sku: row.store_sku || null,
       url: row.url || null,
       title: row.title || null,
+      offer_tag: row.offer_tag || null,
       price_cents: row.current_price_cents ?? null,
       observed_at: row.current_price_observed_at ?? null,
       upc: row.upc || null,

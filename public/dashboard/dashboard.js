@@ -280,11 +280,6 @@
     // Title: prefer offer title, otherwise catalog model_name, otherwise fallback
     let title = null;
 
-    const fromOffer = (state.offers || [])
-      .map(o => (o?.title ? String(o.title).trim() : ''))
-      .find(t => t);
-    if (fromOffer) title = fromOffer;
-
     if (!title) title =
       (cur.model_name && String(cur.model_name).trim()) ||
       (id.model_name && String(id.model_name).trim()) ||
@@ -419,19 +414,28 @@
       const bestLink = o.url || canonicalLink(o.store, o) || '';
       const row = document.createElement('div');
       row.className = 'offer';
+      const tag = (o.offer_tag || '').trim();
+
       row.innerHTML = `
         <div>
           <div class="offer-store">${titleCase(o.store || '')}</div>
         </div>
+
         <div class="muted-price">
           ${o._price != null ? `${fmt.format(o._price)}` : 'No price'}
         </div>
+
+        <div class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size: 18px;">
+          ${tag ? escapeHtml(tag) : ''}
+        </div>
+
         <div>
           ${bestLink ? `<div class="links-compact">
             <a class="btn btn-go" href="${bestLink}" target="_blank" rel="noopener">Link</a>
           </div>` : `<div class="links-compact"></div>`}
         </div>
       `;
+
       wrap.appendChild(row);
     });
 

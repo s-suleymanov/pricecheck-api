@@ -87,12 +87,29 @@ p{margin:0 0 8px}
 
 /* Offers */
 .offer{
-  display:grid;grid-template-columns:160px 1fr auto;gap:12px;align-items:center;
-  padding:12px 0;border-bottom:1px solid var(--line)
+  display:grid;
+  grid-template-columns:160px auto 1fr auto; /* title | price | offer_tag | link */
+  gap:12px;
+  align-items:center;
+  padding:12px 0;
+  border-bottom:1px solid var(--line);
 }
 .offer:last-child{border-bottom:none}
 .offer:hover{background:#fafafa}
+
 .links-compact a{margin-left:8px}
+.offer-linkcol{display:flex;align-items:center}
+.offer-tagcol{display:flex;align-items:center}
+
+.offer-tag{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#fff;
+  white-space:nowrap;
+}
+
 
 /* Chart area */
 .chart{
@@ -204,7 +221,8 @@ details[open]{background:#fff}
 
 .muted-price {
   color: var(--muted);
-  font-size: 18px;
+  font-size: 19px;
+  padding-right: 60px;
 }
 
 #pImg{
@@ -263,6 +281,13 @@ details[open]{background:#fff}
   }
   .offer-store{
     margin-left: 0;
+  }
+  .offer{
+    grid-template-columns: 1fr auto auto; /* title | price | link */
+  }
+  /* hide the 3rd column (offer_tag) */
+  .offer > :nth-child(3){
+    display:none;
   }
   .controls{
     gap: 10px;
