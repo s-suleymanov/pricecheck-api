@@ -1,5 +1,4 @@
-// dashboard/dashboard.js
-
+// public/dashboard/dashboard.js
 (function(){
   const $  = (s, ctx=document)=>ctx.querySelector(s);
   const fmt = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'});
@@ -10,7 +9,7 @@
     offers:[],
     observed:[],
     range:30,
-    selectedAsin:null,
+    selectedVariantKey:null,   // NEW: pci:/upc:/asin:
     lastKey:null
   };
 
@@ -47,7 +46,6 @@
     const raw = String(input ?? '').trim();
     if (!raw) return '';
 
-    // Exact overrides (store keys, brands, acronyms)
     const key = raw.toLowerCase();
     const OVERRIDE = {
       amazon: 'Amazon',
@@ -69,15 +67,15 @@
 
     if (/[A-Z].*[A-Z]/.test(raw) || /[a-z].*[A-Z]/.test(raw)) return raw;
 
-    // Basic title case for plain words
     return raw
       .split(/\s+/)
       .map(w => w ? (w[0].toUpperCase() + w.slice(1).toLowerCase()) : w)
       .join(' ');
   }
 
+  // PCI: 8 chars, first is a letter
   function isLikelyPci(s){
-  return /^[a-z][a-z0-9_-]{7}$/i.test(norm(s));
+    return /^[A-Z][A-Z0-9]{7}$/i.test(norm(s));
   }
 
   function keyFromInput(text){
@@ -92,6 +90,10 @@
       if (pref === 'asin') return `asin:${rest.toUpperCase()}`;
       if (pref === 'upc') return `upc:${rest}`;
       if (pref === 'pci') return `pci:${rest}`;
+      // normalize some aliases
+      if (pref === 'bestbuy' || pref === 'sku') return `bby:${rest}`;
+      if (pref === 'walmart') return `wal:${rest}`;
+      if (pref === 'target') return `tcin:${rest}`;
       return `${pref}:${rest}`;
     }
 
@@ -113,34 +115,37 @@
     return t;
   }
 
-  function chooseSelectedAsinFromKey(key, data){
+  function chooseSelectedVariantKeyFromKey(key, data){
     const variants = Array.isArray(data?.variants) ? data.variants : [];
-    const identity = data?.identity || null;
+    const identity = data?.identity || {};
     const k = String(key || '').trim();
 
-    if (/^asin:/i.test(k)) return up(k.slice(5));
-
-    if (/^upc:/i.test(k)) {
-      const qUpc = cleanUpc(k.slice(4));
-      if (qUpc) {
-        const hit = variants.find(v => cleanUpc(v.upc) === qUpc);
-        if (hit?.asin) return up(hit.asin);
-      }
+    // If user loaded a variant key already, prefer that if it exists in variants
+    if (/^(pci|upc|asin):/i.test(k)) {
+      const exists = variants.find(v => String(v?.key || '') === k);
+      if (exists) return k;
+      // even if not in variants, keep it (backend can still resolve)
+      return k;
     }
 
-    if (identity?.asin) return up(identity.asin);
+    // Otherwise, prefer selected keys from identity
+    const sPci  = identity.selected_pci ? `pci:${identity.selected_pci}` : null;
+    const sUpc  = identity.selected_upc ? `upc:${identity.selected_upc}` : null;
+    const sAsin = identity.selected_asin ? `asin:${String(identity.selected_asin).toUpperCase()}` : null;
 
-    const first = variants.find(v => v?.asin);
-    return first?.asin ? up(first.asin) : null;
+    if (sPci && variants.find(v => v.key === sPci)) return sPci;
+    if (sUpc && variants.find(v => v.key === sUpc)) return sUpc;
+    if (sAsin && variants.find(v => v.key === sAsin)) return sAsin;
+
+    // Fall back to first variant
+    return variants[0]?.key || null;
   }
 
   function getCurrentVariant(){
-    const asin = state.selectedAsin || (state.identity?.asin ? up(state.identity.asin) : null);
-    if (asin) {
-      const v = (state.variants || []).find(x => up(x.asin) === asin);
-      if (v) return v;
-    }
-    return (state.variants && state.variants[0]) || null;
+    const k = String(state.selectedVariantKey || '').trim();
+    if (!k) return (state.variants && state.variants[0]) || null;
+    const hit = (state.variants || []).find(v => String(v?.key || '') === k);
+    return hit || (state.variants && state.variants[0]) || null;
   }
 
   // ---------- Controls ----------
@@ -183,13 +188,13 @@
     setTimeout(()=>$('#pmNote').textContent='',900);
   });
 
-  // Important: selecting a variant triggers an ASIN-scoped load
+  // IMPORTANT: selecting a variant triggers a load using variant.key (pci/upc/asin)
   $('#variant').addEventListener('change', (e) => {
-    const asin = e.target.selectedOptions[0]?.dataset.asin;
-    if (asin) {
-      state.selectedAsin = asin.toUpperCase();
-      applyKeyToUrl(`asin:${asin}`, 'push');
-      run(`asin:${asin}`);
+    const k = e.target.selectedOptions[0]?.dataset.key;
+    if (k) {
+      state.selectedVariantKey = k;
+      applyKeyToUrl(k, 'push');
+      run(k);
     }
   });
 
@@ -215,7 +220,7 @@
       state.offers   = Array.isArray(data.offers)   ? data.offers   : [];
       state.observed = Array.isArray(data.observed) ? data.observed : [];
 
-      state.selectedAsin = chooseSelectedAsinFromKey(state.lastKey, data);
+      state.selectedVariantKey = chooseSelectedVariantKeyFromKey(state.lastKey, data);
 
       hydrateHeader();
       hydrateKpis();
@@ -270,55 +275,40 @@
     const id = state.identity || {};
     const DEFAULT_IMG = '../content-img/default.webp';
 
-    const variants = state.variants || [];
-    const asinU = up(state.selectedAsin || id.asin || '');
+    const cur = getCurrentVariant() || {};
 
-    const asinVariant =
-      variants.find(v => up(v.asin) === asinU) ||
-      variants.find(v => v.asin) ||
-      null;
-
-    const v = asinVariant || variants[0] || null;
-
+    // Title: prefer offer title, otherwise catalog model_name, otherwise fallback
     let title = null;
 
-    if (asinVariant) {
-      title =
-        (asinVariant.model_name && asinVariant.model_name.trim()) ||
-        (asinVariant.model_number && asinVariant.model_number.trim()) ||
-        null;
-    }
+    const fromOffer = (state.offers || [])
+      .map(o => (o?.title ? String(o.title).trim() : ''))
+      .find(t => t);
+    if (fromOffer) title = fromOffer;
 
-    if (!title) {
-      const fromOffer = (state.offers || [])
-        .map(o => (o?.title ? String(o.title).trim() : ''))
-        .find(t => t);
-
-      if (fromOffer) title = fromOffer;
-    }
-
-    // 3) Last resort
-    if (!title) title = 'Product';
+    if (!title) title =
+      (cur.model_name && String(cur.model_name).trim()) ||
+      (id.model_name && String(id.model_name).trim()) ||
+      (id.model_number && String(id.model_number).trim()) ||
+      'Product';
 
     $('#pTitle').textContent = title;
-    $('#pSubtitle').textContent = 'Latest prices for this product';
+    $('#pSubtitle').textContent = 'Latest prices for this variant';
 
-    const cur = getCurrentVariant() || {};
+    // Pills: show selected anchor keys (pci/upc/asin) if present
     const parts = [];
-    if (id.pci) parts.push(`PCI ${id.pci}`);
+    const selPci = id.selected_pci ? String(id.selected_pci).trim() : '';
+    const selUpc = id.selected_upc ? cleanUpc(id.selected_upc) : '';
+    const selAsin = id.selected_asin ? up(id.selected_asin) : '';
 
-    const vUpc = cur.upc ? cleanUpc(cur.upc) : '';
-    const iUpc = id.upc ? cleanUpc(id.upc) : '';
-    if (vUpc) parts.push(`UPC ${vUpc}`);
-    else if (iUpc) parts.push(`UPC ${iUpc}`);
-
-    if (state.selectedAsin) parts.push(`ASIN ${state.selectedAsin}`);
+    if (selPci) parts.push(`PCI ${selPci}`);
+    if (selUpc) parts.push(`UPC ${selUpc}`);
+    if (selAsin) parts.push(`ASIN ${selAsin}`);
 
     $('#pIds').innerHTML = parts.map(p => `<span class="id-pill">${escapeHtml(p)}</span>`).join('');
 
     const img = $('#pImg');
     const src =
-      (v && v.image_url && v.image_url.trim()) ||
+      (cur && cur.image_url && String(cur.image_url).trim()) ||
       (id && id.image_url && String(id.image_url).trim()) ||
       DEFAULT_IMG;
 
@@ -349,7 +339,6 @@
   }
 
   function hydrateKpis(){
-    // Backend is now correct, so KPIs should come from offers.
     const priced = (state.offers || []).filter(o => typeof o.price_cents === 'number');
     if (!priced.length){
       $('#kCurrent').textContent = 'NA';
@@ -375,12 +364,13 @@
     $('#chartNote').textContent = 'No history yet';
   }
 
-  function canonicalLink(store, offer, identity){
+  // Important: Amazon link should use offer.store_sku (ASIN), not a single selected ASIN
+  function canonicalLink(store, offer){
     const st = storeKey(store);
     const sku = norm(offer?.store_sku);
 
     if(st === 'amazon'){
-      const asin = state.selectedAsin || identity?.asin || offer?.asin || sku;
+      const asin = up(sku);
       return asin && /^[A-Z0-9]{10}$/i.test(asin) ? `https://www.amazon.com/dp/${asin}` : '';
     }
     if(st === 'bestbuy'){
@@ -426,7 +416,7 @@
     }
 
     arr.forEach(o=>{
-      const bestLink = o.url || canonicalLink(o.store, o, state.identity) || '';
+      const bestLink = o.url || canonicalLink(o.store, o) || '';
       const row = document.createElement('div');
       row.className = 'offer';
       row.innerHTML = `
@@ -462,12 +452,12 @@
 
     for (const v of list){
       const opt = document.createElement('option');
-      opt.value = v.asin || v.model_number || v.variant_label || 'Variant';
+      const k = String(v.key || '').trim();
+      opt.dataset.key = k;
+      opt.value = k || v.model_number || v.variant_label || 'Variant';
       opt.textContent = v.variant_label || 'Default';
-      if (v.asin) opt.dataset.asin = v.asin;
 
-      const asinU = up(v.asin);
-      opt.selected = !!(state.selectedAsin && asinU === state.selectedAsin);
+      opt.selected = !!(state.selectedVariantKey && k && k === state.selectedVariantKey);
       sel.appendChild(opt);
     }
   }
@@ -481,13 +471,20 @@
   function renderObs(){
     const body = $('#obsBody'); body.innerHTML='';
     if(!state.observed.length) return;
+
+    const getTime = (o) => o?.t || o?.observed_at || o?.observedAt || null;
+
     state.observed
       .slice()
-      .sort((a,b)=> new Date(b.t).getTime() - new Date(a.t).getTime())
+      .sort((a,b)=> new Date(getTime(b) || 0).getTime() - new Date(getTime(a) || 0).getTime())
       .forEach(o=>{
+        const tt = getTime(o);
+        const d = tt ? new Date(tt) : null;
+        const ok = d && !Number.isNaN(d.getTime());
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="mono">${new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(new Date(o.t))}</td>
+          <td class="mono">${ok ? new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(d) : ''}</td>
           <td>${titleCase(o.store || '')}</td>
           <td>${typeof o.price_cents === 'number' ? fmt.format(o.price_cents/100) : ''}</td>
           <td class="muted">Pass</td>
@@ -496,31 +493,31 @@
       });
   }
 
-function renderCoverage(){
-  const div = $('#coverage');
-  div.innerHTML = '';
+  function renderCoverage(){
+    const div = $('#coverage');
+    div.innerHTML = '';
 
-  const offers = Array.isArray(state.offers) ? state.offers : [];
+    const offers = Array.isArray(state.offers) ? state.offers : [];
 
-  const best = {};
-  offers.forEach(o => {
-    const st = storeKey(o.store);
-    const p  = (typeof o.price_cents === 'number' && o.price_cents > 0) ? o.price_cents : null;
-    if (!st || p == null) return;
-    best[st] = Math.min(best[st] ?? Infinity, p);
-  });
+    const best = {};
+    offers.forEach(o => {
+      const st = storeKey(o.store);
+      const p  = (typeof o.price_cents === 'number' && o.price_cents > 0) ? o.price_cents : null;
+      if (!st || p == null) return;
+      best[st] = Math.min(best[st] ?? Infinity, p);
+    });
 
-  const preferred = ['amazon','apple','target','walmart','bestbuy'];
+    const preferred = ['amazon','apple','target','walmart','bestbuy'];
 
-  const seen = new Set();
-  for (const o of offers) {
-    const st = storeKey(o.store);
-    if (st) seen.add(st);
-  }
+    const seen = new Set();
+    for (const o of offers) {
+      const st = storeKey(o.store);
+      if (st) seen.add(st);
+    }
 
-  const rest = [...seen].filter(s => !preferred.includes(s)).sort();
-  const order = preferred.filter(s => seen.has(s)).concat(rest);
-  const present = order.filter(st => Number.isFinite(best[st]));
+    const rest = [...seen].filter(s => !preferred.includes(s)).sort();
+    const order = preferred.filter(s => seen.has(s)).concat(rest);
+    const present = order.filter(st => Number.isFinite(best[st]));
 
     if (!present.length){
       order.forEach(st => {
@@ -576,14 +573,14 @@ function renderCoverage(){
     const best = getCheapestOffer();
     const id = state.identity || {};
     const money = v => fmt.format((v || 0) / 100);
-    const bestLink = best ? (best.url || canonicalLink(best.store, best, id) || '') : '';
+    const bestLink = best ? (best.url || canonicalLink(best.store, best) || '') : '';
 
     const script = best ? (
 `Hello, I would like a price match.
 
 ${titleCase(best.store || 'Retailer')} is offering the same product for ${money(best.price_cents)}${bestLink ? ` (${bestLink})` : ''}
 
-Identifiers: PCI ${id.pci || 'NA'}  UPC ${id.upc || 'NA'}  ASIN ${state.selectedAsin || id.asin || 'NA'}
+Identifiers: PCI ${id.selected_pci || id.pci || 'NA'}  UPC ${id.selected_upc || id.upc || 'NA'}  ASIN ${id.selected_asin || id.asin || 'NA'}
 
 This is the same variant. Please match this price. Thank you.`
     ) : 'Load offers to generate a script.';
@@ -591,6 +588,118 @@ This is the same variant. Please match this price. Thank you.`
     const ta = document.getElementById('pmScript');
     if(ta) ta.value = script;
   }
+
+  // ---------- Intelligence actions ----------
+function intelligenceContext() {
+  const id = state.identity || {};
+  const v  = getCurrentVariant() || {};
+  const offers = (state.offers || []).slice();
+
+  const title =
+    (v.model_name && String(v.model_name).trim()) ||
+    (id.model_name && String(id.model_name).trim()) ||
+    $('#pTitle')?.textContent ||
+    'this item';
+
+  // cheapest offer
+  const priced = offers.filter(o => typeof o.price_cents === 'number' && o.price_cents > 0);
+  priced.sort((a,b)=>a.price_cents-b.price_cents);
+  const cheapest = priced[0] || null;
+
+  // most expensive offer
+  priced.sort((a,b)=>b.price_cents-a.price_cents);
+  const highest = priced[0] || null;
+
+  return { id, v, title, offers, cheapest, highest };
+}
+
+async function copyAndNote(text, note) {
+  try { await navigator.clipboard.writeText(text); } catch {}
+  const el = document.getElementById('actNote');
+  if (el) {
+    el.textContent = note || 'Copied.';
+    setTimeout(()=>{ el.textContent = ''; }, 1800);
+  }
+}
+
+function money(cents){
+  if (typeof cents !== 'number') return 'NA';
+  return fmt.format(cents/100);
+}
+
+function bestLinkForOffer(o){
+  if(!o) return '';
+  return o.url || canonicalLink(o.store, o) || '';
+}
+
+const actSummary = document.getElementById('actSummary');
+const actRefund  = document.getElementById('actRefund');
+const actFlag    = document.getElementById('actFlag');
+
+if (actSummary) actSummary.addEventListener('click', async () => {
+  const { title, offers, cheapest, highest } = intelligenceContext();
+
+  const lines = [];
+  lines.push(`PriceCheck summary for: ${title}`);
+  lines.push('');
+  if (!offers.length) {
+    lines.push('No offers found yet.');
+  } else {
+    if (cheapest) {
+      lines.push(`Cheapest: ${titleCase(cheapest.store)} at ${money(cheapest.price_cents)}${bestLinkForOffer(cheapest) ? ` (${bestLinkForOffer(cheapest)})` : ''}`);
+    }
+    if (highest && cheapest && highest.price_cents !== cheapest.price_cents) {
+      lines.push(`Highest: ${titleCase(highest.store)} at ${money(highest.price_cents)}${bestLinkForOffer(highest) ? ` (${bestLinkForOffer(highest)})` : ''}`);
+      const diff = highest.price_cents - cheapest.price_cents;
+      lines.push(`Spread: ${money(diff)}`);
+    }
+    lines.push('');
+    lines.push('Offers:');
+    offers.forEach(o => {
+      const link = bestLinkForOffer(o);
+      lines.push(`- ${titleCase(o.store)}: ${typeof o.price_cents === 'number' ? money(o.price_cents) : 'No price'}${link ? ` (${link})` : ''}`);
+    });
+  }
+
+  await copyAndNote(lines.join('\n'), 'Summary copied.');
+  });
+
+  if (actRefund) actRefund.addEventListener('click', async () => {
+    const { title, cheapest } = intelligenceContext();
+    const link = bestLinkForOffer(cheapest);
+
+    const text =
+  `Hi, I bought ${title} recently.
+
+  I found it listed for a lower price right now${link ? ` (${link})` : ''}.
+  Could you please match the current price or refund the difference?
+
+  Thank you.`;
+
+    await copyAndNote(text, 'Refund script copied.');
+  });
+
+  if (actFlag) actFlag.addEventListener('click', async () => {
+    const { title, offers } = intelligenceContext();
+
+    const suspicious = offers
+      .filter(o => typeof o.price_cents === 'number' && o.price_cents > 0)
+      .sort((a,b)=>a.price_cents-b.price_cents)[0];
+
+    const link = bestLinkForOffer(suspicious);
+
+    const text =
+  `I want to flag this listing as potentially misleading.
+
+  Item: ${title}
+  Store: ${suspicious ? titleCase(suspicious.store) : 'Unknown'}
+  Listing link: ${link || 'N/A'}
+
+  Reason: price and listing details seem inconsistent with other reputable offers. Please review.`;
+
+    await copyAndNote(text, 'Flag text copied.');
+  });
+
 
   function renderSpecsMatrix(){
     const host = $('#specsMatrix');
@@ -618,7 +727,7 @@ This is the same variant. Please match this price. Thank you.`
 
     items.forEach(v=>{
       html += '<tr>';
-      const label = v.variant_label || v.model_name || v.model_number || v.asin || 'Variant';
+      const label = v.variant_label || v.model_name || v.model_number || v.key || 'Variant';
       html += `<td class="mono">${escapeHtml(label)}</td>`;
 
       ['category','brand','model_number','model_name'].forEach(k=>{
@@ -647,8 +756,9 @@ This is the same variant. Please match this price. Thank you.`
   function downloadObsCsv(){
     const rows = [['time','store','price','note']];
     (state.observed||[]).forEach(o=>{
+      const t = o.t || o.observed_at || o.observedAt || '';
       rows.push([
-        o.t ? new Date(o.t).toISOString() : '',
+        t ? new Date(t).toISOString() : '',
         o.store || '',
         typeof o.price_cents === 'number' ? (o.price_cents/100).toFixed(2) : '',
         (o.note || '').replace(/,/g,';')
