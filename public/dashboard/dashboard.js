@@ -53,6 +53,7 @@
       walmart: 'Walmart',
       bestbuy: 'Best Buy',
       bby: 'Best Buy',
+      radicaladventures: 'Radical Adventures',
       electricsport: 'Electric Sport',
       electricride: 'Electric Ride',
       apple: 'Apple',
