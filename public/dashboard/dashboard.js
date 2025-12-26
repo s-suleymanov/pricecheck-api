@@ -53,6 +53,7 @@
       walmart: 'Walmart',
       bestbuy: 'Best Buy',
       bby: 'Best Buy',
+      electricsport: 'Electric Sport',
       electricride: 'Electric Ride',
       apple: 'Apple',
       dji: 'DJI',
