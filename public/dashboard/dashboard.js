@@ -116,39 +116,72 @@
   }
 
   function chooseSelectedVariantKeyFromKey(key, data){
-    const variants = Array.isArray(data?.variants) ? data.variants : [];
-    const identity = data?.identity || {};
-    const k = String(key || '').trim();
+  const variants = Array.isArray(data?.variants) ? data.variants : [];
+  const identity = data?.identity || {};
+  const k = String(key || '').trim();
 
-    // If user loaded a variant key already, prefer that if it exists in variants
-    if (/^(pci|upc|asin):/i.test(k)) {
-      const exists = variants.find(v => String(v?.key || '') === k);
-      if (exists) return k;
-      // even if not in variants, keep it (backend can still resolve)
-      return k;
+  function mapToExistingVariantKey(kind, rawVal){
+    const val = String(rawVal || '').trim();
+    if (!val || !variants.length) return null;
+
+    if (kind === 'upc') {
+      const want = cleanUpc(val);
+      const hit = variants.find(v => cleanUpc(v?.upc) === want);
+      return hit?.key || null;
     }
 
-    // Otherwise, prefer selected keys from identity
-    const sPci  = identity.selected_pci ? `pci:${identity.selected_pci}` : null;
-    const sUpc  = identity.selected_upc ? `upc:${identity.selected_upc}` : null;
-    const sAsin = identity.selected_asin ? `asin:${String(identity.selected_asin).toUpperCase()}` : null;
+    if (kind === 'asin') {
+      const want = up(val);
+      const hit = variants.find(v => up(v?.asin) === want);
+      return hit?.key || null;
+    }
 
-    if (sPci && variants.find(v => v.key === sPci)) return sPci;
-    if (sUpc && variants.find(v => v.key === sUpc)) return sUpc;
-    if (sAsin && variants.find(v => v.key === sAsin)) return sAsin;
+    if (kind === 'pci') {
+      const want = up(val);
+      const hit = variants.find(v => up(v?.pci) === want);
+      return hit?.key || null;
+    }
 
-    // Fall back to first variant
-    return variants[0]?.key || null;
+    return null;
   }
 
-  function getCurrentVariant(){
-    const k = String(state.selectedVariantKey || '').trim();
-    if (!k) return (state.variants && state.variants[0]) || null;
-    const hit = (state.variants || []).find(v => String(v?.key || '') === k);
-    return hit || (state.variants && state.variants[0]) || null;
+  // If user loaded a variant key already, prefer that.
+  if (/^(pci|upc|asin):/i.test(k)) {
+    const byKey = variants.find(v => String(v?.key || '') === k);
+    if (byKey) return k;
+
+    const kind = k.split(':')[0].toLowerCase();
+    const val  = k.split(':').slice(1).join(':').trim();
+
+    // If the exact key isn't present (common for upc searches when variant keys are pci),
+    // map to the variant that matches by field.
+    const mapped = mapToExistingVariantKey(kind, val);
+    if (mapped) return mapped;
+
+    // If nothing matches, keep k so backend can still resolve.
+    return k;
   }
 
-  // ---------- Controls ----------
+  // Otherwise, prefer selected keys from identity, but map them to real variant keys too.
+  const mappedPci  = identity.selected_pci  ? mapToExistingVariantKey('pci',  identity.selected_pci)  : null;
+  const mappedUpc  = identity.selected_upc  ? mapToExistingVariantKey('upc',  identity.selected_upc)  : null;
+  const mappedAsin = identity.selected_asin ? mapToExistingVariantKey('asin', identity.selected_asin) : null;
+
+  if (mappedPci)  return mappedPci;
+  if (mappedUpc)  return mappedUpc;
+  if (mappedAsin) return mappedAsin;
+
+  // No silent "first variant" fallback.
+  return null;
+}
+
+function getCurrentVariant(){
+  const k = String(state.selectedVariantKey || '').trim();
+  if (!k) return null;
+  const hit = (state.variants || []).find(v => String(v?.key || '') === k);
+  return hit || null;
+}
+
   $('#load').addEventListener('click', () => {
     const raw = $('#query').value.trim();
     const key = keyFromInput(raw);
@@ -275,14 +308,14 @@
     const id = state.identity || {};
     const DEFAULT_IMG = '../content-img/default.webp';
 
-    const cur = getCurrentVariant() || {};
+    const cur = getCurrentVariant() || null;
 
     // Title: prefer offer title, otherwise catalog model_name, otherwise fallback
     let title = null;
 
     if (!title) title =
-      (cur.model_name && String(cur.model_name).trim()) ||
-      (id.model_name && String(id.model_name).trim()) ||
+    (id.model_name && String(id.model_name).trim()) ||
+    (cur && cur.model_name && String(cur.model_name).trim()) ||
       (id.model_number && String(id.model_number).trim()) ||
       'Product';
 
@@ -318,8 +351,8 @@
       img.style.display = 'none';
     }
 
-    const brand = (cur.brand || id.brand || '').trim();
-    const category = (cur.category || id.category || '').trim();
+    const brand = (cur?.brand || id.brand || '').trim();
+    const category = (cur?.category || id.category || '').trim();
 
     const bw = document.getElementById('brandWrap');
     const cw = document.getElementById('categoryWrap');
