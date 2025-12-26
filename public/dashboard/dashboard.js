@@ -53,6 +53,7 @@
       walmart: 'Walmart',
       bestbuy: 'Best Buy',
       bby: 'Best Buy',
+      soloperformance: 'Solo Performance',
       radicaladventures: 'Radical Adventures',
       electricsport: 'Electric Sport',
       electricride: 'Electric Ride',
