@@ -150,7 +150,7 @@ async function findSeedFromListings(client, parsed) {
       `
       select store, store_sku, upc, pci, title, url, current_price_cents, current_price_observed_at, created_at
       from public.listings
-      where normStoreName(store) = $1
+      where replace(lower(btrim(store)), ' ', '') = $1
         and norm_sku(store_sku) = norm_sku($2)
       order by current_price_observed_at desc nulls last, created_at desc
       limit 1
@@ -387,7 +387,7 @@ async function resolveSelectedVariant(client, rawKey) {
       `
       select store, store_sku, upc, pci
       from public.listings
-      where lower(btrim(store)) = $1
+      where replace(lower(btrim(store)), ' ', '') = $1
         and norm_sku(store_sku) = norm_sku($2)
       order by current_price_observed_at desc nulls last, created_at desc
       limit 1
