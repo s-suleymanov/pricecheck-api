@@ -104,7 +104,6 @@ async function findSeedFromListings(client, parsed) {
         seed_listing: row
       };
     }
-    // If user typed asin but it isn't in listings, still return asin as seed.
     return { asin: value, upc: null, pci: null, seed_listing: null };
   }
 
