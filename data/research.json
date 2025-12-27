@@ -1,97 +1,97 @@
 {
   "tape": [
-    { "symbol": "HEADPHONES",  "change_pct": -4.3 },
-    { "symbol": "KEYBOARDS",   "change_pct": -2.6 },
-    { "symbol": "CONSOLES",    "change_pct": -1.9 },
-    { "symbol": "SMART HOME",  "change_pct": -3.8 },
-    { "symbol": "WEARABLES",   "change_pct": -2.1 },
-    { "symbol": "MONITORS",    "change_pct": -3.2 },
-    { "symbol": "PHONES",      "change_pct": -2.4 },
-    { "symbol": "TABLETS",     "change_pct": -1.6 }
+    { "symbol": "HEADPHONES",  "change_pct": -2.8 },
+    { "symbol": "KEYBOARDS",   "change_pct": -1.9 },
+    { "symbol": "CONSOLES",    "change_pct": -0.7 },
+    { "symbol": "SMART HOME",  "change_pct": -2.3 },
+    { "symbol": "WEARABLES",   "change_pct": -1.4 },
+    { "symbol": "MONITORS",    "change_pct": -2.6 },
+    { "symbol": "PHONES",      "change_pct": -1.1 },
+    { "symbol": "TABLETS",     "change_pct": -0.9 }
   ],
 
   "indices": {
-    "pc100_change_pct":       -3.0,
-    "electronics_change_pct": -3.5,
-    "deal_honesty_pct":        85,
-    "lowest_not_amazon_pct":   61
+    "pc100_change_pct":        -1.8,
+    "electronics_change_pct": -2.2,
+    "deal_honesty_pct":        83,
+    "lowest_not_amazon_pct":   64
   },
 
   "gainers": [
-    { "title": "Sony WH-1000XM5 Wireless Headphones",         "category": "Headphones", "store": "amazon",  "change_pct": -26.9 },
-    { "title": "Logitech G915 TKL Lightspeed Wireless",       "category": "Keyboards",  "store": "bestbuy", "change_pct": -23.2 },
-    { "title": "PlayStation 5 Slim Spider-Man 2 Bundle",      "category": "Consoles",   "store": "walmart", "change_pct": -20.5 },
-    { "title": "Google Nest Learning Thermostat (3rd Gen)",   "category": "Smart Home", "store": "target",  "change_pct": -19.1 },
-    { "title": "LG UltraGear 34\" 165Hz QHD Curved Monitor",  "category": "Monitors",   "store": "amazon",  "change_pct": -18.3 },
-    { "title": "AirPods Pro (2nd Gen, USB-C)",                "category": "Headphones", "store": "apple",   "change_pct": -9.4 }
+    { "title": "Sony WH-1000XM5 Wireless Headphones",       "category": "Headphones", "store": "amazon",  "change_pct": -18.4 },
+    { "title": "Samsung Odyssey G7 27\" 240Hz Monitor",    "category": "Monitors",   "store": "bestbuy", "change_pct": -16.9 },
+    { "title": "Apple Watch SE (2nd Gen) 44mm",            "category": "Wearables", "store": "target",  "change_pct": -14.2 },
+    { "title": "Google Nest Thermostat (2024)",            "category": "Smart Home", "store": "amazon",  "change_pct": -13.5 },
+    { "title": "Logitech MX Mechanical Wireless Keyboard", "category": "Keyboards",  "store": "amazon",  "change_pct": -11.8 },
+    { "title": "AirPods Pro (2nd Gen, USB-C)",              "category": "Headphones", "store": "apple",   "change_pct": -8.1 }
   ],
 
   "losers": [
-    { "title": "Xbox Series S 512GB",                  "category": "Consoles",  "store": "target",  "change_pct": 4.1 },
-    { "title": "Apple Watch Series 10 GPS 45mm",       "category": "Wearables", "store": "amazon",  "change_pct": 3.6 },
-    { "title": "Meta Quest 3 512GB",                   "category": "VR",        "store": "bestbuy", "change_pct": 3.0 },
-    { "title": "Canon EOS R50 Mirrorless Camera Kit",  "category": "Cameras",   "store": "walmart", "change_pct": 2.5 },
-    { "title": "iPad Pro 11\" M4 256GB",               "category": "Tablets",   "store": "amazon",  "change_pct": 2.0 },
-    { "title": "iPhone 16 Pro 128GB (Unlocked)",       "category": "Phones",    "store": "apple",   "change_pct": 1.8 }
+    { "title": "PlayStation 5 Slim Digital",         "category": "Consoles",  "store": "walmart", "change_pct": 3.9 },
+    { "title": "iPhone 16 Pro Max 256GB",             "category": "Phones",    "store": "apple",   "change_pct": 3.2 },
+    { "title": "iPad Pro 13\" M4 512GB",               "category": "Tablets",   "store": "amazon",  "change_pct": 2.6 },
+    { "title": "Meta Quest 3 512GB",                   "category": "VR",        "store": "bestbuy", "change_pct": 2.3 },
+    { "title": "Canon EOS R8 Mirrorless Camera Body",  "category": "Cameras",   "store": "amazon",  "change_pct": 1.9 },
+    { "title": "Apple Watch Series 10 GPS 45mm",       "category": "Wearables", "store": "amazon",  "change_pct": 1.6 }
   ],
 
   "heatmap": [
-    { "category": "Headphones",  "change_pct": -4.3 },
-    { "category": "Keyboards",   "change_pct": -2.6 },
-    { "category": "Monitors",    "change_pct": -3.2 },
-    { "category": "Consoles",    "change_pct": -1.9 },
-    { "category": "Smart Home",  "change_pct": -3.8 },
-    { "category": "Cameras",     "change_pct": -1.7 },
-    { "category": "Laptops",     "change_pct": -2.8 },
-    { "category": "Storage",     "change_pct": -4.5 },
-    { "category": "Wearables",   "change_pct": -2.1 },
-    { "category": "Accessories", "change_pct": -1.3 },
-    { "category": "Printers",    "change_pct": -0.9 },
-    { "category": "Routers",     "change_pct": -1.4 },
-    { "category": "Phones",      "change_pct": -2.4 },
-    { "category": "Tablets",     "change_pct": -1.6 }
+    { "category": "Headphones",  "change_pct": -2.8 },
+    { "category": "Keyboards",   "change_pct": -1.9 },
+    { "category": "Monitors",    "change_pct": -2.6 },
+    { "category": "Consoles",    "change_pct": -0.7 },
+    { "category": "Smart Home",  "change_pct": -2.3 },
+    { "category": "Cameras",     "change_pct": -1.2 },
+    { "category": "Laptops",     "change_pct": -2.1 },
+    { "category": "Storage",     "change_pct": -3.4 },
+    { "category": "Wearables",   "change_pct": -1.4 },
+    { "category": "Accessories", "change_pct": -0.8 },
+    { "category": "Printers",    "change_pct": -0.6 },
+    { "category": "Routers",     "change_pct": -1.0 },
+    { "category": "Phones",      "change_pct": -1.1 },
+    { "category": "Tablets",     "change_pct": -0.9 }
   ],
 
   "share": [
     {
       "category": "Headphones",
-      "lowest":    { "store": "Amazon",   "share_pct": 31 },
-      "runner_up": { "store": "Best Buy", "share_pct": 33 }
+      "lowest":    { "store": "Amazon",   "share_pct": 29 },
+      "runner_up": { "store": "Best Buy", "share_pct": 34 }
     },
     {
       "category": "Keyboards",
-      "lowest":    { "store": "Amazon",   "share_pct": 35 },
-      "runner_up": { "store": "Best Buy", "share_pct": 31 }
+      "lowest":    { "store": "Amazon",   "share_pct": 33 },
+      "runner_up": { "store": "Best Buy", "share_pct": 30 }
     },
     {
       "category": "Monitors",
-      "lowest":    { "store": "Best Buy", "share_pct": 38 },
-      "runner_up": { "store": "Amazon",   "share_pct": 29 }
+      "lowest":    { "store": "Best Buy", "share_pct": 40 },
+      "runner_up": { "store": "Amazon",   "share_pct": 27 }
     },
     {
       "category": "Smart Home",
-      "lowest":    { "store": "Amazon",   "share_pct": 40 },
-      "runner_up": { "store": "Target",   "share_pct": 27 }
+      "lowest":    { "store": "Amazon",   "share_pct": 42 },
+      "runner_up": { "store": "Target",   "share_pct": 26 }
     },
     {
       "category": "Wearables",
-      "lowest":    { "store": "Target",   "share_pct": 33 },
-      "runner_up": { "store": "Amazon",   "share_pct": 30 }
+      "lowest":    { "store": "Target",   "share_pct": 35 },
+      "runner_up": { "store": "Amazon",   "share_pct": 29 }
     },
     {
       "category": "Storage",
-      "lowest":    { "store": "Amazon",   "share_pct": 44 },
-      "runner_up": { "store": "Walmart",  "share_pct": 26 }
+      "lowest":    { "store": "Amazon",   "share_pct": 46 },
+      "runner_up": { "store": "Walmart",  "share_pct": 25 }
     },
     {
       "category": "Phones",
-      "lowest":    { "store": "Apple",    "share_pct": 36 },
-      "runner_up": { "store": "Amazon",   "share_pct": 28 }
+      "lowest":    { "store": "Apple",    "share_pct": 38 },
+      "runner_up": { "store": "Amazon",   "share_pct": 26 }
     },
     {
       "category": "Tablets",
-      "lowest":    { "store": "Apple",    "share_pct": 32 },
-      "runner_up": { "store": "Best Buy", "share_pct": 27 }
+      "lowest":    { "store": "Apple",    "share_pct": 34 },
+      "runner_up": { "store": "Best Buy", "share_pct": 26 }
     }
   ]
 }
