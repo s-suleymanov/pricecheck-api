@@ -9,7 +9,7 @@
     offers:[],
     observed:[],
     range:30,
-    selectedVariantKey:null,   // NEW: pci:/upc:/asin:
+    selectedVariantKey:null,   // NEW: pci:/upc
     lastKey:null
   };
 
@@ -120,9 +120,9 @@
   }
 
   function chooseSelectedVariantKeyFromKey(key, data){
-  const variants = Array.isArray(data?.variants) ? data.variants : [];
-  const identity = data?.identity || {};
-  const k = String(key || '').trim();
+    const variants = Array.isArray(data?.variants) ? data.variants : [];
+    const identity = data?.identity || {};
+    const k = String(key || '').trim();
 
   function mapToExistingVariantKey(kind, rawVal){
     const val = String(rawVal || '').trim();
@@ -131,12 +131,6 @@
     if (kind === 'upc') {
       const want = cleanUpc(val);
       const hit = variants.find(v => cleanUpc(v?.upc) === want);
-      return hit?.key || null;
-    }
-
-    if (kind === 'asin') {
-      const want = up(val);
-      const hit = variants.find(v => up(v?.asin) === want);
       return hit?.key || null;
     }
 
@@ -149,16 +143,13 @@
     return null;
   }
 
-  // If user loaded a variant key already, prefer that.
-  if (/^(pci|upc|asin):/i.test(k)) {
+  if (/^(pci|upc):/i.test(k)) {
     const byKey = variants.find(v => String(v?.key || '') === k);
     if (byKey) return k;
 
     const kind = k.split(':')[0].toLowerCase();
     const val  = k.split(':').slice(1).join(':').trim();
 
-    // If the exact key isn't present (common for upc searches when variant keys are pci),
-    // map to the variant that matches by field.
     const mapped = mapToExistingVariantKey(kind, val);
     if (mapped) return mapped;
 
@@ -166,16 +157,21 @@
     return k;
   }
 
-  // Otherwise, prefer selected keys from identity, but map them to real variant keys too.
-  const mappedPci  = identity.selected_pci  ? mapToExistingVariantKey('pci',  identity.selected_pci)  : null;
-  const mappedUpc  = identity.selected_upc  ? mapToExistingVariantKey('upc',  identity.selected_upc)  : null;
-  const mappedAsin = identity.selected_asin ? mapToExistingVariantKey('asin', identity.selected_asin) : null;
+  // Prefer selected keys from identity (these should represent the page you are on)
+  const mappedPci = identity.selected_pci ? mapToExistingVariantKey('pci', identity.selected_pci) : null;
+  const mappedUpc = identity.selected_upc ? mapToExistingVariantKey('upc', identity.selected_upc) : null;
 
-  if (mappedPci)  return mappedPci;
-  if (mappedUpc)  return mappedUpc;
-  if (mappedAsin) return mappedAsin;
+  if (mappedPci) return mappedPci;
+  if (mappedUpc) return mappedUpc;
 
-  // No silent "first variant" fallback.
+  // LAST RESORT fallback: use seed anchors too (prevents dropdown defaulting to first variant)
+  const fallbackPci = identity.pci ? mapToExistingVariantKey('pci', identity.pci) : null;
+  const fallbackUpc = identity.upc ? mapToExistingVariantKey('upc', identity.upc) : null;
+
+  if (fallbackPci) return fallbackPci;
+  if (fallbackUpc) return fallbackUpc;
+
+  // If still nothing, do not silently pick the first variant.
   return null;
 }
 
@@ -225,7 +221,7 @@ function getCurrentVariant(){
     setTimeout(()=>$('#pmNote').textContent='',900);
   });
 
-  // IMPORTANT: selecting a variant triggers a load using variant.key (pci/upc/asin)
+  // IMPORTANT: selecting a variant triggers a load using variant.key (pci/upc)
   $('#variant').addEventListener('change', (e) => {
     const k = e.target.selectedOptions[0]?.dataset.key;
     if (k) {
@@ -330,7 +326,7 @@ function getCurrentVariant(){
     const parts = [];
     const selPci = id.selected_pci ? String(id.selected_pci).trim() : '';
     const selUpc = id.selected_upc ? cleanUpc(id.selected_upc) : '';
-    const selAsin = id.selected_asin ? up(id.selected_asin) : '';
+    const selAsin = id.asin ? up(id.asin) : '';
 
     if (selPci) parts.push(`PCI ${selPci}`);
     if (selUpc) parts.push(`UPC ${selUpc}`);
