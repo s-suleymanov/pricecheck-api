@@ -22,7 +22,8 @@ function normalizePrefix(raw) {
 }
 
 function isLikelyUPC(s) {
-  return /^[0-9\s-]+$/.test(s || '');
+  const v = String(s || '').replace(/[\s-]/g, '');
+  return /^[0-9]{12,14}$/.test(v);
 }
 
 function isLikelyPCI(s) {
