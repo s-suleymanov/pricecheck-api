@@ -112,7 +112,9 @@
 
     if (/apple\.com/i.test(t)) return t;
 
-    if (/^\d{12}$/.test(t)) return `upc:${t}`;
+    if (/^\d{7}$/.test(t)) return `bby:${t}`;
+    if (/^\d{8}$/.test(t)) return `tcin:${t}`;     // optional
+    if (/^\d{12,14}$/.test(t)) return `upc:${t}`;  // I’d change 12 -> 12,14 to match your rule
     if (/^[A-Z0-9]{10}$/i.test(t)) return `asin:${t.toUpperCase()}`;
     if (isLikelyPci(t)) return `pci:${t}`;
 
