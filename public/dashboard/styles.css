@@ -270,6 +270,29 @@ details[open]{background:#fff}
   margin-top:10px;
 }
 
+/* Recall banner variant */
+.pc-warn--recall{
+  background:#ffeef0;
+  border:1px solid #ffb3bd;
+}
+
+.pc-warn--recall .pc-warn__title{
+  color:#9f1239;
+}
+
+.pc-warn__link{
+  display:inline-block;
+  font-weight:600;
+  text-decoration:underline;
+  color: inherit;
+}
+
+.pc-warn__link:hover{
+  opacity:.9;
+}
+
+#ps-warn + #ps-recall{ margin-top:8px; }
+
 .pc-warn__icon svg{
   width:40px;                  /* bigger icon */
   height:40px;

@@ -315,6 +315,24 @@ function getCurrentVariant(){
       if (warnEl) warnEl.hidden = !(id.dropship_warning === true);
     }
 
+    {
+      const recallWrap = document.querySelector('#ps-recall');
+      const recallLink = document.querySelector('#ps-recall-link');
+
+      const url = (id.recall_url || '').trim();
+
+      if (recallWrap) recallWrap.hidden = !url;
+
+      if (recallLink) {
+        if (url) {
+          recallLink.href = url;
+        } else {
+          recallLink.removeAttribute('href');
+        }
+      }
+
+    }
+
     const cur = getCurrentVariant() || null;
 
     // Title: prefer offer title, otherwise catalog model_name, otherwise fallback
