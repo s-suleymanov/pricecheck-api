@@ -367,10 +367,24 @@ function getCurrentVariant(){
     const cb = document.getElementById('categoryBtn');
 
     bw.hidden = !brand;
-    if (brand) bb.textContent = brand;
+      if (brand) {
+        bb.textContent = brand;
+        bb.onclick = () => {
+          location.href = `/browse/?brand=${encodeURIComponent(brand)}`;
+        };
+      } else {
+        bb.onclick = null;
+      }
 
-    cw.hidden = !category;
-    if (category) cb.textContent = category;
+      cw.hidden = !category;
+      if (category) {
+        cb.textContent = category;
+        cb.onclick = () => {
+          location.href = `/browse/?category=${encodeURIComponent(category)}`;
+        };
+      } else {
+        cb.onclick = null;
+      }
   }
 
   function hydrateKpis(){

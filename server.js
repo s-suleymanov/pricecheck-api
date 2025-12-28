@@ -9,6 +9,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // feature routers
+app.use(require('./routes/browse'));
 app.use(require('./routes/dashboard'));
 app.use(require('./routes/insights'));
 app.use(require('./routes/research'));

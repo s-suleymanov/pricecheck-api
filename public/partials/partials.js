@@ -31,7 +31,7 @@
 
     const allowedRoots = [
       "/",
-      "/privacy-policy/",
+      "/browse/",
       "/dashboard/",
       "/research/",
       "/insights/",

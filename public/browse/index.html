@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PriceCheck • Browse</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/browse/styles.css">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/browse/browse.js" defer></script>
+  <script src="/partials/partials.js" defer></script>
+
+</head>
+<body>
+    <div class="page">
+    <div id="site-header"></div>
+
+        <main class="wrap">
+            <h1 id="title">Browse</h1>
+
+            <section class="card controls">
+            <div class="row">
+                <label class="muted">Type</label>
+                <select id="type">
+                <option value="brand">Brand</option>
+                <option value="category">Category</option>
+                </select>
+
+                <label class="muted">Value</label>
+                <input id="value" type="search" placeholder="Sony or Headphones">
+                <button id="go" class="btn">Go</button>
+            </div>
+
+            <div class="row" style="margin-top:10px">
+                <div class="muted" id="meta"></div>
+                <div class="pager">
+                <button id="prev" class="pill">Prev</button>
+                <span class="muted" id="pageLabel"></span>
+                <button id="next" class="pill">Next</button>
+                </div>
+            </div>
+            </section>
+
+            <section class="grid" id="grid"></section>
+
+            <div class="card muted" id="empty" hidden>
+            No results.
+            </div>
+        </main>
+
+        <div id="site-footer"></div>
+    </div>
+
+</body>
+</html>
