@@ -310,6 +310,11 @@ function getCurrentVariant(){
     const id = state.identity || {};
     const DEFAULT_IMG = '../content-img/default.webp';
 
+    {
+      const warnEl = document.querySelector('#ps-warn'); // or whatever your dashboard warning element id is
+      if (warnEl) warnEl.hidden = !(id.dropship_warning === true);
+    }
+
     const cur = getCurrentVariant() || null;
 
     // Title: prefer offer title, otherwise catalog model_name, otherwise fallback

@@ -257,6 +257,34 @@ details[open]{background:#fff}
   color: var(--ink);
 }
 
+/* Dropshipping warning banner */
+.pc-warn{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:9px 10px;
+  border-radius:12px;
+  background:#fff7e6;
+  border:1px solid #ffe2a8;
+  box-shadow:0 1px 0 rgba(0,0,0,0.04);
+  margin-top:10px;
+}
+
+.pc-warn__icon svg{
+  width:40px;                  /* bigger icon */
+  height:40px;
+  margin-top: 7px;
+}
+
+.pc-warn__title{ font-weight:600; }
+.pc-warn__text{ color: var(--muted); font-size:.95rem; margin-top:2px; }
+
+/* Critical: make hidden always hide */
+.pc-warn[hidden],
+#ps-warn[hidden]{
+  display:none !important;
+}
+
 @media (max-width:500px){
   .grid2, .grid3, .grid4 {
     grid-template-columns:1fr

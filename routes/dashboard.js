@@ -187,7 +187,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
   if (pci) {
     const r = await client.query(
       `
-      select id, upc, pci, model_name, model_number, brand, category, image_url, variant_label, created_at
+      select id, upc, pci, model_name, model_number, brand, category, image_url, variant_label, created_at, dropship_warning
       from public.catalog
       where pci is not null and btrim(pci) <> ''
         and upper(btrim(pci)) = upper(btrim($1))
@@ -204,7 +204,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
   if (upc) {
     const r = await client.query(
       `
-      select id, upc, pci, model_name, model_number, brand, category, image_url, variant_label, created_at
+      select id, upc, pci, model_name, model_number, brand, category, image_url, variant_label, created_at, dropship_warning
       from public.catalog
       where norm_upc(upc) = norm_upc($1)
       order by created_at desc
@@ -502,6 +502,7 @@ router.get('/api/compare/:key', async (req, res) => {
         brand: catalogIdentity?.brand || null,
         category: catalogIdentity?.category || null,
         image_url: catalogIdentity?.image_url || null,
+        dropship_warning: !!selectedCatalog?.dropship_warning,
 
         // selected anchors (PCI/UPC only)
         selected_pci: selectedKeys.pci || null,
