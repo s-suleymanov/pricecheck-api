@@ -55,7 +55,7 @@
       bby: 'Best Buy',
       soloperformance: 'Solo Performance',
       radicaladventures: 'Radical Adventures',
-      brandsmartusa: 'BrandsMart USA',
+      brandsmart: 'BrandsMart',
       electricsport: 'Electric Sport',
       electricride: 'Electric Ride',
       apple: 'Apple',
