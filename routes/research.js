@@ -175,10 +175,10 @@ router.get('/api/research/gainers', async (req, res) => {
     select
       coalesce(nullif(title,''),'Unknown') as title,
       coalesce(
-        (select category
-         from asins a
-         where a.upc is not null and norm_upc(a.upc) = norm_upc(chg.upc)
-         limit 1),
+        (select c.category
+        from catalog c
+        where c.upc is not null and norm_upc(c.upc) = norm_upc(chg.upc)
+        limit 1),
         'Uncategorized'
       ) as category,
       lower(btrim(store)) as store,
@@ -250,10 +250,10 @@ router.get('/api/research/losers', async (req, res) => {
     select
       coalesce(nullif(title,''),'Unknown') as title,
       coalesce(
-        (select category
-         from asins a
-         where a.upc is not null and norm_upc(a.upc) = norm_upc(chg.upc)
-         limit 1),
+        (select c.category
+          from catalog c
+          where c.upc is not null and norm_upc(c.upc) = norm_upc(chg.upc)
+          limit 1),
         'Uncategorized'
       ) as category,
       lower(btrim(store)) as store,
@@ -296,9 +296,9 @@ router.get('/api/research/losers', async (req, res) => {
 router.get('/api/research/heatmap', async (req, res) => {
   const sql = `
     with a as (
-      select asin, norm_upc(upc) as upc_norm,
-             coalesce(nullif(category,''),'Uncategorized') as category
-      from asins
+      select norm_upc(upc) as upc_norm,
+            coalesce(nullif(category,''),'Uncategorized') as category
+      from catalog
     ),
     last7 as (
       select ph.item_key,

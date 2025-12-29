@@ -448,6 +448,11 @@ router.get('/dashboard', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
 });
 
+router.get('/dashboard/:slug', (_req, res) => {
+  // Same SPA page, but prettier URLs like /dashboard/apple-airpods-max?key=...
+  res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
+});
+
 router.get('/api/compare/:key', async (req, res) => {
   const rawKey = req.params.key;
 

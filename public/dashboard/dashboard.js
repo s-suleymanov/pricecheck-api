@@ -13,6 +13,91 @@
     lastKey:null
   };
 
+  function slugifyTitle(s) {
+  const raw = String(s || '').trim().toLowerCase();
+  if (!raw) return 'product';
+
+  return raw
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')     // non-alnum to dashes
+    .replace(/^-+|-+$/g, '')         // trim dashes
+    .slice(0, 80) || 'product';
+}
+
+  function setMeta(name, content) {
+    if (!content) return;
+    let el = document.querySelector(`meta[name="${name}"]`);
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute('name', name);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', content);
+  }
+
+  function setOg(property, content) {
+    if (!content) return;
+    let el = document.querySelector(`meta[property="${property}"]`);
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute('property', property);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', content);
+  }
+
+  function setCanonical(href) {
+    if (!href) return;
+    let el = document.querySelector('link[rel="canonical"]');
+    if (!el) {
+      el = document.createElement('link');
+      el.setAttribute('rel', 'canonical');
+      document.head.appendChild(el);
+    }
+    el.setAttribute('href', href);
+  }
+
+  function prettyDashboardUrl(key, title) {
+    const slug = slugifyTitle(title);
+    const url = new URL(location.href);
+    url.pathname = `/dashboard/${slug}`;
+    url.searchParams.set('key', key);
+    return url;
+  }
+
+  function applyPrettyUrl(key, title, mode = 'replace') {
+    const url = prettyDashboardUrl(key, title);
+    if (mode === 'push') history.pushState({ key }, '', url);
+    else history.replaceState({ key }, '', url);
+  }
+
+  function applySeoFromData(title, imageUrl, key) {
+    const cleanTitle = String(title || 'Product').trim();
+    const pageTitle = `${cleanTitle} • PriceCheck`;
+
+    document.title = pageTitle;
+
+    const desc = `Live price comparison across stores for ${cleanTitle}. Variant-aware matching by PCI and UPC.`;
+    setMeta('description', desc);
+
+    const canonical = prettyDashboardUrl(key, cleanTitle).toString();
+    setCanonical(canonical);
+
+    setOg('og:title', pageTitle);
+    setOg('og:description', desc);
+    setOg('og:url', canonical);
+
+    if (imageUrl) {
+      // ensure absolute for share bots
+      const abs = imageUrl.startsWith('http') ? imageUrl : `${location.origin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+      setOg('og:image', abs);
+      setMeta('twitter:image', abs);
+    }
+
+    setMeta('twitter:title', pageTitle);
+    setMeta('twitter:description', desc);
+  }
+
   // ---------- URL helpers ----------
   function applyKeyToUrl(k, mode = 'push') {
     const url = new URL(location.href);
@@ -201,7 +286,17 @@ function getCurrentVariant(){
   $('#share').addEventListener('click', () => {
     const raw = $('#query').value.trim();
     const key = keyFromInput(raw) || currentKeyFromUrl();
-    const link = `${location.origin}/dashboard/?key=${encodeURIComponent(key || '')}`;
+    const id = state.identity || {};
+    const cur = getCurrentVariant() || null;
+
+    const bestTitle =
+      (id.model_name && String(id.model_name).trim()) ||
+      (cur?.model_name && String(cur.model_name).trim()) ||
+      (id.model_number && String(id.model_number).trim()) ||
+      'Product';
+
+    const link = prettyDashboardUrl(key || '', bestTitle).toString();
+
     navigator.clipboard.writeText(link);
     flip('#share','Copied','Copy share link',900);
   });
@@ -258,6 +353,28 @@ function getCurrentVariant(){
       state.observed = Array.isArray(data.observed) ? data.observed : [];
 
       state.selectedVariantKey = chooseSelectedVariantKeyFromKey(state.lastKey, data);
+
+      const id = data.identity || {};
+      const cur = (() => {
+        const k = chooseSelectedVariantKeyFromKey(state.lastKey, data);
+        if (!k) return null;
+        return (Array.isArray(data.variants) ? data.variants : []).find(v => String(v?.key || '') === k) || null;
+      })();
+
+      const bestTitle =
+        (id.model_name && String(id.model_name).trim()) ||
+        (cur?.model_name && String(cur.model_name).trim()) ||
+        (id.model_number && String(id.model_number).trim()) ||
+        'Product';
+
+      const bestImg =
+        (cur?.image_url && String(cur.image_url).trim()) ||
+        (id.image_url && String(id.image_url).trim()) ||
+        '';
+
+      applyPrettyUrl(state.lastKey, bestTitle, 'replace');
+      applySeoFromData(bestTitle, bestImg, state.lastKey);
+
 
       hydrateHeader();
       hydrateKpis();

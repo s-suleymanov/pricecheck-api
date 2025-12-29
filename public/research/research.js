@@ -180,21 +180,6 @@
     return s;
   }
 
-  function wireSearch(){
-    const wrap  = document.querySelector('.search');
-    const input = wrap ? wrap.querySelector('input[type="text"]') : null;
-    const btn   = wrap ? wrap.querySelector('.btn') : null;
-    if (!input || !btn) return;
-
-    function go(){
-      const key = keyFromInput(input.value);
-      if (!key) { location.href = '/dashboard/'; return; }
-      location.href = '/dashboard/?key=' + encodeURIComponent(key);
-    }
-    btn.addEventListener('click', (e)=>{ e.preventDefault(); go(); });
-    input.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); go(); } });
-  }
-
   // ---- utils ----
   function storePretty(s){
     s = String(s||'').toLowerCase();
@@ -219,6 +204,5 @@
     hydrateLosers();
     hydrateHeatmap();
     hydrateShare();
-    wireSearch();
   });
 })();
