@@ -56,6 +56,7 @@
       soloperformance: 'Solo Performance',
       radicaladventures: 'Radical Adventures',
       brandsmart: 'BrandsMart',
+      aliexpress: 'AliExpress',
       electricsport: 'Electric Sport',
       electricride: 'Electric Ride',
       apple: 'Apple',
