@@ -26,15 +26,26 @@ router.get("/browse", (_req, res) => {
 
 // GET /api/browse?type=brand&value=Sony&page=1&limit=24
 router.get("/api/browse", async (req, res) => {
-  const type = String(req.query.type || "").toLowerCase();
-  const value = normText(req.query.value);
+  let type = String(req.query.type || "").toLowerCase();
+  let value = normText(req.query.value);
+
+  const brand = normText(req.query.brand);
+  const category = normText(req.query.category);
+
+  if (brand) {
+    type = "brand";
+    value = brand;
+  } else if (category) {
+    type = "category";
+    value = category;
+  }
 
   if (!value || (type !== "brand" && type !== "category")) {
-    return res.status(400).json({ ok: false, error: "type must be brand|category and value is required" });
+    return res.status(400).json({ ok: false, error: "brand or category is required" });
   }
 
   const page = clampInt(req.query.page, 1, 1000000, 1);
-  const limit = clampInt(req.query.limit, 6, 60, 24);
+  const limit = clampInt(req.query.limit, 6, 500, 60);
   const offset = (page - 1) * limit;
 
   const client = await pool.connect();
@@ -139,6 +150,72 @@ router.get("/api/browse", async (req, res) => {
     });
   } catch (e) {
     console.error("browse error:", e);
+    res.status(500).json({ ok: false, error: "server_error" });
+  } finally {
+    client.release();
+  }
+});
+
+// GET /api/browse_facets?kind=category&limit=24
+router.get("/api/browse_facets", async (req, res) => {
+  const kind = String(req.query.kind || "category").toLowerCase();
+  if (kind !== "category" && kind !== "brand") {
+    return res.status(400).json({ ok: false, error: "kind must be category|brand" });
+  }
+
+  const limit = clampInt(req.query.limit, 6, 500, 60);
+
+  const client = await pool.connect();
+  try {
+    // Count distinct model_number groups per category/brand
+    // Also pick a representative image (latest created row within that category/brand)
+    const sql = `
+      WITH base AS (
+        SELECT
+          upper(btrim(model_number)) AS model_number,
+          ${kind} AS facet,
+          image_url,
+          created_at,
+          id
+        FROM public.catalog
+        WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
+          AND ${kind} IS NOT NULL AND btrim(${kind}) <> ''
+      ),
+      counts AS (
+        SELECT
+          lower(btrim(facet)) AS facet_norm,
+          MIN(btrim(facet)) AS facet_label,
+          COUNT(DISTINCT model_number)::int AS products
+        FROM base
+        GROUP BY lower(btrim(facet))
+      ),
+      images AS (
+        SELECT DISTINCT ON (lower(btrim(facet)))
+          lower(btrim(facet)) AS facet_norm,
+          image_url
+        FROM base
+        WHERE image_url IS NOT NULL AND btrim(image_url) <> ''
+        ORDER BY lower(btrim(facet)), created_at DESC NULLS LAST, id DESC
+      )
+      SELECT
+        c.facet_label AS value,
+        c.products,
+        i.image_url
+      FROM counts c
+      LEFT JOIN images i ON i.facet_norm = c.facet_norm
+      ORDER BY c.products DESC, c.facet_label ASC
+      LIMIT $1
+    `;
+
+    const { rows } = await client.query(sql, [limit]);
+
+    res.json({
+      ok: true,
+      kind,
+      results: rows || [],
+    });
+  } catch (e) {
+    console.error("browse_facets error:", e);
     res.status(500).json({ ok: false, error: "server_error" });
   } finally {
     client.release();
