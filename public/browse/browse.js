@@ -133,7 +133,10 @@
 
 function renderFacets(kind, rows) {
   $("#title").textContent = "Browse PriceCheck";
-  $("#meta").textContent = rows.length ? `Updated weekly • ${rows.length} ${kind}s` : "No data yet";
+  const label = kind === "category" ? "categories" : `${kind}s`;
+  $("#meta").textContent = rows.length
+    ? `Updated Weekly • ${rows.length} ${label} added`
+    : "No data yet";
   $("#pageLabel").textContent = "";
   $("#prev").disabled = true;
   $("#next").disabled = true;
