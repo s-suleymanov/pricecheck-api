@@ -22,20 +22,34 @@
   }
 
   function timeAgo(d) {
-    if (!d) return "";
-    const sec = Math.floor((Date.now() - d.getTime()) / 1000);
-    if (sec < 60) return "just now";
+  if (!d) return "";
+
+  const diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+
+  // future dates
+  if (diffSec < 0) {
+    const sec = Math.abs(diffSec);
     const min = Math.floor(sec / 60);
-    if (min < 60) return `${min} min ago`;
+    if (min < 60) return `in ${min} min`;
     const hr = Math.floor(min / 60);
-    if (hr < 24) return `${hr} hour${hr === 1 ? "" : "s"} ago`;
+    if (hr < 24) return `in ${hr} hour${hr === 1 ? "" : "s"}`;
     const day = Math.floor(hr / 24);
-    if (day < 30) return `${day} day${day === 1 ? "" : "s"} ago`;
-    const mo = Math.floor(day / 30);
-    if (mo < 12) return `${mo} month${mo === 1 ? "" : "s"} ago`;
-    const yr = Math.floor(mo / 12);
-    return `${yr} year${yr === 1 ? "" : "s"} ago`;
+    return `in ${day} day${day === 1 ? "" : "s"}`;
   }
+
+  // past dates
+  if (diffSec < 60) return "just now";
+  const min = Math.floor(diffSec / 60);
+  if (min < 60) return `${min} min ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} hour${hr === 1 ? "" : "s"} ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 30) return `${day} day${day === 1 ? "" : "s"} ago`;
+  const mo = Math.floor(day / 30);
+  if (mo < 12) return `${mo} month${mo === 1 ? "" : "s"} ago`;
+  const yr = Math.floor(mo / 12);
+  return `${yr} year${yr === 1 ? "" : "s"} ago`;
+}
 
   function isExternalUrl(url) {
     return /^https?:\/\//i.test(url);
@@ -105,14 +119,17 @@ function expandQuickLines(arr) {
 
   const src = normKey(pickSource(p));
 
-  // Use files stored under: public/insights/logo/
   const map = {
-    "pricecheck": "/insights/logo/logo.png", // or "/logo/logo.png" if you prefer
-    "wired": "/insights/logo/wired.png",
-    "techcrunch": "/insights/logo/techcrunch.png",
-    "tech crunch": "/insights/logo/techcrunch.png",
+    "pricecheck": "/insights/logo/logo.png",
+    "wired.com": "/insights/logo/wired.webp",
+    "cnet.com": "/insights/logo/cnet.png",
+    "techspot.com": "/insights/logo/techspot.png",
+    "forbes.com": "/insights/logo/forbes.png",
+    "mashable.com": "/insights/logo/mashables.png",
+    "techcrunch.com": "/insights/logo/techcrunch.png",
     "nbc news": "/insights/logo/nbc-news.png",
-    "the verge": "/insights/logo/the-verge.png",
+    "consumerreports.org": "/insights/logo/crs.webp",
+    "theverge.com": "/insights/logo/verge.webp",
     "engadget": "/insights/logo/engadget.png",
   };
 
@@ -203,7 +220,8 @@ function expandQuickLines(arr) {
   // Sort newest first
   list.sort((a, b) => +new Date(pickDate(b)) - +new Date(pickDate(a)));
 
-  const heroes = list.slice(0, heroCount);
+  const withImages = list.filter(p => pickImg(p));
+  const heroes = withImages.slice(0, heroCount);
 
   const heroSet = new Set(heroes);
   let rest = list.filter((p) => !heroSet.has(p));
