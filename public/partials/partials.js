@@ -90,31 +90,35 @@
     mq.addEventListener?.("change", () => close());
   }
 
-    function wireDonateStrip() {
-    const KEY = "pc_don_strip_hide_until";
+  function wireDonateStrip() {
+  const KEY = "pc_don_strip_hide_until";
 
-    const apply = () => {
-      const bar = document.getElementById("pcDonStrip");
-      if (!bar) return;
-      const now = Date.now();
-      const hideUntil = parseInt(localStorage.getItem(KEY) || "0", 10) || 0;
-      bar.style.display = hideUntil > now ? "none" : "";
-    };
+  const apply = () => {
+    const bar = document.getElementById("pcDonStrip");
+    if (!bar) return;
 
-    apply();
+    const now = Date.now();
+    const hideUntil = parseInt(localStorage.getItem(KEY) || "0", 10) || 0;
 
-    document.addEventListener("click", (e) => {
-      const btn = e.target.closest("#pcDonClose");
-      if (!btn) return;
+    // show only if not dismissed
+    bar.style.display = hideUntil > now ? "none" : "";
+  };
 
-      const bar = document.getElementById("pcDonStrip");
-      if (!bar) return;
+  apply();
 
-      const until = Date.now() + 7 * 24 * 60 * 60 * 1000;
-      localStorage.setItem(KEY, String(until));
-      bar.style.display = "none";
-    });
-  }
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("#pcDonClose");
+    if (!btn) return;
+
+    const bar = document.getElementById("pcDonStrip");
+    if (!bar) return;
+
+    const until = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    localStorage.setItem(KEY, String(until));
+
+    bar.style.display = "none";
+  });
+}
 
   // Load both partials
   const headerOk = await loadPartial("site-header", "/partials/header.html");
