@@ -28,4 +28,43 @@
     .heat .cell{border:1px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center}
     .hot{background:#ecfdf5}
     .cold{background:#fffbeb}
-    @media (max-width:1100px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.heat{grid-template-columns:repeat(3,1fr)}}
+    .pc-ana{margin:0 0 18px}
+.pc-ana__head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}
+
+.pc-card{
+  background:#f9fafb;
+  border:1px solid #eaecef;
+  border-radius:16px;
+  padding:16px 18px;
+  box-shadow:0 1px 2px rgba(17,24,39,.06)
+}
+.pc-tile{
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:14px 16px;
+  box-shadow:0 1px 1px rgba(17,24,39,.04)
+}
+
+.pc-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.pc-grid2{grid-template-columns:1fr}}
+
+.pc-muted{color:#6b7280;font-size:.95rem;margin:0 0 8px}
+
+.pc-tablewrap{overflow:auto;border-radius:14px}
+.pc-table{width:100%;border-collapse:collapse;border:1px solid #eaecef;border-radius:14px;overflow:hidden}
+.pc-table th,.pc-table td{border-bottom:1px solid #eaecef;padding:10px 10px;text-align:left;vertical-align:top}
+.pc-table thead th{background:#f9fafb;font-weight:650}
+
+.pc-badge{display:inline-block;font-size:.82rem;padding:3px 8px;border-radius:999px;border:1px solid #eaecef;background:#fff}
+.pc-badge.ok{color:#065f46;background:#ecfdf5;border-color:#a7f3d0}
+.pc-badge.warn{color:#92400e;background:#fffbeb;border-color:#fde68a}
+.pc-badge.info{color:#1e3a8a;background:#eff6ff;border-color:#bfdbfe}
+
+.pc-meter{display:inline-grid;grid-template-columns:repeat(5,1fr);gap:3px;align-items:center}
+.pc-meter span{display:block;height:10px;background:#e5e7eb;border-radius:3px}
+.pc-meter span.active{background:linear-gradient(90deg,#32c1b1,#5c7cff)}
+
+.pc-rowhead{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#6b7280;font-size:.9rem}
+.pc-rowhead__title{font-weight:650;color:#111}
+.pc-rowhead__meta{color:#6b7280}
+@media (max-width:1100px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.heat{grid-template-columns:repeat(3,1fr)}}

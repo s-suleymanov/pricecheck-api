@@ -90,18 +90,39 @@
     mq.addEventListener?.("change", () => close());
   }
 
+    function wireDonateStrip() {
+    const KEY = "pc_don_strip_hide_until";
+
+    const apply = () => {
+      const bar = document.getElementById("pcDonStrip");
+      if (!bar) return;
+      const now = Date.now();
+      const hideUntil = parseInt(localStorage.getItem(KEY) || "0", 10) || 0;
+      bar.style.display = hideUntil > now ? "none" : "";
+    };
+
+    apply();
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("#pcDonClose");
+      if (!btn) return;
+
+      const bar = document.getElementById("pcDonStrip");
+      if (!bar) return;
+
+      const until = Date.now() + 7 * 24 * 60 * 60 * 1000;
+      localStorage.setItem(KEY, String(until));
+      bar.style.display = "none";
+    });
+  }
+
   // Load both partials
   const headerOk = await loadPartial("site-header", "/partials/header.html");
   const footerOk = await loadPartial("site-footer", "/partials/footer.html");
 
-  // Only run header-dependent logic if header loaded
-  if (headerOk) {
+   if (headerOk) {
     setActiveNavStrict();
     wireMobileMenu();
-  }
-
-  // footerOk is just for debugging if needed
-  if (!footerOk) {
-    // optional: console.warn("Footer did not load");
+    wireDonateStrip();
   }
 })();

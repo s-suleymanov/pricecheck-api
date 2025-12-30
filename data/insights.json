@@ -1,42 +1,52 @@
 [
   {
-    "slug": "bestbuy-tech-q4-sample",
-    "title": "Best Buy Technology Q4 CSV",
-    "excerpt": "Sample dataset for Best Buy technology products for Q4. Columns include SKU, Variants, Price, UPC, URL, with approximate size of 2.72 KB (2,789 bytes).",
-    "type": "data",
-    "topic": "headphones",
-    "minutes": null,
-    "url": "/insights/library/data/bestbuy-tech-sample.csv",
-    "date": "2025-11-04"
-  },
-  {
+    "type": "updates",
     "slug": "pricecheck-0-8-5",
     "title": "PriceCheck 0.8.5 Update",
-    "excerpt": "This release improves the Dashboard, makes variant selection accurate, and refines the coverage snapshot so you can find the best price faster.",
-    "type": "updates",
+    "summary": "This release improves the Dashboard, makes variant selection accurate, and refines the coverage snapshot so you can find the best price faster.",
+    "source": "PriceCheck",
     "topic": "Release Notes",
     "minutes": 5,
     "url": "/insights/library/updates/pricecheck-0-8-5/index.html",
-    "date": "2025-11-14"
+    "published_at": "2025-11-14T00:00:00Z"
   },
   {
+    "type": "updates",
     "slug": "state-of-pricecheck-what-products-are-available",
     "title": "State of PriceCheck: What Products Are Available?",
-    "excerpt": "We are working very hard to scrape as much data as possible across various categories. Here are some of the stores and products that we have scrapped.",
-    "type": "updates",
+    "summary": "We are working very hard to scrape as much data as possible across various categories. Here are some of the stores and products that we have scrapped.",
+    "source": "PriceCheck",
     "topic": "Release Notes",
     "minutes": 3,
+    "image_url": "https://www.pricechecktool.com/insights/library/updates/pricecheck-0-8-5/image.png",
     "url": "/insights/library/updates/state-of-pricecheck-what-products-are-available/index.html",
-    "date": "2025-12-21"
+    "published_at": "2025-12-21T00:00:00Z"
   },
   {
+    "type": "updates",
     "slug": "state-of-pricecheck-update-0-8-7",
     "title": "State of PriceCheck: Update 0.8.7",
-    "excerpt": "This update includes improvements to our data scraping processes, enhanced accuracy in price tracking, and new features in the user dashboard.",
-    "type": "updates",
+    "summary": "This update includes improvements to our data scraping processes, enhanced accuracy in price tracking, and new features in the user dashboard.",
+    "source": "PriceCheck",
     "topic": "Release Notes",
     "minutes": 6,
     "url": "/insights/library/updates/state-of-pricecheck-update-0-8-7/index.html",
-    "date": "2025-12-26"
-  }
+    "published_at": "2025-12-26T00:00:00Z"
+  },
+
+  {
+    "type": "news",
+    "title": "AirPods Pro 2 price drops again as retailers compete",
+    "url": "https://www.nbcnews.com/shopping/tech/airpods-pro-2-deal-rcna123456",
+    "source": "NBC News",
+    "published_at": "2025-12-29T00:00:00Z",
+    "summary": "A quick read on why the price keeps moving and where the lowest offers are showing up.",
+    "key": "asin:B0CHWRXH8B"
+  },
+
+  "news | Wired | https://www.wired.com/... | The best noise-canceling headphones right now | 2025-12-20",
+  "updates | PriceCheck | /insights/update-088 | Update 0.8.8: Browse and Insights refresh | 2025-12-30",
+    "news | Wired | https://www.wired.com/... | The best noise-canceling headphones right now | 2025-12-20"
+
+
 ]

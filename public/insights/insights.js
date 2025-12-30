@@ -1,236 +1,360 @@
 // public/insights/insights.js
-(function(){
-  const $  = (s, ctx=document) => ctx.querySelector(s);
-  const $$ = (s, ctx=document) => Array.from(ctx.querySelectorAll(s));
-
-  // ---------------------------
-  // PriceAlert (unchanged)
-  // ---------------------------
-  function toCents(x){
-    const n = parseFloat(String(x).trim());
-    if (Number.isNaN(n) || n <= 0) return null;
-    return Math.round(n * 100);
+(() => {
+  const $ = (s) => document.querySelector(s);
+  function safeText(v) {
+    return v == null ? "" : String(v);
   }
 
-  async function saveAlert(){
-    const recipient = $('#alertEmail')?.value.trim();
-    const query     = $('#alertQuery')?.value.trim();
-    const cents     = toCents($('#alertTarget')?.value);
-    const out       = $('#alertResult');
+  function escapeHtml(s) {
+    return safeText(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
-    if(!recipient || !query || cents == null){
-      if(out) out.textContent = 'Fill email or phone, product or UPC, and a valid target price.';
-      return;
-    }
+  function parseDate(v) {
+    const s = safeText(v).trim();
+    if (!s) return null;
+    const d = new Date(s);
+    return Number.isFinite(d.getTime()) ? d : null;
+  }
 
-    const body = {
-      channel: recipient.includes('@') ? 'email' : 'sms',
-      recipient,
-      query,
-      target_price_cents: cents,
-      page_url: location.href,
-      created_client_at: new Date().toISOString()
-    };
+  function timeAgo(d) {
+    if (!d) return "";
+    const sec = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (sec < 60) return "just now";
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min} min ago`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr} hour${hr === 1 ? "" : "s"} ago`;
+    const day = Math.floor(hr / 24);
+    if (day < 30) return `${day} day${day === 1 ? "" : "s"} ago`;
+    const mo = Math.floor(day / 30);
+    if (mo < 12) return `${mo} month${mo === 1 ? "" : "s"} ago`;
+    const yr = Math.floor(mo / 12);
+    return `${yr} year${yr === 1 ? "" : "s"} ago`;
+  }
 
-    try{
-      const res = await fetch('/api/alerts', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify(body)
+  function isExternalUrl(url) {
+    return /^https?:\/\//i.test(url);
+  }
+
+  function normalizeType(t) {
+  const s = safeText(t).trim().toLowerCase();
+  if (!s) return "updates";
+
+  if (s === "news") return "news";
+  if (s === "updates" || s === "update") return "updates";
+
+  // allow singular and other variants
+  if (s === "blog" || s === "blogs") return "blogs";
+  if (s === "guide" || s === "guides") return "guides";
+
+  if (s.includes("news")) return "news";
+  if (s.includes("update")) return "updates";
+  if (s.includes("blog")) return "blogs";
+  if (s.includes("guide")) return "guides";
+
+  return "updates";
+}
+
+function expandQuickLines(arr) {
+  const out = [];
+  for (const x of Array.isArray(arr) ? arr : []) {
+    if (typeof x === "string") {
+      // Format:
+      // "type | source | url | title | 2025-12-29"
+      const parts = x.split("|").map((s) => s.trim());
+
+      const type = normalizeType(parts[0] || "updates");
+      const source = parts[1] || "PriceCheck";
+      const url = parts[2] || "";
+      const title = (parts[3] || "").trim() || "Untitled";
+
+      const dateStr = (parts[4] || "").trim();
+      const d = parseDate(dateStr);
+
+      out.push({
+        type,
+        source,
+        url,
+        title,
+        published_at: d ? d.toISOString() : "",
+        summary: ""
       });
-      const j = await res.json().catch(()=> ({}));
-      if(!res.ok){
-        if(out) out.textContent = `Save failed: ${j.error || res.status}`;
-        return;
-      }
-      if(out) out.textContent = 'Saved.';
-    }catch(err){
-      console.error(err);
-      if(out) out.textContent = 'Save failed: network error.';
+    } else if (x && typeof x === "object") {
+      out.push({
+        ...x,
+        type: normalizeType(x.type)
+      });
     }
   }
+  return out;
+}
 
-  document.addEventListener('click', (e)=>{
-    if(e.target && e.target.id === 'saveAlert') saveAlert();
-  });
+  function normKey(s) {
+  return safeText(s).trim().toLowerCase();
+}
 
-  // ---------------------------
-  // Library loader
-  // ---------------------------
-  const state = {
-    topic: 'all',
-    type: 'all',
-    q: '',
-    posts: []
+  function pickAvatarUrl(p) {
+  const direct =
+    safeText(p.avatar_url || p.avatar || p.logo_url || p.source_logo || "").trim();
+  if (direct) return direct;
+
+  const src = normKey(pickSource(p));
+
+  // Use files stored under: public/insights/logo/
+  const map = {
+    "pricecheck": "/insights/logo/logo.png", // or "/logo/logo.png" if you prefer
+    "wired": "/insights/logo/wired.png",
+    "techcrunch": "/insights/logo/techcrunch.png",
+    "tech crunch": "/insights/logo/techcrunch.png",
+    "nbc news": "/insights/logo/nbc-news.png",
+    "the verge": "/insights/logo/the-verge.png",
+    "engadget": "/insights/logo/engadget.png",
   };
 
-  const params = new URLSearchParams(location.search);
-  state.topic = params.get('topic') || 'all';
-  state.type  = params.get('type')  || 'all';
-  state.q     = params.get('q')     || '';
+  return map[src] || "";
+}
 
-  const qInput   = $('#q');
-  const rangeSel = $('#range');
-  if(qInput) qInput.value = state.q;
-
-  function updateURL(){
-    const p = new URLSearchParams();
-    if(state.topic !== 'all') p.set('topic', state.topic);
-    if(state.type  !== 'all') p.set('type', state.type);
-    if(state.q) p.set('q', state.q);
-    const qs = p.toString();
-    history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+  function initialsForSource(p) {
+    const s = safeText(pickSource(p)).trim();
+    if (!s) return "PC";
+    const words = s.split(/\s+/).filter(Boolean);
+    const a = (words[0] || "P")[0] || "P";
+    const b = (words[1] || words[0] || "C")[0] || "C";
+    return (a + b).toUpperCase();
   }
 
-  // Topic pills
-  const topicBtns = $$('.topic');
-  function setTopic(t){
-    state.topic = t; updateURL();
-    topicBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.topic===t ? 'true' : 'false'));
-    renderLibrary();
-    filterTables();
+  function pickDate(p) {
+    return parseDate(p.published_at) || parseDate(p.date) || null;
   }
-  topicBtns.forEach(b => b.addEventListener('click', ()=> setTopic(b.dataset.topic)));
 
-  // Type pills
-  const typeBtns = $$('.type-pill');
-  function setType(t){
-    state.type = t; updateURL();
-    typeBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.type===t ? 'true' : 'false'));
-    renderLibrary();
+  function pickTitle(p) {
+    return safeText(p.title || p.name || "Untitled").trim() || "Untitled";
   }
-  typeBtns.forEach(b => b.addEventListener('click', ()=> setType(b.dataset.type)));
 
-  // Search
-  if(qInput){
-    qInput.addEventListener('input', ()=>{
-      state.q = qInput.value.trim();
-      updateURL();
-      renderLibrary();
-      filterTables();
-    });
+  function pickSource(p) {
+    return safeText(p.source || p.publisher || p.site || "PriceCheck").trim() || "PriceCheck";
   }
-  if(rangeSel){
-    rangeSel.addEventListener('change', ()=>{
-      // Placeholder for future feed hookup
-      // Keeps your existing UI stable
+
+  function pickUrl(p) {
+    return safeText(p.url || p.link || "").trim();
+  }
+
+  function pickSummary(p) {
+    return safeText(p.summary || p.excerpt || p.description || "").trim();
+  }
+
+  function pickImg(p) {
+    return safeText(
+      p.image_url || p.imageUrl || p.og_image || p.cover || p.thumbnail || ""
+    ).trim();
+  }
+
+  function sortNewestFirst(posts) {
+    return posts.slice().sort((a, b) => {
+      const ta = (pickDate(a)?.getTime() || 0);
+      const tb = (pickDate(b)?.getTime() || 0);
+      return tb - ta;
     });
   }
 
-  // Populate KPI tables filter by topic/q (your existing DOM)
-  function filterTables(){
-    const term = (state.q || '').toLowerCase();
-    ['#buywait','#doorbuster'].forEach(id => {
-      $$(id+' tbody tr').forEach(tr => {
-        const topicOk = state.topic==='all' || (tr.dataset.topic||'').toLowerCase().includes(state.topic);
-        const text = tr.textContent.toLowerCase();
-        const qOk = !term || text.includes(term);
-        tr.style.display = (topicOk && qOk) ? '' : 'none';
+  function bySection(posts) {
+  const map = { news: [], updates: [], blogs: [], guides: [], all: [] };
+
+  for (const p of posts) {
+    const t = normalizeType(p?.type);
+    const fixed = { ...p, type: t };
+
+    map.all.push(fixed);
+    (map[t] || map.updates).push(fixed);
+  }
+
+  return map;
+}
+
+  function renderSection(elId, posts, opts = {}) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+
+  const list = Array.isArray(posts) ? posts.slice() : [];
+  const heroCount = opts.heroCount ?? 2;
+
+  // If empty, show nothing (you can keep your "No posts yet" template if you want)
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="ins-left">
+        <div class="ins-hero-card">
+          <div class="ins-hero-card__body">
+            <div class="ins-hero-card__meta">PriceCheck • no posts</div>
+            <div class="ins-hero-card__title">No posts yet</div>
+            <p class="ins-hero-card__desc">Check back later</p>
+          </div>
+        </div>
+      </div>
+      <div class="ins-feed"></div>
+    `;
+    return;
+  }
+
+  // Sort newest first
+  list.sort((a, b) => +new Date(pickDate(b)) - +new Date(pickDate(a)));
+
+  const heroes = list.slice(0, heroCount);
+
+  const heroSet = new Set(heroes);
+  let rest = list.filter((p) => !heroSet.has(p));
+
+  // If not enough posts, still fill right side
+  if (!rest.length) rest = list.slice();
+
+  const leftHtml = heroes.map((p) => {
+    const title = escapeHtml(pickTitle(p));
+    const source = escapeHtml(pickSource(p));
+    const ago = timeAgo(pickDate(p));
+    const desc = escapeHtml(pickSummary(p));
+    const url = pickUrl(p);
+    const href = url || "#";
+    const target = url && isExternalUrl(url) ? ` target="_blank" rel="noopener"` : "";
+
+    const img = pickImg(p);
+    const imgHtml = img
+      ? `<img class="ins-hero-card__img" src="${escapeHtml(img)}" alt="">`
+      : `<div class="ins-hero-card__img" aria-hidden="true"></div>`;
+
+    return `
+      <a class="ins-hero-card" href="${escapeHtml(href)}"${target}>
+        ${imgHtml}
+        <div class="ins-hero-card__body">
+          <div class="ins-hero-card__meta">${source} • ${escapeHtml(ago)}</div>
+          <div class="ins-hero-card__title">${title}</div>
+          ${desc ? `<p class="ins-hero-card__desc">${desc}</p>` : ``}
+        </div>
+      </a>
+    `;
+  }).join("");
+
+  const rightHtml = rest.slice(0, 20).map((p) => {
+    const title = escapeHtml(pickTitle(p));
+    const source = escapeHtml(pickSource(p));
+    const ago = timeAgo(pickDate(p));
+    const meta = [source, ago].filter(Boolean).join(" • ");
+
+    const url = pickUrl(p);
+    const href = url || "#";
+    const target = url && isExternalUrl(url) ? ` target="_blank" rel="noopener"` : "";
+
+    const avatar = pickAvatarUrl(p);
+    const srcLabel = escapeHtml(pickSource(p));
+    const initials = escapeHtml(initialsForSource(p));
+
+    const avatarHtml = avatar
+      ? `<img class="ins-item__avatar" src="${escapeHtml(avatar)}" alt="${srcLabel}">`
+      : `<span class="ins-item__avatar is-fallback" aria-hidden="true">${initials}</span>`;
+
+    return `
+        <a class="ins-item" href="${escapeHtml(href)}"${target}>
+          ${avatarHtml}
+          <div class="ins-item__main">
+            <p class="ins-item__title">${title}</p>
+            <div class="ins-item__meta">${escapeHtml(meta)}</div>
+          </div>
+        </a>
+      `;
+  }).join("");
+
+  el.innerHTML = `
+    <div class="ins-left">${leftHtml}</div>
+    <div class="ins-feed">${rightHtml}</div>
+  `;
+}
+
+  function renderAll(elId, posts) {
+    const root = $("#" + elId);
+    if (!root) return;
+    const list = sortNewestFirst(posts).slice(0, 200);
+
+    const html = list.map((p) => {
+      const title = escapeHtml(pickTitle(p));
+      const source = escapeHtml(pickSource(p));
+      const ago = timeAgo(pickDate(p));
+      const meta = [source, ago].filter(Boolean).join(" • ");
+      const url = pickUrl(p);
+      const href = url || "#";
+      const target = url && isExternalUrl(url) ? ` target="_blank" rel="noopener"` : "";
+
+      const avatar = pickAvatarUrl(p);
+      const srcLabel = escapeHtml(pickSource(p));
+      const initials = escapeHtml(initialsForSource(p));
+
+      const avatarHtml = avatar
+        ? `<img class="ins-item__avatar" src="${escapeHtml(avatar)}" alt="${srcLabel}">`
+        : `<span class="ins-item__avatar is-fallback" aria-hidden="true">${initials}</span>`;
+
+      return `
+        <a class="ins-item" href="${escapeHtml(href)}"${target}>
+          ${avatarHtml}
+          <div class="ins-item__main">
+            <p class="ins-item__title">${title}</p>
+            <div class="ins-item__meta">${escapeHtml(meta)}</div>
+          </div>
+        </a>
+      `;
+    }).join("");
+
+    root.innerHTML = `<div class="ins-feed">${html}</div>`;
+  }
+
+  function initTopNav() {
+    const tabs = Array.from(document.querySelectorAll(".ins-topnav .ins-tab"));
+    if (!tabs.length) return;
+
+    tabs.forEach((a) => {
+      a.addEventListener("click", (e) => {
+        const href = a.getAttribute("href") || "";
+        if (!href.startsWith("#")) return;
+        const el = document.querySelector(href);
+        if (!el) return;
+        e.preventDefault();
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        history.replaceState(null, "", href);
       });
     });
   }
 
-  // Load posts.json and render
-  async function loadLibrary(){
-    try{
-      const res = await fetch('/api/insights/posts', { cache:'no-cache' });
-      if(!res.ok) throw new Error('manifest load failed');
-      state.posts = await res.json();
-      renderLibrary();
-    }catch(e){
-      console.error(e);
-      const grid = $('#libraryGrid');
-      if(grid) grid.innerHTML = '<p class="ins-muted">Could not load library.</p>';
-    }
-  }
-
-  function cardHTML(p){
-    const metaParts = [];
-    metaParts.push(p.type ? p.type.charAt(0).toUpperCase() + p.type.slice(1) : '');
-    if (p.minutes) metaParts.push(`${p.minutes} min`);
-    return `
-      <article class="tile ci-post"
-               data-type="${p.type || ''}"
-               data-topic="${p.topic || ''}"
-               role="button"
-               tabindex="0"
-               data-url="${p.url}">
-        <h3>${escapeHtml(p.title || '')}</h3>
-        <p class="ins-muted">${escapeHtml(p.excerpt || '')}</p>
-        <div class="ins-meta"><span>${metaParts.filter(Boolean).join(' • ')}</span></div>
-      </article>`;
-  }
-
-  function escapeHtml(s){
-    return String(s||'')
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;');
-  }
-
-  function renderLibrary(){
-    const grid = $('#libraryGrid');
-    if(!grid) return;
-
-    const term = (state.q || '').toLowerCase();
-    // Simple sort: newest first by date
-    const sorted = (state.posts || []).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
-
-    const filtered = sorted.filter(p=>{
-      const typeOk  = state.type === 'all'  || (p.type||'') === state.type;
-      const topicOk = state.topic === 'all' || ((p.topic||'').toLowerCase().includes(state.topic));
-      const text = `${p.title||''} ${p.excerpt||''}`.toLowerCase();
-      const qOk = !term || text.includes(term);
-      return typeOk && topicOk && qOk;
+  async function loadPosts() {
+    const res = await fetch("/api/insights/posts", {
+      headers: { Accept: "application/json" },
+      cache: "no-cache"
     });
-
-    grid.innerHTML = filtered.map(cardHTML).join('') || '<p class="ins-muted">No items.</p>';
-
-    // click to open
-    grid.querySelectorAll('.ci-post').forEach(el=>{
-      const open = ()=> {
-        const url = el.getAttribute('data-url');
-        if(url) window.location.href = url;
-      };
-      el.addEventListener('click', open);
-      el.addEventListener('keypress', (e)=>{ if(e.key==='Enter' || e.key===' ') open(); });
-    });
+    if (!res.ok) throw new Error("Failed to load /api/insights/posts");
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   }
 
-  // Animate bars once
-  $$('.fill').forEach(f=>{
-    const w = f.style.width;
-    f.style.width = '0%';
-    requestAnimationFrame(()=>{
-      f.style.transition = 'width .9s ease';
-      f.style.width = w;
-    });
+  async function run() {
+    initTopNav();
+
+    const raw = await loadPosts();
+    const posts = expandQuickLines(raw);
+    const sec = bySection(posts);
+
+    renderSection("sec-news", sec.news);
+    renderSection("sec-updates", sec.updates);
+    renderSection("sec-blogs", sec.blogs);
+    renderSection("sec-guides", sec.guides);
+    renderSection("sec-all", sec.all, { heroCount: 0 }); // optional, or keep 2
+
+    const last = $("#lastUpdated");
+    if (last) last.textContent = `Loaded ${posts.length} posts.`;
+  }
+
+  run().catch((err) => {
+    console.error("INSIGHTS RUN FAILED:", err);
+    const last = $("#lastUpdated");
+    if (last) last.textContent = "Failed to load posts. Check console.";
   });
-
-  // Calculator
-  const fmt = new Intl.NumberFormat(undefined,{style:'currency',currency:'USD'});
-  function recalc(){
-    const base = parseFloat($('#base')?.value || '0');
-    const coupon = parseFloat($('#coupon')?.value || '0');
-    const ship = parseFloat($('#ship')?.value || '0');
-    const tax = parseFloat($('#tax')?.value || '0');
-    const net = Math.max(0, base - coupon);
-    const total = net + ship + (net * (tax/100));
-    $('#total').textContent = 'All-in: ' + fmt.format(total);
-    const save = base + ship + (base*(tax/100)) - total;
-    $('#savings').textContent = save>0 ? ('You save ' + fmt.format(save)) : '';
-  }
-  ['base','coupon','ship','tax'].forEach(id => $('#'+id)?.addEventListener('input', recalc));
-  recalc();
-
-  // Initialize
-  // Respect URL params that were pre-set in your HTML
-  if(state.topic !== 'all') setTopic(state.topic);
-  if(state.type  !== 'all') setType(state.type);
-  filterTables();
-  loadLibrary();
-
-  // Last updated footer
-  const dt = new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeStyle:'short'}).format(new Date());
-  const last = $('#lastUpdated'); if(last) last.textContent = 'Updated ' + dt;
 })();

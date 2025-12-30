@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>PriceCheck • Market Insights</title>
+  <title>PriceCheck • Insights</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="PriceCheck Market Insight: real-time consumer signals like Buy or Wait, Doorbuster Reality Check, pattern watch, and total cost math.">
+  <meta name="description" content="PriceCheck Insights: curated news, updates, and posts.">
   <link rel="icon" type="image/png" href="../logo/logo.png">
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="styles.css">
@@ -12,222 +12,76 @@
   <script src="/insights/insights.js" defer></script>
 
   <!-- Open Graph / Twitter -->
-  <meta property="og:title" content="PriceCheck Market Insights">
+  <meta property="og:title" content="PriceCheck Insights">
   <meta property="og:description" content="Consumer-first signals that help you decide when and where to buy.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="../logo/og-cover.png">
   <meta name="twitter:card" content="summary_large_image">
-  <script src="/partials/partials.js" defer></script>
+  <script src="../partials/partials.js" defer></script>
 </head>
 
 <body>
-
   <div id="site-header"></div>
 
-  <main id="content" class="ins-wrap">
-    <h1>Market Insights</h1>
+  <main class="ins-wrap">
+    <header class="ins-hero">
+      <h1>Insights</h1>
+    </header>
 
-    <!-- Controls -->
-    <div class="ins-controls">
-      <div class="ins-controls__left">
-        <div class="ins-pills" role="tablist" aria-label="Filter by category">
-          <button class="ins-pill topic" data-topic="all" aria-pressed="true">All</button>
-          <button class="ins-pill topic" data-topic="headphones">Headphones</button>
-          <button class="ins-pill topic" data-topic="peripherals">Peripherals</button>
-          <button class="ins-pill topic" data-topic="smart home">Smart Home</button>
-          <button class="ins-pill topic" data-topic="consoles">Consoles</button>
-          <button class="ins-pill topic" data-topic="wearables">Wearables</button>
-        </div>
+    <!-- Top tabs like Dzen, but for your sections -->
+    <nav class="ins-topnav" aria-label="Insights sections">
+      <div class="ins-topnav__inner">
+        <a class="ins-tab" href="#news">News</a>
+        <a class="ins-tab" href="#updates">Updates</a>
+        <a class="ins-tab" href="#blogs">Blogs</a>
+        <a class="ins-tab" href="#guides">Guides</a>
+        <a class="ins-tab" href="#library">All</a>
       </div>
-      <div class="ins-sort">
-        <div class="ins-search" role="search">
-          <input id="q" type="search" placeholder="Search a product or UPC">
-        </div>
-        <label for="range" class="sr-only">Timeframe</label>
-        <select id="range" aria-label="Timeframe">
-          <option value="today">Today</option>
-          <option value="7d">7 days</option>
-          <option value="30d">30 days</option>
-        </select>
+    </nav>
+
+    <!-- Sections -->
+    <section class="ins-section" id="news">
+      <div class="ins-section__head">
+        <h2>News</h2>
+        <a class="ins-more" href="#library">More</a>
       </div>
-    </div>
-
-    <!-- Tape -->
-    <div class="ins-tape" style="margin:0 0 22px">
-      <div class="ins-tape__item"><strong>Drop:</strong> MX Master 3S -10% at Target</div>
-      <div class="ins-tape__item"><strong>Low:</strong> AirPods Pro 2 hits 90d low at Best Buy</div>
-      <div class="ins-tape__item"><strong>Jump:</strong> PS5 Slim +6% Walmart bundle</div>
-      <div class="ins-tape__item"><strong>Note:</strong> Kindle Paperwhite price reset</div>
-    </div>
-
-    <!-- Library -->
-    <section class="ins-card" id="library" style="margin:0 0 22px">
-      <h2>Latest from the Stack</h2>
-      <div class="ins-pills" role="tablist" aria-label="Filter by content type" style="margin:8px 0 10px">
-        <button class="ins-pill type-pill" data-type="all" aria-pressed="true">All</button>
-        <button class="ins-pill type-pill" data-type="news">News</button>
-        <button class="ins-pill type-pill" data-type="research">Research</button>
-        <button class="ins-pill type-pill" data-type="guides">Guides</button>
-        <button class="ins-pill type-pill" data-type="markets">Markets</button>
-        <button class="ins-pill type-pill" data-type="data">Datasets</button>
-        <button class="ins-pill type-pill" data-type="blogs">Blogs</button>
-        <button class="ins-pill type-pill" data-type="updates">Updates</button>
-      </div>
-
-      <div class="ins-grid2" id="libraryGrid"></div>
+      <div class="ins-list" id="sec-news"></div>
     </section>
 
-    <section class="ins-shell">
-      <!-- MAIN -->
-      <div class="stack">
-        <!-- Today KPIs -->
-        <section class="ins-card" style="margin:0 0 16px">
-          <h2>Today at a Glance</h2>
-          <div class="ins-grid2">
-            <div class="tile">
-              <div class="ins-muted">New lows</div>
-              <div style="font-size:28px;font-weight:700;margin-top:2px" id="kpi-lows">14</div>
-              <div class="ins-muted">lowest in 90 days</div>
-            </div>
-            <div class="tile">
-              <div class="ins-muted">Deal integrity</div>
-              <div style="font-size:28px;font-weight:700;margin-top:2px" id="kpi-integrity">89%</div>
-              <div class="ins-muted">strike passes today</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Buy or Wait -->
-        <section class="ins-card" style="margin:0 0 16px">
-          <h2>Buy or Wait Snapshot</h2>
-          <table class="ins-table" id="buywait">
-            <thead><tr><th>Product</th><th>Current vs 30d</th><th>Meter</th><th>Status</th><th>Rationale</th></tr></thead>
-            <tbody>
-              <tr data-topic="peripherals"><td>Logitech MX Master 3S</td><td>-10%</td><td><div class="meter"><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span></div></td><td><span class="badge ok">Buy now</span></td><td>reliable weekend dip pattern</td></tr>
-              <tr data-topic="headphones"><td>Sony WH-1000XM5</td><td>-6%</td><td><div class="meter"><span class="active"></span><span class="active"></span><span></span><span></span><span></span></div></td><td><span class="badge ok">Buy soon</span></td><td>near seasonal low</td></tr>
-              <tr data-topic="consoles"><td>PS5 Slim</td><td>+5%</td><td><div class="meter"><span></span><span></span><span></span><span class="active"></span><span class="active"></span></div></td><td><span class="badge warn">Wait</span></td><td>bundle uplift not persistent</td></tr>
-              <tr data-topic="smart home"><td>Ring Doorbell 4</td><td>-8%</td><td><div class="meter"><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span></div></td><td><span class="badge ok">Buy now</span></td><td>coupon stack active</td></tr>
-            </tbody>
-          </table>
-        </section>
-
-        <!-- Doorbuster -->
-        <section class="ins-card" style="margin:0 0 16px">
-          <h2>Doorbuster Reality Check</h2>
-          <table class="ins-table" id="doorbuster">
-            <thead><tr><th>Product</th><th>Claimed discount</th><th>Real 90d low</th><th>Last true low</th><th>Note</th></tr></thead>
-            <tbody>
-              <tr data-topic="headphones"><td>AirPods Pro 2</td><td>-20%</td><td>Yes</td><td>Oct 26</td><td>member price + coupon</td></tr>
-              <tr data-topic="peripherals"><td>Razer BlackWidow V4</td><td>-30%</td><td>No</td><td>Sep 30</td><td>strike reset within 30d</td></tr>
-              <tr data-topic="wearables"><td>Apple Watch Series 10</td><td>-10%</td><td>No</td><td>Aug 14</td><td>different band variant</td></tr>
-            </tbody>
-          </table>
-          <p class="ins-muted">Checks are based on identical variants and recorded history in the selected window.</p>
-        </section>
-
-        <!-- Weekend patterns -->
-        <section class="ins-card" style="margin:0 0 16px;">
-          <h2>Weekend Pattern Watch</h2>
-          <div class="ins-grid2">
-            <div class="tile">
-              <h3>Target - MX Master 3S</h3>
-              <p class="ins-muted">Fri PM - Sun: repeatable dip 3 weeks running.</p>
-              <div class="ins-meta"><span>Pattern strength: High</span><span>Window: Fri 5 pm - Sun 11 pm</span></div>
-            </div>
-            <div class="tile">
-              <h3>Best Buy - AirPods Pro 2</h3>
-              <p class="ins-muted">Member price often reappears on Tue and Thu.</p>
-              <div class="ins-meta"><span>Pattern strength: Medium</span><span>Window: Tue - Thu</span></div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Total cost -->
-        <section class="ins-card" style="margin:0 0 16px">
-          <h2>Total Cost Calculator</h2>
-          <div class="calc-grid">
-            <div>
-              <label for="base" class="ins-muted">Base price</label>
-              <input id="base" type="number" inputmode="decimal" placeholder="199.99">
-            </div>
-            <div>
-              <label for="coupon" class="ins-muted">Coupon</label>
-              <input id="coupon" type="number" inputmode="decimal" placeholder="20">
-            </div>
-            <div>
-              <label for="ship" class="ins-muted">Shipping</label>
-              <input id="ship" type="number" inputmode="decimal" placeholder="5.99">
-            </div>
-            <div>
-              <label for="tax" class="ins-muted">Tax rate %</label>
-              <input id="tax" type="number" inputmode="decimal" placeholder="9.5">
-            </div>
-          </div>
-          <p class="ins-muted" style="margin-top:8px">All-in = max(0, Base - Coupon) + Shipping + Tax.</p>
-          <div class="ins-meta"><span class="calc-total" id="total">All-in: $0.00</span><span id="savings"></span></div>
-        </section>
+    <section class="ins-section" id="updates">
+      <div class="ins-section__head">
+        <h2>Updates</h2>
+        <a class="ins-more" href="#library">More</a>
       </div>
-
-      <!-- SIDEBAR -->
-      <aside>
-        <div class="sticky-cta">
-          <section class="ins-card">
-            <h3>Retailer snapshot</h3>
-            <div class="bars" id="snapshot" aria-label="Cheapest share by retailer">
-              <div class="bar" data-retailer="Amazon" data-share="33">
-                <div>Amazon</div>
-                <div class="track"><div class="fill" style="width:33%"></div></div>
-                <div>33%</div>
-              </div>
-              <div class="bar" data-retailer="Target" data-share="29">
-                <div>Target</div>
-                <div class="track"><div class="fill" style="width:29%"></div></div>
-                <div>29%</div>
-              </div>
-              <div class="bar" data-retailer="Walmart" data-share="26">
-                <div>Walmart</div>
-                <div class="track"><div class="fill" style="width:26%"></div></div>
-                <div>26%</div>
-              </div>
-              <div class="bar" data-retailer="Best Buy" data-share="28">
-                <div>Best Buy</div>
-                <div class="track"><div class="fill" style="width:28%"></div></div>
-                <div>28%</div>
-              </div>
-            </div>
-            <p class="ins-muted" style="margin-top:8px">From today sample. See Research for method.</p>
-          </section>
-
-        <section class="ins-card">
-          <h3>PriceAlert</h3>
-          <p class="ins-muted">Create a target price alert. We will email or message you when it hits.</p>
-
-          <div class="ins-grid3">
-            <textarea class="ins-grid3-txt" id="alertEmail" rows="1" placeholder="Email or Phone Number" autocomplete="email"></textarea>
-            <input class="ins-grid3-txt" id="alertQuery" type="text" placeholder="Product or UPC" autocomplete="off">
-            <input class="ins-grid3-txt" id="alertTarget" type="number" inputmode="decimal" placeholder="Target Price">
-          </div>
-
-          <button class="ins-pill" id="saveAlert" style="margin-top:10px">Save alert</button>
-          <p class="ins-muted" id="alertResult" style="margin-top:8px"></p>
-        </section>
-
-
-          <section class="ins-card">
-            <h3>Definitions</h3>
-            <ul class="pc-points">
-              <li>New low - lowest price in last 90 days</li>
-              <li>Integrity - strike claim passes history check</li>
-              <li>Buy or Wait - percentile vs 30 or 90 day price</li>
-              <li>Total cost - base minus coupon plus ship plus tax</li>
-            </ul>
-          </section>
-        </div>
-      </aside>
+      <div class="ins-list" id="sec-updates"></div>
     </section>
+
+    <section class="ins-section" id="blogs">
+      <div class="ins-section__head">
+        <h2>Blogs</h2>
+        <a class="ins-more" href="#library">More</a>
+      </div>
+      <div class="ins-list" id="sec-blogs"></div>
+    </section>
+
+    <section class="ins-section" id="guides">
+      <div class="ins-section__head">
+        <h2>Guides</h2>
+        <a class="ins-more" href="#library">More</a>
+      </div>
+      <div class="ins-list" id="sec-guides"></div>
+    </section>
+
+    <section class="ins-section" id="library">
+      <div class="ins-section__head">
+        <h2>All posts</h2>
+      </div>
+      <div class="ins-list" id="sec-all"></div>
+    </section>
+
+    <p class="ins-muted" id="lastUpdated" style="margin-top:18px"></p>
   </main>
 
   <div id="site-footer"></div>
-
 </body>
 </html>

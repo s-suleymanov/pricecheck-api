@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>PriceCheck • Market Research</title>
+  <title>PriceCheck • Research</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../styles.css" />
   <link rel="stylesheet" href="style.css">
@@ -16,7 +16,7 @@
   <div id="site-header"></div>
 
   <main class="wrap">
-    <h1>Market Research</h1>
+    <h1>Research</h1>
 
     <!-- Market tape like a stock ticker -->
     <div class="tape" aria-label="market tape">
@@ -54,7 +54,7 @@
         </div>
       </div>
     </section>
-    
+
     <!-- Gainers and Losers -->
     <section class="grid grid-2">
       <div class="card">
@@ -178,6 +178,116 @@
       </table>
       <p class="note">Sigma is the standard deviation of weekly price change for the category basket.</p>
     </section>
+
+    <section class="pc-ana" id="buywaitSec">
+  <div class="pc-ana__head">
+    <h2>Buy or wait snapshot</h2>
+  </div>
+
+  <div class="pc-card">
+    <div class="pc-tablewrap">
+      <table class="pc-table" id="buywait">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Current vs 30d</th>
+            <th>Meter</th>
+            <th>Status</th>
+            <th>Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Logitech MX Master 3S</td>
+            <td>-10%</td>
+            <td><div class="pc-meter"><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span></div></td>
+            <td><span class="pc-badge ok">Buy now</span></td>
+            <td>repeatable weekend dip pattern</td>
+          </tr>
+          <tr>
+            <td>Sony WH-1000XM5</td>
+            <td>-6%</td>
+            <td><div class="pc-meter"><span class="active"></span><span class="active"></span><span></span><span></span><span></span></div></td>
+            <td><span class="pc-badge ok">Buy soon</span></td>
+            <td>near seasonal low</td>
+          </tr>
+          <tr>
+            <td>PS5 Slim</td>
+            <td>+5%</td>
+            <td><div class="pc-meter"><span></span><span></span><span></span><span class="active"></span><span class="active"></span></div></td>
+            <td><span class="pc-badge warn">Wait</span></td>
+            <td>bundle uplift not persistent</td>
+          </tr>
+          <tr>
+            <td>Ring Doorbell 4</td>
+            <td>-8%</td>
+            <td><div class="pc-meter"><span class="active"></span><span class="active"></span><span class="active"></span><span></span><span></span></div></td>
+            <td><span class="pc-badge ok">Buy now</span></td>
+            <td>coupon stack active</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="pc-ana" id="doorbusterSec">
+  <div class="pc-ana__head">
+    <h2>Doorbuster reality check</h2>
+  </div>
+
+  <div class="pc-card">
+    <div class="pc-tablewrap">
+      <table class="pc-table" id="doorbuster">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Claimed discount</th>
+            <th>Real 90d low</th>
+            <th>Last true low</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>AirPods Pro 2</td><td>-20%</td><td>Yes</td><td>2025-10-26</td><td>member price + coupon</td></tr>
+          <tr><td>Razer BlackWidow V4</td><td>-30%</td><td>No</td><td>2025-09-30</td><td>strike reset within 30d</td></tr>
+          <tr><td>Apple Watch Series 10</td><td>-10%</td><td>No</td><td>2025-08-14</td><td>different band variant</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="pc-muted" style="margin-top:10px">Checks are based on identical variants and recorded history in the selected window.</p>
+  </div>
+</section>
+
+<section class="pc-ana" id="patternsSec">
+  <div class="pc-ana__head">
+    <h2>Pattern watch</h2>
+  </div>
+
+  <div class="pc-grid2">
+    <div class="pc-card pc-tile">
+      <div class="pc-rowhead">
+        <div class="pc-rowhead__title">Target</div>
+        <div class="pc-rowhead__meta">Fri 5 pm to Sun 11 pm</div>
+      </div>
+      <h3 style="margin-top:8px">MX Master 3S</h3>
+      <p class="pc-muted">Fri PM to Sun: repeatable dip three weeks running.</p>
+      <div class="pc-muted">Strength: <span class="pc-badge info">High</span></div>
+    </div>
+
+    <div class="pc-card pc-tile">
+      <div class="pc-rowhead">
+        <div class="pc-rowhead__title">Best Buy</div>
+        <div class="pc-rowhead__meta">Tue to Thu</div>
+      </div>
+      <h3 style="margin-top:8px">AirPods Pro 2</h3>
+      <p class="pc-muted">Member price often reappears mid-week.</p>
+      <div class="pc-muted">Strength: <span class="pc-badge info">Medium</span></div>
+    </div>
+  </div>
+</section>
+
+
   </main>
 
   <div id="site-footer"></div>
