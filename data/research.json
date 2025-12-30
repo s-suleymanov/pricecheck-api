@@ -18,11 +18,11 @@
   },
 
   "gainers": [
-    { "title": "Sony WH-1000XM5 Wireless Headphones",       "category": "Headphones", "store": "amazon",  "change_pct": -18.4 },
-    { "title": "Samsung Odyssey G7 27\" 240Hz Monitor",    "category": "Monitors",   "store": "bestbuy", "change_pct": -16.9 },
+    { "title": "Sony WH-1000XM5 Headphones",       "category": "Headphones", "store": "amazon",  "change_pct": -18.4 },
+    { "title": "Samsung Odyssey G7 27\" Monitor",    "category": "Monitors",   "store": "bestbuy", "change_pct": -16.9 },
     { "title": "Apple Watch SE (2nd Gen) 44mm",            "category": "Wearables", "store": "target",  "change_pct": -14.2 },
     { "title": "Google Nest Thermostat (2024)",            "category": "Smart Home", "store": "amazon",  "change_pct": -13.5 },
-    { "title": "Logitech MX Mechanical Wireless Keyboard", "category": "Keyboards",  "store": "amazon",  "change_pct": -11.8 },
+    { "title": "Logitech MX Mechanical Keyboard", "category": "Keyboards",  "store": "amazon",  "change_pct": -11.8 },
     { "title": "AirPods Pro (2nd Gen, USB-C)",              "category": "Headphones", "store": "apple",   "change_pct": -8.1 }
   ],
 
