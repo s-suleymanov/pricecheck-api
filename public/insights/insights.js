@@ -327,21 +327,28 @@ function expandQuickLines(arr) {
   }
 
   function initTopNav() {
-    const tabs = Array.from(document.querySelectorAll(".ins-topnav .ins-tab"));
-    if (!tabs.length) return;
+  const tabs = Array.from(document.querySelectorAll(".ins-topnav .ins-tab"));
+  if (!tabs.length) return;
 
-    tabs.forEach((a) => {
-      a.addEventListener("click", (e) => {
-        const href = a.getAttribute("href") || "";
-        if (!href.startsWith("#")) return;
-        const el = document.querySelector(href);
-        if (!el) return;
-        e.preventDefault();
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        history.replaceState(null, "", href);
-      });
+  tabs.forEach((a) => {
+    a.addEventListener("click", (e) => {
+      const href = a.getAttribute("href") || "";
+      if (!href.startsWith("#")) return;
+
+      const el = document.querySelector(href);
+      if (!el) return;
+
+      e.preventDefault();
+
+      const y = el.getBoundingClientRect().top + window.pageYOffset;
+      const OFFSET = 140; // tweak: 70–120 depending on how you want it to land
+      window.scrollTo({ top: Math.max(0, y - OFFSET), behavior: "smooth" });
+
+      history.replaceState(null, "", href);
     });
-  }
+  });
+}
+
 
   async function loadPosts() {
     const res = await fetch("/api/insights/posts", {
