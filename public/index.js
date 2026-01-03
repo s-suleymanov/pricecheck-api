@@ -1,20 +1,6 @@
 // public/index.js
 (() => {
 
-    const VISIT_KEY = "pc_seen_overview_v1";
-
-  try {
-    // Only apply on the real homepage path
-    if (location.pathname === "/" || location.pathname === "/index.html") {
-      if (!localStorage.getItem(VISIT_KEY)) {
-        localStorage.setItem(VISIT_KEY, "1");
-        location.replace("/overview/");
-        return; // stop running the rest of index.js on first visit
-      }
-    }
-  } catch (e) {
-  }
-
   const $ = (s) => document.querySelector(s);
   const LOGO_DIR = "/insights/logo";
   const LOGO_MAP = window.__PC_LOGO_MAP || {};
