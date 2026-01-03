@@ -503,9 +503,6 @@ em {
   background: rgba(255,255,255,.7);
 }
 
-.trends-pill.is-up{ }
-.trends-pill.is-down{ }
-
 .ins-list.is-trends{
   display:block !important;
 }
