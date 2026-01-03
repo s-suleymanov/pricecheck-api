@@ -640,6 +640,18 @@ em {
   transform: translateY(-1px);
 }
 
+@media (max-width: 430px){
+  .home-tabs .home-tab[data-home-tab="blogs"]{
+    display:none;
+  }
+}
+
+@media (max-width: 350px){
+  .home-tabs .home-tab[data-home-tab="guides"]{
+    display:none;
+  }
+}
+
 /* Mobile: stack nicely */
 @media (max-width: 560px){
   .home-footer__inner{
@@ -652,7 +664,7 @@ em {
   }
 }
 
-@media (max-width: 400px){
+@media (max-width: 450px){
   .home-top__right .home-top__link{
     display: none;
   }
