@@ -22,6 +22,7 @@
 
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="styles.css">
+  <script src="/search.js" defer></script>
   <script src="/dashboard/dashboard.js" defer></script>
   <script src="/partials/partials.js" defer></script>
 </head>
@@ -30,44 +31,10 @@
   <div id="site-header"></div>
 
   <main class="wrap">
-    <h1>Dashboard</h1>
-
-            <!-- Controls -->
-        <section class="card">
-          <div class="controls">
-            <input id="query" type="search" placeholder="Paste a product URL or enter PC code, UPC, ASIN, TCIN, or SKU" aria-label="Product query">
-            <button id="load" class="btn-das">Load</button>
-            <button id="share" class="pill">Copy share link</button>
-          </div>
-          <p class="muted" style="margin-top:6px">
-            Examples:
-            <button class="pill"
-              onclick="document.getElementById('query').value='B0BKVY4WKT';document.getElementById('load').click()">
-              Logitech Master 3S
-            </button>
-            <button class="pill"
-              onclick="document.getElementById('query').value='B0F5HPCLGB';document.getElementById('load').click()">
-              Acer OMR266
-            </button>
-            <button class="pill"
-              onclick="document.getElementById('query').value='B0DGW57KXJ';document.getElementById('load').click()">
-              Apple Airpods Max
-            </button>
-          </p>
-        </section>
-
-    <section class="grid-shell" style="margin-top:18px">
-      <!-- MAIN -->
+    <h2 id="pTitle">Loading...</h2>
+    <section class="grid-shell">
       <div class="main-content">
-
-        <!-- Product header -->
-        <section class="card" id="productHeader">
-          <div class="grid2">
-            <div>
-              <h2 id="pTitle">Product Information</h2>
-              <p class="muted" id="pSubtitle">Enter a link or ID to start.</p>
-              <div class="muted mono" id="pIds"></div>
-              <div class="pc-warn pc-warn--dropship" id="ps-warn" hidden>
+                      <div class="pc-warn pc-warn--dropship" id="ps-warn" hidden>
                 <span class="pc-warn__icon" aria-hidden="true">
                   <svg viewBox="0 -960 960 960" width="26" height="26">
                     <path fill="currentColor" d="m40-120 440-760 440 760H40Zm138-80h604L480-720 178-200Zm302-40q17 0 28.5-11.5T520-280q0-17-11.5-28.5T480-320q-17 0-28.5 11.5T440-280q0 17 11.5 28.5T480-240Zm-40-120h80v-200h-80v200Zm40-100Z"></path>
@@ -92,6 +59,11 @@
                   </div>
                 </div>
               </div>
+
+        <section class="card" id="productHeader">
+          <div class="grid2">
+            <div>
+              <div class="muted mono" id="pIds"></div>
               <div style="margin-top:10px">
                 <label class="muted" for="variant">Variant</label>
                 <select class="variant-dropdown" id="variant"></select>
@@ -103,6 +75,10 @@
              <div style="margin-top:10px" id="categoryWrap" hidden>
                 <label class="muted">Category</label>
                 <button id="categoryBtn" class="ph-btn" type="button"></button>
+              </div>
+              <div style="margin-top:10px" id="colorWrap" hidden>
+                <label class="muted">Color</label>
+                <button id="colorBtn" class="ph-btn" type="button"></button>
               </div>
             </div>
             <div>
@@ -187,9 +163,9 @@
       <aside>
         <div class="sticky">
           <section class="card">
-            <h3>Coverage Snapshot</h3>
+            <h3>PriceCoverage</h3>
             <div class="bars" id="coverage"></div>
-            <p class="muted-note">Share is based on lowest total count within last 24h and feed freshness.</p>
+            <p class="muted-note">Higher percentages indicate this store is recommended more often based on our metrics.</p>
           </section>
 
           <section class="card" style="margin-top:16px">

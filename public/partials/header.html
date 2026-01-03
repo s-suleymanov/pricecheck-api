@@ -1,118 +1,37 @@
 <header class="nav">
-
-  <style>
-    .don-strip{
-      background:#fff7cc;
-      border-bottom:1px solid rgba(17,24,39,.12);
-      padding:8px 12px;
-    }
-    .don-strip__inner{
-      max-width:1200px;
-      margin:0 auto;
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    .don-strip__text{
-      font-size:14px;
-      color:#111;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      flex:1 1 auto;
-    }
-    .don-strip__text a{
-      color:#111;
-      text-decoration:underline;
-      text-underline-offset:2px;
-    }
-    .don-strip__text a:hover{opacity:.85}
-    .don-strip__close{
-      background:#fff7cc;
-      flex:0 0 auto;
-      width:28px;
-      height:28px;
-      border-radius:10px;
-      border:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      line-height:0;
-    }
-    .don-strip__close:hover{background:#f9fafb}
-    .don-strip__close svg{width:16px;height:16px;fill:#111}
-    @media (max-width:700px){
-      .don-strip__text{white-space:normal}
-    }
-  </style>
-
-    <div class="don-strip" id="pcDonStrip" role="note" aria-label="Support PriceCheck" style="display:none">
-      <div class="don-strip__inner">
-        <div class="don-strip__text">
-          Hi, I am Sam Lyman. PriceCheck is run by one person with no ads, no affiliate links, and no paid influence. If you believe in this mission, please consider  <a href="https://ko-fi.com/samlyman">donating</a>.
-        </div>
-        <button class="don-strip__close" type="button" aria-label="Dismiss donation message" id="pcDonClose">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1l4.9 4.9-4.9 4.9a1 1 0 1 0 1.4 1.4l4.9-4.9 4.9 4.9a1 1 0 0 0 1.4-1.4l-4.9-4.9 4.9-4.9a1 1 0 0 0 0-1.4z"/></svg>
-        </button>
-      </div>
-    </div>
-
-  <div class="nav__row">
-    <div class="logo-head">
+    <a class="logo-head" href="/" aria-label="Go to PriceCheck home">
       <img src="/logo/logo.png" alt="PriceCheck Logo" class="logo">
       <div class="brand">
-          <span class="wordmark">PriceCheck</span>
-          <span class="edition">0.8.8 Beta</span>
+        <span class="wordmark">PriceCheck</span>
+        <span class="edition">0.9.0 Beta</span>
       </div>
-    </div>
+    </a>
 
-    <nav class="links" aria-label="Primary">
-      <a href="/browse/">Browse</a>
-      <a href="/dashboard/">Dashboard</a>
-      <a href="/">Overview</a>
-      <a href="/research/">Research</a>
-      <a href="/insights/">Insights</a>
-    </nav>
+    <form class="nav-search" action="#" method="GET" role="search" aria-label="Search PriceCheck">
+      <input
+        class="nav-search__input"
+        type="search"
+        name="q"
+        placeholder="Search or paste URL, UPC, PCI, ASIN, SKU"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </form>
 
     <a class="btn btn--outline"
        href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en">
       Add to Chrome
     </a>
 
-    <button
-      class="nav__burger"
-      type="button"
-      aria-label="Open menu"
-      aria-expanded="false"
-      aria-controls="pcMobileMenu"
-      id="pcBurgerBtn"
-    >
-
-    <!-- menu icon -->
-    <svg class="icon icon-menu" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-    </svg>
-
-
-    <svg class="icon icon-close" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>
-  </button>
-
-  </div>
-
-  <!-- Mobile menu panel -->
-  <div class="nav__mobile" id="pcMobileMenu" hidden>
-    <nav class="nav__mobile-links" aria-label="Mobile primary">
-      <a href="/browse/">Browse</a>
-      <a href="/dashboard/">Dashboard</a>
-      <a href="/">Overview</a>
-      <a href="/research/">Research</a>
-      <a href="/insights/">Insights</a>
-      <a href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en">Extension</a>
-
-      <a class="btn btn--outline nav__mobile-cta"
-         href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en">
-        Add to Chrome
-      </a>
-    </nav>
-  </div>
+    <a href="/" class="nav__burger" aria-label="Go home">
+        <svg
+          class="icon icon-home"
+          viewBox="0 -960 960 960"
+          width="22"
+          height="22"
+          aria-hidden="true"
+        >
+        <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/>
+        </svg>
+    </a>
 </header>

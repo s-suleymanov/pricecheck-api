@@ -7,6 +7,7 @@ const app = express();
 // core middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/data', express.static(path.join(__dirname, 'data')));
 
 // feature routers
 app.use(require('./routes/browse'));

@@ -8,8 +8,6 @@
   --accent-b:#5c7cff;
 }
 
-/* Page */
-body{overflow-x:hidden;background:#fff;color:var(--ink)}
 .ins-wrap{max-width:1200px;margin:0 auto;padding:24px 24px 90px}
 .ins-hero{margin:8px 0 14px}
 h1{font-size:clamp(34px,6vw,56px);font-weight:550;letter-spacing:-.01em;margin:10px 0 8px}
@@ -23,16 +21,6 @@ p{margin:0 0 8px}
   border-radius:16px;
   padding:8px 0px;
   margin:10px 0 16px;
-}
-.ins-item__avatar{
-  width:30px;
-  height:30px;
-  border-radius:999px;
-  flex:0 0 auto;
-  margin-top:2px;
-  border:1px solid var(--line);
-  background:var(--surface-2);
-  object-fit:cover;
 }
 
 .ins-item__avatar.is-fallback{
@@ -178,6 +166,10 @@ p{margin:0 0 8px}
   background:linear-gradient(90deg,var(--accent-a),var(--accent-b));
 }
 
+.ins-item__main{
+  display: flex;
+}
+
 .ins-item__main{min-width:0}
 .ins-item__title{
   margin:0;
@@ -185,9 +177,23 @@ p{margin:0 0 8px}
   font-size:16px;
   line-height:1.35;
   display:-webkit-box;
-  -webkit-line-clamp:2;
+  align-items: center;
+  justify-content: center;
+  display: flex;
   -webkit-box-orient:vertical;
   overflow:hidden;
+}
+
+/* Make real logo avatars match the fallback circle size */
+.ins-item__avatar{
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  object-fit:contain;
+  flex:0 0 auto;
+  background:#fff;
+  border:1px solid rgba(17,24,39,.10);
+  box-sizing:border-box;
 }
 
 .ins-item__meta{

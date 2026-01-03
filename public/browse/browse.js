@@ -1,57 +1,56 @@
 // public/browse/browse.js
-(function () {
+(() => {
   const $ = (s) => document.querySelector(s);
+  const norm = (s) => String(s ?? "").trim();
 
-  const state = {
-    type: "brand",
-    value: "",
-    page: 1,
-    limit: 500,
-    pages: 1,
-    total: 0,
-    results: [],
+  const els = {
+    title: () => $("#title"),
+    meta: () => $("#meta"),
+    grid: () => $("#grid"),
+    empty: () => $("#empty"),
+    prev: () => $("#prev"),
+    next: () => $("#next"),
+    pageLabel: () => $("#pageLabel"),
   };
 
-  function readUrl() {
-    const url = new URL(location.href);
-    const brand = url.searchParams.get("brand");
-    const category = url.searchParams.get("category");
+  const state = {
+    q: "",
+    page: 1,
+    limit: 36,
 
-    if (brand) {
-      state.type = "brand";
-      state.value = brand;
-    } else if (category) {
-      state.type = "category";
-      state.value = category;
-    } else {
-      state.type = (url.searchParams.get("type") || "brand").toLowerCase();
-      state.value = url.searchParams.get("value") || "";
-    }
+    // server response
+    kind: "product", // "brand" | "category" | "product"
+    value: "",
+    total: 0,
+    pages: 1,
+    results: [],
+    also: [],
 
-    state.page = parseInt(url.searchParams.get("page") || "1", 10) || 1;
-    if (state.page < 1) state.page = 1;
+    loading: false,
+    lastReqId: 0,
+    lastError: "",
+  };
 
-    if (!state.value) {
-      state.type = "category";
-    }
+  function setText(el, txt) {
+    if (el) el.textContent = txt ?? "";
   }
 
-  function writeUrl() {
-    const url = new URL(location.href);
+  function setTitle(txt) {
+    setText(els.title(), txt || "Browse PriceCheck");
+  }
 
-    // clear legacy params
-    url.searchParams.delete("type");
-    url.searchParams.delete("value");
+  function setMeta(txt) {
+    setText(els.meta(), txt || "");
+  }
 
-    // clear both smart params first
-    url.searchParams.delete("brand");
-    url.searchParams.delete("category");
+  function setEmptyText(txt) {
+    const el = els.empty();
+    if (el) el.textContent = txt || "No results.";
+  }
 
-    if (state.type === "brand") url.searchParams.set("brand", state.value);
-    else url.searchParams.set("category", state.value);
-
-    url.searchParams.set("page", String(state.page));
-    history.replaceState({}, "", url);
+  function showEmpty(show) {
+    const el = els.empty();
+    if (el) el.hidden = !show;
   }
 
   function fmtPrice(cents) {
@@ -59,252 +58,261 @@
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
   }
 
-  async function inferTypeFromValue(raw) {
-  const v = (raw || "").trim();
-  if (!v) return "category";
+  function setPager() {
+    const label = els.pageLabel();
+    setText(label, state.pages ? `Page ${state.page} of ${state.pages}` : "");
 
-  // fetch facets and try to match
-  let brands = [];
-  let categories = [];
-  try {
-    [brands, categories] = await Promise.all([
-      fetchFacets("brand"),
-      fetchFacets("category"),
-    ]);
-  } catch {
-    return "category";
+    const prev = els.prev();
+    const next = els.next();
+    if (prev) prev.disabled = state.loading || state.page <= 1;
+    if (next) next.disabled = state.loading || state.page >= state.pages;
   }
 
-  const norm = (s) => String(s || "").trim().toLowerCase();
-
-  const vN = norm(v);
-
-  // exact match first
-  const brandHit = brands.some((r) => norm(r.value) === vN);
-  const catHit = categories.some((r) => norm(r.value) === vN);
-  if (brandHit && !catHit) return "brand";
-  if (catHit && !brandHit) return "category";
-  if (brandHit && catHit) {
-    // tie-breaker: prefer brand if both exist
-    return "brand";
+  function setLoading(on) {
+    state.loading = !!on;
+    setPager();
   }
 
-  // prefix match (helps with partial typing)
-  const brandPrefix = brands.some((r) => norm(r.value).startsWith(vN));
-  const catPrefix = categories.some((r) => norm(r.value).startsWith(vN));
-  if (brandPrefix && !catPrefix) return "brand";
-  if (catPrefix && !brandPrefix) return "category";
-
-  // fallback
-  return "category";
-}
-
-  async function fetchBrowse() {
-    const qs = new URLSearchParams({
-      type: state.type,
-      value: state.value,
-      page: String(state.page),
-      limit: String(state.limit),
-    }).toString();
-
-    const res = await fetch(`/api/browse?${qs}`, { headers: { Accept: "application/json" } });
-    if (!res.ok) throw new Error("fetch_failed");
-    const data = await res.json();
-
-    if (!data?.ok) throw new Error("bad_response");
-
-    state.pages = data.pages || 1;
-    state.total = data.total || 0;
-    state.results = Array.isArray(data.results) ? data.results : [];
+  function readUrl() {
+    const u = new URL(location.href);
+    state.q = norm(u.searchParams.get("q") || "");
+    const p = parseInt(u.searchParams.get("page") || "1", 10);
+    state.page = Number.isFinite(p) && p > 0 ? p : 1;
   }
 
-  async function fetchFacets(kind) {
-  const qs = new URLSearchParams({
-    kind,
-    limit: String(state.limit),
-  }).toString();
+  function writeUrl({ replace = false } = {}) {
+    const u = new URL(location.href);
+    if (state.q) u.searchParams.set("q", state.q);
+    else u.searchParams.delete("q");
+    u.searchParams.set("page", String(state.page));
 
-  const res = await fetch(`/api/browse_facets?${qs}`, { headers: { Accept: "application/json" } });
-  if (!res.ok) throw new Error("fetch_failed");
-  const data = await res.json();
-  if (!data?.ok) throw new Error("bad_response");
-  return Array.isArray(data.results) ? data.results : [];
-}
+    if (replace) history.replaceState({}, "", u);
+    else history.pushState({}, "", u);
+  }
 
-function renderFacets(kind, rows) {
-  $("#title").textContent = "Browse PriceCheck";
-  const label = kind === "category" ? "categories" : `${kind}s`;
-  $("#meta").textContent = rows.length
-    ? `Updated Weekly • ${rows.length} ${label} added`
-    : "No data yet";
-  $("#pageLabel").textContent = "";
-  $("#prev").disabled = true;
-  $("#next").disabled = true;
+  async function apiJson(url) {
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    const txt = await res.text().catch(() => "");
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
 
-  const grid = $("#grid");
-  grid.innerHTML = "";
+    let data;
+    try {
+      data = txt ? JSON.parse(txt) : null;
+    } catch {
+      throw new Error(`Bad JSON from ${url}`);
+    }
 
-  $("#empty").hidden = rows.length > 0;
+    if (!data || data.ok !== true) {
+      const msg = data && (data.error || data.message) ? String(data.error || data.message) : "API ok:false";
+      throw new Error(`${msg} (${url})`);
+    }
 
-  for (const r of rows) {
-    const value = r.value || "";
-    const products = typeof r.products === "number" ? r.products : 0;
+    return data;
+  }
 
-    const href = kind === "brand"
-      ? `/browse/?brand=${encodeURIComponent(value)}&page=1`
-      : `/browse/?category=${encodeURIComponent(value)}&page=1`;
+  function cardProduct(r) {
+    const dashKey = r.dashboard_key || "";
+    const href = dashKey ? `/dashboard/?key=${encodeURIComponent(dashKey)}` : "/dashboard/";
 
     const img = r.image_url
       ? `<img class="img" src="${r.image_url}" alt="">`
       : `<div class="img ph"></div>`;
 
-    const card = document.createElement("a");
-    card.className = "card item";
-    card.href = href;
+    const warn = r.dropship_warning ? `<span class="warn">Dropshipping risk</span>` : "";
+    const topLine = [r.brand || "", r.category || ""].filter(Boolean).join(" • ");
+    const name = r.model_name || r.title || r.model_number || "Untitled";
 
-    card.innerHTML = `
-      ${img}
-      <div class="body">
-        <div class="name">${value || "Untitled"}</div>
-        <div class="row2">
-          <div class="muted">${products} products</div>
-        </div>
-      </div>
-    `;
-
-    grid.appendChild(card);
-    }
-  }
-
-
-  function render() {
-    $("#value").value = state.value;
-
-    $("#title").textContent = state.value
-      ? `${state.type === "brand" ? "Brand" : "Category"}: ${state.value}`
-      : "Browse PriceCheck";
-
-    $("#meta").textContent = `${state.total} products`;
-    $("#pageLabel").textContent = `Page ${state.page} of ${state.pages}`;
-
-    $("#prev").disabled = state.page <= 1;
-    $("#next").disabled = state.page >= state.pages;
-
-    const grid = $("#grid");
-    grid.innerHTML = "";
-
-    $("#empty").hidden = state.results.length > 0;
-
-    for (const r of state.results) {
-      const key = r.dashboard_key || "";
-      const href = key ? `/dashboard/?key=${encodeURIComponent(key)}` : "/dashboard/";
-
-      const img = r.image_url ? `<img class="img" src="${r.image_url}" alt="">` : `<div class="img ph"></div>`;
-      const warn = r.dropship_warning ? `<span class="warn">Dropshipping risk</span>` : "";
-
-      const card = document.createElement("a");
-      card.className = "card item";
-      card.href = href;
-
-      card.innerHTML = `
+    return `
+      <a class="card item" href="${href}">
         ${img}
         <div class="body">
-            <div class="subtitle">${(r.brand || "")}${r.category ? " " + r.category : ""}</div>
-            <div class="name">${(r.model_name || r.model_number || "Untitled")}</div>
-            <div class="row2">
-                <div class="price">${fmtPrice(r.best_price_cents)}</div>
-                ${warn}
-            </div>
+          <div class="subtitle">${topLine}</div>
+          <div class="name">${name}</div>
+          <div class="row2">
+            <div class="price">${fmtPrice(r.best_price_cents)}</div>
+            ${warn}
+          </div>
         </div>
-      `;
-
-      grid.appendChild(card);
-    }
+      </a>
+    `;
   }
 
-  async function run() {
-    readUrl();
-    $("#value").value = state.value;
+  function cardFacet(f) {
+    const img = f.image_url
+      ? `<img class="img" src="${f.image_url}" alt="">`
+      : `<div class="img ph"></div>`;
 
-    async function doSearch() {
-      state.value = $("#value").value.trim();
-      state.page = 1;
+    const value = String(f.value || "");
+    const products = typeof f.products === "number" ? f.products : 0;
 
-      if (!state.value) {
-        state.type = "category";
-        writeUrl();
-        await load();
-        return;
-      }
-
-      $("#meta").textContent = "Loading...";
-      state.type = await inferTypeFromValue(state.value);
-
-      writeUrl();
-      await load();
-    }
-
-    const triggerSearch = () => { doSearch(); };
-
-    const icon = $("#searchIcon");
-    if (icon) {
-      icon.addEventListener("click", triggerSearch);
-      icon.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          triggerSearch();
-        }
-      });
-    }
-
-    $("#value").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-          e.preventDefault();
-          triggerSearch();
-        }
-      });
-
-    $("#prev").addEventListener("click", async () => {
-      if (state.page <= 1) return;
-      state.page -= 1;
-      writeUrl();
-      await load();
-    });
-
-    $("#next").addEventListener("click", async () => {
-      if (state.page >= state.pages) return;
-      state.page += 1;
-      writeUrl();
-      await load();
-    });
-
-    await load();
+    // No "Brand:" / "Category:" prefix, per your request
+    return `
+      <button type="button" class="card item" data-nav-kind="${f.kind}" data-nav-value="${value.replace(/"/g, "&quot;")}">
+        ${img}
+        <div class="body">
+          <div class="subtitle"></div>
+          <div class="name">${value}</div>
+          <div class="row2">
+            <div class="muted">${products} products</div>
+          </div>
+        </div>
+      </button>
+    `;
   }
 
-  async function load() {
-    // When empty, show available categories (like your screenshot)
-    if (!state.value) {
-      $("#meta").textContent = "Loading...";
-      try {
-        const rows = await fetchFacets("category");
-        renderFacets("category", rows);
-      } catch {
-        renderFacets("category", []);
-      }
+  function render() {
+    const grid = els.grid();
+    if (!grid) return;
+
+    // title behavior:
+    // - if server resolved brand/category, show that label
+    // - else show the raw query
+    const titleText = state.value || state.q || "Browse PriceCheck";
+    setTitle(titleText);
+
+    if (state.lastError) {
+      setMeta(state.lastError);
+      grid.innerHTML = "";
+      setEmptyText(state.lastError);
+      showEmpty(true);
+      setPager();
       return;
     }
 
-    $("#meta").textContent = "Loading...";
-    try {
-      await fetchBrowse();
-    } catch {
-      state.results = [];
-      state.total = 0;
-      state.pages = 1;
+    const metaParts = [];
+    if (state.total) metaParts.push(`${state.total} products`);
+    setMeta(metaParts.join(" • "));
+
+    const parts = [];
+
+    if (Array.isArray(state.also) && state.also.length) {
+      // If the server says "also" (the other facet matched), show clickable facet cards first
+      for (const f of state.also) parts.push(cardFacet(f));
     }
-    render();
+
+    if (Array.isArray(state.results) && state.results.length) {
+      for (const r of state.results) parts.push(cardProduct(r));
+    }
+
+    grid.innerHTML = parts.join("");
+
+    setEmptyText("No results.");
+    showEmpty(parts.length === 0);
+    setPager();
   }
 
+  async function load() {
+    const reqId = ++state.lastReqId;
+    setLoading(true);
 
-  document.addEventListener("DOMContentLoaded", run);
+    state.lastError = "";
+    state.results = [];
+    state.also = [];
+    state.total = 0;
+    state.pages = 1;
+    state.kind = "product";
+    state.value = "";
+
+    try {
+      if (!state.q) {
+        setLoading(false);
+        setTitle("Browse PriceCheck");
+        setMeta("Search for a brand, category, or product name.");
+        const grid = els.grid();
+        if (grid) grid.innerHTML = "";
+        showEmpty(false);
+        setPager();
+        return;
+      }
+
+      const qs = new URLSearchParams({
+        q: state.q,
+        page: String(state.page),
+        limit: String(state.limit),
+      }).toString();
+
+      const data = await apiJson(`/api/search?${qs}`);
+      if (reqId !== state.lastReqId) return;
+
+      state.kind = data.kind || "product";
+      state.value = data.value || "";
+      state.total = typeof data.total === "number" ? data.total : 0;
+      state.pages = typeof data.pages === "number" ? data.pages : 1;
+      state.results = Array.isArray(data.results) ? data.results : [];
+      state.also = Array.isArray(data.also) ? data.also : [];
+
+      setLoading(false);
+      render();
+    } catch (e) {
+      if (reqId !== state.lastReqId) return;
+      state.lastError = e && e.message ? e.message : "Search failed.";
+      setLoading(false);
+      render();
+    }
+  }
+
+  function navTo(kind, value) {
+    // When a user clicks the "also" facet card, we just set q to that facet value
+    // The server will then resolve it as brand/category and return the right list
+    state.q = norm(value);
+    state.page = 1;
+    writeUrl({ replace: false });
+    load();
+  }
+
+  function wire() {
+    const prev = els.prev();
+    const next = els.next();
+    const grid = els.grid();
+
+    if (prev) {
+      prev.addEventListener("click", () => {
+        if (state.loading || state.page <= 1) return;
+        state.page -= 1;
+        writeUrl({ replace: false });
+        load();
+      });
+    }
+
+    if (next) {
+      next.addEventListener("click", () => {
+        if (state.loading || state.page >= state.pages) return;
+        state.page += 1;
+        writeUrl({ replace: false });
+        load();
+      });
+    }
+
+    if (grid) {
+      grid.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-nav-kind][data-nav-value]");
+        if (!btn) return;
+        const value = btn.getAttribute("data-nav-value");
+        if (!value) return;
+        navTo(btn.getAttribute("data-nav-kind") || "product", value);
+      });
+    }
+
+    window.addEventListener("popstate", () => {
+      readUrl();
+      load();
+    });
+  }
+
+  // Optional SPA entry point for your header search later
+  window.pcBrowse = {
+    search(raw) {
+      state.q = norm(raw);
+      state.page = 1;
+      writeUrl({ replace: false });
+      load();
+    },
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    readUrl();
+    wire();
+    writeUrl({ replace: true });
+    load();
+  });
 })();

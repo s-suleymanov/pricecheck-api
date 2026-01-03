@@ -8,7 +8,6 @@
     variants:[],
     offers:[],
     observed:[],
-    range:30,
     selectedVariantKey:null,   // NEW: pci:/upc
     lastKey:null
   };
@@ -107,8 +106,10 @@
     else history.replaceState({ key: k }, '', url);
   }
   function currentKeyFromUrl() {
-    return new URL(location.href).searchParams.get('key');
+    const sp = new URL(location.href).searchParams;
+    return sp.get('key') || sp.get('q');
   }
+
 
   // ---------- Normalizers ----------
   function norm(s){ return String(s || '').trim(); }
@@ -271,20 +272,18 @@ function getCurrentVariant(){
   return hit || null;
 }
 
-  $('#load').addEventListener('click', () => {
-    const raw = $('#query').value.trim();
-    const key = keyFromInput(raw);
-    if (!key) return;
-    applyKeyToUrl(key, 'push');
-    run(key);
-  });
+const shareBtn = $('#share');
+const sortTotalBtn = $('#sortTotal');
+const copyCheapestBtn = $('#copyCheapest');
+const downloadCsvBtn = $('#downloadCsv');
+const downloadObsBtn = $('#downloadObs');
+const copyPmBtn = $('#copyPm');
+const variantSel = $('#variant');
 
-  $('#query').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); $('#load').click(); }
-  });
-
-  $('#share').addEventListener('click', () => {
-    const raw = $('#query').value.trim();
+// Share button (allow working even if query box is removed)
+if (shareBtn) {
+  shareBtn.addEventListener('click', () => {
+    const raw = '';
     const key = keyFromInput(raw) || currentKeyFromUrl();
     const id = state.identity || {};
     const cur = getCurrentVariant() || null;
@@ -296,32 +295,37 @@ function getCurrentVariant(){
       'Product';
 
     const link = prettyDashboardUrl(key || '', bestTitle).toString();
-
     navigator.clipboard.writeText(link);
     flip('#share','Copied','Copy share link',900);
   });
+}
 
-  $('#sortTotal').addEventListener('click', ()=> renderOffers(true));
+if (sortTotalBtn) sortTotalBtn.addEventListener('click', ()=> renderOffers(true));
 
-  $('#copyCheapest').addEventListener('click', ()=>{
-    const cheap = getCheapestOffer();
-    const link = cheap ? (cheap.url || canonicalLink(cheap.store, cheap, state.identity)) : '';
-    if(link) navigator.clipboard.writeText(link);
-    flip('#copyCheapest','Copied','Copy cheapest link',900);
-  });
+if (copyCheapestBtn) copyCheapestBtn.addEventListener('click', ()=>{
+  const cheap = getCheapestOffer();
+  const link = cheap ? (cheap.url || canonicalLink(cheap.store, cheap, state.identity)) : '';
+  if(link) navigator.clipboard.writeText(link);
+  flip('#copyCheapest','Copied','Copy cheapest link',900);
+});
 
-  $('#downloadCsv').addEventListener('click', downloadHistoryCsv);
-  $('#downloadObs').addEventListener('click', downloadObsCsv);
+if (downloadCsvBtn) downloadCsvBtn.addEventListener('click', downloadHistoryCsv);
+if (downloadObsBtn) downloadObsBtn.addEventListener('click', downloadObsCsv);
 
-  $('#copyPm').addEventListener('click', ()=>{
-    const ta = $('#pmScript');
-    ta.select(); document.execCommand('copy');
-    $('#pmNote').textContent = 'Copied';
-    setTimeout(()=>$('#pmNote').textContent='',900);
-  });
+if (copyPmBtn) copyPmBtn.addEventListener('click', ()=>{
+  const ta = $('#pmScript');
+  if (!ta) return;
+  ta.select(); document.execCommand('copy');
+  const note = $('#pmNote');
+  if (note) {
+    note.textContent = 'Copied';
+    setTimeout(()=> note.textContent='', 900);
+  }
+});
 
-  // IMPORTANT: selecting a variant triggers a load using variant.key (pci/upc)
-  $('#variant').addEventListener('change', (e) => {
+// Variant dropdown (if present)
+if (variantSel) {
+  variantSel.addEventListener('change', (e) => {
     const k = e.target.selectedOptions[0]?.dataset.key;
     if (k) {
       state.selectedVariantKey = k;
@@ -329,6 +333,7 @@ function getCurrentVariant(){
       run(k);
     }
   });
+}
 
   // ---------- Main loader ----------
   async function run(raw){
@@ -337,7 +342,6 @@ function getCurrentVariant(){
     state.lastKey = key;
 
     try{
-      toggleLoading(true);
       const res = await fetch(`/api/compare/${encodeURIComponent(key)}`, { headers: { 'Accept': 'application/json' }});
       if(res.status === 404){
         showMessage(`No match for "${raw}". Try prefixes like asin:..., upc:..., pci:..., bby:..., wal:..., tcin:...`);
@@ -389,15 +393,12 @@ function getCurrentVariant(){
     }catch(err){
       console.error(err);
       showMessage('Network error. Check console.');
-    }finally{
-      toggleLoading(false);
     }
   }
 
   // ---------- UI ----------
   function showMessage(msg){
     $('#pTitle').textContent = msg;
-    $('#pSubtitle').textContent = '';
     $('#pIds').textContent = '';
     $('#offers').innerHTML = '';
     $('#offersNote').textContent = '';
@@ -415,11 +416,6 @@ function getCurrentVariant(){
     $('#chartNote').textContent = 'No history yet';
   }
 
-  function toggleLoading(on){
-    const btn = $('#load');
-    if(on){ btn.disabled = true; btn.textContent = 'Loading...'; }
-    else { btn.disabled = false; btn.textContent = 'Load'; }
-  }
 
   function escapeHtml(s){
     return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -464,7 +460,6 @@ function getCurrentVariant(){
       'Product';
 
     $('#pTitle').textContent = title;
-    $('#pSubtitle').textContent = 'Latest prices for this variant';
 
     // Pills: show selected anchor keys (pci/upc/asin) if present
     const parts = [];
@@ -977,17 +972,17 @@ if (actSummary) actSummary.addEventListener('click', async () => {
 
   window.run = run;
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const key = currentKeyFromUrl();
-    if (key) {
-      const q = $('#query'); if (q) q.value = key;
-      run(key);
-    }
-  });
+ document.addEventListener('DOMContentLoaded', () => {
+  const raw = currentKeyFromUrl(); // raw user input
+  if (raw) {
+    const q = $('#query'); if (q) q.value = raw;
+    run(raw);
+  }
+});
 
   window.addEventListener('popstate', () => {
-    const key = currentKeyFromUrl();
-    const q = $('#query'); if (q) q.value = key || '';
-    if (key) run(key);
+    const raw = currentKeyFromUrl(); // raw user input from ?key= or ?q=
+    const q = $('#query'); if (q) q.value = raw || '';
+    if (raw) run(raw);
   });
 })();
