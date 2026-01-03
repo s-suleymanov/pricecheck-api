@@ -187,7 +187,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
   if (pci) {
     const r = await client.query(
       `
-      select id, upc, pci, model_name, model_number, brand, category, image_url, variant_label, created_at, dropship_warning, recall_url
+      select id, upc, pci, model_name, model_number, brand, category, image_url, version, color, created_at, dropship_warning, recall_url
       from public.catalog
       where pci is not null and btrim(pci) <> ''
         and upper(btrim(pci)) = upper(btrim($1))
@@ -204,7 +204,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
   if (upc) {
     const r = await client.query(
       `
-      select id, upc, pci, model_name, model_number, brand, category, image_url, variant_label, created_at, dropship_warning, recall_url
+      select id, upc, pci, model_name, model_number, brand, category, image_url, version, color, created_at, dropship_warning, recall_url
       from public.catalog
       where norm_upc(upc) = norm_upc($1)
       order by created_at desc
@@ -229,13 +229,13 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
 
   const r = await client.query(
     `
-    select id, upc, pci, model_name, model_number, brand, category, image_url, variant_label, created_at
+    select id, upc, pci, model_name, model_number, brand, category, image_url, version, color, created_at
     from public.catalog
     where model_number is not null and btrim(model_number) <> ''
       and upper(btrim(model_number)) = upper(btrim($1))
     order by
-      (case when variant_label is null or btrim(variant_label) = '' then 1 else 0 end),
-      variant_label nulls last,
+      (case when version is null or btrim(version) = '' then 1 else 0 end),
+      version nulls last,
       (case when model_name is null or btrim(model_name) = '' then 1 else 0 end),
       model_name nulls last,
       id
@@ -244,11 +244,14 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
     [modelNumber]
   );
 
-  return r.rows.map((row) => {
-    const label =
-      (row.variant_label && String(row.variant_label).trim()) ||
-      (row.model_name && String(row.model_name).trim()) ||
-      'Default';
+ return r.rows.map((row) => {
+  const v = row.version && String(row.version).trim();
+  const c = row.color && String(row.color).trim();
+
+  const label =
+    (v && c ? `${v} • ${c}` : (v || c)) ||
+    (row.model_name && String(row.model_name).trim()) ||
+    'Default';
 
     const key =
       (row.pci && String(row.pci).trim() ? `pci:${String(row.pci).trim()}` : null) ||
@@ -262,6 +265,8 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
       model_name: row.model_name || null,
       model_number: row.model_number || null,
       variant_label: label,
+      version: row.version || null,
+      color: row.color || null,
       brand: row.brand || null,
       category: row.category || null,
       image_url: row.image_url || null
@@ -279,7 +284,19 @@ async function getOffersForSelectedVariant(client, selectedKeys) {
 
   const r = await client.query(
     `
-    select store, store_sku, upc, pci, url, title, offer_tag, current_price_cents, current_price_observed_at, created_at
+    select
+      store, store_sku, upc, pci, url, title, offer_tag,
+      current_price_cents, current_price_observed_at, created_at,
+
+      coupon_text,
+      coupon_type,
+      coupon_value_cents,
+      coupon_value_pct,
+      coupon_requires_clip,
+      coupon_code,
+      coupon_expires_at,
+      effective_price_cents,
+      coupon_observed_at
     from public.listings
     where
       (
@@ -303,8 +320,21 @@ async function getOffersForSelectedVariant(client, selectedKeys) {
       url: row.url || null,
       title: row.title || null,
       offer_tag: row.offer_tag || null,
+
       price_cents: row.current_price_cents ?? null,
+      effective_price_cents: row.effective_price_cents ?? null,
+
+      coupon_text: row.coupon_text || null,
+      coupon_type: row.coupon_type || null,
+      coupon_value_cents: row.coupon_value_cents ?? null,
+      coupon_value_pct: row.coupon_value_pct ?? null,
+      coupon_requires_clip: row.coupon_requires_clip ?? null,
+      coupon_code: row.coupon_code || null,
+      coupon_expires_at: row.coupon_expires_at || null,
+      coupon_observed_at: row.coupon_observed_at || null,
+
       observed_at: row.current_price_observed_at ?? null,
+
       upc: row.upc || null,
       pci: row.pci || null
     };
@@ -411,7 +441,9 @@ async function getObservationLog(client, selectedKeys) {
       coalesce(current_price_observed_at, created_at) as t,
       lower(btrim(store)) as store,
       store_sku,
-      current_price_cents as price_cents
+      current_price_cents as price_cents,
+      effective_price_cents as effective_price_cents,
+      coupon_text as coupon_text
     from public.listings
     where
       (
@@ -436,6 +468,8 @@ async function getObservationLog(client, selectedKeys) {
         store: normStoreName(r.store),
         store_sku: r.store_sku || null,
         price_cents: r.price_cents ?? null,
+        effective_price_cents: r.effective_price_cents ?? null,
+        coupon_text: r.coupon_text || null,
         note: 'pass'
       };
     });

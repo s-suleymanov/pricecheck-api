@@ -190,6 +190,90 @@ details[open]{background:#fff}
 }
 .ph-btn:hover{ background:#f9fafb; }
 
+.coupon-badge{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--muted);
+  font-weight:650;
+}
+
+/* Remove “inner card” feeling */
+.coupon-best{
+  border:0;
+  background:transparent;
+  padding:6px 0 0;
+}
+
+/* Top row: store + save should be quiet, not shouting */
+.coupon-best__top{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-top:2px;
+}
+
+.coupon-best__store{
+  color:var(--ink);
+}
+
+.coupon-best__save{
+  color:var(--muted); /* was too strong */
+}
+
+.coupon-best__price{
+  font-size:30px;
+  font-weight:450;
+  letter-spacing:-.02em;
+  margin-top:8px;
+}
+
+.coupon-best__sub{
+  margin-top:4px;
+}
+
+/* Chips should look like metadata tags, not buttons */
+.coupon-meta{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.coupon-chip{
+  border:0;
+  color:var(--muted);
+  background: rgba(17, 24, 39, .04);
+  padding:6px 10px;
+  border-radius:999px;
+}
+
+.coupon-chip--muted{
+  background:rgba(17,24,39,.06);
+}
+
+/* Button should match your other pill buttons, not be a giant slab */
+.coupon-cta{
+  margin-top:12px;
+  width:100%;
+  background:var(--ink);
+  color:var(--paper);
+  text-decoration:none;
+}
+
+.coupon-cta:hover{
+  color:var(--ink);
+  background-color: var(--paper);
+}
+
+/* Footnote should match your muted body copy size everywhere else */
+#cpFootnote{
+  color:var(--muted);
+  line-height:1.4;
+}
+
 .ext-icon{
   width:18px;
   height:18px;

@@ -279,6 +279,8 @@ const downloadCsvBtn = $('#downloadCsv');
 const downloadObsBtn = $('#downloadObs');
 const copyPmBtn = $('#copyPm');
 const variantSel = $('#variant');
+const colorWrap = $('#colorWrap');
+const colorSel  = $('#color');
 
 // Share button (allow working even if query box is removed)
 if (shareBtn) {
@@ -300,7 +302,10 @@ if (shareBtn) {
   });
 }
 
-if (sortTotalBtn) sortTotalBtn.addEventListener('click', ()=> renderOffers(true));
+if (sortTotalBtn) sortTotalBtn.addEventListener('click', ()=> {
+  renderOffers(true);
+  renderCouponsCard();
+});
 
 if (copyCheapestBtn) copyCheapestBtn.addEventListener('click', ()=>{
   const cheap = getCheapestOffer();
@@ -323,14 +328,133 @@ if (copyPmBtn) copyPmBtn.addEventListener('click', ()=>{
   }
 });
 
-// Variant dropdown (if present)
+function normLower(s){ return String(s || '').trim().toLowerCase(); }
+
+function versionsFromVariants(list){
+  const seen = new Set();
+  const out = [];
+  for (const v of list){
+    const ver = String(v?.version || v?.variant_label || '').trim() || 'Default';
+    const k = normLower(ver);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(ver);
+  }
+  return out;
+}
+
+function colorsForVersion(list, version){
+  const want = normLower(version || 'Default');
+  const seen = new Set();
+  const out = [];
+  for (const v of list){
+    const ver = String(v?.version || v?.variant_label || '').trim() || 'Default';
+    if (normLower(ver) !== want) continue;
+    const c = String(v?.color || '').trim();
+    if (!c) continue;
+    const ck = normLower(c);
+    if (seen.has(ck)) continue;
+    seen.add(ck);
+    out.push(c);
+  }
+  return out;
+}
+
+function chooseKeyForVersionColor(list, version, color){
+  const wantV = normLower(version || 'Default');
+  const wantC = normLower(color || '');
+
+  if (wantC){
+    const hit = list.find(v => {
+      const ver = String(v?.version || v?.variant_label || '').trim() || 'Default';
+      const col = String(v?.color || '').trim();
+      return normLower(ver) === wantV && normLower(col) === wantC && String(v?.key || '').trim();
+    });
+    if (hit) return String(hit.key).trim();
+  }
+
+  const hit2 = list.find(v => {
+    const ver = String(v?.version || v?.variant_label || '').trim() || 'Default';
+    return normLower(ver) === wantV && String(v?.key || '').trim();
+  });
+  return hit2 ? String(hit2.key).trim() : null;
+}
+
+function syncVersionColorFromSelectedKey(){
+  const list = Array.isArray(state.variants) ? state.variants : [];
+  const k = String(state.selectedVariantKey || '').trim();
+  const hit = list.find(v => String(v?.key || '').trim() === k);
+
+  state.selectedVersion = hit ? (String(hit.version || hit.variant_label || '').trim() || 'Default') : null;
+  state.selectedColor   = hit ? (String(hit.color || '').trim() || null) : null;
+}
+
+function renderVersionAndColor(){
+  const list = Array.isArray(state.variants) ? state.variants : [];
+
+  const versions = versionsFromVariants(list);
+  variantSel.innerHTML = '';
+
+  const desiredV = state.selectedVersion || (versions[0] || 'Default');
+  for (const ver of (versions.length ? versions : ['Default'])){
+    const opt = document.createElement('option');
+    opt.value = ver;
+    opt.textContent = ver;
+    opt.selected = normLower(ver) === normLower(desiredV);
+    variantSel.appendChild(opt);
+  }
+  state.selectedVersion = variantSel.value || 'Default';
+
+  const colors = colorsForVersion(list, state.selectedVersion);
+
+  if (colorWrap && colorSel){
+    if (colors.length >= 2){
+      colorWrap.hidden = false;
+      colorSel.innerHTML = '';
+
+      const desiredC = state.selectedColor || colors[0];
+      for (const c of colors){
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        opt.selected = normLower(c) === normLower(desiredC);
+        colorSel.appendChild(opt);
+      }
+      state.selectedColor = colorSel.value || colors[0];
+    } else {
+      colorWrap.hidden = true;
+      colorSel.innerHTML = '';
+      state.selectedColor = colors[0] || null;
+    }
+  }
+
+  const resolvedKey = chooseKeyForVersionColor(list, state.selectedVersion, state.selectedColor);
+  if (resolvedKey){
+    state.selectedVariantKey = resolvedKey;
+  }
+}
+
+// Version dropdown change
 if (variantSel) {
-  variantSel.addEventListener('change', (e) => {
-    const k = e.target.selectedOptions[0]?.dataset.key;
-    if (k) {
-      state.selectedVariantKey = k;
-      applyKeyToUrl(k, 'push');
-      run(k);
+  variantSel.addEventListener('change', () => {
+    state.selectedVersion = variantSel.value || 'Default';
+    state.selectedColor = null; // reset, we will pick first available color for this version
+    renderVersionAndColor();
+    if (state.selectedVariantKey){
+      applyKeyToUrl(state.selectedVariantKey, 'push');
+      run(state.selectedVariantKey);
+    }
+  });
+}
+
+// Color dropdown change
+if (colorSel) {
+  colorSel.addEventListener('change', () => {
+    state.selectedColor = colorSel.value || null;
+    renderVersionAndColor();
+    if (state.selectedVariantKey){
+      applyKeyToUrl(state.selectedVariantKey, 'push');
+      run(state.selectedVariantKey);
     }
   });
 }
@@ -357,6 +481,7 @@ if (variantSel) {
       state.observed = Array.isArray(data.observed) ? data.observed : [];
 
       state.selectedVariantKey = chooseSelectedVariantKeyFromKey(state.lastKey, data);
+      syncVersionColorFromSelectedKey();
 
       const id = data.identity || {};
       const cur = (() => {
@@ -384,6 +509,7 @@ if (variantSel) {
       hydrateKpis();
       drawChart();
       renderOffers(false);
+      renderCouponsCard();
       renderVariants();
       renderSpecsMatrix();
       renderForensics();
@@ -573,6 +699,163 @@ if (variantSel) {
     return arr[0];
   }
 
+  function moneyFromCents(c){
+    return (typeof c === 'number') ? fmt.format(c/100) : 'NA';
+  }
+
+  function couponCandidates(){
+  const offers = Array.isArray(state.offers) ? state.offers : [];
+  return offers
+    .map(o => {
+      const price = (typeof o.price_cents === 'number') ? o.price_cents : null;
+      const eff   = (typeof o.effective_price_cents === 'number') ? o.effective_price_cents : null;
+      const text  = couponSummary(o);
+      const has = !!String(o?.coupon_text || '').trim();
+
+      const savings = (price != null && eff != null && eff > 0 && eff <= price) ? (price - eff) : null;
+
+      return {
+        ...o,
+        _price: price,
+        _eff: eff,
+        _couponText: text,
+        _hasCoupon: has,
+        _savings: savings
+      };
+    })
+    .filter(o => o._hasCoupon || o._eff != null);
+}
+
+function pickBestCoupon(list){
+  const arr = (list || []).slice();
+
+  // Best = biggest deterministic savings first, otherwise lowest effective price, otherwise any coupon text
+  arr.sort((a,b) => {
+    const as = (a._savings != null) ? a._savings : -1;
+    const bs = (b._savings != null) ? b._savings : -1;
+    if (bs !== as) return bs - as;
+
+    const ae = (a._eff != null) ? a._eff : Number.POSITIVE_INFINITY;
+    const be = (b._eff != null) ? b._eff : Number.POSITIVE_INFINITY;
+    if (ae !== be) return ae - be;
+
+    // fallback: cheaper sticker price
+    const ap = (a._price != null) ? a._price : Number.POSITIVE_INFINITY;
+    const bp = (b._price != null) ? b._price : Number.POSITIVE_INFINITY;
+    return ap - bp;
+  });
+
+  return arr[0] || null;
+}
+
+function setMaybe(el, text, { asHtml = false } = {}) {
+  if (!el) return;
+  const t = String(text || '').trim();
+  if (!t) {
+    el.hidden = true;
+    if (asHtml) el.innerHTML = '';
+    else el.textContent = '';
+    return;
+  }
+  el.hidden = false;
+  if (asHtml) el.innerHTML = t;
+  else el.textContent = t;
+}
+
+function renderCouponsCard(){
+  const card = document.getElementById('couponCard');
+  if (!card) return;
+
+  const list = couponCandidates();
+  const best = pickBestCoupon(list);
+
+  if (!best){
+    card.hidden = true;
+    return;
+  }
+
+  card.hidden = false;
+
+  const store = titleCase(best.store || 'Retailer');
+  const link = best.url || canonicalLink(best.store, best) || '#';
+
+  const priceCents = best._price;
+  const effCents = best._eff;
+  const showEff = (effCents != null && priceCents != null && effCents > 0 && effCents <= priceCents);
+
+  const saveEl = document.getElementById('cpSave');
+  if (saveEl) saveEl.textContent = (best._savings != null) ? `Save ${moneyFromCents(best._savings)}` : '';
+
+  const stEl = document.getElementById('cpStore');
+  if (stEl) stEl.textContent = store;
+
+  const effEl = document.getElementById('cpEffective');
+  if (effEl) effEl.textContent = showEff ? moneyFromCents(effCents) : (priceCents != null ? moneyFromCents(priceCents) : 'NA');
+
+  const regEl = document.getElementById('cpRegular');
+  if (regEl) regEl.textContent = showEff ? `Regular ${moneyFromCents(priceCents)}` : '';
+
+const confEl = document.getElementById('cpConfidence');
+const ruleEl = document.getElementById('cpRule');
+
+// Confidence: only "Verified" if we can compute eff deterministically
+const confidence =
+  (showEff && best._savings != null) ? 'Verified price' :
+  (String(best.coupon_text || '').trim() ? 'Promo noted' : '');
+
+setMaybe(confEl, confidence);
+
+// Rule: short action hint
+const ruleBits = [];
+if (best.coupon_requires_clip === true) ruleBits.push('Clip coupon');
+if (String(best.coupon_code || '').trim()) ruleBits.push(`Code ${String(best.coupon_code).trim()}`);
+setMaybe(ruleEl, ruleBits.join(' • '));
+
+  const linkEl = document.getElementById('cpLink');
+  if (linkEl) linkEl.href = link;
+
+  // More coupons (top 3 besides best)
+  const more = list
+    .filter(o => o !== best)
+    .slice(0, 3);
+
+  const moreWrap = document.getElementById('cpMore');
+  const moreLabel = document.getElementById('cpMoreLabel');
+
+    if (moreWrap && moreLabel){
+      if (!more.length){
+        moreWrap.hidden = true;
+        moreLabel.hidden = true;
+      } else {
+        moreWrap.hidden = false;
+        moreLabel.hidden = false;
+        moreWrap.innerHTML = more.map(o => {
+          const st = titleCase(o.store || 'Retailer');
+          const show = (o._eff != null) ? moneyFromCents(o._eff) : (o._price != null ? moneyFromCents(o._price) : 'NA');
+          const t = o._couponText || String(o.coupon_text || '').trim();
+          return `
+            <div class="coupon-mini">
+              <div class="coupon-mini__left">
+                <div class="coupon-mini__store">${escapeHtml(st)}</div>
+                <div class="coupon-mini__text">${escapeHtml(t)}</div>
+              </div>
+              <div class="coupon-mini__price">${escapeHtml(show)}</div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  }
+
+  function couponSummary(o){
+    const txt = String(o?.coupon_text || '').trim();
+    if (!txt) return '';
+    const clip = (o?.coupon_requires_clip === true) ? 'Clip' : '';
+    const code = String(o?.coupon_code || '').trim();
+    const bits = [clip, code ? `Code ${code}` : ''].filter(Boolean);
+    return bits.length ? `${txt} • ${bits.join(' • ')}` : txt;
+  }
+
   function renderOffers(sortByPrice){
     const wrap = $('#offers'); wrap.innerHTML = '';
     const note = $('#offersNote');
@@ -629,28 +912,9 @@ if (variantSel) {
   }
 
   function renderVariants(){
-    const sel = $('#variant'); sel.innerHTML = '';
-    const list = Array.isArray(state.variants) ? state.variants : [];
-
-    if (!list.length) {
-      const opt = document.createElement('option');
-      opt.value = 'Default';
-      opt.textContent = 'Default';
-      sel.appendChild(opt);
-      return;
-    }
-
-    for (const v of list){
-      const opt = document.createElement('option');
-      const k = String(v.key || '').trim();
-      opt.dataset.key = k;
-      opt.value = k || v.model_number || v.variant_label || 'Variant';
-      opt.textContent = v.variant_label || 'Default';
-
-      opt.selected = !!(state.selectedVariantKey && k && k === state.selectedVariantKey);
-      sel.appendChild(opt);
-    }
-  }
+  syncVersionColorFromSelectedKey();
+  renderVersionAndColor();
+}
 
   function renderForensics(){
     const ul = $('#forensicsList'); ul.innerHTML = '';
@@ -917,7 +1181,11 @@ if (actSummary) actSummary.addEventListener('click', async () => {
 
     items.forEach(v=>{
       html += '<tr>';
-      const label = v.variant_label || v.model_name || v.model_number || v.key || 'Variant';
+      const ver = (v.version || v.variant_label || '').trim();
+      const col = (v.color || '').trim();
+      const label =
+        (ver && col ? `${ver} • ${col}` : (ver || col)) ||
+        v.model_name || v.model_number || v.key || 'Variant';
       html += `<td class="mono">${escapeHtml(label)}</td>`;
 
       ['category','brand','model_number','model_name'].forEach(k=>{

@@ -77,8 +77,8 @@
                 <button id="categoryBtn" class="ph-btn" type="button"></button>
               </div>
               <div style="margin-top:10px" id="colorWrap" hidden>
-                <label class="muted">Color</label>
-                <button id="colorBtn" class="ph-btn" type="button"></button>
+                <label class="muted" for="color">Color</label>
+                <select class="variant-dropdown" id="color"></select>
               </div>
             </div>
             <div>
@@ -166,6 +166,38 @@
             <h3>PriceCoverage</h3>
             <div class="bars" id="coverage"></div>
             <p class="muted-note">Higher percentages indicate this store is recommended more often based on our metrics.</p>
+          </section>
+
+          <section class="card" id="couponCard" style="margin-top:16px" hidden>
+            <div class="coupon-head">
+              <h3 style="margin:0">Coupons</h3>
+              <span class="coupon-badge" id="cpBadge" hidden>Verified</span>
+            </div>
+
+            <div class="coupon-best">
+              <div class="coupon-best__top">
+                <div class="coupon-best__store" id="cpStore"></div>
+                <div class="coupon-best__save" id="cpSave"></div>
+              </div>
+
+              <div class="coupon-best__price" id="cpEffective"></div>
+              <div class="coupon-best__sub muted" id="cpRegular"></div>
+              <div class="coupon-meta">
+                <span class="coupon-chip" id="cpConfidence" hidden></span>
+                <span class="coupon-chip coupon-chip--muted" id="cpRule" hidden></span>
+              </div>
+
+              <a class="btn btn-go coupon-cta" id="cpLink" href="#" target="_blank" rel="noopener">Unlock Offer</a>
+            </div>
+
+            <div class="coupon-more-wrap" id="cpMoreWrap" hidden>
+              <div class="muted coupon-more__label" id="cpMoreLabel">More coupons</div>
+              <div id="cpMore" class="coupon-more"></div>
+            </div>
+
+            <p class="muted-note" style="margin-top:10px" id="cpFootnote">
+              After-coupon prices are shown only when we can verify them. Exclusions apply.
+            </p>
           </section>
 
           <section class="card" style="margin-top:16px">
