@@ -33,11 +33,10 @@ function wireHeaderSearch() {
     return p.endsWith("/") ? p : p + "/";
   }
 
-  // Load both partials
-  const headerOk = await loadPartial("site-header", "/partials/header.html");
-  const footerOk = await loadPartial("site-footer", "/partials/footer.html");
+  const [headerOk, footerOk] = await Promise.all([
+    loadPartial("site-header", "/partials/header.html"),
+    loadPartial("site-footer", "/partials/footer.html"),
+  ]);
 
-  if (headerOk) {
-  wireHeaderSearch();
-}
+  if (headerOk) wireHeaderSearch();
 })();

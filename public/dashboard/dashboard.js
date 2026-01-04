@@ -460,6 +460,18 @@ if (colorSel) {
   });
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(location.search);
+  const key = params.get("key") || params.get("q") || "";
+
+  if (!key.trim()) {
+    document.getElementById("pTitle").textContent = "Search a product to view the dashboard.";
+    return;
+  }
+
+  run(key);
+});
+
   // ---------- Main loader ----------
   async function run(raw){
     const key = keyFromInput(raw);
@@ -1240,14 +1252,6 @@ if (actSummary) actSummary.addEventListener('click', async () => {
   }
 
   window.run = run;
-
- document.addEventListener('DOMContentLoaded', () => {
-  const raw = currentKeyFromUrl(); // raw user input
-  if (raw) {
-    const q = $('#query'); if (q) q.value = raw;
-    run(raw);
-  }
-});
 
   window.addEventListener('popstate', () => {
     const raw = currentKeyFromUrl(); // raw user input from ?key= or ?q=
