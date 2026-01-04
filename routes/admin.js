@@ -5,9 +5,6 @@ const { Pool } = require("pg");
 
 const router = express.Router();
 
-// routes/admin.js
-const router = express.Router();
-
 // add this
 router.use(express.json({ limit: "1mb" }));
 
