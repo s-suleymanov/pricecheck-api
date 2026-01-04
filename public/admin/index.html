@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PriceCheck Admin</title>
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <img class="brand-logo" src="/logo/admin.png" alt="PriceCheck Admin" />
+      <form id="searchForm" class="search">
+        <input id="q" class="search__input" placeholder="Search pci, upc, asin, store_sku, brand, model..." autocomplete="off" />
+        <button class="search__btn" type="submit">Search</button>
+      </form>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <div class="card__title">Catalog</div>
+        <div id="catalog"></div>
+      </section>
+
+      <section class="card">
+        <div class="card__title">Listings</div>
+        <div id="listings"></div>
+      </section>
+
+      <section class="card card--full">
+        <div class="card__title">Item view</div>
+        <div id="item"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/admin/admin.js" defer></script>
+</body>
+</html>
