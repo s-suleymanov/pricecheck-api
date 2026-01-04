@@ -794,27 +794,25 @@ em {
   margin-top: 10px;
 }
 
-/* Make the top section ("fold") fill the first viewport */
 .home-fold{
-  min-height: calc(100vh - 210px); /* tweak 40px if your header feels taller */
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  height: calc(100vh - 110px);
+  min-height: 0;
+  display:flex;
+  flex-direction:column;
+  overflow: hidden; 
+  padding-top: clamp(24px, 11vh, 110px);
 }
 
-/* Keep logo + search nicely centered in the remaining space */
 .home-logo,
 .home-search{
   flex: 0 0 auto;
 }
 
-/* Reduce the huge top/bottom padding so the fold math is predictable */
 .home-center{
   min-height: 100vh;
   display:flex;
-  align-items:flex-start;
   justify-content:center;
-  padding: 100px 0 0;
-  align-items: stretch;
+  padding-top: 0;
+  align-items: flex-start;
 }
 
