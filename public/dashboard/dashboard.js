@@ -148,6 +148,7 @@
       apple: 'Apple',
       dji: 'DJI',
       segway: 'Segway',
+      iscooter: 'iScooter',
       lg: 'LG',
       sony: 'Sony',
       asus: 'ASUS',
