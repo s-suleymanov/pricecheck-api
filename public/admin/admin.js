@@ -65,7 +65,7 @@ function renderCatalog(list){
     btn.addEventListener("click", () => {
       const pci = btn.getAttribute("data-item-pci") || "";
       const upc = btn.getAttribute("data-item-upc") || "";
-      openItem({ pci: pci || null, upc: upc || null });
+      openItem({ pci: pci || null, upc: upc || null, asin: null });
     });
   });
 }
@@ -221,7 +221,7 @@ function renderItem(data){
     ${offersHtml}
   `;
 
-  // wire catalog save
+  // wire catalog save (correct endpoint + correct id)
   mount.querySelectorAll("form[data-catalog-id]").forEach(form => {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -229,13 +229,17 @@ function renderItem(data){
 
       const id = form.getAttribute("data-catalog-id");
       const msg = form.querySelector("[data-save-msg]");
-      msg.textContent = "Saving...";
-      lockForm(form, true);
+      msg.textContent = "Saving.";
 
+      // read first (disabled inputs are excluded from FormData)
       const raw = Object.fromEntries(new FormData(form).entries());
       const payload = pick(raw, [
-        "pci","upc","brand","category","model_number","model_name","version","color","image_url","recall_url","dropship_warning"
+        "pci","upc","brand","category",
+        "model_number","model_name","version","color",
+        "image_url","recall_url","dropship_warning"
       ]);
+
+      lockForm(form, true);
 
       try {
         await apiJson(`/admin/api/catalog/${encodeURIComponent(id)}`, {
@@ -262,11 +266,16 @@ function renderItem(data){
 
       const id = form.getAttribute("data-listing-id");
       const msg = form.querySelector("[data-save-msg]");
-      msg.textContent = "Saving...";
-      lockForm(form, true);
+      msg.textContent = "Saving.";
 
+      // read first
       const raw = Object.fromEntries(new FormData(form).entries());
-      const payload = pick(raw, ["status","offer_tag","url","title","pci","upc"]);
+
+      // URL is optional: only include it if non-empty, so you don't wipe an existing URL
+      const payload = pick(raw, ["status","offer_tag","title","pci","upc"]);
+      if ((raw.url || "").trim()) payload.url = raw.url.trim();
+
+      lockForm(form, true);
 
       try {
         await apiJson(`/admin/api/listing/${encodeURIComponent(id)}`, {
@@ -317,8 +326,6 @@ async function runSearch(q){
     $("#openBridged")?.addEventListener("click", () => {
       openItem({ pci: bridge.pci || null, upc: bridge.upc || null, asin: null });
     });
-  } else {
-    // keep whatever was there; do not overwrite item view on normal searches
   }
 
   renderCatalog(data.catalog);
