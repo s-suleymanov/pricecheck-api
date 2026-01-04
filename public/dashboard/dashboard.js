@@ -628,7 +628,7 @@ if (colorSel) {
       if (brand) {
         bb.textContent = brand;
         bb.onclick = () => {
-          location.href = `/browse/?brand=${encodeURIComponent(brand)}`;
+          location.href = `/browse/?q=${encodeURIComponent(brand)}&page=1`;
         };
       } else {
         bb.onclick = null;
@@ -638,7 +638,7 @@ if (colorSel) {
       if (category) {
         cb.textContent = category;
         cb.onclick = () => {
-          location.href = `/browse/?category=${encodeURIComponent(category)}`;
+          location.href = `/browse/?q=${encodeURIComponent(category)}&page=1`;
         };
       } else {
         cb.onclick = null;
