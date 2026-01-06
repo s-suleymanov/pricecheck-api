@@ -1,4 +1,17 @@
+console.log("BOOT: server.js starting");
+
+process.on("uncaughtException", (e) => {
+  console.error("BOOT: uncaughtException", e);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (e) => {
+  console.error("BOOT: unhandledRejection", e);
+  process.exit(1);
+});
+
 // server.js
+
 const path = require('path');
 const express = require('express');
 
@@ -38,6 +51,7 @@ app.use(require('./routes/admin'));
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 const port = process.env.PORT || 3000;
+console.log("BOOT: about to listen. PORT=", process.env.PORT);
 app.listen(port, "0.0.0.0", () => {
   console.log(`Listening on port ${port}`);
 });
