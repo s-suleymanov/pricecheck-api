@@ -17,7 +17,7 @@
   <div id="site-header"></div>
   <main class="wrap">
     <h1>PriceCheck Research</h1>
-
+    <p style="font-style: italic;">  Research data may be incomplete or delayed. This section is in beta while core tracking and validation systems are being finalized.</p>
     <!-- Market tape like a stock ticker -->
     <div class="tape" aria-label="market tape">
       <div class="ticker"><strong>HEADPHONES</strong> <span>NA</span></div>
@@ -59,7 +59,7 @@
     <section class="grid grid-2">
       <div class="card">
         <h2>Top gainers</h2>
-        <table class="table">
+        <table class="table" id="gainersTable">
           <thead><tr><th>Product</th><th>Category</th><th>Change</th><th>Cheapest</th></tr></thead>
           <tbody id="gainers-body">
             <tr><td>Razer BlackWidow V4</td><td>Keyboards</td><td class="ok">−18%</td><td>Target</td></tr>
@@ -72,7 +72,7 @@
       </div>
       <div class="card">
         <h2>Top losers</h2>
-        <table class="table">
+        <table class="table" id="losersTable">
           <thead><tr><th>Product</th><th>Category</th><th>Change</th><th>Cheapest</th></tr></thead>
           <tbody id="losers-body">
             <tr><td>PS5 Slim</td><td>Consoles</td><td class="warn">+9%</td><td>Walmart</td></tr>
