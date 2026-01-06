@@ -608,6 +608,23 @@
     io.observe(homeInsSection);
   }
 
+    // Mobile: if we came here from the header search icon, focus search immediately
+  (function focusHomeSearchIfAsked() {
+    const params = new URLSearchParams(location.search);
+    if (params.get("focus") !== "1") return;
+
+    const input = document.querySelector("#homeSearchForm input[name='q']");
+    if (!input) return;
+
+    // Wait a frame so layout settles, then focus
+    requestAnimationFrame(() => {
+      input.focus({ preventScroll: true });
+      // put cursor at end (helps if browser restores value)
+      const v = input.value || "";
+      input.setSelectionRange(v.length, v.length);
+    });
+  })();
+
   // Boot (fast path)
   wireHomeSearchRouter();
   wireTabsWhenReady();
