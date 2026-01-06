@@ -51,7 +51,7 @@
 }
 
 .nav-search__input{
-  width: min(700px, 100%);
+  width: min(800px, 100%);
   font-size: 16px;
   height: 45px;
   padding: 0 14px;
@@ -64,11 +64,10 @@
 
 /* Keep header tidy on smaller screens */
 @media (max-width: 900px){
-  .nav-search{
-    display:none; /* mobile uses burger menu */
+  .logo-head .brand{
+    display: none;
   }
 }
-
 
 *{box-sizing:border-box}
 html,body{min-height:100%}
@@ -330,70 +329,10 @@ em {
   color:var(--paper);
 }
 
-.nav__burger{
-  display: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  border: 1px solid rgba(0,0,0,0.12);
-  background: transparent;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-}
-/* icons */
-.nav__burger .icon{
-  width: 28px;
-  height: 28px;
-  fill: #000;              /* BLACK icon */
-}
-/* when menu is open */
-.nav__burger[aria-expanded="true"] .icon-menu{
-  display: none;
-}
-.nav__burger[aria-expanded="true"] .icon-close{
-  display: block;
-}
-/* default state */
-.nav__burger .icon-close{
-  display: none;
-}
-
-.nav__mobile{
-  padding: 10px 18px 16px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-}
-
-.nav__mobile-links{
-  display: grid;
-  gap: 10px;
-}
-
-.nav__mobile-links a{
-  text-decoration: none;
-}
-
-.nav__mobile-links > a:not(.nav__mobile-cta){
-  padding: 12px 12px;
-  border-radius: 12px;
-  background: #eaecef;
-  color: black;
-  border: 1px solid rgba(0,0,0,0.12);
-}
-
-/* Make CTA full width inside menu */
-.nav__mobile-cta{
-  width: 100%;
-  display: inline-flex;
-  justify-content: center;
-  margin-top: 6px;
-}
-
 /* mobile breakpoint */
 @media (max-width: 900px){
   .nav .links{ display: none; }
   .nav .btn.btn--outline{ display: none; }
-  .nav__burger{ display: inline-flex; background: white; }
 }
 
 /* Mobile stack */
