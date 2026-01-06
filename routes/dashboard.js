@@ -475,6 +475,78 @@ async function getObservationLog(client, selectedKeys) {
     });
 }
 
+async function getPriceHistoryDailyAndStats(client, selectedKeys, days) {
+  const pci = (selectedKeys?.pci || '').trim();
+  const upc = (selectedKeys?.upc || '').trim();
+
+  // Daily lows
+  const dailySql = `
+    with base as (
+      select
+        (date_trunc('day', observed_at at time zone 'utc'))::date as d,
+        coalesce(effective_price_cents, price_cents) as p
+      from public.price_history
+      where observed_at >= now() - ($3::int || ' days')::interval
+        and (
+          ($1 <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($1)))
+          or
+          ($2 <> '' and norm_upc(upc) = norm_upc($2))
+        )
+        and coalesce(effective_price_cents, price_cents) is not null
+        and coalesce(effective_price_cents, price_cents) > 0
+    )
+    select d::text as d, min(p)::int as price_cents
+    from base
+    group by d
+    order by d asc;
+  `;
+
+  const dailyRes = await client.query(dailySql, [pci, upc, days]);
+
+  // Stats computed from daily lows (not raw events)
+   // Stats computed from daily lows (not raw events)
+  const statsSql = `
+    with daily as (
+      select
+        (date_trunc('day', observed_at at time zone 'utc'))::date as d,
+        min(coalesce(effective_price_cents, price_cents))::int as low_cents
+      from public.price_history
+      where observed_at >= now() - ($3::int || ' days')::interval
+        and (
+          ($1 <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($1)))
+          or
+          ($2 <> '' and norm_upc(upc) = norm_upc($2))
+        )
+        and coalesce(effective_price_cents, price_cents) is not null
+        and coalesce(effective_price_cents, price_cents) > 0
+      group by 1
+    ),
+    lows30 as (
+      select * from daily where d >= (now() at time zone 'utc')::date - 30
+    )
+    select
+      percentile_cont(0.20) within group (order by low_cents)
+        filter (where d >= (now() at time zone 'utc')::date - 90) as typical_low_90_cents,
+      percentile_cont(0.20) within group (order by low_cents)
+        filter (where d >= (now() at time zone 'utc')::date - 30) as typical_low_30_cents,
+      (select min(low_cents) from lows30) as low_30_cents,
+      (select d from lows30 order by low_cents asc, d asc limit 1) as low_30_date
+    from daily
+  `;
+
+  const statsRes = await client.query(statsSql, [pci, upc, days]);
+
+  const statsRow = statsRes.rows[0] || {};
+  const stats = {
+    typical_low_90_cents: statsRow.typical_low_90_cents != null ? Math.round(Number(statsRow.typical_low_90_cents)) : null,
+    typical_low_30_cents: statsRow.typical_low_30_cents != null ? Math.round(Number(statsRow.typical_low_30_cents)) : null,
+    low_30_cents: statsRow.low_30_cents != null ? Number(statsRow.low_30_cents) : null,
+    low_30_date: statsRow.low_30_date || null,
+  };
+
+  return { daily: dailyRes.rows, stats };
+}
+
 // -------------------------
 // routes
 // -------------------------
@@ -527,6 +599,8 @@ router.get('/api/compare/:key', async (req, res) => {
     // 6) observation log (PCI/UPC only)
     const observed = await getObservationLog(client, selectedKeys);
 
+    const history = await getPriceHistoryDailyAndStats(client, selectedKeys, 90);
+
     res.json({
       identity: {
         // seed keys (what we found in listings)
@@ -550,8 +624,14 @@ router.get('/api/compare/:key', async (req, res) => {
         selected_asin: null
       },
       variants,
+      selected_variant: {
+         key:
+          (selectedKeys.pci ? `pci:${selectedKeys.pci}` : null) ||
+          (selectedKeys.upc ? `upc:${selectedKeys.upc}` : null)
+      },
       offers,
-      observed
+      observed,
+      history
     });
   } catch (e) {
     console.error(e);

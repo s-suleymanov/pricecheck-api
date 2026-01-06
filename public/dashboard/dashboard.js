@@ -8,6 +8,9 @@
     variants:[],
     offers:[],
     observed:[],
+    history:[],
+    historyStats: null,
+    rangeDays: 30,
     selectedVariantKey:null,   // NEW: pci:/upc
     lastKey:null
   };
@@ -472,6 +475,20 @@ document.addEventListener("DOMContentLoaded", () => {
   run(key);
 });
 
+document.querySelectorAll('button.pill[data-range]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const n = parseInt(btn.getAttribute('data-range'), 10);
+    if (!Number.isFinite(n)) return;
+    state.rangeDays = n;
+
+    // Optional: visual active state
+    document.querySelectorAll('button.pill[data-range]').forEach(b => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+
+    drawChart();
+  });
+});
+
   // ---------- Main loader ----------
   async function run(raw){
     const key = keyFromInput(raw);
@@ -491,6 +508,8 @@ document.addEventListener("DOMContentLoaded", () => {
       state.identity = data.identity || null;
       state.variants = Array.isArray(data.variants) ? data.variants : [];
       state.offers   = Array.isArray(data.offers)   ? data.offers   : [];
+      state.history = (data.history && Array.isArray(data.history.daily)) ? data.history.daily : [];
+      state.historyStats = (data.history && data.history.stats) ? data.history.stats : null;
       state.observed = Array.isArray(data.observed) ? data.observed : [];
 
       state.selectedVariantKey = chooseSelectedVariantKeyFromKey(state.lastKey, data);
@@ -664,25 +683,135 @@ document.addEventListener("DOMContentLoaded", () => {
       $('#kCurrent').textContent = 'NA';
       $('#kStore').textContent = '';
       $('#kTypical').textContent = 'NA';
+      $('#kTypicalNote').textContent = '';
       $('#kLow30').textContent = 'NA';
+      $('#kLow30Date').textContent = '';
       $('#kIntegrity').textContent = 'NA';
       return;
     }
+
     priced.sort((a,b)=>a.price_cents-b.price_cents);
     const best = priced[0];
 
     $('#kCurrent').textContent = fmt.format(best.price_cents/100);
     $('#kStore').textContent = `at ${titleCase(best.store || 'Retailer')}`;
-    $('#kTypical').textContent = fmt.format(best.price_cents/100);
-    $('#kLow30').textContent = fmt.format(best.price_cents/100);
-    $('#kLow30Date').textContent = '';
+
+    const hs = state.historyStats || {};
+    const tl90 = (typeof hs.typical_low_90_cents === 'number') ? hs.typical_low_90_cents : null;
+    const tl30 = (typeof hs.typical_low_30_cents === 'number') ? hs.typical_low_30_cents : null;
+
+    $('#kTypical').textContent = tl90 != null ? fmt.format(tl90/100) : 'NA';
+    $('#kTypicalNote').textContent = tl90 != null ? 'based on daily lows' : '';
+
+    $('#kLow30').textContent = tl30 != null ? fmt.format(tl30/100) : 'NA';
+
+    const low30Date = hs.low_30_date ? new Date(hs.low_30_date) : null;
+    const ok = low30Date && !Number.isNaN(low30Date.getTime());
+    $('#kLow30Date').textContent = ok ? `lowest day: ${new Intl.DateTimeFormat(undefined,{dateStyle:'medium'}).format(low30Date)}` : '';
+
+    // Keep your current “Pass” placeholder until you wire real integrity logic
     $('#kIntegrity').textContent = 'Pass';
   }
 
   function drawChart(){
-    const svg = $('#chart'); svg.innerHTML = '';
-    $('#chartNote').textContent = 'No history yet';
+  const svg = $('#chart');
+  const note = $('#chartNote');
+  svg.innerHTML = '';
+  svg.setAttribute('viewBox', '0 0 700 200');
+  svg.setAttribute('preserveAspectRatio', 'none');
+
+  const pts = Array.isArray(state.history) ? state.history : [];
+  if (!pts.length) {
+    note.textContent = 'No history yet';
+    return;
   }
+
+  const days = state.rangeDays || 30;
+
+  // Use UTC cutoff in ms to avoid timezone weirdness
+  const cutoffMs = Date.now() - days * 24 * 60 * 60 * 1000;
+
+  const filtered = pts
+    .map(p => {
+      const day = String(p?.d || '').slice(0, 10); // supports "2026-01-04" or "2026-01-04T08:00:00.000Z"
+      const t = new Date(day + 'T00:00:00Z');
+      return { d: day, t, price_cents: p?.price_cents };
+    })
+    .filter(r => Number.isFinite(r.t.getTime()) && typeof r.price_cents === 'number')
+    .filter(r => r.t.getTime() >= cutoffMs)
+    .sort((a,b)=>a.t - b.t);
+
+  if (filtered.length < 2) {
+    note.textContent = 'Not enough history yet';
+    return;
+  }
+
+  note.textContent = '';
+
+  const W = 700, H = 200;
+  const padL = 10, padR = 10, padT = 10, padB = 18;
+
+  const prices = filtered.map(p => p.price_cents);
+  let minP = Math.min(...prices);
+  let maxP = Math.max(...prices);
+
+  if (minP === maxP) {
+    minP = Math.max(0, minP - 50);
+    maxP = maxP + 50;
+  } else {
+    const span = maxP - minP;
+    minP = Math.max(0, Math.floor(minP - span * 0.08));
+    maxP = Math.ceil(maxP + span * 0.08);
+  }
+
+  const x = (i) => padL + (i * (W - padL - padR)) / (filtered.length - 1);
+  const y = (p) => padT + ((maxP - p) * (H - padT - padB)) / (maxP - minP);
+
+  const linePath = filtered
+    .map((p,i)=> `${i===0?'M':'L'} ${x(i).toFixed(2)} ${y(p.price_cents).toFixed(2)}`)
+    .join(' ');
+
+  const hs = state.historyStats || {};
+  const typical =
+    (typeof hs.typical_low_90_cents === 'number' ? hs.typical_low_90_cents : null) ??
+    (typeof hs.typical_low_30_cents === 'number' ? hs.typical_low_30_cents : null);
+
+  const typicalY = (typeof typical === 'number') ? y(typical) : null;
+
+  const ns = 'http://www.w3.org/2000/svg';
+
+  const p1 = document.createElementNS(ns, 'path');
+  p1.setAttribute('d', linePath);
+  p1.setAttribute('fill', 'none');
+  p1.setAttribute('class', 'chart-line');
+  p1.setAttribute('stroke', '#6366f1');
+  p1.setAttribute('stroke-width', '2');
+  p1.setAttribute('stroke-linecap', 'round');
+  p1.setAttribute('stroke-linejoin', 'round');
+
+  svg.appendChild(p1);
+
+  if (typicalY != null) {
+    const p2 = document.createElementNS(ns, 'path');
+  p2.setAttribute('d', `M ${padL} ${typicalY.toFixed(2)} L ${W - padR} ${typicalY.toFixed(2)}`);
+  p2.setAttribute('fill', 'none');
+  p2.setAttribute('class', 'chart-line alt');
+  p2.setAttribute('stroke', '#10b981');
+  p2.setAttribute('stroke-width', '2');
+  p2.setAttribute('stroke-dasharray', '4 4');
+    svg.appendChild(p2);
+  }
+
+
+  const last = filtered[filtered.length - 1];
+  const dot = document.createElementNS(ns, 'circle');
+  dot.setAttribute('cx', x(filtered.length - 1));
+  dot.setAttribute('cy', y(last.price_cents));
+  dot.setAttribute('r', 3.5);
+  dot.setAttribute('fill', '#6366f1');
+  dot.setAttribute('class', 'chart-dot');
+  svg.appendChild(dot);
+}
 
   // Important: Amazon link should use offer.store_sku (ASIN), not a single selected ASIN
   function canonicalLink(store, offer){
@@ -1213,15 +1342,54 @@ if (actSummary) actSummary.addEventListener('click', async () => {
     host.innerHTML = html;
   }
 
-  // ---------- Downloads ----------
   function downloadHistoryCsv(){
-    const rows = [['date','price','typical_low']];
-    const csv = rows.map(r=>r.map(v=>String(v)).join(',')).join('\n');
-    const blob = new Blob([csv], {type:'text/csv'});
+    const pts = Array.isArray(state.history) ? state.history : [];
+    if (!pts.length) return;
+
+    const days = state.rangeDays || 30;
+    const cutoff = new Date();
+    cutoff.setUTCDate(cutoff.getUTCDate() - days);
+
+    const hs = state.historyStats || {};
+    const typical =
+      (typeof hs.typical_low_90_cents === 'number' ? hs.typical_low_90_cents : null) ??
+      (typeof hs.typical_low_30_cents === 'number' ? hs.typical_low_30_cents : null);
+
+    const rows = pts
+      .map(p => {
+        const day = String(p?.d || '').slice(0, 10);
+        return { d: day, t: new Date(day + 'T00:00:00Z'), price_cents: p?.price_cents };
+      })
+      .filter(r => Number.isFinite(r.t.getTime()) && typeof r.price_cents === 'number')
+      .filter(r => r.t >= cutoff)
+      .sort((a,b)=>a.t - b.t)
+      .map(r => ({
+        date: r.d,
+        price: (r.price_cents/100).toFixed(2),
+        typical_low: (typeof typical === 'number') ? (typical/100).toFixed(2) : ''
+      }));
+
+    if (!rows.length) return;
+
+    const header = ['date','price','typical_low'];
+    const csv = [
+      header.join(','),
+      ...rows.map(r => `${r.date},${r.price},${r.typical_low}`)
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'history.csv';
-    document.body.appendChild(a); a.click(); a.remove();
+    a.href = url;
+
+    const v = getCurrentVariant();
+    const label = (v?.variant_label || v?.model_name || 'history').toString().trim().replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+    a.download = `pricecheck-${label}-${days}d.csv`;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   function downloadObsCsv(){

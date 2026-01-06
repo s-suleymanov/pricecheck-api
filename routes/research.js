@@ -146,49 +146,73 @@ router.get('/api/research/indices', (req, res) => {
 router.get('/api/research/gainers', async (req, res) => {
   const sql = `
     with last7 as (
-      select item_key,
-             percentile_cont(0.5) within group (order by price_cents) as p50_7d
-      from price_history
+      select
+        coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) as prod_key,
+        percentile_cont(0.5) within group (order by coalesce(effective_price_cents, price_cents)) as p50_7d
+      from public.price_history
       where observed_at >= now() - interval '7 days'
-        and item_key is not null
-      group by item_key
+        and coalesce(effective_price_cents, price_cents) is not null
+        and coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) is not null
+      group by 1
     ),
     latest as (
-      select distinct on (item_key)
-             item_key, store, title, upc, asin, price_cents, observed_at
-      from price_history
-      where item_key is not null
-      order by item_key, observed_at desc
-    ),
-    joined as (
-      select l.item_key, l.store, l.title, l.upc, l.asin,
-             l.price_cents, l.observed_at, s.p50_7d
-      from latest l
-      join last7 s on s.item_key = l.item_key
-      where s.p50_7d > 0
+      select distinct on (coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)))
+        coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) as prod_key,
+        lower(btrim(store)) as store,
+        coalesce(nullif(title,''), 'Unknown') as title,
+        coalesce(effective_price_cents, price_cents) as price_cents,
+        observed_at
+      from public.price_history
+      where coalesce(effective_price_cents, price_cents) is not null
+        and coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) is not null
+      order by coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)), observed_at desc
     ),
     chg as (
-      select item_key, store, title, upc, asin, price_cents,
-             ((price_cents - p50_7d)::numeric / p50_7d) as change_ratio
-      from joined
+      select
+        l.prod_key,
+        l.store,
+        l.title,
+        l.price_cents,
+        ((l.price_cents - s.p50_7d)::numeric / nullif(s.p50_7d,0)) as change_ratio
+      from latest l
+      join last7 s on s.prod_key = l.prod_key
+      where s.p50_7d > 0
+    ),
+    cheapest as (
+      select distinct on (prod_key)
+        prod_key,
+        store as cheapest_store
+      from (
+        select
+          coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) as prod_key,
+          lower(btrim(store)) as store,
+          coalesce(effective_price_cents, price_cents) as p,
+          observed_at
+        from public.price_history
+        where coalesce(effective_price_cents, price_cents) is not null
+          and coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) is not null
+      ) x
+      order by prod_key, p asc, observed_at desc
     )
     select
-      coalesce(nullif(title,''),'Unknown') as title,
+      chg.title as title,
       coalesce(
-        (select c.category
-        from catalog c
-        where c.upc is not null and norm_upc(c.upc) = norm_upc(chg.upc)
-        limit 1),
+        (select c.category from public.catalog c
+          where c.pci is not null and upper(btrim(c.pci)) = chg.prod_key
+          limit 1),
+        (select c.category from public.catalog c
+          where c.upc is not null and norm_upc(c.upc) = chg.prod_key
+          limit 1),
         'Uncategorized'
       ) as category,
-      lower(btrim(store)) as store,
-      change_ratio
+      cheapest.cheapest_store as store,
+      chg.change_ratio
     from chg
-    where change_ratio is not null
-    order by change_ratio asc
+    join cheapest on cheapest.prod_key = chg.prod_key
+    where chg.change_ratio is not null
+    order by chg.change_ratio asc
     limit 10;
   `;
-
   let client;
   try {
     client = await pool.connect();
@@ -219,51 +243,75 @@ router.get('/api/research/gainers', async (req, res) => {
 
 // Top losers - try DB, fall back to snapshot
 router.get('/api/research/losers', async (req, res) => {
-  const sql = `
+    const sql = `
     with last7 as (
-      select item_key,
-             percentile_cont(0.5) within group (order by price_cents) as p50_7d
-      from price_history
+      select
+        coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) as prod_key,
+        percentile_cont(0.5) within group (order by coalesce(effective_price_cents, price_cents)) as p50_7d
+      from public.price_history
       where observed_at >= now() - interval '7 days'
-        and item_key is not null
-      group by item_key
+        and coalesce(effective_price_cents, price_cents) is not null
+        and coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) is not null
+      group by 1
     ),
     latest as (
-      select distinct on (item_key)
-             item_key, store, title, upc, asin, price_cents, observed_at
-      from price_history
-      where item_key is not null
-      order by item_key, observed_at desc
-    ),
-    joined as (
-      select l.item_key, l.store, l.title, l.upc, l.asin,
-             l.price_cents, l.observed_at, s.p50_7d
-      from latest l
-      join last7 s on s.item_key = l.item_key
-      where s.p50_7d > 0
+      select distinct on (coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)))
+        coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) as prod_key,
+        lower(btrim(store)) as store,
+        coalesce(nullif(title,''), 'Unknown') as title,
+        coalesce(effective_price_cents, price_cents) as price_cents,
+        observed_at
+      from public.price_history
+      where coalesce(effective_price_cents, price_cents) is not null
+        and coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) is not null
+      order by coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)), observed_at desc
     ),
     chg as (
-      select item_key, store, title, upc, asin, price_cents,
-             ((price_cents - p50_7d)::numeric / p50_7d) as change_ratio
-      from joined
+      select
+        l.prod_key,
+        l.store,
+        l.title,
+        l.price_cents,
+        ((l.price_cents - s.p50_7d)::numeric / nullif(s.p50_7d,0)) as change_ratio
+      from latest l
+      join last7 s on s.prod_key = l.prod_key
+      where s.p50_7d > 0
+    ),
+    cheapest as (
+      select distinct on (prod_key)
+        prod_key,
+        store as cheapest_store
+      from (
+        select
+          coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) as prod_key,
+          lower(btrim(store)) as store,
+          coalesce(effective_price_cents, price_cents) as p,
+          observed_at
+        from public.price_history
+        where coalesce(effective_price_cents, price_cents) is not null
+          and coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) is not null
+      ) x
+      order by prod_key, p asc, observed_at desc
     )
     select
-      coalesce(nullif(title,''),'Unknown') as title,
+      chg.title as title,
       coalesce(
-        (select c.category
-          from catalog c
-          where c.upc is not null and norm_upc(c.upc) = norm_upc(chg.upc)
+        (select c.category from public.catalog c
+          where c.pci is not null and upper(btrim(c.pci)) = chg.prod_key
+          limit 1),
+        (select c.category from public.catalog c
+          where c.upc is not null and norm_upc(c.upc) = chg.prod_key
           limit 1),
         'Uncategorized'
       ) as category,
-      lower(btrim(store)) as store,
-      change_ratio
+      cheapest.cheapest_store as store,
+      chg.change_ratio
     from chg
-    where change_ratio is not null
-    order by change_ratio desc
+    join cheapest on cheapest.prod_key = chg.prod_key
+    where chg.change_ratio is not null
+    order by chg.change_ratio desc
     limit 10;
   `;
-
   let client;
   try {
     client = await pool.connect();

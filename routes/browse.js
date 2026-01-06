@@ -32,18 +32,6 @@ router.get("/browse/", (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "browse", "index.html"));
 });
 
-/**
- * SMART SEARCH PRIORITY:
- * 1) Exact brand match in catalog -> return brand results
- * 2) Exact category match in catalog -> return category results
- * 3) Fallback: product search in catalog.model_name (and model_number as a bonus so "g30lp" can still hit)
- *
- * Response shape:
- * - kind: "brand" | "category" | "product"
- * - value: the resolved brand/category label when kind is brand/category
- * - results: cards (one per model_number group)
- * - also: optional array of the other facet if both match
- */
 router.get("/api/search", async (req, res) => {
   const q = normText(req.query.q);
   if (!q) return res.status(400).json({ ok: false, error: "q is required" });
