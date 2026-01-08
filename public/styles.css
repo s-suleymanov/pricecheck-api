@@ -214,11 +214,6 @@ body{
   margin:0 0 10px; color:#4b5563;
   font-size:clamp(15px, 2vw, 17px); line-height:1.55;
 }
-.use__note{
-  margin:8px 0 0; color:#6b7280; font-size:15px;
-  font-style:italic;
-}
-
 .say { background:#fff; }
 .say__title{
   text-align:center;
