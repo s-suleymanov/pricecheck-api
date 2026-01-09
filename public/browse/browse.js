@@ -54,7 +54,7 @@
   }
 
   function fmtPrice(cents) {
-    if (typeof cents !== "number") return "No Price";
+    if (typeof cents !== "number") return "N/A";
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
   }
 
@@ -108,6 +108,30 @@
     }
 
     return data;
+  }
+
+  function setHead({ title, description, canonical } = {}) {
+    if (title) document.title = title;
+
+    if (description != null) {
+      let el = document.querySelector('meta[name="description"]');
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute("name", "description");
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", description);
+    }
+
+    if (canonical) {
+      let link = document.querySelector('link[rel="canonical"]');
+      if (!link) {
+        link = document.createElement("link");
+        link.setAttribute("rel", "canonical");
+        document.head.appendChild(link);
+      }
+      link.setAttribute("href", canonical);
+    }
   }
 
   function cardProduct(r) {
@@ -184,6 +208,16 @@
     const titleText = state.value || state.q || "Browse PriceCheck";
     setTitle(titleText);
 
+    const q = (state.value || state.q || "").trim();
+    const canonical = q
+      ? `${location.origin}/browse/?q=${encodeURIComponent(q)}`
+      : `${location.origin}/browse/`;
+
+    const total = typeof state.total === "number" ? state.total : 0;
+    const desc = q
+      ? `Browse ${q} on PriceCheck. ${total ? `${total} results.` : ""} Compare products and check the latest prices.`
+      : "Browse PriceCheck. Search for a brand, category, or product name.";
+
     if (state.lastError) {
       setMeta(state.lastError);
       grid.innerHTML = "";
@@ -192,6 +226,16 @@
       setPager();
       return;
     }
+
+    const title = q
+      ? `${q} Price Comparison and Deals`
+      : "Compare Product Prices Across Stores | PriceCheck";
+
+    setHead({
+      title,
+      description: desc,
+      canonical,
+    });
 
     const metaParts = [];
     if (state.total) metaParts.push(`${state.total} products`);
