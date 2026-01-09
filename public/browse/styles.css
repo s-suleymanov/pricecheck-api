@@ -134,6 +134,7 @@ h1{
 }
 
 .subtitle{
+  margin-top: 8px;
   font-size: 15px;
   color: var(--muted);
   white-space: nowrap;
@@ -142,7 +143,6 @@ h1{
 }
 
 .name{
-  margin-top: 8px;
   font-weight: 600;
   font-size: 22px;
   line-height: 1.25;
