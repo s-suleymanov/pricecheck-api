@@ -194,15 +194,13 @@
 
     const warn = r.dropship_warning ? `<span class="warn">Dropshipping risk</span>` : "";
 
-    const brand = (r.brand || "").trim();
     const category = (r.category || "").trim();
     const version = (r.version || "").trim();
 
-    // brand/category: no dot, just a space
-    const bc = [brand, category].filter(Boolean).join(" ").trim();
-
-    // add dot only before variant (version)
-    const subtitle = version ? (bc ? `${bc} • ${version}` : version) : bc;
+      // subtitle: category • variant (no brand)
+    const subtitle = version
+      ? (category ? `${category} • ${version}` : version)
+      : category;
 
     const name = r.model_name || r.title || r.model_number || "Untitled";
 
@@ -213,8 +211,8 @@
         </div>
 
         <div class="body">
-          <div class="subtitle">${subtitle}</div>
           <div class="name">${name}</div>
+          <div class="subtitle">${subtitle}</div>
         </div>
 
         <div class="right">
