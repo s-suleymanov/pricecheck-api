@@ -13,7 +13,8 @@
   }
 
   function isPci(s) {
-    return /^[A-Z][A-Z0-9]{7}$/i.test(norm(s));
+    const t = norm(s);
+    return /^[A-Z][A-Z0-9]{7}$/i.test(t) && /\d/.test(t);
   }
 
   function shouldGoDashboard(raw) {
