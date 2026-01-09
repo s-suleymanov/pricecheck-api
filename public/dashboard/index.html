@@ -6,12 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="PriceCheck Dashboard: product view with history, cross store offers, variant specs, integrity forensics, observation log, coverage, exports.">
   <link rel="icon" type="image/png" href="/logo/logo.png">
-  <link rel="canonical" href="https://pricechecktool.com/dashboard/" />
+  <link rel="canonical" href="https://pricechecktool.com/dashboard/" id="pcCanonical" />
 
+  <meta name="robots" content="noindex,follow">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="PriceCheck">
   <meta property="og:title" content="PriceCheck • Dashboard">
-  <meta property="og:description" content="Compare prices across stores with variant-aware matching.">
+  <meta property="og:description" content="Live price comparison across stores.">
   <meta property="og:url" content="https://pricechecktool.com/dashboard/">
   <meta property="og:image" content="https://pricechecktool.com/content-img/default.webp">
 
@@ -31,7 +32,7 @@
   <div id="site-header"></div>
 
   <main class="wrap">
-    <h2 id="pTitle">Loading...</h2>
+    <h1 id="pTitle">Loading...</h1>
     <section class="grid-shell">
       <div class="main-content">
                       <div class="pc-warn pc-warn--dropship" id="ps-warn" hidden>
@@ -164,7 +165,7 @@
       <aside>
         <div class="sticky">
           <section class="card">
-            <h3>PriceCoverage</h3>
+            <h3>Store Coverage</h3>
             <div class="bars" id="coverage"></div>
             <p class="muted-note">Higher percentages indicate this store is recommended more often based on our metrics.</p>
           </section>
