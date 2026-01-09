@@ -550,12 +550,23 @@ async function getPriceHistoryDailyAndStats(client, selectedKeys, days) {
 // -------------------------
 // routes
 // -------------------------
-router.get('/dashboard', (_req, res) => {
+router.get(['/dashboard', '/dashboard/'], (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
 });
 
-router.get('/dashboard/:slug', (_req, res) => {
-  // Same SPA page, but prettier URLs like /dashboard/apple-airpods-max?key=...
+const ALLOWED_KIND = new Set(['asin', 'upc', 'pci', 'tcin', 'bby', 'wal']);
+
+// Canonical key-in-path pages (no slug)
+router.get(['/dashboard/:kind/:value', '/dashboard/:kind/:value/'], (req, res, next) => {
+  const kind = String(req.params.kind || '').toLowerCase();
+  if (!ALLOWED_KIND.has(kind)) return next(); // lets your 404 handler catch junk
+  res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
+});
+
+// Canonical slug + key-in-path pages
+router.get(['/dashboard/:slug/:kind/:value', '/dashboard/:slug/:kind/:value/'], (req, res, next) => {
+  const kind = String(req.params.kind || '').toLowerCase();
+  if (!ALLOWED_KIND.has(kind)) return next();
   res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
 });
 

@@ -40,9 +40,18 @@
 
   function dashboardUrl(raw) {
     const v = norm(raw);
-    const u = new URL("/dashboard/", location.origin);
-    u.searchParams.set("key", v); // dashboard reads key, but we will also accept q
-    return u.toString();
+    if (!v) return new URL("/dashboard/", location.origin).toString();
+
+    const i = v.indexOf(":");
+    if (i !== -1) {
+      const kind = v.slice(0, i).trim().toLowerCase();
+      const value = v.slice(i + 1).trim();
+      if (kind && value) {
+        return new URL(`/dashboard/${kind}/${encodeURIComponent(value)}/`, location.origin).toString();
+      }
+    }
+
+    return null;
   }
 
   function slugify(s) {
@@ -67,7 +76,9 @@
     if (!v) return;
 
     if (shouldGoDashboard(v)) {
-      location.href = dashboardUrl(v);
+      const to = dashboardUrl(v);
+      if (to) location.href = to;
+      else location.href = browseUrl(v); // or just return / show error
       return;
     }
 

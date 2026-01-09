@@ -5,7 +5,7 @@
   <title>PriceCheck • Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="PriceCheck Dashboard: product view with history, cross store offers, variant specs, integrity forensics, observation log, coverage, exports.">
-  <link rel="icon" type="image/png" href="../logo/logo.png">
+  <link rel="icon" type="image/png" href="/logo/logo.png">
   <link rel="canonical" href="https://pricechecktool.com/dashboard/" />
 
   <meta property="og:type" content="website">
@@ -16,12 +16,12 @@
   <meta property="og:image" content="https://pricechecktool.com/content-img/default.webp">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="PriceCheck • Dashboard">
+  <meta name="twitter:title" content="Dashboard • PriceCheck">
   <meta name="twitter:description" content="Compare prices across stores with variant-aware matching.">
   <meta name="twitter:image" content="https://pricechecktool.com/content-img/default.webp">
 
-  <link rel="stylesheet" href="../styles.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/dashboard/styles.css">
   <script src="/search.js" defer></script>
   <script src="/dashboard/dashboard.js" defer></script>
   <script src="/partials/partials.js" defer></script>
@@ -104,6 +104,7 @@
           <div class="spaced">
             <h2 style="margin:0">Cross Offers</h2>
             <div>
+              <button class="pill" id="share" type="button" aria-label="Copy share link">Share</button>
               <button class="pill" id="sortTotal">Sort by price</button>
               <button class="pill" id="copyCheapest">Copy cheapest link</button>
             </div>

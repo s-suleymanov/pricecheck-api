@@ -15,6 +15,17 @@
     lastKey:null
   };
 
+  function setJsonLd(obj) {
+    let el = document.querySelector('script[data-pc-jsonld="1"]');
+    if (!el) {
+      el = document.createElement('script');
+      el.type = 'application/ld+json';
+      el.setAttribute('data-pc-jsonld', '1');
+      document.head.appendChild(el);
+    }
+    el.textContent = JSON.stringify(obj);
+  }
+
   function slugifyTitle(s) {
   const raw = String(s || '').trim().toLowerCase();
   if (!raw) return 'product';
@@ -38,15 +49,67 @@
   }
 
   function setOg(property, content) {
-    if (!content) return;
-    let el = document.querySelector(`meta[property="${property}"]`);
+      if (!content) return;
+      let el = document.querySelector(`meta[property="${property}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute('property', property);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    }
+
+    function setRobots(content) {
+    let el = document.querySelector('meta[name="robots"]');
     if (!el) {
       el = document.createElement('meta');
-      el.setAttribute('property', property);
+      el.setAttribute('name', 'robots');
       document.head.appendChild(el);
     }
     el.setAttribute('content', content);
   }
+
+  function canonicalKeyFromData(data, fallbackKey) {
+    const id = data?.identity || {};
+    const pci = String(id.selected_pci || '').trim();
+    const upc = String(id.selected_upc || '').trim();
+
+    if (pci) return `pci:${pci}`;
+    if (upc) return `upc:${upc}`;
+    return String(fallbackKey || '').trim() || null;
+  }
+
+  function urlKeyFromPathname() {
+    const parts = location.pathname.split('/').filter(Boolean);
+    if (parts[0] !== 'dashboard') return null;
+
+    // /dashboard/:kind/:value/
+    if (parts.length >= 3 && /^[a-z]+$/i.test(parts[1])) {
+      return `${parts[1].toLowerCase()}:${decodeURIComponent(parts[2] || '')}`;
+    }
+
+    // /dashboard/:slug/:kind/:value/
+    if (parts.length >= 4 && /^[a-z]+$/i.test(parts[2])) {
+      return `${parts[2].toLowerCase()}:${decodeURIComponent(parts[3] || '')}`;
+    }
+
+    return null;
+  }
+
+  function isOnCanonicalKey(canonicalKey) {
+    const on = urlKeyFromPathname() || currentKeyFromUrl() || '';
+    return String(on).trim().toLowerCase() === String(canonicalKey || '').trim().toLowerCase();
+  }
+
+    function slugifyBrowse(s) {
+    return String(s ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/['"]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    }
 
   function setCanonical(href) {
     if (!href) return;
@@ -61,9 +124,16 @@
 
   function prettyDashboardUrl(key, title) {
     const slug = slugifyTitle(title);
-    const url = new URL(location.href);
-    url.pathname = `/dashboard/${slug}`;
-    url.searchParams.set('key', key);
+    const [kindRaw, ...rest] = String(key || '').trim().split(':');
+    const kind = (kindRaw || '').toLowerCase();
+    const value = rest.join(':').trim();
+
+    const url = new URL(location.origin);
+    if (kind && value) {
+      url.pathname = `/dashboard/${slug}/${kind}/${encodeURIComponent(value)}/`;
+    } else {
+      url.pathname = `/dashboard/${slug}/`;
+    }
     return url;
   }
 
@@ -79,8 +149,7 @@
 
     document.title = pageTitle;
 
-    const desc = `Live price comparison across stores for ${cleanTitle}. Variant-aware matching by PCI and UPC.`;
-    setMeta('description', desc);
+    const desc = `Compare prices for ${cleanTitle} across Amazon, Target, Walmart, and Best Buy. See today’s cheapest offer and any verified coupons, matched to the exact variant by PCI and UPC.`;
 
     const canonical = prettyDashboardUrl(key, cleanTitle).toString();
     setCanonical(canonical);
@@ -100,19 +169,26 @@
     setMeta('twitter:description', desc);
   }
 
-  // ---------- URL helpers ----------
-  function applyKeyToUrl(k, mode = 'push') {
-    const url = new URL(location.href);
-    if (k) url.searchParams.set('key', k);
-    else url.searchParams.delete('key');
-    if (mode === 'push') history.pushState({ key: k }, '', url);
-    else history.replaceState({ key: k }, '', url);
-  }
   function currentKeyFromUrl() {
-    const sp = new URL(location.href).searchParams;
-    return sp.get('key') || sp.get('q');
+  const parts = location.pathname.split('/').filter(Boolean);
+
+  if (parts[0] === 'dashboard') {
+    // no slug
+    if (parts.length >= 3 && /^[a-z]+$/i.test(parts[1])) {
+      const kind = parts[1].toLowerCase();
+      const value = decodeURIComponent(parts[2] || '');
+      if (value) return `${kind}:${value}`;
+    }
+    // slug + kind + value
+    if (parts.length >= 4 && /^[a-z]+$/i.test(parts[2])) {
+      const kind = parts[2].toLowerCase();
+      const value = decodeURIComponent(parts[3] || '');
+      if (value) return `${kind}:${value}`;
+    }
   }
 
+  return null;
+}
 
   // ---------- Normalizers ----------
   function norm(s){ return String(s || '').trim(); }
@@ -286,11 +362,9 @@ const variantSel = $('#variant');
 const colorWrap = $('#colorWrap');
 const colorSel  = $('#color');
 
-// Share button (allow working even if query box is removed)
 if (shareBtn) {
   shareBtn.addEventListener('click', () => {
-    const raw = '';
-    const key = keyFromInput(raw) || currentKeyFromUrl();
+    const key = state.lastKey || currentKeyFromUrl();
     const id = state.identity || {};
     const cur = getCurrentVariant() || null;
 
@@ -445,7 +519,6 @@ if (variantSel) {
     state.selectedColor = null; // reset, we will pick first available color for this version
     renderVersionAndColor();
     if (state.selectedVariantKey){
-      applyKeyToUrl(state.selectedVariantKey, 'push');
       run(state.selectedVariantKey);
     }
   });
@@ -457,21 +530,18 @@ if (colorSel) {
     state.selectedColor = colorSel.value || null;
     renderVersionAndColor();
     if (state.selectedVariantKey){
-      applyKeyToUrl(state.selectedVariantKey, 'push');
+      applyPrettyUrl(state.selectedVariantKey, $('#pTitle')?.textContent || 'Product', 'push');
       run(state.selectedVariantKey);
     }
   });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const params = new URLSearchParams(location.search);
-  const key = params.get("key") || params.get("q") || "";
-
+  const key = currentKeyFromUrl() || "";
   if (!key.trim()) {
     document.getElementById("pTitle").textContent = "Search a product to view the dashboard.";
     return;
   }
-
   run(key);
 });
 
@@ -490,10 +560,14 @@ document.querySelectorAll('button.pill[data-range]').forEach(btn => {
 });
 
   // ---------- Main loader ----------
-  async function run(raw){
-    const key = keyFromInput(raw);
-    if(!key){ showMessage('Enter a product URL or ID.'); return; }
-    state.lastKey = key;
+async function run(raw){
+  const input = String(raw || '').trim();
+  const key = (/^(asin|upc|pci|tcin|bby|wal):/i.test(input))
+            ? input.toLowerCase().startsWith('asin:') ? `asin:${input.slice(5).trim().toUpperCase()}` : input
+            : keyFromInput(input);
+
+  if(!key){ showMessage('Enter a product URL or ID.'); return; }
+  state.lastKey = key;
 
     try{
       const res = await fetch(`/api/compare/${encodeURIComponent(key)}`, { headers: { 'Accept': 'application/json' }});
@@ -533,9 +607,49 @@ document.querySelectorAll('button.pill[data-range]').forEach(btn => {
         (id.image_url && String(id.image_url).trim()) ||
         '';
 
-      applyPrettyUrl(state.lastKey, bestTitle, 'replace');
-      applySeoFromData(bestTitle, bestImg, state.lastKey);
+      const offers = (state.offers || [])
+      .filter(o => typeof o.price_cents === 'number' && o.price_cents > 0)
+      .slice(0, 10)
+      .map(o => ({
+        "@type": "Offer",
+        "priceCurrency": "USD",
+        "price": (o.price_cents / 100).toFixed(2),
+        "url": (o.url || canonicalLink(o.store, o) || undefined),
+        "seller": { "@type": "Organization", "name": titleCase(o.store || "Retailer") },
+        "availability": "https://schema.org/InStock"
+      }))
+      .filter(o => o.url); // require a url for cleanliness
 
+    setJsonLd({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": bestTitle,
+      "image": bestImg ? [bestImg.startsWith('http') ? bestImg : `${location.origin}${bestImg.startsWith('/') ? '' : '/'}${bestImg}`] : undefined,
+      "brand": (state.identity?.brand ? { "@type": "Brand", "name": state.identity.brand } : undefined),
+      "sku": (state.identity?.selected_pci || undefined),
+      "offers": offers.length ? offers : undefined
+    });
+
+      const canonicalKey = canonicalKeyFromData(data, state.lastKey);
+
+      // always show the canonical PCI URL when possible
+      if (canonicalKey) {
+        state.lastKey = canonicalKey;
+        applyPrettyUrl(canonicalKey, bestTitle, 'replace');
+        applySeoFromData(bestTitle, bestImg, canonicalKey);
+      }
+
+      // robots: only index PCI canonical pages
+      const kind = (String(canonicalKey || '').split(':')[0] || '').toLowerCase();
+      if (kind === 'pci' && isOnCanonicalKey(canonicalKey)) {
+        // canonical PCI page: index allowed
+        // you can remove robots tag, but leaving it unset is simplest
+        const robots = document.querySelector('meta[name="robots"]');
+        if (robots) robots.remove();
+      } else {
+        // everything else: do not index, but allow crawlers to follow links
+        setRobots('noindex,follow');
+      }
 
       hydrateHeader();
       hydrateKpis();
@@ -657,24 +771,27 @@ document.querySelectorAll('button.pill[data-range]').forEach(btn => {
     const cb = document.getElementById('categoryBtn');
 
     bw.hidden = !brand;
-      if (brand) {
-        bb.textContent = brand;
-        bb.onclick = () => {
-          location.href = `/browse/?q=${encodeURIComponent(brand)}&page=1`;
-        };
-      } else {
-        bb.onclick = null;
-      }
+    if (brand) {
+      bb.textContent = brand;
+      bb.onclick = () => {
+        const slug = slugifyBrowse(brand);
+        location.href = slug ? `/browse/${encodeURIComponent(slug)}/` : `/browse/`;
+      };
+    } else {
+      bb.onclick = null;
+    }
 
-      cw.hidden = !category;
-      if (category) {
-        cb.textContent = category;
-        cb.onclick = () => {
-          location.href = `/browse/?q=${encodeURIComponent(category)}&page=1`;
-        };
-      } else {
-        cb.onclick = null;
-      }
+    cw.hidden = !category;
+    if (category) {
+      cb.textContent = category;
+      cb.onclick = () => {
+        const slug = slugifyBrowse(category);
+        location.href = slug ? `/browse/${encodeURIComponent(slug)}/` : `/browse/`;
+      };
+    } else {
+      cb.onclick = null;
+    }
+
   }
 
   function hydrateKpis(){
@@ -1422,8 +1539,7 @@ if (actSummary) actSummary.addEventListener('click', async () => {
   window.run = run;
 
   window.addEventListener('popstate', () => {
-    const raw = currentKeyFromUrl(); // raw user input from ?key= or ?q=
-    const q = $('#query'); if (q) q.value = raw || '';
+    const raw = currentKeyFromUrl();
     if (raw) run(raw);
   });
 })();

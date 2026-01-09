@@ -184,9 +184,26 @@
     }
   }
 
+  function dashPathFromKeyAndTitle(key, title) {
+    const k = String(key || "").trim();
+    if (!k) return "/dashboard/";
+
+    const i = k.indexOf(":");
+    if (i === -1) return "/dashboard/";
+
+    const kind = k.slice(0, i).toLowerCase();
+    const value = k.slice(i + 1).trim();
+    if (!kind || !value) return "/dashboard/";
+
+    const slug = slugify(title || "product");
+    return `/dashboard/${slug}/${kind}/${encodeURIComponent(value)}/`;
+  }
+
   function cardProduct(r) {
-    const dashKey = r.dashboard_key || "";
-    const href = dashKey ? `/dashboard/?key=${encodeURIComponent(dashKey)}` : "/dashboard/";
+    const dashKey = String(r.dashboard_key || "").trim();
+
+    const displayName = r.model_name || r.title || r.model_number || "Untitled";
+    const href = dashKey ? dashPathFromKeyAndTitle(dashKey, displayName) : "/dashboard/";
 
     const img = r.image_url
       ? `<img class="img" src="${r.image_url}" alt="">`
@@ -197,12 +214,10 @@
     const category = (r.category || "").trim();
     const version = (r.version || "").trim();
 
-      // subtitle: category • variant (no brand)
+    // subtitle: category • variant (no brand)
     const subtitle = version
       ? (category ? `${category} • ${version}` : version)
       : category;
-
-    const name = r.model_name || r.title || r.model_number || "Untitled";
 
     return `
       <a class="card item" href="${href}">
@@ -211,7 +226,7 @@
         </div>
 
         <div class="body">
-          <div class="name">${name}</div>
+          <div class="name">${displayName}</div>
           <div class="subtitle">${subtitle}</div>
         </div>
 
