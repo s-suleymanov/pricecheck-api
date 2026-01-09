@@ -1,5 +1,8 @@
 /* public/browse/styles.css */
-:root { color-scheme: light; }
+:root{
+  color-scheme: light;
+  --muted: #6b7280; /* safe even if global styles.css also defines it */
+}
 
 html, body { height: 100%; }
 
@@ -36,7 +39,7 @@ h1{
 }
 
 .muted{
-  color: #6b7280;
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -44,8 +47,8 @@ h1{
 .card{
   background: #fff;
   border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+  border-radius: 14px;
+  box-shadow: none;
 }
 
 .controls .row{
@@ -76,84 +79,89 @@ h1{
   cursor: default;
 }
 
-/* grid */
+/* ===== Default (desktop): Google-style list ===== */
 .grid{
   margin-top: 16px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-@media (max-width: 1100px){
-  .grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
-@media (max-width: 860px){
-  .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-@media (max-width: 520px){
-  .wrap{ width: calc(100% - 28px); padding: 20px 0 28px; }
-  .grid{ grid-template-columns: 1fr; }
-  input{ width: 100%; }
-  .pager{ margin-left: 0; width: 100%; justify-content: flex-end; }
-}
-
-/* item cards */
 .card.item{
-  display: block;
+  display: grid;
+  grid-template-columns: 150px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 28px 16px 22px;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
   box-shadow: 0 10px 22px rgba(0,0,0,0.04);
-  transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
 .card.item:hover{
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(0,0,0,0.06);
+  box-shadow: 0 16px 34px rgba(0,0,0,0.07);
+  border-color: rgba(0,0,0,0.12);
+}
+
+.thumb{
+  width: 150px;
+  height: 150px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f2f2f2;
 }
 
 .img{
   width: 100%;
-  aspect-ratio: 1 / 1;
-  height: auto;
+  height: 100%;
   object-fit: cover;
   display: block;
-  background: #f2f2f2;
 }
 
 .img.ph{
   display: block;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(180deg, #f3f4f6, #eef2f7);
 }
 
 .body{
-  padding: 12px 12px 14px;
+  padding: 0;
+  min-width: 0;
 }
 
-.subtitle {
+.subtitle{
+  font-size: 15px;
   color: var(--muted);
-  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .name{
   margin-top: 6px;
   font-weight: 600;
-  font-size: 20px;
+  font-size: 22px;
   line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.row2{
-  margin-top: 10px;
+.right{
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 14px;
+  justify-content: flex-end;
+  white-space: nowrap;
 }
 
 .price{
-  font-weight: 550;
+  font-weight: 600;
+  font-size: 22px;
 }
 
 .warn{
@@ -166,13 +174,85 @@ h1{
   white-space: nowrap;
 }
 
+/* Hide mobile-only row on desktop */
+.row2{ display: none; }
+
 /* Empty state */
 #empty{
   margin-top: 16px;
   padding: 18px;
   text-align: center;
-  color: #6b7280;
+  color: var(--muted);
   border: 1px dashed rgba(0,0,0,0.14);
   background: #fff;
   box-shadow: none;
+}
+
+/* ===== Mobile/Tablet: switch back to cards ===== */
+@media (max-width: 860px){
+  .wrap{ width: calc(100% - 28px); padding: 20px 0 28px; }
+
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .card{
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+  }
+
+  .card.item{
+    display: block;
+    padding: 0;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.04);
+    transition: transform 120ms ease, box-shadow 120ms ease;
+  }
+
+  .card.item:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(0,0,0,0.06);
+    background: #fff;
+  }
+
+  .thumb{
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+  }
+
+  .img{
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .body{
+    padding: 12px 12px 14px;
+  }
+
+  .name{
+    margin-top: 6px;
+    font-size: 20px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .right{ display: none; }
+
+  .row2{
+    display: flex;
+    margin-top: 10px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .pager{ margin-left: 0; width: 100%; justify-content: flex-end; }
+
+  @media (max-width: 520px){
+    .grid{ grid-template-columns: 1fr; }
+  }
 }

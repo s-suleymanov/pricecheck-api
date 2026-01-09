@@ -54,7 +54,7 @@
   }
 
   function fmtPrice(cents) {
-    if (typeof cents !== "number") return "NA";
+    if (typeof cents !== "number") return "No Price";
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
   }
 
@@ -119,19 +119,33 @@
       : `<div class="img ph"></div>`;
 
     const warn = r.dropship_warning ? `<span class="warn">Dropshipping risk</span>` : "";
-    const topLine = [r.brand || "", r.category || ""].filter(Boolean).join(" • ");
+
+    const brand = (r.brand || "").trim();
+    const category = (r.category || "").trim();
+    const version = (r.version || "").trim();
+
+    // brand/category: no dot, just a space
+    const bc = [brand, category].filter(Boolean).join(" ").trim();
+
+    // add dot only before variant (version)
+    const subtitle = version ? (bc ? `${bc} • ${version}` : version) : bc;
+
     const name = r.model_name || r.title || r.model_number || "Untitled";
 
     return `
       <a class="card item" href="${href}">
-        ${img}
+        <div class="thumb">
+          ${img}
+        </div>
+
         <div class="body">
-          <div class="subtitle">${topLine}</div>
+          <div class="subtitle">${subtitle}</div>
           <div class="name">${name}</div>
-          <div class="row2">
-            <div class="price">${fmtPrice(r.best_price_cents)}</div>
-            ${warn}
-          </div>
+        </div>
+
+        <div class="right">
+          <div class="price">${fmtPrice(r.best_price_cents)}</div>
+          ${warn}
         </div>
       </a>
     `;

@@ -32,6 +32,11 @@ router.get("/browse/", (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "browse", "index.html"));
 });
 
+// Helper SQL snippet: normalize version for grouping.
+// - Treat NULL/empty as '' so base variants still show
+// - Group by lower(trim(version)) ignoring case differences
+const VERSION_NORM_SQL = "COALESCE(NULLIF(lower(btrim(c.version)), ''), '')";
+
 router.get("/api/search", async (req, res) => {
   const q = normText(req.query.q);
   if (!q) return res.status(400).json({ ok: false, error: "q is required" });
@@ -46,11 +51,15 @@ router.get("/api/search", async (req, res) => {
   const client = await pool.connect();
   try {
     // 1) exact brand + category checks (case-insensitive)
+    // NOTE: "products" now means "variants" (distinct model_number + version)
     const facetSql = `
       WITH b AS (
         SELECT
           MIN(btrim(brand)) AS label,
-          COUNT(DISTINCT upper(btrim(model_number)))::int AS products
+          COUNT(DISTINCT (
+            upper(btrim(model_number)) || '|' ||
+            COALESCE(NULLIF(lower(btrim(version)), ''), '')
+          ))::int AS products
         FROM public.catalog
         WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
           AND brand IS NOT NULL AND btrim(brand) <> ''
@@ -59,7 +68,10 @@ router.get("/api/search", async (req, res) => {
       c AS (
         SELECT
           MIN(btrim(category)) AS label,
-          COUNT(DISTINCT upper(btrim(model_number)))::int AS products
+          COUNT(DISTINCT (
+            upper(btrim(model_number)) || '|' ||
+            COALESCE(NULLIF(lower(btrim(version)), ''), '')
+          ))::int AS products
         FROM public.catalog
         WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
           AND category IS NOT NULL AND btrim(category) <> ''
@@ -75,12 +87,12 @@ router.get("/api/search", async (req, res) => {
     const brandProducts = facetRow.brand_products || 0;
     const categoryProducts = facetRow.category_products || 0;
 
-    // Helper: fetch products for a given facet type/value (same logic as /api/browse)
     async function fetchFacet(type, value) {
       const countSql = `
         WITH base AS (
-          SELECT DISTINCT ON (upper(btrim(model_number)))
-            upper(btrim(model_number)) AS model_number
+          SELECT DISTINCT
+            upper(btrim(model_number)) AS model_number,
+            COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm
           FROM public.catalog
           WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
             AND (
@@ -96,8 +108,13 @@ router.get("/api/search", async (req, res) => {
 
       const listSql = `
         WITH picked AS (
-          SELECT DISTINCT ON (upper(btrim(model_number)))
-            upper(btrim(model_number)) AS model_number,
+          SELECT DISTINCT ON (
+            upper(btrim(c.model_number)),
+            ${VERSION_NORM_SQL}
+          )
+            upper(btrim(c.model_number)) AS model_number,
+            COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+            c.version,
             c.model_name,
             c.brand,
             c.category,
@@ -114,12 +131,16 @@ router.get("/api/search", async (req, res) => {
               OR
               ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
             )
-          ORDER BY upper(btrim(model_number)), c.created_at DESC NULLS LAST, c.id DESC
+          ORDER BY
+            upper(btrim(c.model_number)),
+            ${VERSION_NORM_SQL},
+            c.created_at DESC NULLS LAST,
+            c.id DESC
         ),
         page_rows AS (
           SELECT *
           FROM picked
-          ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number
+          ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number, version_norm
           LIMIT $3 OFFSET $4
         ),
         anchors AS (
@@ -135,20 +156,23 @@ router.get("/api/search", async (req, res) => {
         cheapest AS (
           SELECT
             a.model_number,
+            a.version_norm,
             MIN(l.current_price_cents) FILTER (WHERE l.current_price_cents IS NOT NULL) AS best_price_cents
           FROM anchors a
           LEFT JOIN public.catalog c
             ON upper(btrim(c.model_number)) = a.model_number
+           AND COALESCE(NULLIF(lower(btrim(c.version)), ''), '') = a.version_norm
           LEFT JOIN public.listings l
             ON (
               (c.pci IS NOT NULL AND btrim(c.pci) <> '' AND l.pci IS NOT NULL AND btrim(l.pci) <> '' AND upper(btrim(l.pci)) = upper(btrim(c.pci)))
               OR
               (c.upc IS NOT NULL AND btrim(c.upc) <> '' AND l.upc IS NOT NULL AND btrim(l.upc) <> '' AND public.norm_upc(l.upc) = public.norm_upc(c.upc))
             )
-          GROUP BY a.model_number
+          GROUP BY a.model_number, a.version_norm
         )
         SELECT
           a.model_number,
+          a.version,
           a.model_name,
           a.brand,
           a.category,
@@ -157,8 +181,10 @@ router.get("/api/search", async (req, res) => {
           a.dashboard_key,
           ch.best_price_cents
         FROM anchors a
-        LEFT JOIN cheapest ch ON ch.model_number = a.model_number
-        ORDER BY a.brand NULLS LAST, a.category NULLS LAST, a.model_name NULLS LAST, a.model_number
+        LEFT JOIN cheapest ch
+          ON ch.model_number = a.model_number
+         AND ch.version_norm = a.version_norm
+        ORDER BY a.brand NULLS LAST, a.category NULLS LAST, a.model_name NULLS LAST, a.model_number, a.version_norm
       `;
 
       const { rows } = await client.query(listSql, [type, value, limit, offset]);
@@ -172,8 +198,6 @@ router.get("/api/search", async (req, res) => {
 
     // 2) If brand/category match exists, return that and do NOT do product search
     if (brandProducts > 0 || categoryProducts > 0) {
-      // Pick primary facet.
-      // If both match, choose the larger one as primary, and return the other in "also".
       let kind;
       let value;
       let also = [];
@@ -211,16 +235,18 @@ router.get("/api/search", async (req, res) => {
       });
     }
 
-    // 3) Fallback: product search in catalog.model_name (plus model_number so "g30lp" hits)
+    // 3) Fallback: product search in catalog.model_name + model_number + version
     const countSql = `
       WITH base AS (
-        SELECT DISTINCT ON (upper(btrim(model_number)))
-          upper(btrim(model_number)) AS model_number
+        SELECT DISTINCT
+          upper(btrim(model_number)) AS model_number,
+          COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm
         FROM public.catalog
         WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
           AND (
             lower(coalesce(model_name,'')) LIKE $1
             OR lower(coalesce(model_number,'')) LIKE $1
+            OR lower(coalesce(version,'')) LIKE $1
           )
       )
       SELECT COUNT(*)::int AS total
@@ -230,8 +256,13 @@ router.get("/api/search", async (req, res) => {
 
     const listSql = `
       WITH picked AS (
-        SELECT DISTINCT ON (upper(btrim(model_number)))
-          upper(btrim(model_number)) AS model_number,
+        SELECT DISTINCT ON (
+          upper(btrim(c.model_number)),
+          ${VERSION_NORM_SQL}
+        )
+          upper(btrim(c.model_number)) AS model_number,
+          COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+          c.version,
           c.model_name,
           c.brand,
           c.category,
@@ -246,13 +277,18 @@ router.get("/api/search", async (req, res) => {
           AND (
             lower(coalesce(c.model_name,'')) LIKE $1
             OR lower(coalesce(c.model_number,'')) LIKE $1
+            OR lower(coalesce(c.version,'')) LIKE $1
           )
-        ORDER BY upper(btrim(model_number)), c.created_at DESC NULLS LAST, c.id DESC
+        ORDER BY
+          upper(btrim(c.model_number)),
+          ${VERSION_NORM_SQL},
+          c.created_at DESC NULLS LAST,
+          c.id DESC
       ),
       page_rows AS (
         SELECT *
         FROM picked
-        ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number
+        ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number, version_norm
         LIMIT $2 OFFSET $3
       ),
       anchors AS (
@@ -268,20 +304,23 @@ router.get("/api/search", async (req, res) => {
       cheapest AS (
         SELECT
           a.model_number,
+          a.version_norm,
           MIN(l.current_price_cents) FILTER (WHERE l.current_price_cents IS NOT NULL) AS best_price_cents
         FROM anchors a
         LEFT JOIN public.catalog c
           ON upper(btrim(c.model_number)) = a.model_number
+         AND COALESCE(NULLIF(lower(btrim(c.version)), ''), '') = a.version_norm
         LEFT JOIN public.listings l
           ON (
             (c.pci IS NOT NULL AND btrim(c.pci) <> '' AND l.pci IS NOT NULL AND btrim(l.pci) <> '' AND upper(btrim(l.pci)) = upper(btrim(c.pci)))
             OR
             (c.upc IS NOT NULL AND btrim(c.upc) <> '' AND l.upc IS NOT NULL AND btrim(l.upc) <> '' AND public.norm_upc(l.upc) = public.norm_upc(c.upc))
           )
-        GROUP BY a.model_number
+        GROUP BY a.model_number, a.version_norm
       )
       SELECT
         a.model_number,
+        a.version,
         a.model_name,
         a.brand,
         a.category,
@@ -290,8 +329,10 @@ router.get("/api/search", async (req, res) => {
         a.dashboard_key,
         ch.best_price_cents
       FROM anchors a
-      LEFT JOIN cheapest ch ON ch.model_number = a.model_number
-      ORDER BY a.brand NULLS LAST, a.category NULLS LAST, a.model_name NULLS LAST, a.model_number
+      LEFT JOIN cheapest ch
+        ON ch.model_number = a.model_number
+       AND ch.version_norm = a.version_norm
+      ORDER BY a.brand NULLS LAST, a.category NULLS LAST, a.model_name NULLS LAST, a.model_number, a.version_norm
     `;
 
     const { rows } = await client.query(listSql, [like, limit, offset]);
@@ -343,8 +384,9 @@ router.get("/api/browse", async (req, res) => {
   try {
     const countSql = `
       WITH base AS (
-        SELECT DISTINCT ON (upper(btrim(model_number)))
-          upper(btrim(model_number)) AS model_number
+        SELECT DISTINCT
+          upper(btrim(model_number)) AS model_number,
+          COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm
         FROM public.catalog
         WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
           AND (
@@ -360,8 +402,13 @@ router.get("/api/browse", async (req, res) => {
 
     const listSql = `
       WITH picked AS (
-        SELECT DISTINCT ON (upper(btrim(model_number)))
-          upper(btrim(model_number)) AS model_number,
+        SELECT DISTINCT ON (
+          upper(btrim(c.model_number)),
+          ${VERSION_NORM_SQL}
+        )
+          upper(btrim(c.model_number)) AS model_number,
+          COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+          c.version,
           c.model_name,
           c.brand,
           c.category,
@@ -378,12 +425,16 @@ router.get("/api/browse", async (req, res) => {
             OR
             ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
           )
-        ORDER BY upper(btrim(model_number)), c.created_at DESC NULLS LAST, c.id DESC
+        ORDER BY
+          upper(btrim(c.model_number)),
+          ${VERSION_NORM_SQL},
+          c.created_at DESC NULLS LAST,
+          c.id DESC
       ),
       page_rows AS (
         SELECT *
         FROM picked
-        ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number
+        ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number, version_norm
         LIMIT $3 OFFSET $4
       ),
       anchors AS (
@@ -399,20 +450,23 @@ router.get("/api/browse", async (req, res) => {
       cheapest AS (
         SELECT
           a.model_number,
+          a.version_norm,
           MIN(l.current_price_cents) FILTER (WHERE l.current_price_cents IS NOT NULL) AS best_price_cents
         FROM anchors a
         LEFT JOIN public.catalog c
           ON upper(btrim(c.model_number)) = a.model_number
+         AND COALESCE(NULLIF(lower(btrim(c.version)), ''), '') = a.version_norm
         LEFT JOIN public.listings l
           ON (
             (c.pci IS NOT NULL AND btrim(c.pci) <> '' AND l.pci IS NOT NULL AND btrim(l.pci) <> '' AND upper(btrim(l.pci)) = upper(btrim(c.pci)))
             OR
             (c.upc IS NOT NULL AND btrim(c.upc) <> '' AND l.upc IS NOT NULL AND btrim(l.upc) <> '' AND public.norm_upc(l.upc) = public.norm_upc(c.upc))
           )
-        GROUP BY a.model_number
+        GROUP BY a.model_number, a.version_norm
       )
       SELECT
         a.model_number,
+        a.version,
         a.model_name,
         a.brand,
         a.category,
@@ -421,8 +475,10 @@ router.get("/api/browse", async (req, res) => {
         a.dashboard_key,
         ch.best_price_cents
       FROM anchors a
-      LEFT JOIN cheapest ch ON ch.model_number = a.model_number
-      ORDER BY a.brand NULLS LAST, a.category NULLS LAST, a.model_name NULLS LAST, a.model_number
+      LEFT JOIN cheapest ch
+        ON ch.model_number = a.model_number
+       AND ch.version_norm = a.version_norm
+      ORDER BY a.brand NULLS LAST, a.category NULLS LAST, a.model_name NULLS LAST, a.model_number, a.version_norm
     `;
 
     const { rows } = await client.query(listSql, [type, value, limit, offset]);
@@ -456,10 +512,12 @@ router.get("/api/browse_facets", async (req, res) => {
 
   const client = await pool.connect();
   try {
+    // Facet "products" now means distinct variants (model_number + version), not just model_number.
     const sql = `
       WITH base AS (
         SELECT
           upper(btrim(model_number)) AS model_number,
+          COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
           ${kind} AS facet,
           image_url,
           created_at,
@@ -472,7 +530,7 @@ router.get("/api/browse_facets", async (req, res) => {
         SELECT
           lower(btrim(facet)) AS facet_norm,
           MIN(btrim(facet)) AS facet_label,
-          COUNT(DISTINCT model_number)::int AS products
+          COUNT(DISTINCT (model_number || '|' || version_norm))::int AS products
         FROM base
         GROUP BY lower(btrim(facet))
       ),
