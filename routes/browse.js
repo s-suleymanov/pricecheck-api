@@ -24,13 +24,14 @@ function normLower(v) {
   return normText(v).toLowerCase();
 }
 
-// Serve browse page (support both /browse and /browse/)
-router.get("/browse", (_req, res) => {
-  res.sendFile(path.join(__dirname, "..", "public", "browse", "index.html"));
-});
-router.get("/browse/", (_req, res) => {
-  res.sendFile(path.join(__dirname, "..", "public", "browse", "index.html"));
-});
+// Serve browse page (SPA HTML for all browse paths)
+const BROWSE_HTML = path.join(__dirname, "..", "public", "browse", "index.html");
+
+router.get("/browse", (_req, res) => res.redirect(301, "/browse/"));
+
+router.get("/browse/", (_req, res) => res.sendFile(BROWSE_HTML));
+router.get("/browse/:q/", (_req, res) => res.sendFile(BROWSE_HTML));
+router.get("/browse/:q/page/:n/", (_req, res) => res.sendFile(BROWSE_HTML));
 
 // Helper SQL snippet: normalize version for grouping.
 // - Treat NULL/empty as '' so base variants still show

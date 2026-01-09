@@ -45,12 +45,21 @@
     return u.toString();
   }
 
+  function slugify(s) {
+    return String(s ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/['"]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
   function browseUrl(raw) {
-  const v = norm(raw);
-  const u = new URL("/browse/", location.origin);
-  u.searchParams.set("q", v);
-  u.searchParams.set("page", "1");
-  return u.toString();
+    const v = norm(raw);
+    if (!v) return new URL("/browse/", location.origin).toString();
+
+    const slug = encodeURIComponent(slugify(v));
+    return new URL(`/browse/${slug}/`, location.origin).toString();
   }
 
   function route(raw) {

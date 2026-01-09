@@ -46,6 +46,7 @@ app.use(require('./routes/dashboard'));
 app.use(require('./routes/insights'));
 app.use(require('./routes/research'));
 app.use(require('./routes/admin'));
+app.use(require("./routes/sitemap"));
 
 // health
 app.get('/health', (_req, res) => res.json({ ok: true }));

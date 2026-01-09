@@ -53,9 +53,60 @@
     if (el) el.hidden = !show;
   }
 
+  function readUrl() {
+    const parsed = parseBrowsePath(location.pathname);
+    state.q = norm(parsed.q);
+    state.page = parsed.page;
+  }
+
   function fmtPrice(cents) {
     if (typeof cents !== "number") return "N/A";
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+  }
+
+  function slugify(s) {
+    return String(s ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/['"]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function unslug(s) {
+    return String(s ?? "").replace(/-/g, " ").trim();
+  }
+
+  function parseBrowsePath(pathname) {
+    // Handles:
+    // /browse/
+    // /browse/segway/
+    // /browse/segway/page/2/
+    const clean = String(pathname || "/").replace(/\/+$/g, "/");
+    const parts = clean.split("/").filter(Boolean); // ["browse", ...]
+    if (parts[0] !== "browse") return { q: "", page: 1 };
+
+    const slug = parts[1] || "";
+    let page = 1;
+
+    if (parts[2] === "page" && parts[3]) {
+      const n = parseInt(parts[3], 10);
+      if (Number.isFinite(n) && n > 0) page = n;
+    }
+
+    const q = slug ? unslug(decodeURIComponent(slug)) : "";
+    return { q, page };
+  }
+
+  function buildBrowsePath(rawQ, page) {
+    const q = norm(rawQ);
+    const p = Number.isFinite(page) && page > 0 ? page : 1;
+
+    if (!q) return "/browse/";
+
+    const slug = encodeURIComponent(slugify(q));
+    if (p === 1) return `/browse/${slug}/`;
+    return `/browse/${slug}/page/${p}/`;
   }
 
   function setPager() {
@@ -73,21 +124,10 @@
     setPager();
   }
 
-  function readUrl() {
-    const u = new URL(location.href);
-    state.q = norm(u.searchParams.get("q") || "");
-    const p = parseInt(u.searchParams.get("page") || "1", 10);
-    state.page = Number.isFinite(p) && p > 0 ? p : 1;
-  }
-
   function writeUrl({ replace = false } = {}) {
-    const u = new URL(location.href);
-    if (state.q) u.searchParams.set("q", state.q);
-    else u.searchParams.delete("q");
-    u.searchParams.set("page", String(state.page));
-
-    if (replace) history.replaceState({}, "", u);
-    else history.pushState({}, "", u);
+    const path = buildBrowsePath(state.q, state.page);
+    if (replace) history.replaceState({}, "", path);
+    else history.pushState({}, "", path);
   }
 
   async function apiJson(url) {
@@ -110,7 +150,7 @@
     return data;
   }
 
-  function setHead({ title, description, canonical } = {}) {
+  function setHead({ title, description, canonical, robots } = {}) {
     if (title) document.title = title;
 
     if (description != null) {
@@ -131,6 +171,16 @@
         document.head.appendChild(link);
       }
       link.setAttribute("href", canonical);
+    }
+
+    if (robots != null) {
+      let el = document.querySelector('meta[name="robots"]');
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute("name", "robots");
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", robots);
     }
   }
 
@@ -209,10 +259,13 @@
     setTitle(titleText);
 
     const q = (state.value || state.q || "").trim();
+    const isPaged = state.page > 1;
     const canonical = q
-      ? `${location.origin}/browse/?q=${encodeURIComponent(q)}`
+      ? `${location.origin}${buildBrowsePath(q, 1)}`
       : `${location.origin}/browse/`;
-
+    const robots = !q
+      ? "noindex,follow"
+      : (isPaged ? "noindex,follow" : "index,follow");
     const total = typeof state.total === "number" ? state.total : 0;
     const desc = q
       ? `Browse ${q} on PriceCheck. ${total ? `${total} results.` : ""} Compare products and check the latest prices.`
@@ -235,6 +288,7 @@
       title,
       description: desc,
       canonical,
+      robots,
     });
 
     const metaParts = [];
