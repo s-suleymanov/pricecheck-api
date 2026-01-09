@@ -234,6 +234,8 @@
       hp: 'HP',
       dell: 'Dell',
       bose: 'Bose',
+      samsclub: "Sam's Club",
+      lowes: "Lowe's"
     };
     if (OVERRIDE[key]) return OVERRIDE[key];
 
