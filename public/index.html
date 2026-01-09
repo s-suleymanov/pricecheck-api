@@ -3,17 +3,83 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>PriceCheck: Organizing the world’s product information</title>
   <meta name="description" content="PriceCheck organizes product information and pricing across major retailers, helping people compare products, understand markets, and make informed decisions." />
   <link rel="canonical" href="https://pricechecktool.com/" />
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="insights/styles.css">
-  <link rel="icon" type="image/png" href="logo/logo.svg">
+
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+
+  <link rel="icon" href="/logo/logo.svg" type="image/svg+xml" />
+  <link rel="icon" href="/logo/logo.png" type="image/png" sizes="512x512" />
+  <link rel="apple-touch-icon" href="/logo/logo.png" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="PriceCheck" />
+  <meta property="og:title" content="PriceCheck: Organizing the world’s product information" />
+  <meta
+    property="og:description"
+    content="Compare prices across retailers, understand markets, and make informed decisions."
+  />
+  <meta property="og:url" content="https://pricechecktool.com/" />
+  <!-- Use an absolute URL. Make sure this image exists and is at least 1200x630 -->
+  <meta property="og:image" content="https://pricechecktool.com/logo/home.png" />
+  <meta property="og:image:alt" content="PriceCheck logo and tagline" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PriceCheck: Organizing the world’s product information" />
+  <meta
+    name="twitter:description"
+    content="Compare prices across retailers, understand markets, and make informed decisions."
+  />
+  <meta name="twitter:image" content="https://pricechecktool.com/logo/home.png" />
+
+  <link rel="preload" href="/styles.css" as="style" />
+  <link rel="preload" href="/logo/logo.svg" as="image" type="image/svg+xml" />
+
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/insights/styles.css" />
+  <link rel="stylesheet" href="/research/style.css" />
+
+  <!-- Structured data: Organization + WebSite (SearchAction) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://pricechecktool.com/#org",
+        "name": "PriceCheck",
+        "url": "https://pricechecktool.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://pricechecktool.com/logo/logo.svg"
+        },
+        "sameAs": [
+          "https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf",
+          "https://ko-fi.com/samlyman"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://pricechecktool.com/#website",
+        "url": "https://pricechecktool.com/",
+        "name": "PriceCheck",
+        "publisher": { "@id": "https://pricechecktool.com/#org" },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://pricechecktool.com/browse/{search_term_string}/",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    ]
+  }
+  </script>
 
   <script src="/search.js" defer></script>
   <script src="/insights/logo-map.js" defer></script>
   <script src="/index.js" defer></script>
-  <link rel="stylesheet" href="/research/style.css">
   <script src="/research/research.js" defer></script>
 </head>
 
@@ -41,8 +107,9 @@
     <div class="home-center__inner">
       <section class="home-fold" aria-label="Top">
         <div class="home-logo">
+          <h1 class="sr-only">PriceCheck</h1>
           <div class="home-logo__word">PriceCheck</div>
-          <img src="logo/logo.svg" alt="PriceCheck" class="home-logo__img">
+          <img src="/logo/logo.svg" alt="PriceCheck" class="home-logo__img">
         </div>
 
         <form id="homeSearchForm" class="home-search" action="#" method="GET" role="search" aria-label="Search products">
