@@ -14,7 +14,7 @@
 }
 
 body{overflow-x:hidden;background:#fff;color:var(--ink)}
-.wrap{max-width:1250px;margin:0 auto;padding:10px 24px 90px}
+.wrap{max-width:1250px;margin:0 auto;padding:0px 24px 90px}
 
 /* Layout */
 :root{--dash-sidebar:360px}
