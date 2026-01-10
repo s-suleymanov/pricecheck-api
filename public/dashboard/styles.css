@@ -420,6 +420,10 @@ details[open]{background:#fff}
   .offer > :nth-child(3){
     display:none;
   }
+  .pc-warn{
+    margin-left: 18px;
+    margin-right: 18px;
+  }
   .controls{
     gap: 10px;
   }

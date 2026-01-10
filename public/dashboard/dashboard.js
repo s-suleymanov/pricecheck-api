@@ -1427,14 +1427,14 @@ if (actSummary) actSummary.addEventListener('click', async () => {
 
     const cols = [
       ['variant', 'Variant'],
+      ['color', 'Color'],
       ['category', 'Category'],
       ['brand', 'Brand'],
-      ['model_number', 'Model'],
       ['model_name', 'Name'],
     ];
 
     const varies = {};
-    ['category','brand','model_number','model_name'].forEach(k=>{
+    ['color', 'category','brand','model_name'].forEach(k=>{
       const vals = new Set(items.map(v => (v[k] || '').trim()));
       varies[k] = vals.size > 1;
     });
@@ -1445,18 +1445,19 @@ if (actSummary) actSummary.addEventListener('click', async () => {
 
     items.forEach(v=>{
       html += '<tr>';
-      const ver = (v.version || v.variant_label || '').trim();
-      const col = (v.color || '').trim();
-      const label =
-        (ver && col ? `${ver} • ${col}` : (ver || col)) ||
-        v.model_name || v.model_number || v.key || 'Variant';
+      const ver = String(v?.version || v?.variant_label || '').trim();
+      const label = ver || v.model_name || v.model_number || v.key || 'Variant';
       html += `<td class="mono">${escapeHtml(label)}</td>`;
 
-      ['category','brand','model_number','model_name'].forEach(k=>{
-        const val = v[k] || 'NA';
-        const hi = varies[k] ? ' style="background:rgba(255,230,150,.45)"' : '';
-        html += `<td${hi}>${escapeHtml(val)}</td>`;
-      });
+          ['color','category','brand','model_name'].forEach(k=>{
+            const raw = String(v?.[k] || '').trim();
+            const val =
+              raw ? raw :
+              (k === 'color' ? '—' : 'NA');
+
+            const hi = varies[k] ? ' style="background:rgba(255,230,150,.45)"' : '';
+            html += `<td${hi}>${escapeHtml(val)}</td>`;
+        });
       html += '</tr>';
     });
 
