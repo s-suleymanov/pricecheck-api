@@ -235,7 +235,10 @@
       dell: 'Dell',
       bose: 'Bose',
       samsclub: "Sam's Club",
-      lowes: "Lowe's"
+      lowes: "Lowe's",
+      ebay: "Ebay",
+      alibaba: "Alibaba",
+      aovo: "AOVO"
     };
     if (OVERRIDE[key]) return OVERRIDE[key];
 
