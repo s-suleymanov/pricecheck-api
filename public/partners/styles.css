@@ -3,8 +3,9 @@
 }
 
 .partners__title{
-  font-size:clamp(30px, 4.8vw, 40px);
+  font-size:clamp(30px, 4.8vw, 50px);
   line-height:1.1;
+  font-weight: 600;
   letter-spacing:-.01em;
   margin:0 0 10px;
   text-align:left;
