@@ -222,6 +222,7 @@
       radicaladventures: 'Radical Adventures',
       brandsmart: 'BrandsMart',
       aliexpress: 'AliExpress',
+      macys: "Macy's",
       electricsport: 'Electric Sport',
       electricride: 'Electric Ride',
       apple: 'Apple',
@@ -238,7 +239,9 @@
       lowes: "Lowe's",
       ebay: "Ebay",
       alibaba: "Alibaba",
-      aovo: "AOVO"
+      aovo: "AOVO",
+      macys: "Macy's",
+      "5thwheel": "5th Wheel"
     };
     if (OVERRIDE[key]) return OVERRIDE[key];
 
@@ -706,7 +709,10 @@ async function run(raw){
       const warnEl = document.querySelector('#ps-warn'); // or whatever your dashboard warning element id is
       if (warnEl) warnEl.hidden = !(id.dropship_warning === true);
     }
-
+    {
+      const limited = document.querySelector('#ps-limited');
+      if (limited) limited.hidden = !(id.coverage_warning === true);
+    }
     {
       const recallWrap = document.querySelector('#ps-recall');
       const recallLink = document.querySelector('#ps-recall-link');
