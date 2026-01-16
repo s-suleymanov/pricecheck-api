@@ -309,6 +309,7 @@ async function getOffersForSelectedVariant(client, selectedKeys) {
   );
 
   const amazon = [];
+  const walmart = [];
   const nonAmazonBestByStore = new Map();
 
   for (const row of r.rows) {
@@ -344,6 +345,12 @@ async function getOffersForSelectedVariant(client, selectedKeys) {
       continue;
     }
 
+    // Walmart: keep multiple listings (different store_sku) as separate offers
+    if (store === 'walmart') {
+      walmart.push(candidate);
+      continue;
+    }
+
     // keep just the newest per non-amazon store
     const prev = nonAmazonBestByStore.get(store);
     if (!prev) {
@@ -366,21 +373,24 @@ async function getOffersForSelectedVariant(client, selectedKeys) {
     return tb - ta;
   });
 
+  walmart.sort((a, b) => {
+    const ta = a.observed_at ? new Date(a.observed_at).getTime() : 0;
+    const tb = b.observed_at ? new Date(b.observed_at).getTime() : 0;
+    return tb - ta;
+  });
+
   const AMAZON_MAX = 10;
+  const WALMART_MAX = 10;
+
   const amazonCapped = amazon.slice(0, AMAZON_MAX);
+  const walmartCapped = walmart.slice(0, WALMART_MAX);
 
   const nonAmazon = Array.from(nonAmazonBestByStore.values());
   nonAmazon.sort((a, b) => a.store.localeCompare(b.store));
 
-  return [...amazonCapped, ...nonAmazon];
+  return [...amazonCapped, ...walmartCapped, ...nonAmazon];
 }
 
-/**
- * Selected variant resolution:
- * - pci/upc are direct.
- * - asin is converted to pci/upc via Amazon listing (NO selected_asin).
- * - store keys resolved to listing then use its pci/upc.
- */
 async function resolveSelectedVariant(client, rawKey) {
   const parsed = parseKey(rawKey);
 
