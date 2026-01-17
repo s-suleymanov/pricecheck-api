@@ -223,6 +223,8 @@
       brandsmart: 'BrandsMart',
       aliexpress: 'AliExpress',
       macys: "Macy's",
+      niu: "NIU",
+      voromotors: "Voro Motors",
       electricsport: 'Electric Sport',
       electricride: 'Electric Ride',
       apple: 'Apple',
