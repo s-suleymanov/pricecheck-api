@@ -363,7 +363,6 @@ function getCurrentVariant(){
 }
 
 const shareBtn = $('#share');
-const sortTotalBtn = $('#sortTotal');
 const copyCheapestBtn = $('#copyCheapest');
 const downloadCsvBtn = $('#downloadCsv');
 const downloadObsBtn = $('#downloadObs');
@@ -389,11 +388,6 @@ if (shareBtn) {
     flip('#share','Copied','Copy share link',900);
   });
 }
-
-if (sortTotalBtn) sortTotalBtn.addEventListener('click', ()=> {
-  renderOffers(true);
-  renderCouponsCard();
-});
 
 if (copyCheapestBtn) copyCheapestBtn.addEventListener('click', ()=>{
   const cheap = getCheapestOffer();
@@ -664,7 +658,7 @@ async function run(raw){
       hydrateHeader();
       hydrateKpis();
       drawChart();
-      renderOffers(false);
+      renderOffers(true);
       renderCouponsCard();
       renderVariants();
       renderSpecsMatrix();
