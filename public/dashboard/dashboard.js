@@ -646,12 +646,9 @@ async function run(raw){
       // robots: only index PCI canonical pages
       const kind = (String(canonicalKey || '').split(':')[0] || '').toLowerCase();
       if (kind === 'pci' && isOnCanonicalKey(canonicalKey)) {
-        // canonical PCI page: index allowed
-        // you can remove robots tag, but leaving it unset is simplest
         const robots = document.querySelector('meta[name="robots"]');
         if (robots) robots.remove();
       } else {
-        // everything else: do not index, but allow crawlers to follow links
         setRobots('noindex,follow');
       }
 
