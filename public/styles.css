@@ -201,13 +201,16 @@ img.logo:hover {
   margin:0 0 100px; font-weight:400;
 }
 .use__grid{
+  align-items: center;
+  text-align: center;
+  justify-content: center;
   display:grid;
   grid-template-columns:repeat(3, 1fr);
   gap:100px;
 }
 .use__icon{
   width:70px; height:70px; display:block; margin-bottom:18px;
-  padding:8px; object-fit:contain;
+  padding:8px; object-fit:contain; justify-self: center;
 }
 .use__h3{
   margin:0 0 8px;
