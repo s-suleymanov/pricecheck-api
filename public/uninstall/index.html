@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="../logo/logo.png">
+  <title>We will miss you</title>
+
+  <style>
+    :root{
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e5e7eb;
+      --card: #ffffff;
+      --shadow: 0 14px 40px rgba(15, 23, 42, 0.10);
+      --radius: 18px;
+      --radius2: 14px;
+      --accent: #111827;
+      --accentText: #ffffff;
+      --chipBg: #f8fafc;
+      --chipBgOn: #111827;
+      --chipText: #0f172a;
+      --chipTextOn: #ffffff;
+      --ok: #059669;
+      --err: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap{
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 48px 20px 70px;
+    }
+
+    .hero-uninstall{
+      padding: 22px 2px 6px;
+      text-align: center;
+    }
+
+    h1{
+      margin: 0;
+      font-size: clamp(44px, 6vw, 82px);
+      line-height: 0.95;
+      letter-spacing: -1.4px;
+      font-weight: 600;
+      padding-bottom: 40px;
+    }
+
+    .sub-uninstall{
+        color: var(--muted);
+        font-size: clamp(18px, 2.2vw, 28px);
+        line-height: 1.35;
+        margin: 0 auto 120px;
+        max-width: 800px;
+    }
+
+    .grid{
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 35px;
+    }
+    @media (min-width: 900px){
+      .grid{ grid-template-columns: 1.15fr 0.85fr; }
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .card h2{
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+
+    .card p{
+      font-size: 18px;
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .chips{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .chip{
+      border: 1px solid var(--border);
+      background: var(--chipBg);
+      color: var(--chipText);
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.06s ease, background 0.12s ease, border-color 0.12s ease;
+    }
+    .chip:hover{ transform: translateY(-1px); }
+    .chip.on{
+      background: var(--chipBgOn);
+      color: var(--chipTextOn);
+      border-color: var(--chipBgOn);
+    }
+
+    textarea{
+      width: 100%;
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      padding: 12px 12px;
+      font-size: 16px;
+      line-height: 1.5;
+      outline: none;
+      background: #fff;
+      font-family: system-ui;
+      color: var(--text);
+      min-height: 120px;
+      resize: vertical;
+    }
+    textarea:focus{ border-color: #cbd5e1; }
+
+    .actions{
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn{
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 750;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: transform 0.06s ease, background 0.12s ease, border-color 0.12s ease;
+      user-select: none;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: #cbd5e1; }
+    .btn.primary{
+      font-size: 18px;
+      font-weight: 500;
+      background: var(--accent);
+      color: var(--accentText);
+      border-color: var(--accent);
+      height: 45px;
+    }
+    .btn.primary:hover{
+      transform: translateY(-2px);
+    }
+
+    .btn:disabled{
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .msg{
+      margin-top: 10px;
+      font-size: 13.5px;
+      line-height: 1.45;
+    }
+    .msg.ok{ color: var(--ok); }
+    .msg.err{ color: var(--err); }
+
+    .rightList{
+      margin-top: 10px;
+      display: grid;
+      gap: 10px;
+    }
+    .tip{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+    }
+    .tip:hover{
+        transform: translateY(-2px);
+    }
+    .tip b{
+      font-weight: 600;
+      display: block;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+    .tip span{
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    /* Hero fade + rise on load */
+    @keyframes pc-fade-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-uninstall h1,
+    .hero-uninstall .sub-uninstall {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: pc-fade-rise 1400ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    will-change: opacity, transform;
+    }
+
+    .hero-uninstall .sub-uninstall {
+    animation-delay: 220ms; /* subtitle follows the title */
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+    .hero-uninstall h1,
+    .hero-uninstall .sub-uninstall {
+        opacity: 1;
+        transform: none;
+        animation: none;
+    }
+    }
+
+  </style>
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+
+<body>
+
+  <div class="wrap">
+
+    <div class="hero-uninstall">
+      <h1>We're sorry to see you go.</h1>
+      <div class="sub-uninstall">
+       The goal of PriceCheck is to help you make better shopping decisions. If it did not, tell us what went wrong.
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>What made you uninstall?</h2>
+        <p>Your feedback helps improve PriceCheck for everyone.</p>
+
+        <div class="chips" id="chips"></div>
+
+        <textarea id="details" placeholder="Please describe the issue in more detail."></textarea>
+
+        <div class="actions">
+           <button class="btn primary" id="send" type="button">Send Feedback</button>
+            <div class="msg" id="msg"></div>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <h2>Common fixes
+        </h2>
+        <p>For more complicated issues, reach out to <a href="/support">support</a> and we will help.</p>
+
+        <div class="rightList">
+          <div class="tip">
+            <b>Nothing showed up</b>
+            <span>Go to a product page, then click the PriceCheck icon once. It will show up after that.</span>
+          </div>
+          <div class="tip">
+            <b>Wrong match</b>
+            <span>If you paste one example URL above, we can usually fix the matching logic quickly.</span>
+          </div>
+          <div class="tip">
+            <b>Slow</b>
+            <span>This is actionable. Tell us which sites felt slow and what you were doing.</span>
+          </div>
+          <div class="tip">
+            <b>Privacy concern</b>
+            <span>Let us know what worried you and what we can do to improve the safety and security of PriceCheck. </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const REASONS = [
+        ["bug", "It did not work"],
+        ["performance", "Too slow"],
+        ["confusing", "Confusing"],
+        ["wrong_matches", "Wrong matches"],
+        ["missing_store", "Missing a store"],
+        ["privacy", "Privacy concern"],
+        ["not_needed", "Not needed"],
+        ["other", "Other"]
+      ];
+
+      const qs = new URLSearchParams(location.search);
+
+      const meta = {
+        path: location.pathname,
+        v: qs.get("v"),
+        utm_source: qs.get("utm_source"),
+        utm_medium: qs.get("utm_medium"),
+        utm_campaign: qs.get("utm_campaign"),
+        ua: navigator.userAgent,
+        ts: new Date().toISOString()
+      };
+
+      let selected = "";
+
+      const chips = document.getElementById("chips");
+      REASONS.forEach(([key, label]) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "chip";
+        btn.textContent = label;
+        btn.dataset.key = key;
+        btn.addEventListener("click", () => {
+          selected = key;
+          [...chips.children].forEach((c) => c.classList.toggle("on", c.dataset.key === key));
+        });
+        chips.appendChild(btn);
+      });
+
+      const send = document.getElementById("send");
+      const msg = document.getElementById("msg");
+
+      send.addEventListener("click", async () => {
+        if (!selected) {
+          msg.className = "msg err";
+          msg.textContent = "Pick a reason first.";
+          return;
+        }
+
+        const details = (document.getElementById("details").value || "").trim();
+
+        send.disabled = true;
+        msg.className = "msg";
+        msg.textContent = "";
+
+        try {
+          const res = await fetch("/api/uninstall_feedback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reason: selected, details, meta }),
+            keepalive: true
+          });
+
+          if (!res.ok) throw new Error("bad status " + res.status);
+
+          msg.className = "msg ok";
+          msg.textContent = "Thanks. Feedback received.";
+        } catch (e) {
+          send.disabled = false;
+          msg.className = "msg err";
+          msg.textContent = "Could not send. Please try again.";
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

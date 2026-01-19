@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PriceCheck Support Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="description" content="Admin inbox for PriceCheck support." />
+  <link rel="stylesheet" href="../styles.css" />
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0b0f19;
+      --muted:#6b7280;
+      --muted2:#9ca3af;
+      --border:#e5e7eb;
+      --card:#ffffff;
+      --soft:#f8fafc;
+      --shadow:0 10px 28px rgba(15, 23, 42, 0.08);
+      --radius:18px;
+      --radius2:22px;
+
+      --accent-a:#66c7c5;
+      --accent-b:#6f8cf5;
+      --accent-c:#86d39a;
+
+      --btn:#111827;
+      --btnText:#ffffff;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    a{color:inherit; text-decoration:none}
+
+    .container{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 18px 80px;
+    }
+
+    .hero{
+      padding: 56px 0 18px;
+      text-align:left;
+    }
+    .hero h1{
+      margin:0;
+      font-size: clamp(34px, 5vw, 54px);
+      letter-spacing: -1.0px;
+      line-height: 1.05;
+      font-weight: 700;
+    }
+    .gradient{
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b), var(--accent-c));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero p{
+      margin: 12px 0 0;
+      max-width: 860px;
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      width: 100%;
+    }
+    .cardHeader{
+      padding: 16px 16px 12px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+    }
+    .cardHeader h2{
+      margin:0;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.3px;
+    }
+    .cardHeader p{
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .cardBody{padding: 14px 16px 16px}
+
+    .chipRow{
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .chip{
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      background: var(--soft);
+      padding: 7px 10px;
+      border-radius: 999px;
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      user-select:none;
+    }
+    .chipGood{
+      background: rgba(134,211,154,0.14);
+      border-color: rgba(134,211,154,0.30);
+      color: #064e3b;
+    }
+    .chipBad{
+      background: rgba(239,68,68,0.10);
+      border-color: rgba(239,68,68,0.22);
+      color: #7f1d1d;
+    }
+
+    .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 12px;
+    }
+
+    .field{
+      flex: 1 1 auto;
+      min-width: 220px;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .input, select, textarea{
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 11px 12px;
+      font-size: 14px;
+      outline:none;
+      background:#fff;
+      color: var(--text);
+    }
+    textarea{min-height: 140px; resize: vertical}
+
+    .label{
+      font-size: 12px;
+      color: var(--muted);
+      margin: 10px 0 6px;
+      display:block;
+    }
+
+    .help{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .issues{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .issue{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    .issueTop{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .issueTitle{
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: -0.1px;
+      margin: 0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .badges{
+      display:flex;
+      gap: 6px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .badge{
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--soft);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .badgeAccent{
+      background: rgba(102,199,197,0.12);
+      border-color: rgba(102,199,197,0.28);
+      color: #0b3b36;
+    }
+
+    .issueBody{
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .issueFooter{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      margin-top: 2px;
+    }
+    .meta{
+      font-size: 12px;
+      color: var(--muted2);
+    }
+
+    .actions{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .linkBtn{
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+      font-size: 12px;
+      font-weight: 800;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+    .linkBtn:hover{transform: translateY(-1px); box-shadow: 0 10px 18px rgba(15,23,42,0.08)}
+
+    .empty{
+      padding: 12px 2px 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Modal */
+    .modalOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(17,24,39,0.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 60;
+    }
+    .modalOverlay.open{display:flex}
+    .modal{
+      width: min(900px, 96vw);
+      background:#fff;
+      border-radius: var(--radius2);
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 70px rgba(15,23,42,0.22);
+      overflow:hidden;
+    }
+    .modalHeader{
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modalHeader strong{
+      font-size: 14px;
+      font-weight: 900;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .modalBody{
+      padding: 14px 16px 16px;
+    }
+    .modalMeta{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .modalBody pre{
+      margin:0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .modalGrid{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 860px){
+      .modalGrid{grid-template-columns: 1fr}
+    }
+  </style>
+
+  <script src="/partials/partials.js" defer></script>
+</head>
+
+<body>
+  <div id="site-header"></div>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Support <span class="gradient">Admin</span></h1>
+      <p>
+        This page loads private reports and lets you change status and visibility.
+        You must paste the admin token to use it. The token is stored only in this browser.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="cardHeader">
+        <div>
+          <h2>Access</h2>
+          <p>Paste SUPPORT_ADMIN_TOKEN. It is sent as x-support-admin-token.</p>
+        </div>
+        <div class="chipRow">
+          <span class="chip" id="chipApi">API: unknown</span>
+          <span class="chip" id="chipAuth">Auth: not set</span>
+        </div>
+      </div>
+
+      <div class="cardBody">
+        <label class="label" for="adminToken">Admin token</label>
+        <input class="input" id="adminToken" type="text" placeholder="SUPPORT_ADMIN_TOKEN" />
+
+        <div class="row" style="margin-top:10px">
+          <div class="field" style="min-width:280px">
+            <button class="btn btnPrimary" id="btnSetToken" type="button" style="min-width:140px">Set token</button>
+            <button class="btn" id="btnClearToken" type="button" style="min-width:140px">Clear</button>
+          </div>
+          <div class="field" style="justify-content:flex-end">
+            <button class="btn" id="btnPing" type="button" style="min-width:140px">Ping API</button>
+          </div>
+        </div>
+
+        <div class="help" id="authMsg"></div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:18px">
+      <div class="cardHeader">
+        <div>
+          <h2>Inbox</h2>
+          <p>All posts means public and private. Public only matches what users see.</p>
+        </div>
+        <div class="chipRow">
+          <span class="chip"><b id="pillCount">0</b> loaded</span>
+        </div>
+      </div>
+
+      <div class="cardBody">
+        <div class="row">
+          <div class="field" style="min-width:260px">
+            <input class="input" id="q" type="text" placeholder="Search title or body..." />
+          </div>
+
+          <div class="field" style="justify-content:flex-end">
+            <select id="view" style="width:190px">
+              <option value="admin">All posts (public + private)</option>
+              <option value="public">Public only</option>
+            </select>
+
+            <select id="status" style="width:180px">
+              <option value="all">All status</option>
+              <option value="open">Open</option>
+              <option value="investigating">Investigating</option>
+              <option value="planned">Planned</option>
+              <option value="fixed">Fixed</option>
+              <option value="closed">Closed</option>
+            </select>
+
+            <select id="sort" style="width:160px">
+              <option value="new">Newest</option>
+              <option value="top">Top voted</option>
+            </select>
+
+            <button class="btn" id="btnSearch" type="button">Search</button>
+            <button class="btn" id="btnRefresh" type="button">Refresh</button>
+          </div>
+        </div>
+
+        <div class="issues" id="issues"></div>
+        <div class="empty" id="emptyMsg" style="display:none"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHeader">
+        <strong id="modalTitle">Issue</strong>
+        <button class="btn" id="btnCloseModal" type="button">Close</button>
+      </div>
+      <div class="modalBody">
+        <div class="modalMeta" id="modalMeta"></div>
+
+        <div class="modalGrid">
+          <div>
+            <label class="label" for="modalStatus">Status</label>
+            <select id="modalStatus">
+              <option value="open">open</option>
+              <option value="investigating">investigating</option>
+              <option value="planned">planned</option>
+              <option value="fixed">fixed</option>
+              <option value="closed">closed</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="modalVis">Visibility</label>
+            <select id="modalVis">
+              <option value="public">public</option>
+              <option value="private">private</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="help" id="modalSaveMsg" style="margin-top:10px"></div>
+
+        <div style="margin-top:12px">
+          <label class="label">Body</label>
+          <pre id="modalBody"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = "/api/support";
+    const $ = (id) => document.getElementById(id);
+
+    const state = {
+      issues: [],
+      adminToken: localStorage.getItem("pc_support_admin_token") || "",
+      currentIssue: null
+    };
+
+    function fmtTime(iso) {
+      try { return new Date(iso).toLocaleString(); }
+      catch { return iso || ""; }
+    }
+
+    async function api(path, opts = {}) {
+      const headers = Object.assign(
+        { "content-type": "application/json" },
+        opts.headers || {}
+      );
+      if (state.adminToken) headers["x-support-admin-token"] = state.adminToken;
+
+      const res = await fetch(path, Object.assign({}, opts, { headers }));
+      const ct = res.headers.get("content-type") || "";
+      const data = ct.includes("application/json") ? await res.json() : null;
+      if (!res.ok) throw new Error(data?.error || "request_failed");
+      return data;
+    }
+
+    function setChips({ apiOk = null, authOk = null } = {}) {
+      const chipApi = $("chipApi");
+      const chipAuth = $("chipAuth");
+
+      if (apiOk === true) {
+        chipApi.textContent = "API: ok";
+        chipApi.className = "chip chipGood";
+      } else if (apiOk === false) {
+        chipApi.textContent = "API: fail";
+        chipApi.className = "chip chipBad";
+      } else {
+        chipApi.textContent = "API: unknown";
+        chipApi.className = "chip";
+      }
+
+      if (authOk === true) {
+        chipAuth.textContent = "Auth: set";
+        chipAuth.className = "chip chipGood";
+      } else if (authOk === false) {
+        chipAuth.textContent = "Auth: missing";
+        chipAuth.className = "chip chipBad";
+      } else {
+        chipAuth.textContent = state.adminToken ? "Auth: set" : "Auth: not set";
+        chipAuth.className = state.adminToken ? "chip chipGood" : "chip";
+      }
+    }
+
+    async function pingApi() {
+      $("authMsg").textContent = "Pinging...";
+      try {
+        // This will 401 if token is missing or wrong, which is still a useful signal.
+        await api(`${API}/issues?view=admin&status=all&sort=new&limit=1&offset=0`);
+        $("authMsg").textContent = "API ok and token accepted.";
+        setChips({ apiOk: true, authOk: true });
+      } catch (e) {
+        const msg = String(e.message || "");
+        if (msg === "admin_required") {
+          $("authMsg").textContent = "API ok but token missing or wrong.";
+          setChips({ apiOk: true, authOk: false });
+        } else {
+          $("authMsg").textContent = "API failed. Check server logs and route mounting.";
+          setChips({ apiOk: false });
+        }
+      }
+    }
+
+    function badge(issue) {
+      const badges = document.createElement("div");
+      badges.className = "badges";
+
+      const bCat = document.createElement("span");
+      bCat.className = "badge";
+      bCat.textContent = issue.category || "Bug";
+
+      const bStatus = document.createElement("span");
+      bStatus.className = "badge badgeAccent";
+      bStatus.textContent = issue.status || "open";
+
+      const bVis = document.createElement("span");
+      bVis.className = "badge";
+      bVis.textContent = issue.is_public ? "public" : "private";
+
+      badges.appendChild(bCat);
+      badges.appendChild(bStatus);
+      badges.appendChild(bVis);
+      return badges;
+    }
+
+    function openModal(issue) {
+      state.currentIssue = issue;
+
+      $("modalTitle").textContent = issue.title || "Issue";
+
+      const meta = [];
+      meta.push(`#${issue.id}`);
+      meta.push(issue.category || "Bug");
+      meta.push(issue.status || "open");
+      meta.push(issue.is_public ? "public" : "private");
+      meta.push(fmtTime(issue.created_at));
+
+      if (issue.source_url) meta.push(`url: ${issue.source_url}`);
+      if (issue.reporter_email) meta.push(`email: ${issue.reporter_email}`);
+      if (issue.app_version) meta.push(`v: ${issue.app_version}`);
+      if (issue.reporter_ip) meta.push(`ip: ${issue.reporter_ip}`);
+
+      $("modalMeta").textContent = meta.join("  •  ");
+      $("modalBody").textContent = issue.body || "";
+
+      $("modalStatus").value = issue.status || "open";
+      $("modalVis").value = issue.is_public ? "public" : "private";
+      $("modalSaveMsg").textContent = "";
+
+      $("modalOverlay").classList.add("open");
+    }
+
+    function closeModal() {
+      $("modalOverlay").classList.remove("open");
+      state.currentIssue = null;
+    }
+
+    async function patchIssue(issue, patch) {
+      if (!state.adminToken) throw new Error("admin_required");
+      const r = await api(`${API}/issues/${issue.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch)
+      });
+      return r.issue;
+    }
+
+    function issueCard(issue) {
+      const wrap = document.createElement("div");
+      wrap.className = "issue";
+
+      const top = document.createElement("div");
+      top.className = "issueTop";
+
+      const title = document.createElement("h3");
+      title.className = "issueTitle";
+      title.textContent = issue.title || "Untitled";
+
+      top.appendChild(title);
+      top.appendChild(badge(issue));
+
+      const body = document.createElement("div");
+      body.className = "issueBody";
+      body.textContent = issue.body || "";
+
+      const footer = document.createElement("div");
+      footer.className = "issueFooter";
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = `${fmtTime(issue.created_at)} • #${issue.id}`;
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const viewBtn = document.createElement("button");
+      viewBtn.className = "linkBtn";
+      viewBtn.type = "button";
+      viewBtn.textContent = "View";
+      viewBtn.onclick = () => openModal(issue);
+      actions.appendChild(viewBtn);
+
+      const statusSel = document.createElement("select");
+      statusSel.style.width = "170px";
+      ["open","investigating","planned","fixed","closed"].forEach((s) => {
+        const o = document.createElement("option");
+        o.value = s;
+        o.textContent = s;
+        if ((issue.status || "open") === s) o.selected = true;
+        statusSel.appendChild(o);
+      });
+      statusSel.onchange = async () => {
+        statusSel.disabled = true;
+        try {
+          const updated = await patchIssue(issue, { status: statusSel.value });
+          issue.status = updated.status;
+          render();
+        } catch (e) {
+          alert(`Error: ${e.message}`);
+        } finally {
+          statusSel.disabled = false;
+        }
+      };
+      actions.appendChild(statusSel);
+
+      const visSel = document.createElement("select");
+      visSel.style.width = "150px";
+      const o1 = document.createElement("option");
+      o1.value = "public"; o1.textContent = "public";
+      const o2 = document.createElement("option");
+      o2.value = "private"; o2.textContent = "private";
+      visSel.appendChild(o1);
+      visSel.appendChild(o2);
+      visSel.value = issue.is_public ? "public" : "private";
+      visSel.onchange = async () => {
+        visSel.disabled = true;
+        try {
+          const updated = await patchIssue(issue, { is_public: visSel.value === "public" });
+          issue.is_public = updated.is_public;
+          render();
+        } catch (e) {
+          alert(`Error: ${e.message}`);
+        } finally {
+          visSel.disabled = false;
+        }
+      };
+      actions.appendChild(visSel);
+
+      footer.appendChild(meta);
+      footer.appendChild(actions);
+
+      wrap.appendChild(top);
+      wrap.appendChild(body);
+      wrap.appendChild(footer);
+      return wrap;
+    }
+
+    function render() {
+      const list = $("issues");
+      list.innerHTML = "";
+      $("pillCount").textContent = String(state.issues.length);
+
+      if (!state.adminToken) {
+        $("emptyMsg").style.display = "block";
+        $("emptyMsg").textContent = "Set the admin token above, then refresh the inbox.";
+        return;
+      }
+
+      if (!state.issues.length) {
+        $("emptyMsg").style.display = "block";
+        $("emptyMsg").textContent = "No issues found for these filters.";
+      } else {
+        $("emptyMsg").style.display = "none";
+        state.issues.forEach((it) => list.appendChild(issueCard(it)));
+      }
+    }
+
+    async function loadIssues() {
+      if (!state.adminToken) {
+        state.issues = [];
+        render();
+        return;
+      }
+
+      const q = $("q").value.trim();
+      const view = $("view").value;
+      const status = $("status").value;
+      const sort = $("sort").value;
+
+      const qs = new URLSearchParams();
+      qs.set("view", view === "public" ? "public" : "admin");
+      qs.set("status", status || "all");
+      qs.set("sort", sort || "new");
+      qs.set("limit", "80");
+      qs.set("offset", "0");
+      if (q) qs.set("q", q);
+
+      try {
+        const data = await api(`${API}/issues?${qs.toString()}`);
+        state.issues = data.issues || [];
+        setChips({ apiOk: true, authOk: true });
+        render();
+      } catch (e) {
+        state.issues = [];
+        render();
+        if (String(e.message) === "admin_required") {
+          setChips({ apiOk: true, authOk: false });
+        } else {
+          setChips({ apiOk: false });
+        }
+      }
+    }
+
+    function setAdminToken() {
+      const t = $("adminToken").value.trim();
+      state.adminToken = t;
+      if (t) localStorage.setItem("pc_support_admin_token", t);
+      else localStorage.removeItem("pc_support_admin_token");
+
+      setChips({ authOk: Boolean(t) });
+      $("authMsg").textContent = t ? "Token saved on this device." : "Token cleared.";
+    }
+
+    function clearAdminToken() {
+      state.adminToken = "";
+      localStorage.removeItem("pc_support_admin_token");
+      $("adminToken").value = "";
+      state.issues = [];
+      setChips({ authOk: false });
+      $("authMsg").textContent = "Token cleared.";
+      render();
+    }
+
+    // Modal save handlers
+    async function modalSaveStatusOrVis() {
+      const issue = state.currentIssue;
+      if (!issue) return;
+
+      const nextStatus = $("modalStatus").value;
+      const nextVis = $("modalVis").value === "public";
+
+      $("modalSaveMsg").textContent = "Saving...";
+      try {
+        const updated = await patchIssue(issue, { status: nextStatus, is_public: nextVis });
+        issue.status = updated.status;
+        issue.is_public = updated.is_public;
+
+        $("modalSaveMsg").textContent = "Saved.";
+        render();
+      } catch (e) {
+        $("modalSaveMsg").textContent = `Error: ${e.message}`;
+      }
+    }
+
+    // Wiring
+    $("btnSetToken").onclick = () => setAdminToken();
+    $("btnClearToken").onclick = () => clearAdminToken();
+    $("btnPing").onclick = () => pingApi();
+
+    $("btnSearch").onclick = () => loadIssues();
+    $("btnRefresh").onclick = () => loadIssues();
+
+    $("q").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") loadIssues();
+    });
+    $("view").onchange = () => loadIssues();
+    $("status").onchange = () => loadIssues();
+    $("sort").onchange = () => loadIssues();
+
+    $("modalOverlay").addEventListener("click", (e) => {
+      if (e.target === $("modalOverlay")) closeModal();
+    });
+    $("btnCloseModal").onclick = () => closeModal();
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    $("modalStatus").onchange = () => modalSaveStatusOrVis();
+    $("modalVis").onchange = () => modalSaveStatusOrVis();
+
+    // Boot
+    (async () => {
+      $("adminToken").value = state.adminToken || "";
+      setChips({ authOk: Boolean(state.adminToken) });
+      if (state.adminToken) {
+        await pingApi();
+        await loadIssues();
+      } else {
+        render();
+      }
+    })();
+  </script>
+</body>
+</html>

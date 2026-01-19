@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>PriceCheck Welcome</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0b0f14;
+      --muted:#6b7280;
+      --muted2:#9ca3af;
+      --line:#e5e7eb;
+      --soft:#f7f7f8;
+      --soft2:#fbfbfc;
+      --shadow: 0 10px 30px rgba(0,0,0,0.10);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:var(--bg);
+    }
+    .brand .ver{
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--muted);
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 650;
+      color: #111827;
+      white-space: nowrap;
+    }
+
+    .searchWrap{
+      flex:1 1 auto;
+      display:flex;
+      justify-content:center;
+      min-width: 0;
+    }
+    .search{
+      width: min(720px, 100%);
+      height: 44px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 0 16px;
+      outline: none;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .search::placeholder{ color: var(--muted2); }
+
+    .topCta{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
+    .btnOutline{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid #111827;
+      background: #fff;
+      color: #111827;
+      text-decoration:none;
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    /* Page */
+    .wrap{
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 52px 18px 80px;
+    }
+
+    .hero-installed{
+      text-align:center;
+      padding: 42px 0 18px;
+    }
+
+    @keyframes riseFade {
+        from { opacity: 0; transform: translateY(30px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-installed h1{
+      margin: 0;
+      font-size: clamp(90px, 7vw, 120px);
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      font-weight: 550;
+      animation: riseFade 520ms ease-out both;
+    }
+
+    .grad{
+      background: #7fd38b;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-installed p{
+      margin: 18px auto 100px;
+      max-width: 70ch;
+      animation: riseFade 700ms ease-out both;
+      animation-delay: 120ms;
+      color: var(--muted);
+      font-size: 25px;
+      line-height: 1.55;
+    }
+
+    .center{
+      margin: 26px auto 0;
+      max-width: 860px;
+    }
+
+    .panel{
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--soft2);
+      padding: 16px;
+    }
+
+    .row{
+      display:flex;
+      gap: 12px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+
+    .bigInput{
+      flex: 1 1 420px;
+      height: 52px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 0 16px;
+      outline: none;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .bigInput::placeholder{ color: var(--muted2); }
+
+    .btnBlack{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height: 52px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.12);
+      background: #0b0f14;
+      color: #fff;
+      text-decoration:none;
+      font-weight: 800;
+      cursor:pointer;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+      white-space: nowrap;
+    }
+
+    .btnGhost{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height: 52px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #111827;
+      text-decoration:none;
+      font-weight: 700;
+      cursor:pointer;
+      white-space: nowrap;
+    }
+
+    .status{
+      margin-top: 12px;
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap: wrap;
+    }
+
+    .detect{
+      font-family: var(--mono);
+      font-size: 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 12px;
+      color: #111827;
+      flex: 1 1 420px;
+      min-width: 260px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .hint{
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin-top: 10px;
+      text-align: left;
+    }
+
+    .split{
+      margin-top: 0;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 35px;
+    }
+    @media (min-width: 980px){
+      .split{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .card{
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      padding: 18px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+    }
+    .card h2{
+      margin: 0 0 8px;
+      font-size: 40px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .card p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.55;
+      margin-bottom: 40px;
+    }
+    /* Card header row with top-right link icon */
+    .cardHead{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap: 12px;
+    }
+
+    .cardIconLink{
+    flex: 0 0 auto;
+    width: 50px;
+    height: 50px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    cursor:pointer;
+    }
+
+    .cardIconLink:hover{
+    background: var(--soft);
+    }
+
+    .cardIconSvg{
+    width: 25px;
+    height: 25px;
+    display:block;
+    fill: #111827;
+    opacity: 0.9;
+    }
+
+
+    .miniList{
+      margin-top: 12px;
+      display:grid;
+      gap: 10px;
+    }
+    .mini{
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 14px;
+      padding: 12px;
+      color: #111827;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .mini b{ font-weight: 550; }
+
+    details{
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 12px 12px;
+    }
+    summary{
+      cursor: pointer;
+      font-weight: 800;
+      color: #111827;
+    }
+    .detailsBody{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .warn{
+      margin-top: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(239,68,68,0.25);
+      background: rgba(239,68,68,0.06);
+      padding: 12px;
+      color: #111827;
+      font-size: 14px;
+      line-height: 1.5;
+      display:none;
+      text-align:left;
+    }
+
+    .footNote{
+      margin-top: 18px;
+      color: var(--muted2);
+      font-size: 13px;
+      line-height: 1.45;
+      text-align:center;
+    }
+  </style>
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="icon" type="image/png" href="../logo/logo.png">
+</head>
+
+<body>
+
+  <main class="wrap">
+    <section class="hero-installed">
+      <h1>PriceCheck is all <span class="grad">yours
+      </span></h1>
+      <p>
+        Feel free to go wild, or let PriceCheck stay quiet until you need a second opinion.
+      </p>
+    </section>
+
+    <section class="split">
+      <div class="card">
+        <div class="cardHead">
+        <h2>Policy</h2>
+
+        <a class="cardIconLink" href="/privacy-policy" aria-label="Open privacy policy">
+            <svg class="cardIconSvg" viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+            <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/>
+            </svg>
+        </a>
+        </div>
+        <p>
+            PriceCheck is built to be the opposite of affiliate shopping tools. We do not use affiliate links, we do not run ads,
+            and we do not sell user data. By using this service, you agree to our terms and conditions.
+        </p>
+        <div class="miniList">
+        <div class="mini">
+            <b>What PriceCheck reads.</b> When you click the extension, it reads the product ID (ASIN, TCIN, SKU, or UPC), the title, the current price, and the page URL.
+            </div>
+
+            <div class="mini">
+            <b>What PriceCheck sends.</b> That product info is sent to the PriceCheck server so it can match the same item across stores and return comparison prices.
+            </div>
+
+            <div class="mini">
+            <b>What PriceCheck stores.</b> We may save a product-level record (store, product ID, price, timestamp) to build public price history. It is never tied to you.
+            </div>
+
+            <div class="mini">
+            <b>What we never do.</b> We do not sell, rent, or share user data with third parties. We do not track you across sites. We do not get paid when you buy.
+            </div>
+
+            <div class="mini">
+            <b>Your control.</b> PriceCheck only runs on supported product pages when you click the icon. You can disable or remove the extension any time.
+            </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead">
+        <h2>Support</h2>
+
+        <a class="cardIconLink" href="/support" aria-label="Open support">
+            <svg class="cardIconSvg" viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+            <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/>
+            </svg>
+        </a>
+        </div>
+
+        <p>
+               PriceCheck offers comprehensive support coverage for all our tools and features. You can request support by clicking on the top right corner of this card.
+
+        </p>
+
+        <div class="miniList">
+            <div class="mini">
+            <b>1) Pin PriceCheck.</b> In Chrome, click the puzzle icon, find PriceCheck, then hit the pin so it stays in your toolbar. This makes it one click to open the sidebar on any product page.
+            </div>
+
+            <div class="mini">
+            <b>2) Click the icon on a product page.</b> Open an Amazon, Target, Walmart, or Best Buy product page, then click the PriceCheck icon. The sidebar will open.
+            </div>
+
+            <div class="mini">
+            <b>3) Keep it open or get it out of the way.</b> Use the minimize tab to keep PriceCheck on the edge while you browse. If you are done, close it and open it again any time from the icon.
+            </div>
+
+            <div class="mini">
+            <b>4) Expand for the full view.</b> Use the expand icon in the sidebar to open PriceCheck and compare the same product across stores, versions, and price history.
+            </div>
+
+            <div class="mini">
+            <b>5) If something looks off, send the basics.</b> Share the product URL and a one-line description of the issue (wrong version, wrong condition, wrong bundle, coupon did not apply).
+            </div>
+        </div>
+        </div>
+
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const qs = new URLSearchParams(location.search);
+      const v = (qs.get("v") || "").trim();
+
+      const verText = document.getElementById("verText");
+      const chip = document.getElementById("chip");
+      const warn = document.getElementById("warn");
+
+      if (v) {
+        verText.textContent = "Installed: v" + v;
+        chip.textContent = "v" + v;
+      }
+
+      const qTop = document.getElementById("qTop");
+      const qMain = document.getElementById("qMain");
+      const detectBox = document.getElementById("detectBox");
+
+      // Keep inputs in sync so the top search bar is not dead weight.
+      function sync(from, to) {
+        to.value = from.value;
+        updateDetect(from.value);
+      }
+      qTop.addEventListener("input", () => sync(qTop, qMain));
+      qMain.addEventListener("input", () => sync(qMain, qTop));
+
+      function clean(s){ return String(s || "").trim(); }
+
+      function parseInput(raw) {
+        const s = clean(raw);
+        if (!s) return null;
+
+        // Strip angle brackets and quotes some users paste.
+        const t = s.replace(/^[<"'`]+|[>"'`]+$/g, "").trim();
+
+        // If it is a bare ID.
+        // UPC: 12 digits common (also allow 11-14)
+        if (/^\d{11,14}$/.test(t)) return { kind: "upc", value: t, source: "bare" };
+
+        // PCI: you treat as alnum-ish. Keep it conservative.
+        // If it looks like pci:xxxxx already, honor it.
+        const pref = t.match(/^([a-z]+)\s*:\s*(.+)$/i);
+        if (pref) {
+          const k = pref[1].toLowerCase();
+          const val = pref[2].trim();
+          const allow = new Set(["asin","upc","pci","tcin","wal","bby","sku"]);
+          if (allow.has(k) && val) return { kind: k === "sku" ? "bby" : k, value: val, source: "prefixed" };
+        }
+
+        // ASIN: typically 10 chars, often starts with B but not always.
+        if (/^[A-Z0-9]{10}$/.test(t.toUpperCase())) return { kind: "asin", value: t.toUpperCase(), source: "bare" };
+
+        // Try URL parsing.
+        let u;
+        try { u = new URL(t); } catch { return null; }
+
+        const host = (u.hostname || "").toLowerCase();
+        const path = (u.pathname || "");
+
+        // Amazon
+        if (host.includes("amazon.")) {
+          const m =
+            path.match(/\/dp\/([A-Z0-9]{10})/i) ||
+            path.match(/\/gp\/product\/([A-Z0-9]{10})/i) ||
+            path.match(/\/product\/([A-Z0-9]{10})/i);
+          if (m) return { kind: "asin", value: m[1].toUpperCase(), source: "amazon_url" };
+          const qp = u.searchParams.get("asin");
+          if (qp && /^[A-Z0-9]{10}$/i.test(qp)) return { kind: "asin", value: qp.toUpperCase(), source: "amazon_qp" };
+        }
+
+        // Target
+        if (host.includes("target.com")) {
+          // /p/.../-/A-########
+          const m = path.match(/\/-\/A-(\d{8})/);
+          if (m) return { kind: "tcin", value: m[1], source: "target_url" };
+          const qp = u.searchParams.get("tcin");
+          if (qp && /^\d{8}$/.test(qp)) return { kind: "tcin", value: qp, source: "target_qp" };
+        }
+
+        // Walmart
+        if (host.includes("walmart.com")) {
+          // /ip/.../123456789
+          const m = path.match(/\/ip\/[^/]*\/(\d+)/);
+          if (m) return { kind: "wal", value: m[1], source: "walmart_url" };
+          // Some walmart URLs use ?athcpid= etc, but itemId is usually in the path. Keep it simple.
+        }
+
+        // Best Buy
+        if (host.includes("bestbuy.com")) {
+          // /site/.../SKU.p
+          const m = path.match(/\/(\d+)\.p$/);
+          if (m) return { kind: "bby", value: m[1], source: "bestbuy_url" };
+          const qp = u.searchParams.get("skuId");
+          if (qp && /^\d+$/.test(qp)) return { kind: "bby", value: qp, source: "bestbuy_qp" };
+        }
+
+        return { kind: "url", value: t, source: "url_unknown" };
+      }
+
+      function dashboardUrlFrom(parsed, raw) {
+        if (!parsed) return null;
+
+        // Prefer direct dashboard routing when we have a clean key.
+        const k = parsed.kind;
+        const v = parsed.value;
+
+        // Your search.js already knows how to route raw input and URLs.
+        // Direct dashboard routes are faster when the key is known.
+        const direct = new Set(["asin","upc","pci","tcin","wal","bby"]);
+        if (direct.has(k)) {
+          return "/dashboard/" + k + "/" + encodeURIComponent(v) + "/";
+        }
+
+        // Fallback: let /search do the routing for URLs or ambiguous input.
+        return "/search?q=" + encodeURIComponent(clean(raw));
+      }
+
+      function updateDetect(raw) {
+        const parsed = parseInput(raw);
+        const url = dashboardUrlFrom(parsed, raw);
+
+        if (!raw.trim()) {
+          detectBox.textContent = "Detected: (paste something above)";
+          warn.style.display = "none";
+          return;
+        }
+
+        if (!parsed) {
+          detectBox.textContent = "Detected: could not parse input. Try a full product URL or a clean ID.";
+          warn.style.display = "block";
+          warn.textContent = "If you pasted a short code, it might not be enough to identify the product. Paste the full product URL instead.";
+          return;
+        }
+
+        warn.style.display = "none";
+
+        const out = {
+          detected_kind: parsed.kind,
+          detected_value: parsed.value,
+          source: parsed.source,
+          open_url: url
+        };
+
+        detectBox.textContent = JSON.stringify(out, null, 2);
+      }
+
+      updateDetect("");
+
+      function openNow(raw) {
+        const parsed = parseInput(raw);
+        const url = dashboardUrlFrom(parsed, raw);
+        if (!url) return;
+        location.href = url;
+      }
+
+      document.getElementById("goBtn").addEventListener("click", () => openNow(qMain.value));
+      document.getElementById("searchForm").addEventListener("submit", (e) => {
+        // If you submit from the top bar, route through the same logic.
+        e.preventDefault();
+        openNow(qTop.value);
+      });
+
+      function buildReport(raw) {
+        const parsed = parseInput(raw);
+        const url = dashboardUrlFrom(parsed, raw);
+
+        return {
+          type: "pricecheck_report",
+          installed_page: location.pathname,
+          input: raw || null,
+          detected: parsed ? { kind: parsed.kind, value: parsed.value, source: parsed.source } : null,
+          suggested_open: url || null,
+          extension_version: v || null,
+          userAgent: navigator.userAgent,
+          ts: new Date().toISOString(),
+          note: "Describe what was wrong. Example: matched wrong size, wrong condition, wrong bundle."
+        };
+      }
+
+      document.getElementById("copyBtn").addEventListener("click", async () => {
+        const raw = qMain.value.trim();
+        const report = buildReport(raw);
+        const text = JSON.stringify(report, null, 2);
+
+        try {
+          await navigator.clipboard.writeText(text);
+          chip.textContent = "Copied";
+          setTimeout(() => { chip.textContent = v ? ("v" + v) : "Installed"; }, 1100);
+        } catch {
+          warn.style.display = "block";
+          warn.textContent = "Copy failed. Your browser may block clipboard access on this page. You can manually copy from the detector box.";
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
