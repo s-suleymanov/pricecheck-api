@@ -28,6 +28,20 @@
       color:var(--text);
       background:var(--bg);
     }
+    /* Confetti overlay */
+    #confettiCanvas{
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 450ms ease;
+    }
+    #confettiCanvas.isDone{
+    opacity: 0;
+    }
     .brand .ver{
       margin-top: 2px;
       font-size: 12px;
@@ -356,10 +370,11 @@
 </head>
 
 <body>
+  <canvas id="confettiCanvas" aria-hidden="true"></canvas>
 
   <main class="wrap">
     <section class="hero-installed">
-      <h1>PriceCheck is all <span class="grad">yours
+      <h1>Installation <span class="grad">Succeeded
       </span></h1>
       <p>
         Feel free to go wild, or let PriceCheck stay quiet until you need a second opinion.
@@ -447,199 +462,91 @@
   </main>
 
   <script>
-    (function () {
-      const qs = new URLSearchParams(location.search);
-      const v = (qs.get("v") || "").trim();
+    (function runConfettiBurst(){
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduceMotion) return;
 
-      const verText = document.getElementById("verText");
-      const chip = document.getElementById("chip");
-      const warn = document.getElementById("warn");
+        const canvas = document.getElementById("confettiCanvas");
+        if (!canvas) return;
 
-      if (v) {
-        verText.textContent = "Installed: v" + v;
-        chip.textContent = "v" + v;
-      }
+        const ctx = canvas.getContext("2d", { alpha: true });
+        if (!ctx) return;
 
-      const qTop = document.getElementById("qTop");
-      const qMain = document.getElementById("qMain");
-      const detectBox = document.getElementById("detectBox");
+        const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
-      // Keep inputs in sync so the top search bar is not dead weight.
-      function sync(from, to) {
-        to.value = from.value;
-        updateDetect(from.value);
-      }
-      qTop.addEventListener("input", () => sync(qTop, qMain));
-      qMain.addEventListener("input", () => sync(qMain, qTop));
+        function resize(){
+        canvas.width = Math.floor(window.innerWidth * dpr);
+        canvas.height = Math.floor(window.innerHeight * dpr);
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resize();
+        window.addEventListener("resize", resize, { passive: true });
 
-      function clean(s){ return String(s || "").trim(); }
+        const colors = ["#7fd38b", "#ffd24a", "#111827", "#abc7ff", "#dcb5f5"];
+        const pieces = [];
+        const W = () => window.innerWidth;
+        const H = () => window.innerHeight;
+        const rand = (min, max) => min + Math.random() * (max - min);
 
-      function parseInput(raw) {
-        const s = clean(raw);
-        if (!s) return null;
+        const count = Math.round(Math.min(180, Math.max(90, W() * 0.12)));
 
-        // Strip angle brackets and quotes some users paste.
-        const t = s.replace(/^[<"'`]+|[>"'`]+$/g, "").trim();
-
-        // If it is a bare ID.
-        // UPC: 12 digits common (also allow 11-14)
-        if (/^\d{11,14}$/.test(t)) return { kind: "upc", value: t, source: "bare" };
-
-        // PCI: you treat as alnum-ish. Keep it conservative.
-        // If it looks like pci:xxxxx already, honor it.
-        const pref = t.match(/^([a-z]+)\s*:\s*(.+)$/i);
-        if (pref) {
-          const k = pref[1].toLowerCase();
-          const val = pref[2].trim();
-          const allow = new Set(["asin","upc","pci","tcin","wal","bby","sku"]);
-          if (allow.has(k) && val) return { kind: k === "sku" ? "bby" : k, value: val, source: "prefixed" };
+        for (let i = 0; i < count; i++){
+        const w = rand(6, 10);
+        const h = rand(10, 18);
+        pieces.push({
+            x: rand(0, W()),
+            y: rand(-H() * 0.6, -10),
+            vx: rand(-0.6, 0.6),
+            vy: rand(0.4, 2.0),
+            w, h,
+            r: rand(0, Math.PI * 2),
+            vr: rand(-0.12, 0.12),
+            sway: rand(0.6, 1.4),
+            seed: rand(0, 1000),
+            color: colors[(Math.random() * colors.length) | 0],
+        });
         }
 
-        // ASIN: typically 10 chars, often starts with B but not always.
-        if (/^[A-Z0-9]{10}$/.test(t.toUpperCase())) return { kind: "asin", value: t.toUpperCase(), source: "bare" };
+        const start = performance.now();
+        const durationMs = 12200;
+        const fadeMs = 2500;
 
-        // Try URL parsing.
-        let u;
-        try { u = new URL(t); } catch { return null; }
+        function draw(t){
+        const elapsed = t - start;
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-        const host = (u.hostname || "").toLowerCase();
-        const path = (u.pathname || "");
+        for (const p of pieces){
+            const tt = elapsed / 1000;
+            p.x += p.vx * 3 + Math.sin((tt + p.seed) * 2.0) * p.sway;
+            p.y += p.vy * 2.2;
+            p.r += p.vr;
 
-        // Amazon
-        if (host.includes("amazon.")) {
-          const m =
-            path.match(/\/dp\/([A-Z0-9]{10})/i) ||
-            path.match(/\/gp\/product\/([A-Z0-9]{10})/i) ||
-            path.match(/\/product\/([A-Z0-9]{10})/i);
-          if (m) return { kind: "asin", value: m[1].toUpperCase(), source: "amazon_url" };
-          const qp = u.searchParams.get("asin");
-          if (qp && /^[A-Z0-9]{10}$/i.test(qp)) return { kind: "asin", value: qp.toUpperCase(), source: "amazon_qp" };
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.r);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = 0.95;
+            ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+            ctx.restore();
+
+            if (p.x < -40) p.x = W() + 40;
+            if (p.x > W() + 40) p.x = -40;
         }
 
-        // Target
-        if (host.includes("target.com")) {
-          // /p/.../-/A-########
-          const m = path.match(/\/-\/A-(\d{8})/);
-          if (m) return { kind: "tcin", value: m[1], source: "target_url" };
-          const qp = u.searchParams.get("tcin");
-          if (qp && /^\d{8}$/.test(qp)) return { kind: "tcin", value: qp, source: "target_qp" };
+        if (elapsed < durationMs) return requestAnimationFrame(draw);
+
+        canvas.classList.add("isDone");
+        setTimeout(() => {
+            window.removeEventListener("resize", resize);
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            // canvas.remove(); // uncomment if you want it gone from the DOM
+        }, fadeMs + 50);
         }
 
-        // Walmart
-        if (host.includes("walmart.com")) {
-          // /ip/.../123456789
-          const m = path.match(/\/ip\/[^/]*\/(\d+)/);
-          if (m) return { kind: "wal", value: m[1], source: "walmart_url" };
-          // Some walmart URLs use ?athcpid= etc, but itemId is usually in the path. Keep it simple.
-        }
-
-        // Best Buy
-        if (host.includes("bestbuy.com")) {
-          // /site/.../SKU.p
-          const m = path.match(/\/(\d+)\.p$/);
-          if (m) return { kind: "bby", value: m[1], source: "bestbuy_url" };
-          const qp = u.searchParams.get("skuId");
-          if (qp && /^\d+$/.test(qp)) return { kind: "bby", value: qp, source: "bestbuy_qp" };
-        }
-
-        return { kind: "url", value: t, source: "url_unknown" };
-      }
-
-      function dashboardUrlFrom(parsed, raw) {
-        if (!parsed) return null;
-
-        // Prefer direct dashboard routing when we have a clean key.
-        const k = parsed.kind;
-        const v = parsed.value;
-
-        // Your search.js already knows how to route raw input and URLs.
-        // Direct dashboard routes are faster when the key is known.
-        const direct = new Set(["asin","upc","pci","tcin","wal","bby"]);
-        if (direct.has(k)) {
-          return "/dashboard/" + k + "/" + encodeURIComponent(v) + "/";
-        }
-
-        // Fallback: let /search do the routing for URLs or ambiguous input.
-        return "/search?q=" + encodeURIComponent(clean(raw));
-      }
-
-      function updateDetect(raw) {
-        const parsed = parseInput(raw);
-        const url = dashboardUrlFrom(parsed, raw);
-
-        if (!raw.trim()) {
-          detectBox.textContent = "Detected: (paste something above)";
-          warn.style.display = "none";
-          return;
-        }
-
-        if (!parsed) {
-          detectBox.textContent = "Detected: could not parse input. Try a full product URL or a clean ID.";
-          warn.style.display = "block";
-          warn.textContent = "If you pasted a short code, it might not be enough to identify the product. Paste the full product URL instead.";
-          return;
-        }
-
-        warn.style.display = "none";
-
-        const out = {
-          detected_kind: parsed.kind,
-          detected_value: parsed.value,
-          source: parsed.source,
-          open_url: url
-        };
-
-        detectBox.textContent = JSON.stringify(out, null, 2);
-      }
-
-      updateDetect("");
-
-      function openNow(raw) {
-        const parsed = parseInput(raw);
-        const url = dashboardUrlFrom(parsed, raw);
-        if (!url) return;
-        location.href = url;
-      }
-
-      document.getElementById("goBtn").addEventListener("click", () => openNow(qMain.value));
-      document.getElementById("searchForm").addEventListener("submit", (e) => {
-        // If you submit from the top bar, route through the same logic.
-        e.preventDefault();
-        openNow(qTop.value);
-      });
-
-      function buildReport(raw) {
-        const parsed = parseInput(raw);
-        const url = dashboardUrlFrom(parsed, raw);
-
-        return {
-          type: "pricecheck_report",
-          installed_page: location.pathname,
-          input: raw || null,
-          detected: parsed ? { kind: parsed.kind, value: parsed.value, source: parsed.source } : null,
-          suggested_open: url || null,
-          extension_version: v || null,
-          userAgent: navigator.userAgent,
-          ts: new Date().toISOString(),
-          note: "Describe what was wrong. Example: matched wrong size, wrong condition, wrong bundle."
-        };
-      }
-
-      document.getElementById("copyBtn").addEventListener("click", async () => {
-        const raw = qMain.value.trim();
-        const report = buildReport(raw);
-        const text = JSON.stringify(report, null, 2);
-
-        try {
-          await navigator.clipboard.writeText(text);
-          chip.textContent = "Copied";
-          setTimeout(() => { chip.textContent = v ? ("v" + v) : "Installed"; }, 1100);
-        } catch {
-          warn.style.display = "block";
-          warn.textContent = "Copy failed. Your browser may block clipboard access on this page. You can manually copy from the detector box.";
-        }
-      });
+        requestAnimationFrame(draw);
     })();
-  </script>
+    </script>
 </body>
 </html>
