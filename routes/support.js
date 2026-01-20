@@ -89,11 +89,6 @@ router.get("/api/support/issues", async (req, res) => {
 const sort = String(req.query.sort || "top");   // top | new (default top)
 let status = String(req.query.status || "all"); // all | open | investigating | planned | fixed | closed (default all)
 
-if (sort !== "new" && sort !== "top") {
-  // if someone passes garbage, do not break the feed
-  // default stays "top"
-}
-
 if (status !== "all" && !allowedStatus(status)) {
   status = "all";
 }
@@ -130,8 +125,8 @@ if (status !== "all" && !allowedStatus(status)) {
 
   const orderSql =
   sort === "top"
-    ? `order by score desc, i.created_at desc`
-    : `order by i.created_at desc`;
+      ? `order by coalesce(sum(v.vote), 0) desc, i.created_at desc`
+      : `order by i.created_at desc`;
 
   // IMPORTANT: public responses exclude reporter_email, reporter_ip, user_agent
   const selectCols = wantAdmin
