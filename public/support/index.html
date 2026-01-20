@@ -109,7 +109,7 @@
     .hero p{
       margin: 14px auto 0;
       max-width: 820px;
-      font-size: 18px;
+      font-size: 22px;
       color: var(--muted);
       line-height: 1.6;
     }
@@ -123,6 +123,8 @@
     }
     .btn:hover {
         cursor: pointer;
+        background-color: black;
+        color: white;
     }
     .tabBtn{
       border: 1px solid var(--border);
@@ -130,11 +132,11 @@
       color: var(--text);
       border-radius: 14px;
       padding: 11px 14px;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 500;
       cursor:pointer;
       transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-      min-width: 160px;
+      min-width: 100px;
     }
     .tabBtn:hover{transform: translateY(-1px); box-shadow: 0 10px 18px rgba(15,23,42,0.08)}
     .tabBtn.active{
@@ -179,7 +181,7 @@
     }
     .cardHeader p{
       margin: 6px 0 0;
-      font-size: 14px;
+      font-size: 16px;
       color: var(--muted);
       line-height: 1.5;
     }
@@ -220,7 +222,7 @@
     .label{
       font-size: 16px;
       color: var(--muted);
-      margin: 10px 0 6px;
+      margin: 18px 0 6px;
       display:block;
     }
 
@@ -239,14 +241,14 @@
       border: 1px solid var(--border);
       background: #fff;
       cursor:pointer;
-      font-size: 13px;
+      font-size: 16px;
       color: var(--text);
       user-select:none;
     }
     .seg input{margin:0}
 
     .help{
-      font-size: 12px;
+      font-size: 16px;
       color: var(--muted);
       line-height: 1.5;
       margin-top: 10px;
@@ -276,23 +278,20 @@
       align-items:center;
       justify-content:center;
       gap: 6px;
-      border: 1px solid var(--border);
       border-radius: 14px;
-      background: var(--soft);
-      padding: 8px 6px;
       min-height: 78px;
     }
 
     .voteBtn{
-      width: 34px;
-      height: 28px;
+      width: 40px;
+      height: 40px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: #fff;
       cursor:pointer;
       display:grid;
       place-items:center;
-      font-size: 12px;
+      font-size: 16px;
       transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
     }
     .voteBtn:hover{transform: translateY(-1px); box-shadow: 0 10px 18px rgba(15,23,42,0.08)}
@@ -302,14 +301,18 @@
     }
 
     .score{
-      font-size: 12px;
-      font-weight: 800;
+      font-size: 20px;
+      font-weight: 600;
       color: var(--text);
       opacity: 0.9;
       font-variant-numeric: tabular-nums;
     }
 
-    .issueMain{min-width:0}
+    .issueMain{
+      min-width:0;
+      display: flex;
+      flex-direction: column;
+    }
     .issueTop{
       display:flex;
       gap: 10px;
@@ -317,8 +320,8 @@
       justify-content:space-between;
     }
     .issueTitle{
-      font-size: 14px;
-      font-weight: 800;
+      font-size: 24px;
+      font-weight: 600;
       letter-spacing: -0.1px;
       margin: 0;
       overflow:hidden;
@@ -333,7 +336,7 @@
       align-items:center;
     }
     .badge{
-      font-size: 11px;
+      font-size: 14px;
       padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid var(--border);
@@ -350,8 +353,9 @@
     .issueBody{
       margin-top: 6px;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 18px;
       line-height: 1.5;
+      flex: 1 1 auto;
       white-space: pre-wrap;
       overflow: hidden;
       display: -webkit-box;
@@ -359,89 +363,23 @@
     }
 
     .issueFooter{
-      margin-top: 8px;
+      margin-top: auto;
+      padding-top: 8px;
       display:flex;
       align-items:center;
-      justify-content:space-between;
+      justify-content:end;
       gap: 10px;
       flex-wrap:wrap;
     }
     .meta{
-      font-size: 12px;
+      font-size: 14px;
       color: var(--muted2);
     }
 
-    .linkBtn{
-      border: 1px solid var(--border);
-      background: #fff;
-      border-radius: 12px;
-      padding: 8px 10px;
-      cursor:pointer;
-      font-size: 12px;
-      font-weight: 700;
-      transition: transform 120ms ease, box-shadow 120ms ease;
-    }
-    .linkBtn:hover{transform: translateY(-1px); box-shadow: 0 10px 18px rgba(15,23,42,0.08)}
-
     .empty{
       padding: 12px 2px 0;
-      font-size: 13px;
+      font-size: 16px;
       color: var(--muted);
-    }
-
-    /* Modal */
-    .modalOverlay{
-      position:fixed;
-      inset:0;
-      background: rgba(17,24,39,0.55);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding: 18px;
-      z-index: 60;
-    }
-    .modalOverlay.open{display:flex}
-    .modal{
-      width: min(840px, 96vw);
-      background:#fff;
-      border-radius: var(--radius2);
-      border: 1px solid var(--border);
-      box-shadow: 0 24px 70px rgba(15,23,42,0.22);
-      overflow:hidden;
-    }
-    .modalHeader{
-      padding: 14px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      border-bottom: 1px solid var(--border);
-    }
-    .modalHeader strong{
-      font-size: 14px;
-      font-weight: 900;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-    }
-    .modalBody{
-      padding: 14px 16px 16px;
-    }
-    .modalMeta{
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 10px;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-    .modalBody pre{
-      margin:0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--text);
     }
   </style>
 </head>
@@ -453,15 +391,18 @@
     <section class="hero">
       <h1>PriceCheck Support</h1>
       <p>
-        Post on public board  so other people can vote, or send a private report that only we can see. 
+        Your all in one shop for reporting bugs, proposing features, and voting on what PriceCheck builds next.
       </p>
 
       <div class="heroTabs" id="supportTabs" role="tablist" aria-label="Support sections">
         <button class="tabBtn active" id="tabBoard" type="button" role="tab" aria-selected="true" aria-controls="panelBoard">
-          View board
+          Explore
         </button>
         <button class="tabBtn" id="tabReport" type="button" role="tab" aria-selected="false" aria-controls="panelReport">
-          Send feedback
+          Submit
+        </button>
+         <button class="tabBtn" id="tabEmail" type="button" role="tab" aria-selected="false" aria-controls="panelEmail">
+          Email
         </button>
       </div>
     </section>
@@ -471,8 +412,8 @@
       <div class="card" id="panelBoard" data-panel="board" role="tabpanel" aria-labelledby="tabBoard">
         <div class="cardHeader">
           <div>
-            <h2>Public board</h2>
-            <p>What do you want to see added next</p>
+            <h2>Explore Ideas</h2>
+            <p>Public feed of ideas, issues and status notes.</p>
           </div>
         </div>
 
@@ -494,7 +435,6 @@
                 <option value="closed">Closed</option>
                 <option value="all">All</option>
               </select>
-              <button class="btn" id="btnSearch" type="button">Search</button>
             </div>
           </div>
 
@@ -507,8 +447,8 @@
       <div class="card" id="panelReport" data-panel="report" role="tabpanel" aria-labelledby="tabReport" style="display:none">
         <div class="cardHeader">
           <div>
-            <h2>Send feedback</h2>
-            <p>Do not include any personal or sensitive information. Changes cannot be made after submission.</p>
+            <h2>Submit Report</h2>
+            <p>Do not include sensitive personal information. Changes cannot be made after submission.</p>
           </div>
         </div>
 
@@ -526,7 +466,7 @@
           </select>
 
           <label class="label" for="rBody">Details</label>
-          <textarea id="rBody" placeholder="What happened? Steps to reproduce? What did you expect? Paste any IDs like ASIN, UPC, PCI, TCIN, SKU."></textarea>
+          <textarea id="rBody" placeholder="What happened? Steps to reproduce? What did you expect? Please be as specific as you can."></textarea>
 
           <label class="label" for="rUrl">Page link (optional)</label>
           <input class="input" id="rUrl" type="text" placeholder="Paste the page where it happened" />
@@ -539,33 +479,34 @@
             <label><input id="rPrivate" type="radio" name="vis" /> Private</label>
           </div>
 
-          <div class="row" style="margin-top:14px">
-            <button class="btn btnPrimary" id="btnSubmit" type="button" style="flex:1">Submit</button>
-            <button class="btn" id="btnClear" type="button">Clear</button>
+          <div class="row" style="margin-top:28px">
+            <button class="btn btnPrimary" id="btnSubmit" type="button" style="flex:1; font-size: 18px;">Submit</button>
+            <button class="btn" id="btnClear" type="button" style="font-size: 18px;">Clear</button>
           </div>
 
           <div class="help" id="submitMsg"></div>
         </div>
       </div>
+
+      <!-- Email -->
+        <div class="card" id="panelEmail" data-panel="email" role="tabpanel" aria-labelledby="tabEmail" style="display:none">
+        <div class="cardHeader">
+            <div>
+            <h2>Send Email</h2>
+            <p>Email response times usually take longer than Submit. If you email, include links, screenshots, and any product IDs.</p>
+            </div>
+        </div>
+
+        <div class="cardBody">
+            <a class="btn btnPrimary" href="mailto:support@pricechecktool.com" style="display:inline-block; font-size:18px; padding:12px 16px; border-radius:14px;">
+            Email PriceCheck
+            </a>
+        </div>
+        </div>
     </section>
   </main>
 
     <div id="site-footer"></div>
-
-  <!-- Modal -->
-  <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true">
-    <div class="modal">
-      <div class="modalHeader">
-        <strong id="modalTitle">Issue</strong>
-        <button class="btn" id="btnCloseModal" type="button">Close</button>
-      </div>
-      <div class="modalBody">
-        <div class="modalMeta" id="modalMeta"></div>
-        <pre id="modalBody"></pre>
-      </div>
-    </div>
-  </div>
-
   <script>
     const API = "/api/support";
     const $ = (id) => document.getElementById(id);
@@ -594,37 +535,23 @@
     }
 
     function setActivePanel(next) {
-      state.activePanel = next;
+        state.activePanel = next;
 
-      const isBoard = next === "board";
-      $("panelBoard").style.display = isBoard ? "block" : "none";
-      $("panelReport").style.display = isBoard ? "none" : "block";
+        const isBoard = next === "board";
+        const isReport = next === "report";
+        const isEmail = next === "email";
 
-      $("tabBoard").classList.toggle("active", isBoard);
-      $("tabReport").classList.toggle("active", !isBoard);
+        $("panelBoard").style.display = isBoard ? "block" : "none";
+        $("panelReport").style.display = isReport ? "block" : "none";
+        $("panelEmail").style.display = isEmail ? "block" : "none";
 
-      $("tabBoard").setAttribute("aria-selected", isBoard ? "true" : "false");
-      $("tabReport").setAttribute("aria-selected", !isBoard ? "true" : "false");
-    }
+        $("tabBoard").classList.toggle("active", isBoard);
+        $("tabReport").classList.toggle("active", isReport);
+        $("tabEmail").classList.toggle("active", isEmail);
 
-    function openModal(issue) {
-      $("modalTitle").textContent = issue.title || "Issue";
-
-      const meta = [];
-      meta.push(`#${issue.id}`);
-      meta.push(issue.category || "Bug");
-      meta.push(issue.status || "open");
-      meta.push(issue.is_public ? "public" : "private");
-      meta.push(fmtTime(issue.created_at));
-      if (issue.source_url) meta.push(`url: ${issue.source_url}`);
-
-      $("modalMeta").textContent = meta.join("  •  ");
-      $("modalBody").textContent = issue.body || "";
-      $("modalOverlay").classList.add("open");
-    }
-
-    function closeModal() {
-      $("modalOverlay").classList.remove("open");
+        $("tabBoard").setAttribute("aria-selected", isBoard ? "true" : "false");
+        $("tabReport").setAttribute("aria-selected", isReport ? "true" : "false");
+        $("tabEmail").setAttribute("aria-selected", isEmail ? "true" : "false");
     }
 
     function badge(issue) {
@@ -723,20 +650,7 @@
       meta.className = "meta";
       meta.textContent = `${fmtTime(issue.created_at)} • #${issue.id}`;
 
-      const actions = document.createElement("div");
-      actions.style.display = "flex";
-      actions.style.gap = "8px";
-      actions.style.alignItems = "center";
-
-      const viewBtn = document.createElement("button");
-      viewBtn.className = "linkBtn";
-      viewBtn.type = "button";
-      viewBtn.textContent = "View";
-      viewBtn.onclick = () => openModal(issue);
-      actions.appendChild(viewBtn);
-
       footer.appendChild(meta);
-      footer.appendChild(actions);
 
       main.appendChild(top);
       main.appendChild(body);
@@ -825,21 +739,13 @@
     // Wiring
     $("tabBoard").onclick = () => setActivePanel("board");
     $("tabReport").onclick = () => setActivePanel("report");
-    $("btnSearch").onclick = () => loadPublic().catch(() => {});
+    $("tabEmail").onclick = () => setActivePanel("email");
     $("q").addEventListener("keydown", (e) => {
       if (e.key === "Enter") loadPublic().catch(() => {});
     });
 
     $("btnSubmit").onclick = () => submitReport();
     $("btnClear").onclick = () => clearReport();
-
-    $("modalOverlay").addEventListener("click", (e) => {
-      if (e.target === $("modalOverlay")) closeModal();
-    });
-    $("btnCloseModal").onclick = () => closeModal();
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeModal();
-    });
 
     // Boot
     (async () => {

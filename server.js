@@ -28,6 +28,7 @@ app.use(require("./routes/research"));
 app.use(require("./routes/admin"));
 app.use(require("./routes/sitemap"));
 app.use(require("./routes/uninstall"));
+app.use(require("./routes/support"));
 
 // health
 app.get("/health", (_req, res) => res.json({ ok: true }));
