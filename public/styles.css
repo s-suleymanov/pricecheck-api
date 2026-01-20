@@ -601,15 +601,33 @@ em {
   }
 }
 
-/* Mobile: stack nicely */
 @media (max-width: 560px){
   .home-footer__inner{
-    justify-items:center;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "mark"
+      "left"
+      "right";
+    justify-items: center;
     gap: 12px;
     padding: 22px 0;
   }
+
+  .home-footer__mark{ grid-area: mark; }
+  .home-footer__side--left{ grid-area: left; }
+  .home-footer__side--right{ grid-area: right; }
+
   .home-footer__side{
-    justify-content:center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    max-width: 92vw;          /* keeps flex wrapping inside viewport */
+  }
+
+  .home-footer__link{
+    white-space: nowrap;       /* prevents ugly mid-word breaks */
+    font-size: 13px;           /* tiny shrink helps */
+    padding: 6px 8px;          /* gives wrap-friendly tap targets */
   }
 }
 
