@@ -423,18 +423,19 @@
               <input class="input" id="q" type="text" placeholder="Search issues..." />
             </div>
             <div class="field" style="justify-content:flex-end">
-              <select id="sort" style="width:160px">
-                <option value="new">Newest</option>
-                <option value="top">Top voted</option>
-              </select>
-              <select id="status" style="width:180px">
-                <option value="open">Open</option>
-                <option value="investigating">Investigating</option>
-                <option value="planned">Planned</option>
-                <option value="fixed">Fixed</option>
-                <option value="closed">Closed</option>
-                <option value="all">All</option>
-              </select>
+                <select id="sort" style="width:160px">
+                    <option value="top" selected>Top voted</option>
+                    <option value="new">Newest</option>
+                </select>
+
+                <select id="status" style="width:180px">
+                    <option value="all" selected>All</option>
+                    <option value="open">Open</option>
+                    <option value="investigating">Investigating</option>
+                    <option value="planned">Planned</option>
+                    <option value="fixed">Fixed</option>
+                    <option value="closed">Closed</option>
+                </select>
             </div>
           </div>
 
@@ -740,6 +741,10 @@
     $("tabBoard").onclick = () => setActivePanel("board");
     $("tabReport").onclick = () => setActivePanel("report");
     $("tabEmail").onclick = () => setActivePanel("email");
+
+    $("sort").addEventListener("change", () => loadPublic().catch(() => {}));
+    $("status").addEventListener("change", () => loadPublic().catch(() => {}));
+
     $("q").addEventListener("keydown", (e) => {
       if (e.key === "Enter") loadPublic().catch(() => {});
     });

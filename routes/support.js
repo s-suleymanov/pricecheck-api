@@ -86,8 +86,19 @@ router.get("/api/support/issues", async (req, res) => {
   const wantAdmin = view === "admin";
   if (wantAdmin && !admin) return res.status(401).json({ error: "admin_required" });
 
-  const sort = String(req.query.sort || "new"); // new | top
-  const status = String(req.query.status || "open"); // open | all | investigating | planned | fixed | closed
+const sort = String(req.query.sort || "top");   // top | new (default top)
+let status = String(req.query.status || "all"); // all | open | investigating | planned | fixed | closed (default all)
+
+if (sort !== "new" && sort !== "top") {
+  // if someone passes garbage, do not break the feed
+  // default stays "top"
+}
+
+if (status !== "all" && !allowedStatus(status)) {
+  status = "all";
+}
+
+
   const q = clampText(req.query.q || "", 200);
 
   const limit = Math.max(1, Math.min(Number(req.query.limit || 50), 100));
@@ -118,9 +129,9 @@ router.get("/api/support/issues", async (req, res) => {
   const whereSql = where.length ? `where ${where.join(" and ")}` : "";
 
   const orderSql =
-    sort === "top"
-      ? `order by coalesce(sum(v.vote), 0) desc, i.created_at desc`
-      : `order by i.created_at desc`;
+  sort === "top"
+    ? `order by score desc, i.created_at desc`
+    : `order by i.created_at desc`;
 
   // IMPORTANT: public responses exclude reporter_email, reporter_ip, user_agent
   const selectCols = wantAdmin
