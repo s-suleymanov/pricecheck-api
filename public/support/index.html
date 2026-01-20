@@ -475,8 +475,8 @@
           <input class="input" id="rEmail" type="email" placeholder="Only if you want a reply" />
 
           <div class="seg" style="margin-top:12px">
-            <label><input id="rPublic" type="radio" name="vis" checked /> Public</label>
-            <label><input id="rPrivate" type="radio" name="vis" /> Private</label>
+            <label><input id="rPrivate" type="radio" name="vis" checked/> Private</label>
+            <label><input id="rPublic" type="radio" name="vis" /> Public</label>
           </div>
 
           <div class="row" style="margin-top:28px">
@@ -695,7 +695,7 @@
       $("rUrl").value = "";
       $("rEmail").value = "";
       $("rCategory").value = "Bug";
-      $("rPublic").checked = true;
+      $("rPrivate").checked = true;
       $("submitMsg").textContent = "";
     }
 
