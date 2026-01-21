@@ -33,6 +33,11 @@ app.use(require("./routes/support"));
 // health
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
+// Catch-all 404 (MUST be last)
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, "public", "404", "index.html"));
+});
+
 const port = process.env.PORT || 3000;
 console.log("BOOT: about to listen. PORT=", process.env.PORT);
 app.listen(port, "0.0.0.0", () => {

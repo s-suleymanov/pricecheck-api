@@ -468,8 +468,8 @@
     </section>
   </main>
 
-  <script>
-    (function runConfettiBurst(){
+    <script>
+      (function runConfettiBurst(){
         const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         if (reduceMotion) return;
 
@@ -482,11 +482,12 @@
         const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
         function resize(){
-        canvas.width = Math.floor(window.innerWidth * dpr);
-        canvas.height = Math.floor(window.innerHeight * dpr);
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          canvas.width = Math.floor(window.innerWidth * dpr);
+          canvas.height = Math.floor(window.innerHeight * dpr);
+          canvas.style.width = "100%";
+          canvas.style.height = "100%";
+          // Draw in CSS pixels
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
         resize();
         window.addEventListener("resize", resize, { passive: true });
@@ -500,9 +501,9 @@
         const count = Math.round(Math.min(180, Math.max(90, W() * 0.12)));
 
         for (let i = 0; i < count; i++){
-        const w = rand(6, 10);
-        const h = rand(10, 18);
-        pieces.push({
+          const w = rand(6, 10);
+          const h = rand(10, 18);
+          pieces.push({
             x: rand(0, W()),
             y: rand(-H() * 0.6, -10),
             vx: rand(-0.6, 0.6),
@@ -513,22 +514,39 @@
             sway: rand(0.6, 1.4),
             seed: rand(0, 1000),
             color: colors[(Math.random() * colors.length) | 0],
-        });
+          });
         }
 
         const start = performance.now();
+        let last = start;
         const durationMs = 12200;
         const fadeMs = 2500;
 
         function draw(t){
-        const elapsed = t - start;
-        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+          const elapsed = t - start;
 
-        for (const p of pieces){
+          // Time-based step so speed is consistent across refresh rates.
+          let dt = (t - last) / 1000; // seconds
+          last = t;
+
+          // Clamp dt so tab switching or frame stalls do not cause huge jumps.
+          dt = Math.max(0, Math.min(dt, 0.05));
+
+          ctx.clearRect(0, 0, W(), H());
+
+          const SPEED = 1.50;
+          const X_SCALE = 180 * SPEED;
+          const Y_SCALE = 132 * SPEED;
+          const R_SCALE = 60;
+          const SWAY_SCALE = 60 * SPEED;
+
+
+          for (const p of pieces){
             const tt = elapsed / 1000;
-            p.x += p.vx * 3 + Math.sin((tt + p.seed) * 2.0) * p.sway;
-            p.y += p.vy * 2.2;
-            p.r += p.vr;
+
+            p.x += (p.vx * X_SCALE) * dt + Math.sin((tt + p.seed) * 2.0) * (p.sway * SWAY_SCALE) * dt;
+            p.y += (p.vy * Y_SCALE) * dt;
+            p.r += (p.vr * R_SCALE) * dt;
 
             ctx.save();
             ctx.translate(p.x, p.y);
@@ -540,20 +558,20 @@
 
             if (p.x < -40) p.x = W() + 40;
             if (p.x > W() + 40) p.x = -40;
-        }
+          }
 
-        if (elapsed < durationMs) return requestAnimationFrame(draw);
+          if (elapsed < durationMs) return requestAnimationFrame(draw);
 
-        canvas.classList.add("isDone");
-        setTimeout(() => {
+          canvas.classList.add("isDone");
+          setTimeout(() => {
             window.removeEventListener("resize", resize);
-            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            // canvas.remove(); // uncomment if you want it gone from the DOM
-        }, fadeMs + 50);
+            ctx.clearRect(0, 0, W(), H());
+            // canvas.remove(); // optional
+          }, fadeMs + 50);
         }
 
         requestAnimationFrame(draw);
-    })();
-    </script>
+      })();
+  </script>
 </body>
 </html>
