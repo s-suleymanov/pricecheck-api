@@ -274,10 +274,6 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
   });
 }
 
-/**
- * Offers: match ONLY by PCI and/or UPC.
- * No ASIN matching.
- */
 async function getOffersForSelectedVariant(client, selectedKeys) {
   const pci = selectedKeys?.pci ? String(selectedKeys.pci).trim() : '';
   const upc = selectedKeys?.upc ? String(selectedKeys.upc).trim() : '';
@@ -310,7 +306,8 @@ async function getOffersForSelectedVariant(client, selectedKeys) {
 
   const amazon = [];
   const walmart = [];
-  const nonAmazonBestByStore = new Map();
+  const bestbuy = [];
+  const nonMultiBestByStore = new Map(); // everything else: newest per store
 
   for (const row of r.rows) {
     const store = normStoreName(row.store);
@@ -340,55 +337,49 @@ async function getOffersForSelectedVariant(client, selectedKeys) {
       pci: row.pci || null
     };
 
-    if (store === 'amazon') {
-      amazon.push(candidate);
-      continue;
-    }
+    // Multi-offer stores (keep multiple rows)
+    if (store === 'amazon') { amazon.push(candidate); continue; }
+    if (store === 'walmart') { walmart.push(candidate); continue; }
+    if (store === 'bestbuy') { bestbuy.push(candidate); continue; }
 
-    // Walmart: keep multiple listings (different store_sku) as separate offers
-    if (store === 'walmart') {
-      walmart.push(candidate);
-      continue;
-    }
-
-    // keep just the newest per non-amazon store
-    const prev = nonAmazonBestByStore.get(store);
+    // All other stores: keep just newest per store
+    const prev = nonMultiBestByStore.get(store);
     if (!prev) {
-      nonAmazonBestByStore.set(store, candidate);
+      nonMultiBestByStore.set(store, candidate);
       continue;
     }
 
     const tNew = candidate.observed_at ? new Date(candidate.observed_at).getTime() : 0;
     const tOld = prev.observed_at ? new Date(prev.observed_at).getTime() : 0;
 
-    if (tNew > tOld) nonAmazonBestByStore.set(store, candidate);
+    if (tNew > tOld) nonMultiBestByStore.set(store, candidate);
     else if (tNew === tOld && prev.price_cents == null && candidate.price_cents != null) {
-      nonAmazonBestByStore.set(store, candidate);
+      nonMultiBestByStore.set(store, candidate);
     }
   }
 
-  amazon.sort((a, b) => {
+  const byNewest = (a, b) => {
     const ta = a.observed_at ? new Date(a.observed_at).getTime() : 0;
     const tb = b.observed_at ? new Date(b.observed_at).getTime() : 0;
     return tb - ta;
-  });
+  };
 
-  walmart.sort((a, b) => {
-    const ta = a.observed_at ? new Date(a.observed_at).getTime() : 0;
-    const tb = b.observed_at ? new Date(b.observed_at).getTime() : 0;
-    return tb - ta;
-  });
+  amazon.sort(byNewest);
+  walmart.sort(byNewest);
+  bestbuy.sort(byNewest);
 
   const AMAZON_MAX = 10;
   const WALMART_MAX = 10;
+  const BESTBUY_MAX = 10;
 
   const amazonCapped = amazon.slice(0, AMAZON_MAX);
   const walmartCapped = walmart.slice(0, WALMART_MAX);
+  const bestbuyCapped = bestbuy.slice(0, BESTBUY_MAX);
 
-  const nonAmazon = Array.from(nonAmazonBestByStore.values());
-  nonAmazon.sort((a, b) => a.store.localeCompare(b.store));
+  const nonMulti = Array.from(nonMultiBestByStore.values());
+  nonMulti.sort((a, b) => a.store.localeCompare(b.store));
 
-  return [...amazonCapped, ...walmartCapped, ...nonAmazon];
+  return [...amazonCapped, ...walmartCapped, ...bestbuyCapped, ...nonMulti];
 }
 
 async function resolveSelectedVariant(client, rawKey) {
