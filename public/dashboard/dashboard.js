@@ -232,6 +232,7 @@
       segway: 'Segway',
       iscooter: 'iScooter',
       lg: 'LG',
+      microcenter: "Micro Center",
       sony: 'Sony',
       asus: 'ASUS',
       hp: 'HP',
