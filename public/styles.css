@@ -209,8 +209,12 @@ img.logo:hover {
   gap:100px;
 }
 .use__icon{
-  width:80px; height:80px; display:block; margin-bottom:18px;
-  padding:8px; object-fit:contain; justify-self: center;
+  width:80px; 
+  height:80px; 
+  display:block; 
+  margin: 0 auto 18px;
+  padding:8px; 
+  object-fit:contain; 
 }
 .use__h3{
   margin:0 0 8px;
