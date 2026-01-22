@@ -395,7 +395,7 @@ if (copyCheapestBtn) copyCheapestBtn.addEventListener('click', ()=>{
   const cheap = getCheapestOffer();
   const link = cheap ? (cheap.url || canonicalLink(cheap.store, cheap, state.identity)) : '';
   if(link) navigator.clipboard.writeText(link);
-  flip('#copyCheapest','Copied','Copy cheapest link',900);
+  flip('#copyCheapest','Copied','Copy Cheapest',900);
 });
 
 if (downloadCsvBtn) downloadCsvBtn.addEventListener('click', downloadHistoryCsv);
