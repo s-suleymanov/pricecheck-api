@@ -233,6 +233,7 @@
       iscooter: 'iScooter',
       lg: 'LG',
       microcenter: "Micro Center",
+      bjs: "BJ's",
       sony: 'Sony',
       asus: 'ASUS',
       hp: 'HP',
