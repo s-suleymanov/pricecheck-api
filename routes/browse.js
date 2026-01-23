@@ -38,6 +38,86 @@ router.get("/browse/:q/page/:n/", (_req, res) => res.sendFile(BROWSE_HTML));
 // - Group by lower(trim(version)) ignoring case differences
 const VERSION_NORM_SQL = "COALESCE(NULLIF(lower(btrim(c.version)), ''), '')";
 
+// GET /api/suggest?q=son&limit=8
+router.get("/api/suggest", async (req, res) => {
+  const q = normText(req.query.q);
+  if (!q) return res.json({ ok: true, q: "", results: [] });
+
+  const limit = clampInt(req.query.limit, 1, 20, 8);
+  const half = Math.max(1, Math.ceil(limit / 2));
+
+  const qLower = normLower(q);
+  const like = `%${qLower}%`;
+
+  const client = await pool.connect();
+  try {
+    // "products" means distinct variants: (model_number + version_norm)
+    const sql = `
+      WITH base AS (
+        SELECT
+          upper(btrim(model_number)) AS model_number,
+          COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+          brand,
+          category
+        FROM public.catalog
+        WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
+      ),
+      brand_counts AS (
+        SELECT
+          lower(btrim(brand)) AS facet_norm,
+          MIN(btrim(brand)) AS facet_label,
+          COUNT(DISTINCT (model_number || '|' || version_norm))::int AS products
+        FROM base
+        WHERE brand IS NOT NULL AND btrim(brand) <> ''
+          AND lower(btrim(brand)) LIKE $1
+        GROUP BY lower(btrim(brand))
+        ORDER BY products DESC, facet_label ASC
+        LIMIT $2
+      ),
+      category_counts AS (
+        SELECT
+          lower(btrim(category)) AS facet_norm,
+          MIN(btrim(category)) AS facet_label,
+          COUNT(DISTINCT (model_number || '|' || version_norm))::int AS products
+        FROM base
+        WHERE category IS NOT NULL AND btrim(category) <> ''
+          AND lower(btrim(category)) LIKE $1
+        GROUP BY lower(btrim(category))
+        ORDER BY products DESC, facet_label ASC
+        LIMIT $3
+      )
+      SELECT 'brand'::text AS kind, facet_label AS value, products
+      FROM brand_counts
+      UNION ALL
+      SELECT 'category'::text AS kind, facet_label AS value, products
+      FROM category_counts
+    `;
+
+    const { rows } = await client.query(sql, [like, half, half]);
+
+    // Keep it stable and predictable:
+    // - higher products first
+    // - then kind (brand before category)
+    // - then alphabetically
+    const results = (rows || [])
+      .sort((a, b) => {
+        const ap = Number(a.products || 0);
+        const bp = Number(b.products || 0);
+        if (bp !== ap) return bp - ap;
+        if (a.kind !== b.kind) return a.kind === "brand" ? -1 : 1;
+        return String(a.value || "").localeCompare(String(b.value || ""));
+      })
+      .slice(0, limit);
+
+    return res.json({ ok: true, q, results });
+  } catch (e) {
+    console.error("suggest error:", e);
+    return res.status(500).json({ ok: false, error: "server_error" });
+  } finally {
+    client.release();
+  }
+});
+
 router.get("/api/search", async (req, res) => {
   const q = normText(req.query.q);
   if (!q) return res.status(400).json({ ok: false, error: "q is required" });

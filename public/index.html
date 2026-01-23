@@ -120,7 +120,11 @@
             placeholder="Search products, brands, categories or paste URL, UPC, PCI, ASIN, SKU"
             autocomplete="off"
             spellcheck="false"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls="homeAc"
           />
+          <div class="pc-ac" id="homeAc" hidden></div>
         </form>
 
         <nav class="home-tabs" aria-label="Explore">

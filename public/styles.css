@@ -11,6 +11,11 @@
   --max:1220px;
 }
 
+.nav-search__input::-webkit-search-cancel-button,
+.home-search__input::-webkit-search-cancel-button{
+  cursor: pointer;
+}
+
 /* Let the homepage content area be wide */
 .home-center__inner{
   width: min(1220px, 92vw);
@@ -44,22 +49,51 @@
   flex: 1 1 520px;
   display:flex;
   justify-content:center;
+
+  position: relative;           /* IMPORTANT: dropdown anchors here */
+  width: 100%;
+  max-width: 800px;             /* SAME as your old input cap */
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.nav-search__input:placeholder-shown{
-  text-align: center;
-}
-
+/* DEFAULT (not focused): keep old size */
 .nav-search__input{
-  width: min(800px, 100%);
+  width: 100%;
   font-size: 16px;
   height: 45px;
   padding: 0 14px;
   border-radius: 999px;
   border: 1px solid rgba(17,24,39,.18);
-  background: rgba(255,255,255,.88);
+  background: rgba(255,255,255,.94);
   color: #111;
   outline: none;
+  transition: 
+    box-shadow .15s ease, 
+    border-radius 0s, 
+    background .15s ease, 
+    height .15s ease, 
+    font-size .15s ease, 
+    padding .15s ease;
+}
+
+/* EXPANDED (focused): Google-like size */
+.nav-search__input:focus{
+  font-size: 18px;
+  height: 52px;
+  padding: 0 18px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+}
+
+/* EXPANDED + "one connected piece" while dropdown is open */
+.nav-search.is-open .nav-search__input{
+  border-color: #e5e7eb;
+  font-size: 18px;
+  height: 52px;
+  padding: 0 18px;
+  border-radius: 18px 18px 0 0;
+  border-bottom-color: transparent;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
 }
 
 /* Keep header tidy on smaller screens */
@@ -68,6 +102,12 @@
     display: none;
   }
 }
+
+@media (max-width: 560px){
+  .pc-ac__count{ display:none; }  /* hide only the number */
+  .pc-ac__pill{ display:none; }
+}
+
 
 *{box-sizing:border-box}
 html,body{min-height:100%}
@@ -215,6 +255,81 @@ img.logo:hover {
   margin: 0 auto 18px;
   padding:8px; 
   object-fit:contain; 
+}
+
+.pc-ac{
+  position: absolute;
+  top: 100%;                    /* attach directly */
+  left: 0;
+  right: 0;
+  width: 100%;
+
+  margin-top: 0;                /* no gap */
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-top: 0;                /* merge border with input */
+  border-radius: 0 0 18px 18px; /* bottom only */
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.nav-search.is-open .nav-search__input{
+  border-radius: 18px 18px 0 0; /* top only */
+  border-bottom-color: transparent;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+}
+
+.pc-ac[hidden] { display: none; }
+
+.pc-ac__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+.pc-ac__item:hover,
+.pc-ac__item.is-active {
+  background: #f8fafc;
+}
+
+.pc-ac__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pc-ac__label {
+  font-size: 17px;
+  color: #0b0f19;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-ac__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pc-ac__pill {
+  font-size: 15px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  color: #334155;
+  background: #fff;
+}
+
+.pc-ac__count {
+  font-size: 16px;
+  color: #64748b;
 }
 .use__h3{
   margin:0 0 8px;
@@ -641,6 +756,10 @@ em {
   }
 }
 
+/* IMPORTANT: anchors the .pc-ac dropdown under the home input */
+.home-search{ position: relative; }
+
+/* DEFAULT (not focused): keep it smaller like the old home input */
 .home-search__input{
   box-sizing: border-box;
   width:100%;
@@ -653,6 +772,25 @@ em {
   outline: none;
   box-shadow: 0 10px 30px rgba(0,0,0,.06);
   border-color: rgba(17,24,39,.35);
+}
+
+/* EXPANDED (focused): the current “Google-like” size */
+.home-search__input:focus{
+  height:56px;
+  padding: 0 18px;
+  font-size: 18px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+}
+
+/* EXPANDED + connected-piece when autocomplete is open */
+.home-search.is-open .home-search__input{
+  border-color: #e5e7eb;
+  height:56px;
+  padding: 0 18px;
+  font-size: 18px;
+  border-radius: 18px 18px 0 0;
+  border-bottom-color: transparent;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
 }
 
 .home-tabs{

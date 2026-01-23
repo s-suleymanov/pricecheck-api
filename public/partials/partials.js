@@ -11,6 +11,7 @@ function wireHeaderSearch() {
   }
 
   window.pcSearch.bindForm(form, input);
+  window.pcSearch.attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
 }
 
   async function loadPartial(mountId, url) {

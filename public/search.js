@@ -26,6 +26,42 @@
     return /^[A-Z][A-Z0-9]{7}$/i.test(t) && /\d/.test(t);
   }
 
+  // -----------------------------
+  // Built-in nav destinations
+  // -----------------------------
+  const BUILTIN_PAGES = [
+    { key: "support",  label: "Support",  href: "/support/" },
+    { key: "policy",   label: "Privacy Policy", href: "/privacy-policy/" },
+    { key: "partners", label: "Partners", href: "/partners/" },
+  ];
+
+  function normalizeBuiltinKey(raw) {
+    const t = norm(raw).toLowerCase();
+    if (!t) return "";
+
+    // Strip scheme/host if someone pastes a full site URL for your pages
+    // Example: https://pricechecktool.com/support -> support
+    try {
+      if (/^https?:\/\//i.test(t)) {
+        const u = new URL(t);
+        const p = String(u.pathname || "/").toLowerCase();
+        const cleaned = p.replace(/^\/+|\/+$/g, ""); // trim slashes
+        return cleaned;
+      }
+    } catch (_e) {}
+
+    // Strip leading/trailing slashes and collapse spaces
+    return t.replace(/^\/+|\/+$/g, "").trim();
+  }
+
+  function builtinHrefFromRaw(raw) {
+    const k = normalizeBuiltinKey(raw);
+    if (!k) return null;
+    const hit = BUILTIN_PAGES.find((p) => p.key === k);
+    if (!hit) return null;
+    return new URL(hit.href, location.origin).toString();
+  }
+
   // Derive a normalized dashboard key from any input: prefix form, raw ID, or URL.
   function dashboardKeyFromRaw(raw) {
     const t = norm(raw);
@@ -107,22 +143,301 @@
     const v = norm(raw);
     if (!v) return;
 
+    // 0) built-in nav pages first
+    const builtinHref = builtinHrefFromRaw(v);
+    if (builtinHref) {
+      location.href = builtinHref;
+      return;
+    }
+
+    // 1) dashboard keys
     const key = dashboardKeyFromRaw(v);
     if (key) {
       location.href = dashboardUrlFromKey(key);
       return;
     }
 
+    // 2) browse fallback
     location.href = browseUrl(v);
   }
 
   function bindForm(formEl, inputEl) {
-    if (!formEl || !inputEl) return;
-    formEl.addEventListener("submit", (e) => {
+  if (!formEl || !inputEl) return;
+
+  formEl.addEventListener("submit", (e) => {
       e.preventDefault();
       route(inputEl.value);
     });
   }
 
-  window.pcSearch = { route, bindForm, shouldGoDashboard };
+  function debounce(fn, ms) {
+    let t = null;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), ms);
+    };
+  }
+
+  function attachAutocomplete(inputEl, opts = {}) {
+    const input = inputEl;
+    if (!input) return;
+
+    const endpoint = String(opts.endpoint || "/api/suggest");
+    const maxItems = Number(opts.limit || 8);
+
+    // Ensure parent is positioned
+    const parent =
+      input.closest(".nav-search") ||
+      input.closest(".home-search") ||
+      input.parentElement;
+    if (parent && getComputedStyle(parent).position === "static") {
+      parent.style.position = "relative";
+    }
+
+    // Build / reuse dropdown
+    let box = parent.querySelector(".pc-ac");
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "pc-ac";
+      box.hidden = true;
+      parent.appendChild(box);
+    }
+
+    box.setAttribute("role", "listbox");
+    if (!box.id) box.id = "pc-ac-" + Math.random().toString(36).slice(2);
+
+    let items = [];
+    let active = -1;
+    let lastQ = "";
+    let aborter = null;
+
+    function close() {
+      parent.classList.remove("is-open");
+      box.hidden = true;
+      box.innerHTML = "";
+      items = [];
+      active = -1;
+      input.removeAttribute("aria-activedescendant");
+      input.setAttribute("aria-expanded", "false");
+    }
+
+    function openIfAny() {
+      parent.classList.toggle("is-open", items.length > 0);
+      box.hidden = items.length === 0;
+      input.setAttribute("aria-expanded", items.length ? "true" : "false");
+    }
+
+    function render() {
+      if (items.length === 0) return close();
+
+      box.innerHTML = items
+        .map((it, idx) => {
+          const id = `${box.id}-opt-${idx}`;
+          const isPage = it.kind === "page";
+          const pill =
+            it.kind === "brand" ? "Brand" :
+            it.kind === "category" ? "Category" :
+            "Page";
+
+          const count = Number(it.products || 0);
+          const countText = !isPage && count > 0 ? `${count}` : "";
+          const cls = idx === active ? "pc-ac__item is-active" : "pc-ac__item";
+
+          return `
+            <div class="${cls}" role="option" id="${id}" data-idx="${idx}" aria-selected="${idx === active}">
+              <div class="pc-ac__left">
+                <div class="pc-ac__label">${escapeHtml(String(it.value || ""))}</div>
+              </div>
+              <div class="pc-ac__meta">
+                <span class="pc-ac__pill">${pill}</span>
+                ${countText ? `<span class="pc-ac__count">${countText}</span>` : ""}
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      openIfAny();
+
+      if (active >= 0) {
+        input.setAttribute("aria-activedescendant", `${box.id}-opt-${active}`);
+      }
+    }
+
+    function setActive(idx) {
+      const n = items.length;
+      if (n === 0) return;
+      active = Math.max(0, Math.min(n - 1, idx));
+      render();
+    }
+
+    function pick(idx) {
+      const it = items[idx];
+      if (!it) return;
+
+      close();
+
+      // Pages go directly
+      if (it.kind === "page" && it.href) {
+        location.href = String(it.href);
+        return;
+      }
+
+      // Otherwise, put the chosen label in the input, then route normally
+      input.value = String(it.value || "").trim();
+      route(input.value);
+    }
+
+    function builtinMatches(q) {
+      const qq = norm(q).toLowerCase();
+      if (!qq) return [];
+
+      // Show built-ins on prefix match: "sup" -> Support
+      return BUILTIN_PAGES
+        .filter((p) => p.key.startsWith(qq) || p.label.toLowerCase().startsWith(qq))
+        .map((p) => ({
+          kind: "page",
+          value: p.label,
+          href: new URL(p.href, location.origin).toString(),
+        }));
+    }
+
+    async function fetchSuggestions(q) {
+      const qq = norm(q);
+      if (!qq) return close();
+
+      if (qq === lastQ) return;
+      lastQ = qq;
+
+      const builtins = builtinMatches(qq);
+
+      if (aborter) aborter.abort();
+      aborter = new AbortController();
+
+      try {
+        const url = new URL(endpoint, location.origin);
+        url.searchParams.set("q", qq);
+        url.searchParams.set("limit", String(maxItems));
+
+        const res = await fetch(url.toString(), { signal: aborter.signal, cache: "no-store" });
+        if (!res.ok) throw new Error(`suggest ${res.status}`);
+        const data = await res.json();
+
+        const api = Array.isArray(data?.results) ? data.results : [];
+
+        const facets = api
+          .filter((x) => x && (x.kind === "brand" || x.kind === "category") && x.value)
+          .slice(0, maxItems);
+
+        // Merge: built-in pages first, then API facets, keep within maxItems
+        const merged = [];
+        for (const b of builtins) merged.push(b);
+        for (const f of facets) merged.push(f);
+
+        // Dedup by (kind + value) just in case
+        const seen = new Set();
+        items = merged.filter((it) => {
+          const k = `${it.kind}::${String(it.value || "").toLowerCase()}`;
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        }).slice(0, maxItems);
+
+        active = -1;
+        render();
+      } catch (e) {
+        if (String(e?.name) === "AbortError") return;
+        console.error(e);
+
+        // If API fails, still show built-ins if any
+        const onlyBuiltins = builtinMatches(qq).slice(0, maxItems);
+        items = onlyBuiltins;
+        active = -1;
+        render();
+      }
+    }
+
+    const debouncedFetch = debounce(fetchSuggestions, 120);
+
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("aria-controls", box.id);
+    input.setAttribute("aria-expanded", "false");
+
+    input.addEventListener("input", () => {
+      debouncedFetch(input.value);
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (box.hidden) {
+        if (e.key === "ArrowDown") {
+          debouncedFetch(input.value);
+        }
+        return;
+      }
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActive(active < 0 ? 0 : active + 1);
+        return;
+      }
+
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActive(active < 0 ? items.length - 1 : active - 1);
+        return;
+      }
+
+      if (e.key === "Enter") {
+        if (active >= 0) {
+          e.preventDefault();
+          pick(active);
+        }
+        return;
+      }
+    });
+
+    box.addEventListener("mousedown", (e) => {
+      // prevent input blur before click processes
+      e.preventDefault();
+    });
+
+    box.addEventListener("click", (e) => {
+      const el = e.target.closest("[data-idx]");
+      if (!el) return;
+      const idx = Number(el.getAttribute("data-idx"));
+      if (!Number.isFinite(idx)) return;
+      pick(idx);
+    });
+
+    document.addEventListener("click", (e) => {
+      if (e.target === input) return;
+      if (box.contains(e.target)) return;
+      close();
+    });
+
+    input.addEventListener("blur", () => {
+      // click handler uses mousedown preventDefault, so blur usually means real blur
+      setTimeout(() => close(), 0);
+    });
+
+    // small HTML escape
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    return { close };
+  }
+
+  window.pcSearch = { route, bindForm, shouldGoDashboard, attachAutocomplete };
 })();
