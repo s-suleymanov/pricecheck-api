@@ -221,6 +221,7 @@
       soloperformance: 'Solo Performance',
       radicaladventures: 'Radical Adventures',
       brandsmart: 'BrandsMart',
+      jbl: 'JBL',
       aliexpress: 'AliExpress',
       macys: "Macy's",
       niu: "NIU",
