@@ -28,36 +28,36 @@ function xmlEscape(s) {
 }
 
 function getBaseUrl(req) {
-  // Prefer explicit canonical base if you set it, otherwise derive from request.
   const base = String(process.env.PUBLIC_BASE_URL || "").trim();
   if (base) return base.replace(/\/+$/g, "");
 
-  const proto = (req.headers["x-forwarded-proto"] || req.protocol || "https").toString().split(",")[0].trim();
-  const host = (req.headers["x-forwarded-host"] || req.get("host") || "").toString().split(",")[0].trim();
+  const proto = (req.headers["x-forwarded-proto"] || req.protocol || "https")
+    .toString()
+    .split(",")[0]
+    .trim();
+  const host = (req.headers["x-forwarded-host"] || req.get("host") || "")
+    .toString()
+    .split(",")[0]
+    .trim();
   return `${proto}://${host}`.replace(/\/+$/g, "");
 }
-
-// Tune these based on how your catalog stores scooter categories.
-const SCOOTER_CATEGORY_SQL = `
-  (
-    lower(coalesce(c.category,'')) like '%scooter%'
-    or lower(coalesce(c.category,'')) like '%e-scooter%'
-    or lower(coalesce(c.category,'')) like '%electric scooter%'
-    or lower(coalesce(c.category,'')) like '%escooter%'
-  )
-`;
 
 router.get("/sitemap.xml", async (req, res) => {
   const base = getBaseUrl(req);
 
-  // How many brands to include
+  // How many brand browse URLs to include
   const limit = Number.isFinite(parseInt(process.env.SITEMAP_BRAND_LIMIT || "200", 10))
     ? parseInt(process.env.SITEMAP_BRAND_LIMIT || "200", 10)
     : 200;
 
+  // Optional: ignore brands with very little data (reduces junk pages)
+  const minProducts = Number.isFinite(parseInt(process.env.SITEMAP_BRAND_MIN_PRODUCTS || "1", 10))
+    ? parseInt(process.env.SITEMAP_BRAND_MIN_PRODUCTS || "1", 10)
+    : 1;
+
   const client = await pool.connect();
   try {
-    // Top e-scooter brands by distinct variants (model_number + version)
+    // Top brands across ALL categories by distinct variants (model_number + version)
     const sql = `
       WITH base AS (
         SELECT
@@ -70,22 +70,19 @@ router.get("/sitemap.xml", async (req, res) => {
         FROM public.catalog c
         WHERE c.model_number IS NOT NULL AND btrim(c.model_number) <> ''
           AND c.brand IS NOT NULL AND btrim(c.brand) <> ''
-          AND ${SCOOTER_CATEGORY_SQL}
+          AND lower(btrim(c.brand)) NOT IN ('unknown','n/a','na','none','null','(not set)','generic')
         GROUP BY lower(btrim(c.brand))
       )
       SELECT brand_label, products
       FROM base
+      WHERE products >= $2
       ORDER BY products DESC, brand_label ASC
       LIMIT $1
     `;
 
-    const { rows } = await client.query(sql, [limit]);
+    const { rows } = await client.query(sql, [limit, minProducts]);
 
-    // Build URL list
     const urls = [];
-
-    // Optional: include the browse home (I usually keep it out, since you are noindexing it)
-    // urls.push({ loc: `${base}/browse/`, changefreq: "daily", priority: "0.3" });
 
     for (const r of rows || []) {
       const label = String(r.brand_label || "").trim();
@@ -120,7 +117,6 @@ router.get("/sitemap.xml", async (req, res) => {
       `\n</urlset>\n`;
 
     res.setHeader("Content-Type", "application/xml; charset=utf-8");
-    // Cache for 1 hour (safe for sitemaps)
     res.setHeader("Cache-Control", "public, max-age=3600");
     return res.status(200).send(body);
   } catch (e) {
