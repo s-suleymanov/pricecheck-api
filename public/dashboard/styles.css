@@ -13,7 +13,7 @@
   --radius-inner:12px;
 }
 
-body{overflow-x:hidden;background:#fff;color:var(--ink);margin:120px 0 0 0;}
+body{overflow-x:hidden;color:var(--ink);margin:120px 0 0 0;}
 .wrap{max-width:1250px;margin:0 auto;padding:0px 24px 90px}
 
 /* Layout */
