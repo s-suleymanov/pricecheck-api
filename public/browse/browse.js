@@ -261,6 +261,32 @@
     `;
   }
 
+function animateGridCards(gridEl) {
+  if (!gridEl) return;
+
+  const cards = Array.from(gridEl.querySelectorAll(".card.item"));
+  if (!cards.length) return;
+
+  for (let i = 0; i < cards.length; i++) {
+    const el = cards[i];
+    el.classList.remove("pc-enter-active");
+    el.classList.add("pc-enter");
+
+    const delay = Math.min(i * 28, 650);
+    el.style.setProperty("--pc-delay", `${delay}ms`);
+  }
+
+  // Force a style/layout read so the browser commits pc-enter first
+  gridEl.getBoundingClientRect();
+
+  // Two RAFs pushes the "active" flip past the first paint
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      for (const el of cards) el.classList.add("pc-enter-active");
+    });
+  });
+}
+
   function render() {
     const grid = els.grid();
     if (!grid) return;
@@ -320,6 +346,7 @@
     }
 
     grid.innerHTML = parts.join("");
+    animateGridCards(grid);
 
     setEmptyText("No results.");
     showEmpty(parts.length === 0);

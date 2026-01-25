@@ -685,6 +685,34 @@ em {
   line-height: 1;
 }
 
+
+  /* ===== Staggered enter animation (top to bottom) ===== */
+.card.item.pc-enter{
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.card.item.pc-enter.pc-enter-active{
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 420ms ease, transform 420ms ease;
+  transition-delay: var(--pc-delay, 0ms);
+}
+
+.card.item.pc-enter-active:hover{
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .card.item.pc-enter,
+  .card.item.pc-enter.pc-enter-active{
+    opacity: 1;
+    transform: none;
+    transition: none;
+    transition-delay: 0ms;
+  }
+}
+
 .home-footer__link:hover,
 .home-footer__link:focus-visible{
   color: rgba(17,24,39,.92);
