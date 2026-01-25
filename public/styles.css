@@ -753,12 +753,6 @@ em {
   }
 }
 
-@media (max-width: 450px){
-  .home-top__right .home-top__link{
-    display: none;
-  }
-}
-
 /* IMPORTANT: anchors the .pc-ac dropdown under the home input */
 .home-search{ position: relative; }
 
