@@ -3,7 +3,7 @@
 }
 
 .partners__title{
-  font-size:clamp(30px, 4.8vw, 50px);
+  font-size:clamp(30px, 4.8vw, 65px);
   line-height:1.1;
   font-weight: 600;
   letter-spacing:-.01em;
