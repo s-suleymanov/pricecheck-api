@@ -119,7 +119,7 @@ p{margin:0 0 8px}
 
 /* Chart area */
 .chart{
-  width:100%;height:200px;display:block;
+  width:100%;display:block;
   background:var(--surface);
   border:1px dashed #eef2f7;border-radius:12px
 }
@@ -499,3 +499,21 @@ details[open]{background:#fff}
     display: none !important;
   }
 }
+
+/* Chart tooltip */
+.chart-tip{
+  position:absolute;
+  z-index:20;
+  pointer-events:none;
+  background:#0f172a;
+  color:#fff;
+  font-size:12px;
+  line-height:1.25;
+  padding:8px 10px;
+  border-radius:10px;
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+  transform: translate(-50%, calc(-100% - 10px));
+  white-space:nowrap;
+}
+
+.chart-tip[hidden]{ display:none; }

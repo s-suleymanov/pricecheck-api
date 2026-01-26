@@ -842,38 +842,142 @@ async function run(raw){
   const note = $('#chartNote');
   svg.innerHTML = '';
   svg.setAttribute('viewBox', '0 0 700 200');
-  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+  function ensureChartTip(){
+  const host = svg.parentElement;
+  if (!host) return null;
+
+  // Make sure the tooltip can position relative to the chart area
+  const cs = getComputedStyle(host);
+  if (cs.position === 'static') host.style.position = 'relative';
+
+  let tip = host.querySelector('#chartTip');
+    if (!tip) {
+      tip = document.createElement('div');
+      tip.id = 'chartTip';
+      tip.className = 'chart-tip';
+      tip.hidden = true;
+      host.appendChild(tip);
+    }
+    return tip;
+  }
+
+  const tip = ensureChartTip();
+
+  function showTip(px, py, text){
+    if (!tip) return;
+    tip.textContent = text;
+    tip.style.left = `${px}px`;
+    tip.style.top  = `${py}px`;
+    tip.hidden = false;
+  }
+
+  function hideTip(){
+    if (!tip) return;
+    tip.hidden = true;
+  }
 
   const pts = Array.isArray(state.history) ? state.history : [];
-  if (!pts.length) {
+
+  let workingPts = pts;
+
+  if (!workingPts.length) {
+    const offers = Array.isArray(state.offers) ? state.offers : [];
+    const priced = offers
+      .map(o => {
+        const p = (typeof o.price_cents === 'number' && o.price_cents > 0) ? o.price_cents : null;
+        const e = (typeof o.effective_price_cents === 'number' && o.effective_price_cents > 0) ? o.effective_price_cents : null;
+        // prefer effective if present and valid
+        const use = (e != null && p != null && e <= p) ? e : p;
+        return use;
+      })
+      .filter(v => typeof v === 'number' && v > 0)
+      .sort((a,b)=>a-b);
+
+    if (priced.length) {
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      workingPts = [{ d: today, price_cents: priced[0] }];
+      note.textContent = ''; // we are rendering something useful
+    } else {
+      note.textContent = 'No history yet';
+      return;
+    }
+  }  
+
+  note.textContent = '';
+
+    // Apply range filter
+  const days = Number(state.rangeDays || 30);
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - days);
+
+  const filtered = workingPts
+    .map(p => {
+      const day = String(p?.d || '').slice(0, 10);
+      const t = new Date(day + 'T00:00:00Z');
+      return { d: day, t, price_cents: p?.price_cents };
+    })
+    .filter(r => Number.isFinite(r.t.getTime()) && typeof r.price_cents === 'number' && r.price_cents > 0)
+    .filter(r => r.t >= cutoff)
+    .sort((a,b)=>a.t - b.t);
+
+    if (!filtered.length) {
     note.textContent = 'No history yet';
     return;
   }
 
-  const days = state.rangeDays || 30;
+  if (filtered.length === 1) {
+    const W = 700, H = 200;
+    const padL = 0, padR = 10, padT = 10, padB = 18;
+    const centerX = (padL + (W - padR)) / 2;
 
-  // Use UTC cutoff in ms to avoid timezone weirdness
-  const cutoffMs = Date.now() - days * 24 * 60 * 60 * 1000;
+    const p = filtered[0].price_cents;
 
-  const filtered = pts
-    .map(p => {
-      const day = String(p?.d || '').slice(0, 10); // supports "2026-01-04" or "2026-01-04T08:00:00.000Z"
-      const t = new Date(day + 'T00:00:00Z');
-      return { d: day, t, price_cents: p?.price_cents };
-    })
-    .filter(r => Number.isFinite(r.t.getTime()) && typeof r.price_cents === 'number')
-    .filter(r => r.t.getTime() >= cutoffMs)
-    .sort((a,b)=>a.t - b.t);
+    // Pad min/max so a flat line is visible
+    let minP = Math.max(0, p - 50);
+    let maxP = p + 50;
 
-  if (filtered.length < 2) {
-    note.textContent = 'Not enough history yet';
+    const y = (price) => padT + ((maxP - price) * (H - padT - padB)) / (maxP - minP);
+
+    const ns = 'http://www.w3.org/2000/svg';
+    const y0 = y(p);
+
+    const line = document.createElementNS(ns, 'path');
+    line.setAttribute('d', `M ${padL} ${y0.toFixed(2)} L ${centerX.toFixed(2)} ${y0.toFixed(2)}`);
+    line.setAttribute('fill', 'none');
+    line.setAttribute('class', 'chart-line');
+    line.setAttribute('stroke', '#6366f1');
+    line.setAttribute('stroke-width', '2');
+    line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(line);
+
+    const dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', centerX.toFixed(2));
+    dot.setAttribute('cy', y0.toFixed(2));
+    dot.setAttribute('r', 3.5);
+    dot.setAttribute('fill', '#6366f1');
+    dot.setAttribute('class', 'chart-dot');
+    svg.appendChild(dot);
+
+    const label = `${fmt.format(p/100)} • ${filtered[0].d}`;
+    dot.addEventListener('pointerenter', (e) => {
+      const hostRect = svg.parentElement.getBoundingClientRect();
+      showTip(e.clientX - hostRect.left, e.clientY - hostRect.top, label);
+    });
+    dot.addEventListener('pointermove', (e) => {
+      const hostRect = svg.parentElement.getBoundingClientRect();
+      showTip(e.clientX - hostRect.left, e.clientY - hostRect.top, label);
+    });
+    dot.addEventListener('pointerleave', hideTip);
+
+    note.textContent = '';
     return;
   }
 
-  note.textContent = '';
-
   const W = 700, H = 200;
-  const padL = 10, padR = 10, padT = 10, padB = 18;
+  const padL = 0, padR = 10, padT = 10, padB = 18;
 
   const prices = filtered.map(p => p.price_cents);
   let minP = Math.min(...prices);
@@ -914,6 +1018,38 @@ async function run(raw){
   p1.setAttribute('stroke-linejoin', 'round');
 
   svg.appendChild(p1);
+
+    // Hover points (invisible) so users can read exact date + price
+  const hostRect = () => svg.parentElement.getBoundingClientRect();
+
+  filtered.forEach((pt, i) => {
+    const cx = x(i);
+    const cy = y(pt.price_cents);
+
+    const hit = document.createElementNS(ns, 'circle');
+    hit.setAttribute('cx', cx);
+    hit.setAttribute('cy', cy);
+    hit.setAttribute('r', 10);                 // big hit area
+    hit.setAttribute('fill', 'transparent');   // invisible
+    hit.style.cursor = 'default';
+
+    const label = `${fmt.format(pt.price_cents/100)} • ${pt.d}`;
+
+    hit.addEventListener('pointerenter', (e) => {
+      const r = hostRect();
+      showTip(e.clientX - r.left, e.clientY - r.top, label);
+    });
+    hit.addEventListener('pointermove', (e) => {
+      const r = hostRect();
+      showTip(e.clientX - r.left, e.clientY - r.top, label);
+    });
+    hit.addEventListener('pointerleave', hideTip);
+
+    svg.appendChild(hit);
+  });
+
+  // Also hide tooltip if you leave the SVG entirely
+  svg.addEventListener('pointerleave', hideTip);
 
   if (typicalY != null) {
     const p2 = document.createElementNS(ns, 'path');
