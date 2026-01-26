@@ -365,39 +365,12 @@ function getCurrentVariant(){
   return hit || null;
 }
 
-const shareBtn = $('#share');
-const copyCheapestBtn = $('#copyCheapest');
 const downloadCsvBtn = $('#downloadCsv');
 const downloadObsBtn = $('#downloadObs');
 const copyPmBtn = $('#copyPm');
 const variantSel = $('#variant');
 const colorWrap = $('#colorWrap');
 const colorSel  = $('#color');
-
-if (shareBtn) {
-  shareBtn.addEventListener('click', () => {
-    const key = state.lastKey || currentKeyFromUrl();
-    const id = state.identity || {};
-    const cur = getCurrentVariant() || null;
-
-    const bestTitle =
-      (id.model_name && String(id.model_name).trim()) ||
-      (cur?.model_name && String(cur.model_name).trim()) ||
-      (id.model_number && String(id.model_number).trim()) ||
-      'Product';
-
-    const link = prettyDashboardUrl(key || '', bestTitle).toString();
-    navigator.clipboard.writeText(link);
-    flip('#share','Copied','Copy share link',900);
-  });
-}
-
-if (copyCheapestBtn) copyCheapestBtn.addEventListener('click', ()=>{
-  const cheap = getCheapestOffer();
-  const link = cheap ? (cheap.url || canonicalLink(cheap.store, cheap, state.identity)) : '';
-  if(link) navigator.clipboard.writeText(link);
-  flip('#copyCheapest','Copied','Copy Cheapest',900);
-});
 
 if (downloadCsvBtn) downloadCsvBtn.addEventListener('click', downloadHistoryCsv);
 if (downloadObsBtn) downloadObsBtn.addEventListener('click', downloadObsCsv);
@@ -1670,14 +1643,6 @@ if (actSummary) actSummary.addEventListener('click', async () => {
     a.href = URL.createObjectURL(blob);
     a.download = 'observations.csv';
     document.body.appendChild(a); a.click(); a.remove();
-  }
-
-  // ---------- Small helpers ----------
-  function flip(sel,on,off,ms){
-    const el=$(sel);
-    const txt=el.textContent;
-    el.textContent=on;
-    setTimeout(()=>el.textContent=off||txt,ms||900);
   }
 
   window.run = run;
