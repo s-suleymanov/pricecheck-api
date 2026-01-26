@@ -11,6 +11,16 @@
   --max:1220px;
 }
 
+.home-logo,
+.home-logo *{
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.home-logo img{
+  -webkit-user-drag: none;
+}
+
 .nav-search__input::-webkit-search-cancel-button,
 .home-search__input::-webkit-search-cancel-button{
   cursor: pointer;
