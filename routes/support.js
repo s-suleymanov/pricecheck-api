@@ -66,13 +66,6 @@ router.get(["/support", "/support/"], (req, res) => {
   res.sendFile(supportPath("index.html"));
 });
 
-// Avoid /support/admin/ because ../styles.css breaks there
-router.get("/support/admin/", (req, res) => res.redirect(302, "/support/admin"));
-
-router.get(["/support/admin", "/support/admin.html"], (req, res) => {
-  res.sendFile(supportPath("admin.html"));
-});
-
 /* API health (optional but nice for debugging) */
 router.get("/api/support/health", (req, res) => {
   res.json({ ok: true });
