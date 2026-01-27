@@ -775,23 +775,28 @@ async function run(raw){
   }
 
   function hydrateKpis(){
-    const priced = (state.offers || []).filter(o => typeof o.price_cents === 'number');
-    if (!priced.length){
-      $('#kCurrent').textContent = 'NA';
-      $('#kStore').textContent = '';
-      $('#kTypical').textContent = 'NA';
-      $('#kTypicalNote').textContent = '';
-      $('#kLow30').textContent = 'NA';
-      $('#kLow30Date').textContent = '';
-      $('#kIntegrity').textContent = 'NA';
-      return;
-    }
+  const offers = Array.isArray(state.offers) ? state.offers : [];
+  const priced = offers
+    .map(o => ({ o, c: bestComparableCents(o) }))
+    .filter(x => typeof x.c === 'number' && x.c > 0);
 
-    priced.sort((a,b)=>a.price_cents-b.price_cents);
-    const best = priced[0];
+  if (!priced.length){
+    $('#kCurrent').textContent = 'NA';
+    $('#kStore').textContent = '';
+    $('#kTypical').textContent = 'NA';
+    $('#kTypicalNote').textContent = '';
+    $('#kLow30').textContent = 'NA';
+    $('#kLow30Date').textContent = '';
+    $('#kIntegrity').textContent = 'NA';
+    return;
+  }
 
-    $('#kCurrent').textContent = fmt.format(best.price_cents/100);
-    $('#kStore').textContent = `at ${titleCase(best.store || 'Retailer')}`;
+  priced.sort((a,b)=>a.c-b.c);
+  const best = priced[0].o;
+  const bestCents = priced[0].c;
+
+  $('#kCurrent').textContent = fmt.format(bestCents/100);
+  $('#kStore').textContent = `at ${titleCase(best.store || 'Retailer')}`;
 
     const hs = state.historyStats || {};
     const tl90 = (typeof hs.typical_low_90_cents === 'number') ? hs.typical_low_90_cents : null;
@@ -854,6 +859,23 @@ async function run(raw){
   const pts = Array.isArray(state.history) ? state.history : [];
 
   let workingPts = pts;
+
+  // Force today's point to reflect the cheapest current offer (including verified coupons),
+  // even if price_history is Amazon-heavy.
+  const today = new Date().toISOString().slice(0, 10);
+  const todayBest = bestOfferCentsToday();
+
+  if (typeof todayBest === 'number' && todayBest > 0){
+    const idx = (Array.isArray(workingPts) ? workingPts : []).findIndex(p => String(p?.d || '').slice(0,10) === today);
+    if (idx >= 0){
+      const cur = Number(workingPts[idx]?.price_cents);
+      if (!Number.isFinite(cur) || todayBest < cur){
+        workingPts[idx].price_cents = todayBest;
+      }
+    } else {
+      workingPts = (Array.isArray(workingPts) ? workingPts : []).concat([{ d: today, price_cents: todayBest }]);
+    }
+  }
 
   if (!workingPts.length) {
     const offers = Array.isArray(state.offers) ? state.offers : [];
@@ -1068,14 +1090,42 @@ async function run(raw){
   }
 
   function getCheapestOffer(){
-    const arr = (state.offers || []).filter(o => typeof o.price_cents === 'number');
-    if (!arr.length) return null;
-    arr.sort((a,b)=>a.price_cents-b.price_cents);
-    return arr[0];
+    const offers = Array.isArray(state.offers) ? state.offers : [];
+    let best = null;
+    let bestC = null;
+
+    for (const o of offers){
+      const c = bestComparableCents(o);
+      if (typeof c !== 'number' || c <= 0) continue;
+      if (bestC == null || c < bestC){
+        bestC = c;
+        best = o;
+      }
+    }
+    return best;
   }
 
   function moneyFromCents(c){
     return (typeof c === 'number') ? fmt.format(c/100) : 'NA';
+  }
+
+  function bestComparableCents(o){
+    const p = (typeof o?.price_cents === 'number' && o.price_cents > 0) ? o.price_cents : null;
+    const e = (typeof o?.effective_price_cents === 'number' && o.effective_price_cents > 0) ? o.effective_price_cents : null;
+    // Use effective only when it is a real, better-or-equal price
+    if (p != null && e != null && e <= p) return e;
+    return p;
+  }
+
+  function bestOfferCentsToday(){
+    const offers = Array.isArray(state.offers) ? state.offers : [];
+    let best = null;
+    for (const o of offers){
+      const c = bestComparableCents(o);
+      if (typeof c !== 'number') continue;
+      if (best == null || c < best) best = c;
+    }
+    return best;
   }
 
   function couponCandidates(){
@@ -1316,8 +1366,9 @@ function setMaybe(el, text, { asHtml = false } = {}) {
     }
 
     let arr = state.offers.map(o=>{
-      const price = (typeof o.price_cents === 'number') ? o.price_cents/100 : null;
-      return { ...o, _price: price };
+      const cents = bestComparableCents(o);
+      const price = (typeof cents === 'number') ? cents/100 : null;
+      return { ...o, _price: price, _price_cents: cents };
     });
 
     if(sortByPrice){
