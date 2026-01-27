@@ -1,3 +1,5 @@
+console.log("DB ADMIN: db.js loaded", location.pathname);
+
 const $ = (sel) => document.querySelector(sel);
 
 function esc(s){

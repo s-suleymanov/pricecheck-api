@@ -134,20 +134,6 @@ function requireAdminApi(req, res, next) {
   next();
 }
 
-function canonicalStore(store) {
-  const s = String(store || "").trim();
-  if (!s) return null;
-  const low = s.toLowerCase();
-  if (low === "bestbuy" || low === "best buy") return "Best Buy";
-  if (low === "amazon") return "Amazon";
-  if (low === "walmart") return "Walmart";
-  if (low === "target") return "Target";
-  return s
-    .split(/\s+/g)
-    .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ""))
-    .join(" ");
-}
-
 // Bulk imports should not guess store names.
 // Preserve exactly what you typed (after trim).
 function canonicalManufacturerStore(store) {
@@ -607,7 +593,7 @@ router.patch("/admin/api/catalog/:id", requireAdminApi, async (req, res) => {
 router.get("/admin/api/db/items", requireAdminApi, async (req, res) => {
   const qRaw = normKey(req.query.q);
   const limit = Math.min(Math.max(toInt(req.query.limit) || 25, 1), 50);
-  const offset = Math.max(0, Math.min(toInt(req.query.offset) || 0), 500);
+  const offset = Math.max(0, Math.min(toInt(req.query.offset) || 0, 500));
 
   const q = (qRaw || "").trim();
   const qDigits = q.replace(/[^\d]/g, "");
@@ -630,12 +616,12 @@ router.get("/admin/api/db/items", requireAdminApi, async (req, res) => {
         where
           ($1::text is not null and upper(btrim(c.pci)) = upper(btrim($1)))
           or ($2::text is not null and norm_upc(c.upc) = norm_upc($2))
-          or (c.model_number ilike '%' || $3 || '%')
-          or (c.model_name ilike '%' || $3 || '%')
-          or (c.brand ilike '%' || $3 || '%')
-          or (c.category ilike '%' || $3 || '%')
-          or (c.version ilike '%' || $3 || '%')
-          or (c.color ilike '%' || $3 || '%')
+          or (coalesce(c.model_number,'') ilike '%' || $3 || '%')
+          or (coalesce(c.model_name,'') ilike '%' || $3 || '%')
+          or (coalesce(c.brand,'') ilike '%' || $3 || '%')
+          or (coalesce(c.category,'') ilike '%' || $3 || '%')
+          or (coalesce(c.version,'') ilike '%' || $3 || '%')
+          or (coalesce(c.color,'') ilike '%' || $3 || '%')
         order by c.created_at desc nulls last
         limit $4 offset $5
       ),
@@ -655,9 +641,9 @@ router.get("/admin/api/db/items", requireAdminApi, async (req, res) => {
         ) c2 on true
         where
           ($6::text is not null and upper(regexp_replace(coalesce(l.store_sku,''), '[^0-9A-Za-z]', '', 'g')) = upper(regexp_replace(coalesce($6::text,''), '[^0-9A-Za-z]', '', 'g')))
-          or (l.store_sku ilike '%' || $3 || '%')
-          or (l.title ilike '%' || $3 || '%')
-          or (l.store ilike '%' || $3 || '%')
+          or (coalesce(l.store_sku,'') ilike '%' || $3 || '%')
+          or (coalesce(l.title,'') ilike '%' || $3 || '%')
+          or (coalesce(l.store,'') ilike '%' || $3 || '%')
           or ($1::text is not null and upper(btrim(l.pci)) = upper(btrim($1)))
           or ($2::text is not null and norm_upc(l.upc) = norm_upc($2))
         order by c2.id, greatest(coalesce(l.current_price_observed_at, l.created_at), coalesce(l.coupon_observed_at, l.created_at)) desc nulls last
@@ -983,12 +969,12 @@ router.get("/admin/api/search", requireAdminApi, async (req, res) => {
         where
           ($1::text is not null and upper(btrim(pci)) = upper(btrim($1)))
           or ($2::text is not null and regexp_replace(coalesce(upc,''), '[^0-9]', '', 'g') = regexp_replace(coalesce($2::text,''), '[^0-9]', '', 'g'))
-          or (model_number ilike '%' || $3 || '%')
-          or (model_name ilike '%' || $3 || '%')
-          or (brand ilike '%' || $3 || '%')
-          or (category ilike '%' || $3 || '%')
-          or (version ilike '%' || $3 || '%')
-          or (color ilike '%' || $3 || '%')
+          or (coalesce(model_number,'') ilike '%' || $3 || '%')
+          or (coalesce(model_name,'') ilike '%' || $3 || '%')
+          or (coalesce(brand,'') ilike '%' || $3 || '%')
+          or (coalesce(category,'') ilike '%' || $3 || '%')
+          or (coalesce(version,'') ilike '%' || $3 || '%')
+          or (coalesce(color,'') ilike '%' || $3 || '%')
         order by created_at desc nulls last
         limit $4
       `;
