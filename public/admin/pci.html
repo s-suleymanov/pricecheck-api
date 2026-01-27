@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PriceCheck PCI Generator</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{
+      --ink:#0f172a;
+      --muted:#64748b;
+      --paper:#ffffff;
+      --line:#e2e8f0;
+      --bg:#f8fafc;
+      --good:#16a34a;
+      --bad:#dc2626;
+      --chip:#0ea5e9;
+      --chipText:#ffffff;
+      --radius:18px;
+      --max:980px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    body{ margin:0; background:var(--bg); color:var(--ink); }
+    .wrap{ width:min(var(--max), 92vw); margin:22px auto 60px; }
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+      padding:14px 16px; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+      box-shadow: 0 10px 30px rgba(2,6,23,.05);
+    }
+    .title{ display:flex; flex-direction:column; gap:2px; }
+    .title h1{ font-size:18px; margin:0; letter-spacing:-.02em; }
+    .title p{ margin:0; color:var(--muted); font-size:13px; }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; padding:8px 10px; border-radius:999px;
+      background:#eef2ff; border:1px solid #e0e7ff; color:#3730a3;
+      user-select:none;
+    }
+    .pill.good{ background:#ecfdf5; border-color:#bbf7d0; color:#166534; }
+    .pill.bad{ background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+
+    .grid{ display:grid; grid-template-columns: 1.1fr .9fr; gap:14px; margin-top:14px; }
+    @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card{
+      background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+      box-shadow: 0 10px 30px rgba(2,6,23,.05);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding:14px 16px; border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .cardHead h2{ margin:0; font-size:14px; letter-spacing:-.01em; }
+    .cardHead .sub{ margin:0; color:var(--muted); font-size:12px; }
+    .cardBody{ padding:14px 16px; }
+
+    .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .in{
+      height:40px; border-radius:12px; border:1px solid var(--line); background:#fff;
+      padding:0 12px; font-size:14px; outline:none; min-width: 120px;
+    }
+    .in:focus{ border-color:#94a3b8; box-shadow: 0 0 0 4px rgba(148,163,184,.18); }
+    .btn{
+      height:40px; padding:0 12px; border-radius:12px; border:1px solid var(--line);
+      background:#fff; cursor:pointer; font-weight:600; font-size:13px;
+    }
+    .btn:hover{ background:#f8fafc; }
+    .btn.primary{
+      border-color:#0ea5e9; background:#0ea5e9; color:#fff;
+    }
+    .btn.primary:hover{ filter:brightness(.98); }
+    .btn.danger{
+      border-color:#fecaca; background:#fff; color:#b91c1c;
+    }
+    .btn.danger:hover{ background:#fff5f5; }
+
+    textarea{
+      width:100%; min-height:240px; resize:vertical;
+      border-radius:14px; border:1px solid var(--line); padding:12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:13px; line-height:1.35;
+      outline:none;
+    }
+    textarea:focus{ border-color:#94a3b8; box-shadow: 0 0 0 4px rgba(148,163,184,.18); }
+    .hint{ color:var(--muted); font-size:12px; margin-top:10px; line-height:1.35; }
+    .mini{ color:var(--muted); font-size:12px; }
+    .sep{ height:1px; background:var(--line); margin:12px 0; }
+    .kpi{
+      display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:12px;
+    }
+    .kpi .box{
+      border:1px solid var(--line); border-radius:14px; padding:10px 12px; background:#fff;
+    }
+    .kpi .box b{ display:block; font-size:16px; }
+    .kpi .box span{ color:var(--muted); font-size:12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="title">
+        <h1>PCI Generator</h1>
+        <p>8 chars, first is a letter, excludes 0, I, O, and guarantees at least one digit.</p>
+      </div>
+      <div class="pill" id="statusPill">Loading…</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="cardHead">
+          <div>
+            <h2>Generate</h2>
+            <p class="sub">Outputs are unique against your saved used set.</p>
+          </div>
+          <div class="mini" id="usedCount">used: 0</div>
+        </div>
+
+        <div class="cardBody">
+          <div class="row">
+            <input class="in" id="count" inputmode="numeric" placeholder="How many" value="1" />
+            <button class="btn primary" id="btnGen">Generate</button>
+            <button class="btn" id="btnCopy">Copy output</button>
+            <button class="btn" id="btnCopyUsed">Copy used JSON</button>
+          </div>
+
+          <div class="sep"></div>
+
+          <label class="mini" for="out">Output (one per line)</label>
+          <textarea id="out" spellcheck="false" placeholder="Generated PCIs will appear here"></textarea>
+
+          <div class="kpi">
+            <div class="box">
+              <b id="kpiNew">0</b>
+              <span>generated this run</span>
+            </div>
+            <div class="box">
+              <b id="kpiUsed">0</b>
+              <span>total used stored</span>
+            </div>
+            <div class="box">
+              <b id="kpiValid">0%</b>
+              <span>output passes rules</span>
+            </div>
+          </div>
+
+          <div class="hint">
+            Storage is local to this browser via localStorage. If you want a single master file, export and re import whenever you switch machines.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHead">
+          <div>
+            <h2>Import / Export</h2>
+            <p class="sub">Manage the used set (pc_codes_used.json style).</p>
+          </div>
+        </div>
+
+        <div class="cardBody">
+          <div class="row">
+            <button class="btn" id="btnDownload">Download used JSON</button>
+            <button class="btn" id="btnImport">Import JSON</button>
+            <input type="file" id="file" accept="application/json" style="display:none" />
+            <button class="btn danger" id="btnClear">Clear used</button>
+          </div>
+
+          <div class="sep"></div>
+
+          <label class="mini" for="paste">Paste JSON (optional) then Import from paste</label>
+          <textarea id="paste" spellcheck="false" placeholder='Paste something like ["A1BC2DEF","Z9X8W7V6"]'></textarea>
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="btnImportPaste">Import from paste</button>
+            <span class="mini" id="importMsg"></span>
+          </div>
+
+          <div class="hint">
+            Import merges into your existing used set. It does not delete anything unless you hit Clear used.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Mirrors your Node script rules, but runs in the browser.
+    const STORAGE_KEY = "pc_codes_used_v1";
+
+    const LETTERS  = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // excludes I and O, includes U
+    const DIGITS   = "123456789";                // excludes 0
+    const ALPHABET = LETTERS + DIGITS;
+    const LEN = 8;
+
+    const $ = (id) => document.getElementById(id);
+
+    function setPill(text, kind){
+      const pill = $("statusPill");
+      pill.textContent = text;
+      pill.className = "pill" + (kind ? (" " + kind) : "");
+    }
+
+    function loadUsed(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return new Set();
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) return new Set();
+        return new Set(arr.map(x => String(x || "").trim()).filter(Boolean));
+      } catch {
+        return new Set();
+      }
+    }
+
+    function saveUsed(set){
+      const arr = Array.from(set);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr, null, 2));
+    }
+
+    function cryptoInt(maxExclusive){
+      // unbiased integer in [0, maxExclusive)
+      if (!Number.isFinite(maxExclusive) || maxExclusive <= 0) throw new Error("bad max");
+      const max = Math.floor(maxExclusive);
+
+      // rejection sampling
+      const uint32Max = 0xFFFFFFFF;
+      const bucketSize = Math.floor((uint32Max + 1) / max);
+      const limit = bucketSize * max;
+
+      const buf = new Uint32Array(1);
+      while(true){
+        crypto.getRandomValues(buf);
+        const x = buf[0];
+        if (x < limit) return x % max;
+      }
+    }
+
+    function randChar(str){
+      return str[cryptoInt(str.length)];
+    }
+
+    function genPciToken(){
+      // first char must be a letter
+      let out = randChar(LETTERS);
+
+      for (let i = 1; i < LEN; i++) out += randChar(ALPHABET);
+
+      // ensure at least one digit exists
+      if (!/[1-9]/.test(out)) {
+        const pos = 1 + cryptoInt(LEN - 1); // 1..LEN-1
+        out = out.slice(0, pos) + randChar(DIGITS) + out.slice(pos + 1);
+      }
+
+      return out;
+    }
+
+    function genUnique(used){
+      let pci;
+      do { pci = genPciToken(); } while (used.has(pci));
+      return pci;
+    }
+
+    function validatePci(p){
+      const s = String(p || "").trim();
+      if (s.length !== LEN) return false;
+      if (!LETTERS.includes(s[0])) return false;
+      for (const ch of s) if (!ALPHABET.includes(ch)) return false;
+      if (!/[1-9]/.test(s)) return false;
+      return true;
+    }
+
+    function parseCount(){
+      const n = parseInt(($("count").value || "").trim(), 10);
+      if (!Number.isFinite(n) || n <= 0) return 1;
+      return Math.min(n, 5000);
+    }
+
+    function updateStats(used, outputLines){
+      $("usedCount").textContent = "used: " + used.size;
+
+      $("kpiNew").textContent = String(outputLines.length);
+      $("kpiUsed").textContent = String(used.size);
+
+      const ok = outputLines.length ? outputLines.filter(validatePci).length : 0;
+      const pct = outputLines.length ? Math.round((ok / outputLines.length) * 100) : 0;
+      $("kpiValid").textContent = pct + "%";
+    }
+
+    function copyText(text){
+      return navigator.clipboard.writeText(String(text || ""));
+    }
+
+    function download(filename, text){
+      const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 250);
+    }
+
+    function tryParseJsonArray(text){
+      const data = JSON.parse(text);
+      if (!Array.isArray(data)) throw new Error("JSON must be an array");
+      const cleaned = data
+        .map(x => String(x || "").trim())
+        .filter(Boolean);
+      return cleaned;
+    }
+
+    // init
+    let USED = loadUsed();
+    setPill("Ready", "good");
+    updateStats(USED, []);
+
+    $("btnGen").addEventListener("click", () => {
+      const n = parseCount();
+      const out = [];
+      for (let i = 0; i < n; i++){
+        const pci = genUnique(USED);
+        USED.add(pci);
+        out.push(pci);
+      }
+      saveUsed(USED);
+
+      $("out").value = out.join("\n");
+      updateStats(USED, out);
+      setPill("Generated " + out.length, "good");
+    });
+
+    $("btnCopy").addEventListener("click", async () => {
+      const text = $("out").value || "";
+      if (!text.trim()) { setPill("Nothing to copy", "bad"); return; }
+      try{
+        await copyText(text);
+        setPill("Copied output", "good");
+      } catch {
+        setPill("Copy failed", "bad");
+      }
+    });
+
+    $("btnCopyUsed").addEventListener("click", async () => {
+      try{
+        const arr = Array.from(USED);
+        await copyText(JSON.stringify(arr, null, 2));
+        setPill("Copied used JSON", "good");
+      } catch {
+        setPill("Copy failed", "bad");
+      }
+    });
+
+    $("btnDownload").addEventListener("click", () => {
+      download("pc_codes_used.json", JSON.stringify(Array.from(USED), null, 2));
+      setPill("Downloaded JSON", "good");
+    });
+
+    $("btnImport").addEventListener("click", () => $("file").click());
+
+    $("file").addEventListener("change", async (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+
+      $("importMsg").textContent = "Importing…";
+      try{
+        const text = await f.text();
+        const arr = tryParseJsonArray(text);
+
+        let added = 0;
+        for (const x of arr){
+          if (!x) continue;
+          if (!USED.has(x)) { USED.add(x); added++; }
+        }
+        saveUsed(USED);
+
+        $("importMsg").textContent = "Imported. Added " + added + ".";
+        updateStats(USED, ($("out").value || "").split("\n").filter(Boolean));
+        setPill("Imported JSON", "good");
+      } catch (err){
+        $("importMsg").textContent = "Import failed.";
+        setPill("Import failed", "bad");
+      } finally {
+        e.target.value = "";
+      }
+    });
+
+    $("btnImportPaste").addEventListener("click", () => {
+      const txt = $("paste").value || "";
+      $("importMsg").textContent = "Importing…";
+      try{
+        const arr = tryParseJsonArray(txt);
+        let added = 0;
+        for (const x of arr){
+          if (!x) continue;
+          if (!USED.has(x)) { USED.add(x); added++; }
+        }
+        saveUsed(USED);
+
+        $("importMsg").textContent = "Imported. Added " + added + ".";
+        updateStats(USED, ($("out").value || "").split("\n").filter(Boolean));
+        setPill("Imported from paste", "good");
+      } catch (err){
+        $("importMsg").textContent = "Import failed. Paste must be a JSON array.";
+        setPill("Import failed", "bad");
+      }
+    });
+
+    $("btnClear").addEventListener("click", () => {
+      const ok = confirm("Clear all used PCIs stored in this browser?");
+      if (!ok) return;
+      USED = new Set();
+      saveUsed(USED);
+      $("out").value = "";
+      $("paste").value = "";
+      $("importMsg").textContent = "";
+      updateStats(USED, []);
+      setPill("Cleared", "good");
+    });
+  </script>
+</body>
+</html>

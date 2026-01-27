@@ -502,8 +502,8 @@ details[open]{background:#fff}
 }
 
 @media (max-width:570px){
-    p.muted .pill:nth-of-type(3){
-    display: none !important;
+  button.pill[data-range="90"]{
+    display:none !important;
   }
 }
 

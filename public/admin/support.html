@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PriceCheck Admin Support</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="icon" type="image/svg+xml" href="/logo/logo.svg">
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <img src="/logo/logo.svg" alt="PriceCheck" />
+      </div>
+      <div class="btnRow">
+        <button class="btn" id="btnHome" type="button">Home</button>
+        <button class="btn" id="btnLogout" type="button">Log out</button>
+      </div>
+    </div>
+
+    <section class="hero">
+      <h1>Support Inbox</h1>
+      <p>All posts includes public and private. Updates are saved instantly.</p>
+    </section>
+
+    <section class="card">
+      <div class="cardHeader">
+        <div>
+          <h2>Filters</h2>
+          <p>Search title/body, then filter by status and sort.</p>
+        </div>
+        <div class="btnRow">
+          <span class="pill"><b id="pillCount">0</b> loaded</span>
+          <span class="pill" id="pillApi">API: unknown</span>
+        </div>
+      </div>
+
+      <div class="cardBody">
+        <div class="grid2">
+          <div>
+            <label class="label" for="q">Search</label>
+            <input class="input" id="q" type="text" placeholder="Search title or body..." />
+          </div>
+
+          <div>
+            <label class="label" for="status">Status</label>
+            <select id="status">
+              <option value="all">All status</option>
+              <option value="open">Open</option>
+              <option value="investigating">Investigating</option>
+              <option value="planned">Planned</option>
+              <option value="fixed">Fixed</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="label" for="sort">Sort</label>
+            <select id="sort">
+              <option value="new">Newest</option>
+              <option value="top">Top voted</option>
+            </select>
+          </div>
+
+          <div class="btnRow" style="align-items:flex-end; justify-content:flex-start">
+            <button class="btn btnPrimary" id="btnRefresh" type="button" style="min-width:140px">Refresh</button>
+          </div>
+        </div>
+
+        <div class="issues" id="issues"></div>
+        <div class="kicker" id="emptyMsg" style="display:none; padding-top:10px"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modalOverlay" id="modalOverlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHeader">
+        <strong id="modalTitle">Issue</strong>
+        <div class="btnRow">
+          <button class="btn" id="btnCloseModal" type="button">Close</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <div class="modalMeta" id="modalMeta"></div>
+
+        <div class="modalGrid">
+          <div>
+            <label class="label" for="modalStatus">Status</label>
+            <select id="modalStatus">
+              <option value="open">open</option>
+              <option value="investigating">investigating</option>
+              <option value="planned">planned</option>
+              <option value="fixed">fixed</option>
+              <option value="closed">closed</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="modalVis">Visibility</label>
+            <select id="modalVis">
+              <option value="public">public</option>
+              <option value="private">private</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="kicker" id="modalSaveMsg" style="margin-top:10px"></div>
+
+        <div style="margin-top:12px">
+          <label class="label">Body</label>
+          <pre id="modalBody"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = "/admin/api/support";
+    const $ = (id) => document.getElementById(id);
+
+    const state = {
+      issues: [],
+      currentIssue: null
+    };
+
+    function fmtTime(iso) {
+      try { return new Date(iso).toLocaleString(); }
+      catch { return iso || ""; }
+    }
+
+    async function apiJson(path, opts = {}) {
+      const res = await fetch(path, Object.assign({
+        cache: "no-store",
+        credentials: "include",
+        headers: { "content-type": "application/json" }
+      }, opts));
+
+      const ct = res.headers.get("content-type") || "";
+      const data = ct.includes("application/json") ? await res.json() : null;
+      if (!res.ok) throw new Error(data?.error || "request_failed");
+      return data;
+    }
+
+    function setApiPill(ok) {
+      if (ok === true) {
+        $("pillApi").textContent = "API: ok";
+        $("pillApi").className = "pill pillGood";
+      } else if (ok === false) {
+        $("pillApi").textContent = "API: fail";
+        $("pillApi").className = "pill pillBad";
+      } else {
+        $("pillApi").textContent = "API: unknown";
+        $("pillApi").className = "pill";
+      }
+    }
+
+    function badge(issue) {
+      const badges = document.createElement("div");
+      badges.className = "badges";
+
+      const bCat = document.createElement("span");
+      bCat.className = "badge";
+      bCat.textContent = issue.category || "Bug";
+
+      const bStatus = document.createElement("span");
+      bStatus.className = "badge badgeAccent";
+      bStatus.textContent = issue.status || "open";
+
+      const bVis = document.createElement("span");
+      bVis.className = "badge";
+      bVis.textContent = issue.is_public ? "public" : "private";
+
+      badges.appendChild(bCat);
+      badges.appendChild(bStatus);
+      badges.appendChild(bVis);
+      return badges;
+    }
+
+    function openModal(issue) {
+      state.currentIssue = issue;
+
+      $("modalTitle").textContent = issue.title || "Issue";
+
+      const meta = [];
+      meta.push(`#${issue.id}`);
+      meta.push(issue.category || "Bug");
+      meta.push(issue.status || "open");
+      meta.push(issue.is_public ? "public" : "private");
+      meta.push(fmtTime(issue.created_at));
+
+      if (issue.source_url) meta.push(`url: ${issue.source_url}`);
+      if (issue.reporter_email) meta.push(`email: ${issue.reporter_email}`);
+      if (issue.app_version) meta.push(`v: ${issue.app_version}`);
+      if (issue.reporter_ip) meta.push(`ip: ${issue.reporter_ip}`);
+
+      $("modalMeta").textContent = meta.join("  •  ");
+      $("modalBody").textContent = issue.body || "";
+
+      $("modalStatus").value = issue.status || "open";
+      $("modalVis").value = issue.is_public ? "public" : "private";
+      $("modalSaveMsg").textContent = "";
+
+      $("modalOverlay").classList.add("open");
+    }
+
+    function closeModal() {
+      $("modalOverlay").classList.remove("open");
+      state.currentIssue = null;
+    }
+
+    async function patchIssue(issue, patch) {
+      const r = await apiJson(`${API}/issues/${issue.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch)
+      });
+      return r.issue;
+    }
+
+    function issueCard(issue) {
+      const wrap = document.createElement("div");
+      wrap.className = "issue";
+
+      const top = document.createElement("div");
+      top.className = "issueTop";
+
+      const title = document.createElement("h3");
+      title.className = "issueTitle";
+      title.textContent = issue.title || "Untitled";
+
+      top.appendChild(title);
+      top.appendChild(badge(issue));
+
+      const body = document.createElement("div");
+      body.className = "issueBody";
+      body.textContent = issue.body || "";
+
+      const footer = document.createElement("div");
+      footer.className = "issueFooter";
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = `${fmtTime(issue.created_at)} • #${issue.id} • score ${issue.score ?? 0}`;
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const viewBtn = document.createElement("button");
+      viewBtn.className = "btn";
+      viewBtn.type = "button";
+      viewBtn.textContent = "View";
+      viewBtn.onclick = () => openModal(issue);
+      actions.appendChild(viewBtn);
+
+      const statusSel = document.createElement("select");
+      statusSel.style.width = "170px";
+      ["open","investigating","planned","fixed","closed"].forEach((s) => {
+        const o = document.createElement("option");
+        o.value = s;
+        o.textContent = s;
+        if ((issue.status || "open") === s) o.selected = true;
+        statusSel.appendChild(o);
+      });
+      statusSel.onchange = async () => {
+        statusSel.disabled = true;
+        try {
+          const updated = await patchIssue(issue, { status: statusSel.value });
+          issue.status = updated.status;
+          render();
+        } catch (e) {
+          alert(`Error: ${e.message}`);
+        } finally {
+          statusSel.disabled = false;
+        }
+      };
+      actions.appendChild(statusSel);
+
+      const visSel = document.createElement("select");
+      visSel.style.width = "150px";
+      const o1 = document.createElement("option");
+      o1.value = "public"; o1.textContent = "public";
+      const o2 = document.createElement("option");
+      o2.value = "private"; o2.textContent = "private";
+      visSel.appendChild(o1);
+      visSel.appendChild(o2);
+      visSel.value = issue.is_public ? "public" : "private";
+      visSel.onchange = async () => {
+        visSel.disabled = true;
+        try {
+          const updated = await patchIssue(issue, { is_public: visSel.value === "public" });
+          issue.is_public = updated.is_public;
+          render();
+        } catch (e) {
+          alert(`Error: ${e.message}`);
+        } finally {
+          visSel.disabled = false;
+        }
+      };
+      actions.appendChild(visSel);
+
+      footer.appendChild(meta);
+      footer.appendChild(actions);
+
+      wrap.appendChild(top);
+      wrap.appendChild(body);
+      wrap.appendChild(footer);
+      return wrap;
+    }
+
+    function render() {
+      const list = $("issues");
+      list.innerHTML = "";
+      $("pillCount").textContent = String(state.issues.length);
+
+      if (!state.issues.length) {
+        $("emptyMsg").style.display = "block";
+        $("emptyMsg").textContent = "No issues found for these filters.";
+      } else {
+        $("emptyMsg").style.display = "none";
+        state.issues.forEach((it) => list.appendChild(issueCard(it)));
+      }
+    }
+
+    async function loadIssues() {
+      const q = $("q").value.trim();
+      const status = $("status").value;
+      const sort = $("sort").value;
+
+      const qs = new URLSearchParams();
+      qs.set("status", status || "all");
+      qs.set("sort", sort || "new");
+      qs.set("limit", "80");
+      qs.set("offset", "0");
+      if (q) qs.set("q", q);
+
+      try {
+        await apiJson(`${API}/health`);
+        setApiPill(true);
+
+        const data = await apiJson(`${API}/issues?${qs.toString()}`);
+        state.issues = data.issues || [];
+        render();
+      } catch (e) {
+        setApiPill(false);
+        state.issues = [];
+        render();
+
+        if (String(e.message) === "admin_required") {
+          location.href = "/admin/login";
+        }
+      }
+    }
+
+    async function modalSaveStatusOrVis() {
+      const issue = state.currentIssue;
+      if (!issue) return;
+
+      const nextStatus = $("modalStatus").value;
+      const nextVis = $("modalVis").value === "public";
+
+      $("modalSaveMsg").textContent = "Saving...";
+      try {
+        const updated = await patchIssue(issue, { status: nextStatus, is_public: nextVis });
+        issue.status = updated.status;
+        issue.is_public = updated.is_public;
+
+        $("modalSaveMsg").textContent = "Saved.";
+        render();
+      } catch (e) {
+        $("modalSaveMsg").textContent = `Error: ${e.message}`;
+      }
+    }
+
+    // Nav + auth
+    $("btnHome").onclick = () => location.href = "/admin/";
+    $("btnLogout").onclick = async () => {
+      try { await apiJson("/admin/api/logout", { method: "POST" }); } catch {}
+      location.href = "/admin/login";
+    };
+
+    $("btnRefresh").onclick = () => loadIssues();
+    $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") loadIssues(); });
+    $("status").onchange = () => loadIssues();
+    $("sort").onchange = () => loadIssues();
+
+    $("modalOverlay").addEventListener("click", (e) => {
+      if (e.target === $("modalOverlay")) closeModal();
+    });
+    $("btnCloseModal").onclick = () => closeModal();
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    $("modalStatus").onchange = () => modalSaveStatusOrVis();
+    $("modalVis").onchange = () => modalSaveStatusOrVis();
+
+    // Boot
+    loadIssues();
+  </script>
+</body>
+</html>

@@ -1079,49 +1079,57 @@ async function run(raw){
   }
 
   function couponCandidates(){
-  const offers = Array.isArray(state.offers) ? state.offers : [];
-  return offers
-    .map(o => {
-      const price = (typeof o.price_cents === 'number') ? o.price_cents : null;
-      const eff   = (typeof o.effective_price_cents === 'number') ? o.effective_price_cents : null;
-      const text  = couponSummary(o);
-      const has = !!String(o?.coupon_text || '').trim();
+    const offers = Array.isArray(state.offers) ? state.offers : [];
 
-      const savings = (price != null && eff != null && eff > 0 && eff <= price) ? (price - eff) : null;
+    return offers
+      .map(o => {
+        const price = (typeof o.price_cents === 'number' && o.price_cents > 0) ? o.price_cents : null;
+        const eff   = (typeof o.effective_price_cents === 'number' && o.effective_price_cents > 0) ? o.effective_price_cents : null;
 
-      return {
-        ...o,
-        _price: price,
-        _eff: eff,
-        _couponText: text,
-        _hasCoupon: has,
-        _savings: savings
-      };
-    })
-    .filter(o => o._hasCoupon || o._eff != null);
-}
+        const hasCouponSignal =
+          !!String(o?.coupon_text || '').trim() ||
+          !!String(o?.coupon_code || '').trim() ||
+          (o?.coupon_requires_clip === true);
 
-function pickBestCoupon(list){
-  const arr = (list || []).slice();
+        const text = couponSummary(o);
 
-  // Best = biggest deterministic savings first, otherwise lowest effective price, otherwise any coupon text
-  arr.sort((a,b) => {
-    const as = (a._savings != null) ? a._savings : -1;
-    const bs = (b._savings != null) ? b._savings : -1;
-    if (bs !== as) return bs - as;
+        const savings =
+          (price != null && eff != null && eff > 0 && eff <= price) ? (price - eff) : null;
 
-    const ae = (a._eff != null) ? a._eff : Number.POSITIVE_INFINITY;
-    const be = (b._eff != null) ? b._eff : Number.POSITIVE_INFINITY;
-    if (ae !== be) return ae - be;
+        return {
+          ...o,
+          _price: price,
+          _eff: eff,
+          _couponText: text,
+          _hasCoupon: hasCouponSignal,
+          _savings: savings
+        };
+      })
+      // keep anything that has coupon signals OR a deterministic effective price
+      .filter(o => o._hasCoupon || (o._eff != null));
+    }
 
-    // fallback: cheaper sticker price
-    const ap = (a._price != null) ? a._price : Number.POSITIVE_INFINITY;
-    const bp = (b._price != null) ? b._price : Number.POSITIVE_INFINITY;
-    return ap - bp;
-  });
+    function pickBestCoupon(list){
+      const arr = (list || []).slice();
 
-  return arr[0] || null;
-}
+    // Best = biggest deterministic savings first, otherwise lowest effective price, otherwise any coupon text
+    arr.sort((a,b) => {
+      const as = (a._savings != null) ? a._savings : -1;
+      const bs = (b._savings != null) ? b._savings : -1;
+      if (bs !== as) return bs - as;
+
+      const ae = (a._eff != null) ? a._eff : Number.POSITIVE_INFINITY;
+      const be = (b._eff != null) ? b._eff : Number.POSITIVE_INFINITY;
+      if (ae !== be) return ae - be;
+
+      // fallback: cheaper sticker price
+      const ap = (a._price != null) ? a._price : Number.POSITIVE_INFINITY;
+      const bp = (b._price != null) ? b._price : Number.POSITIVE_INFINITY;
+      return ap - bp;
+    });
+
+    return arr[0] || null;
+  }
 
 function setMaybe(el, text, { asHtml = false } = {}) {
   if (!el) return;
@@ -1137,26 +1145,30 @@ function setMaybe(el, text, { asHtml = false } = {}) {
   else el.textContent = t;
 }
 
-function renderCouponsCard(){
+  function renderCouponsCard(){
   const card = document.getElementById('couponCard');
   if (!card) return;
 
   const list = couponCandidates();
-  const best = pickBestCoupon(list);
 
-  if (!best){
+  if (!list.length){
     card.hidden = true;
     return;
   }
 
   card.hidden = false;
 
+  // Pick primary for the top summary
+  const best = pickBestCoupon(list) || list[0];
+
   const store = titleCase(best.store || 'Retailer');
-  const link = best.url || canonicalLink(best.store, best) || '#';
+  const link  = best.url || canonicalLink(best.store, best) || '#';
 
   const priceCents = best._price;
-  const effCents = best._eff;
-  const showEff = (effCents != null && priceCents != null && effCents > 0 && effCents <= priceCents);
+  const effCents   = best._eff;
+
+  const showEff =
+    (effCents != null && priceCents != null && effCents > 0 && effCents <= priceCents);
 
   const saveEl = document.getElementById('cpSave');
   if (saveEl) saveEl.textContent = (best._savings != null) ? `Save ${moneyFromCents(best._savings)}` : '';
@@ -1165,68 +1177,131 @@ function renderCouponsCard(){
   if (stEl) stEl.textContent = store;
 
   const effEl = document.getElementById('cpEffective');
-  if (effEl) effEl.textContent = showEff ? moneyFromCents(effCents) : (priceCents != null ? moneyFromCents(priceCents) : 'NA');
+  if (effEl) {
+    effEl.textContent = showEff
+      ? moneyFromCents(effCents)
+      : (priceCents != null ? moneyFromCents(priceCents) : 'NA');
+  }
 
   const regEl = document.getElementById('cpRegular');
   if (regEl) regEl.textContent = showEff ? `Regular ${moneyFromCents(priceCents)}` : '';
 
-const confEl = document.getElementById('cpConfidence');
-const ruleEl = document.getElementById('cpRule');
+  const confEl = document.getElementById('cpConfidence');
+  const ruleEl = document.getElementById('cpRule');
 
-// Confidence: only "Verified" if we can compute eff deterministically
-const confidence =
-  (showEff && best._savings != null) ? 'Verified price' :
-  (String(best.coupon_text || '').trim() ? 'Promo noted' : '');
+  const confidence =
+    (showEff && best._savings != null) ? 'Verified price' :
+    (String(best.coupon_text || '').trim() ? 'Promo noted' : '');
 
-setMaybe(confEl, confidence);
+  setMaybe(confEl, confidence);
 
-// Rule: short action hint
-const ruleBits = [];
-if (best.coupon_requires_clip === true) ruleBits.push('Clip coupon');
-if (String(best.coupon_code || '').trim()) ruleBits.push(`Code ${String(best.coupon_code).trim()}`);
-setMaybe(ruleEl, ruleBits.join(' • '));
+  const ruleBits = [];
+  if (best.coupon_requires_clip === true) ruleBits.push('Clip coupon');
+  if (String(best.coupon_code || '').trim()) ruleBits.push(`Code ${String(best.coupon_code).trim()}`);
+  setMaybe(ruleEl, ruleBits.join(' • '));
 
   const linkEl = document.getElementById('cpLink');
   if (linkEl) linkEl.href = link;
 
-  // More coupons (top 3 besides best)
-  const more = list
-    .filter(o => o !== best)
-    .slice(0, 3);
+  // ----------------------------
+  // Build "more" list (deduped)
+  // ----------------------------
+  const seen = new Set();
 
-  const moreWrap = document.getElementById('cpMore');
+  const more = (list || [])
+    .filter(o => o !== best)
+    .filter(o => {
+      const k = [
+        storeKey(o.store),
+        String(o.coupon_text || '').trim().toLowerCase(),
+        String(o.coupon_code || '').trim().toLowerCase(),
+        o.coupon_requires_clip === true ? 'clip' : '',
+        String(o._eff ?? ''),
+        String(o._price ?? '')
+      ].join('|');
+
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
+    .sort((a,b) => {
+      const as = (a._savings != null) ? a._savings : -1;
+      const bs = (b._savings != null) ? b._savings : -1;
+      if (bs !== as) return bs - as;
+
+      const ae = (a._eff != null) ? a._eff : Number.POSITIVE_INFINITY;
+      const be = (b._eff != null) ? b._eff : Number.POSITIVE_INFINITY;
+      if (ae !== be) return ae - be;
+
+      const ap = (a._price != null) ? a._price : Number.POSITIVE_INFINITY;
+      const bp = (b._price != null) ? b._price : Number.POSITIVE_INFINITY;
+      return ap - bp;
+    });
+
+  const moreOuter = document.getElementById('cpMoreWrap');
+  const moreWrap  = document.getElementById('cpMore');
   const moreLabel = document.getElementById('cpMoreLabel');
 
-    if (moreWrap && moreLabel){
-      if (!more.length){
-        moreWrap.hidden = true;
-        moreLabel.hidden = true;
-      } else {
-        moreWrap.hidden = false;
-        moreLabel.hidden = false;
-        moreWrap.innerHTML = more.map(o => {
-          const st = titleCase(o.store || 'Retailer');
-          const show = (o._eff != null) ? moneyFromCents(o._eff) : (o._price != null ? moneyFromCents(o._price) : 'NA');
-          const t = o._couponText || String(o.coupon_text || '').trim();
-          return `
-            <div class="coupon-mini">
-              <div class="coupon-mini__left">
-                <div class="coupon-mini__store">${escapeHtml(st)}</div>
-                <div class="coupon-mini__text">${escapeHtml(t)}</div>
-              </div>
-              <div class="coupon-mini__price">${escapeHtml(show)}</div>
-            </div>
-          `;
-        }).join('');
-      }
-    }
+  if (!moreOuter || !moreWrap || !moreLabel) return;
+
+  // If there are no additional options, hide the section
+  if (!more.length){
+    moreOuter.hidden = true;
+    moreLabel.hidden = true;
+    moreWrap.innerHTML = '';
+    return;
   }
 
+  moreOuter.hidden = false;
+  moreLabel.hidden = false;
+  moreLabel.textContent = `All coupon options (${1 + more.length})`;
+
+  // Render best first, then the rest
+  const all = [best, ...more];
+
+  moreWrap.innerHTML = all.map(o => {
+    const st = titleCase(o.store || 'Retailer');
+
+    const pC = o._price;
+    const eC = o._eff;
+
+    const show = (eC != null && pC != null && eC > 0 && eC <= pC)
+      ? moneyFromCents(eC)
+      : (pC != null ? moneyFromCents(pC) : 'NA');
+
+    const reg = (eC != null && pC != null && eC > 0 && eC <= pC)
+      ? `Regular ${moneyFromCents(pC)}`
+      : '';
+
+    const t = (o._couponText || String(o.coupon_text || '').trim() || '').trim();
+    const u = o.url || canonicalLink(o.store, o) || '';
+    const badge = (o === best) ? `<span class="id-pill" style="margin-left:8px;">Best</span>` : '';
+
+    return `
+      <a class="coupon-mini" href="${u ? escapeHtml(u) : '#'}" target="_blank" rel="noopener"
+         style="${u ? '' : 'pointer-events:none;'} text-decoration:none;color:inherit;">
+        <div class="coupon-mini__left">
+          <div class="coupon-mini__store">${escapeHtml(st)}${badge}</div>
+          <div class="coupon-mini__text">${escapeHtml(t || 'Promo available')}</div>
+          ${reg ? `<div class="coupon-mini__text" style="opacity:.75;">${escapeHtml(reg)}</div>` : ''}
+        </div>
+        <div class="coupon-mini__price">${escapeHtml(show)}</div>
+      </a>
+    `;
+  }).join('');
+}
+
   function couponSummary(o){
-    const txt = String(o?.coupon_text || '').trim();
-    if (!txt) return '';
-    const clip = (o?.coupon_requires_clip === true) ? 'Clip' : '';
+    const txt  = String(o?.coupon_text || '').trim();
+    const clip = (o?.coupon_requires_clip === true) ? 'Clip coupon' : '';
     const code = String(o?.coupon_code || '').trim();
+
+    // If there's no coupon_text, still surface code/clip as a real option
+    if (!txt) {
+      const bits = [clip, code ? `Code ${code}` : ''].filter(Boolean);
+      return bits.join(' • '); // can be "Clip coupon", "Code BF50", or "Clip coupon • Code BF50"
+    }
+
     const bits = [clip, code ? `Code ${code}` : ''].filter(Boolean);
     return bits.length ? `${txt} • ${bits.join(' • ')}` : txt;
   }

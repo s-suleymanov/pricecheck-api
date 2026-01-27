@@ -2,39 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PriceCheck Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
   <link rel="stylesheet" href="/admin/admin.css" />
-  <link rel="icon" type="image/svg+xml" href="../logo/logo.svg">
+  <link rel="icon" type="image/svg+xml" href="/logo/logo.svg">
 </head>
 <body>
   <div class="wrap">
-    <header class="top">
-      <img class="brand-logo" src="/logo/logo.svg" alt="PriceCheck Admin" />
-      <form id="searchForm" class="search">
-        <input id="q" class="search__input" placeholder="Search pci, upc, asin, store_sku, brand, model..." autocomplete="off" />
-        <button class="search__btn" type="submit">Search</button>
-      </form>
-    </header>
+    <div class="topbar">
+      <div class="brand">
+        <img src="/logo/logo.svg" alt="PriceCheck" />
+      </div>
+      <div class="btnRow">
+        <button class="btn" id="btnLogout" type="button">Log out</button>
+      </div>
+    </div>
 
-    <main class="grid">
-      <section class="card">
-        <div class="card__title">Catalog</div>
-        <div id="catalog"></div>
-      </section>
+    <section class="hero">
+      <h1>Welcome, Boss!</h1>
+      <p>What shall we build next?</p>
+    </section>
 
-      <section class="card">
-        <div class="card__title">Listings</div>
-        <div id="listings"></div>
-      </section>
+    <section class="card">
+      <div class="cardHeader">
+        <div>
+          <h2>Tools</h2>
+        </div>
+      </div>
 
-      <section class="card card--full">
-        <div class="card__title">Item view</div>
-        <div id="item"></div>
-      </section>
-    </main>
+      <div class="cardBody">
+        <div class="bigButtons">
+          <button class="bigBtn" id="goSupport" type="button">
+            <strong>Support Inbox</strong>
+            <span>Read and manage user support messages.</span>
+          </button>
+
+          <button class="bigBtn" id="goBulk" type="button">
+            <strong>Bulk Add</strong>
+            <span>Paste rows to add catalog and listings in one go.</span>
+          </button>
+
+          <button class="bigBtn" id="goDb" type="button">
+            <strong>Database Manager</strong>
+            <span>Edit catalog and listings, review offers and coupons.</span>
+          </button>
+        </div>
+
+        <div class="hr"></div>
+        <div class="kicker">Tip: bookmark this page. If you get logged out, you will land back on the login page.</div>
+      </div>
+    </section>
   </div>
 
-  <script src="/admin/admin.js" defer></script>
+<script>
+  async function apiJson(url, opts = {}) {
+    const res = await fetch(url, {
+      cache: "no-store",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      ...opts,
+    });
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+    if (!res.ok) throw new Error((data && data.error) ? data.error : `HTTP ${res.status}`);
+    return data;
+  }
+
+  document.getElementById("goSupport").onclick = () => location.href = "/admin/support";
+  document.getElementById("goDb").onclick = () => location.href = "/admin/db";
+
+  // new
+  document.getElementById("goBulk").onclick = () => location.href = "/admin/bulk";
+
+  document.getElementById("btnLogout").onclick = async () => {
+    try { await apiJson("/admin/api/logout", { method: "POST" }); } catch {}
+    location.href = "/admin/login";
+  };
+</script>
 </body>
 </html>

@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PriceCheck Admin • Bulk add</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="icon" type="image/svg+xml" href="/logo/logo.svg">
+
+  <style>
+    /* Bulk page layout only. Keep it minimal and let admin.css do the real styling. */
+
+    .brandRow{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .brandRow img{
+      width:36px;
+      height:36px;
+    }
+
+    .bulkFieldset{
+      border:0;
+      padding:0;
+      margin:0 0 14px 0;
+    }
+
+    .bulkRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      align-items:flex-end;
+    }
+
+    .min260{ min-width:260px; }
+    .min220{ min-width:220px; }
+
+    .gridCols{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+      gap:12px;
+    }
+
+    .bulkKickerTop{ margin-top:6px; }
+    .bulkKickerTop2{ margin-top:10px; }
+
+    .bulkTableWrap{
+      margin-top:10px;
+      overflow:auto;
+    }
+
+    /* Make textarea/select match your admin inputs without redesigning */
+    input,
+    textarea,
+    select{
+      width:100%;
+      padding:12px 14px;
+      border:1px solid var(--line, #eaecef);
+      border-radius:14px;
+      background:var(--paper, #fff);
+      color:var(--ink, #111);
+      outline:none;
+      font:inherit;
+    }
+
+    textarea{
+      resize:vertical;
+      line-height:1.35;
+      min-height:190px;
+    }
+
+    label{
+      display:block;
+      font-weight:600;
+      margin-bottom:6px;
+    }
+
+    #bulkTable{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    #bulkTable th,
+    #bulkTable td{
+      padding:10px 8px;
+      border-bottom:1px solid var(--line, #eaecef);
+      text-align:left;
+      font-size:13px;
+      vertical-align:top;
+      white-space:nowrap;
+    }
+
+    #bulkTable thead th{
+      background:rgba(0,0,0,0.02);
+      font-weight:600;
+    }
+
+    /* Let long text wrap inside a couple columns */
+    #bulkTable td:nth-child(3),
+    #bulkTable td:nth-child(9){
+      white-space:normal;
+      min-width:260px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap" style="max-width: none;">
+    <div class="topbar">
+      <div class="brand brandRow">
+        <a href="/admin/">
+        <img src="/logo/logo.svg" alt="PriceCheck" />
+        </a>
+      </div>
+
+      <div class="btnRow">
+        <button class="btn" id="btnClear" type="button">Clear</button>
+        <button class="btn" id="btnTemplate" type="button">Paste template</button>
+        <button class="btn btnPrimary" id="btnImport" type="button">Import</button>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="cardHeader">
+        <div>
+          <h2>Bulk Adder</h2>
+        </div>
+      </div>
+
+      <div class="cardBody">
+        <fieldset class="bulkFieldset">
+
+          <div class="bulkRow">
+            <div class="grow min260">
+              <label for="source_store">Manufacturer store (required)</label>
+              <input id="source_store" placeholder="NIU, Apollo, Segway, Roborock..." autocomplete="off" />
+            </div>
+
+            <div class="min220">
+              <label for="write_mode">Write</label>
+              <select id="write_mode">
+                <option value="catalog_and_listings">Catalog and listings</option>
+                <option value="catalog_only">Catalog only</option>
+                <option value="listings_only">Listings only</option>
+              </select>
+            </div>
+
+            <div class="min220">
+              <label for="default_brand">Default brand (optional)</label>
+              <input id="default_brand" placeholder="NIU, Apollo..." autocomplete="off" />
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="hr"></div>
+
+        <section>
+          <h3>Catalog columns</h3>
+          <p class="kicker">These columns write to <code>public.catalog</code>. Paste one value per line in each box.</p>
+
+          <div class="gridCols">
+            <div>
+              <label for="col_pci">pci</label>
+              <textarea id="col_pci" rows="10" placeholder="PCI123ABC&#10;PCI123ABD&#10;..."></textarea>
+            </div>
+
+            <div>
+              <label for="col_model_name">model_name</label>
+              <textarea id="col_model_name" rows="10" placeholder="NIU KQi 3 Electric scooter&#10;NIU KQi 3 Electric scooter&#10;..."></textarea>
+            </div>
+
+            <div>
+              <label for="col_version">version</label>
+              <textarea id="col_version" rows="10" placeholder="KQi 3 Pro&#10;KQi 3 Sport&#10;..."></textarea>
+            </div>
+
+            <div>
+              <label for="col_color">color</label>
+              <textarea id="col_color" rows="10" placeholder="Black&#10;White&#10;..."></textarea>
+            </div>
+
+            <div>
+              <label for="col_model_number">model_number</label>
+              <textarea id="col_model_number" rows="10" placeholder="kqi3&#10;kqi3&#10;..."></textarea>
+              <div class="kicker bulkKickerTop">
+                Model family key. You can paste it, or later we can generate it from model_name if you want.
+              </div>
+            </div>
+
+            <div>
+              <label for="col_brand">brand</label>
+              <textarea id="col_brand" rows="10" placeholder="NIU&#10;NIU&#10;..."></textarea>
+              <div class="kicker bulkKickerTop">
+                If blank, the Default brand above will be used.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="hr"></div>
+
+        <section>
+          <h3>Listings columns</h3>
+          <p class="kicker">These columns write to <code>public.listings</code>. Store will be the Manufacturer store you chose above.</p>
+
+          <div class="gridCols">
+            <div>
+              <label for="col_store_sku">store_sku</label>
+              <textarea id="col_store_sku" rows="10" placeholder="KQi3P-Black&#10;KQi3S-Black&#10;..."></textarea>
+            </div>
+
+            <div>
+              <label for="col_url">url</label>
+              <textarea id="col_url" rows="10" placeholder="https://www.niu.com/...&#10;https://www.niu.com/...&#10;..."></textarea>
+            </div>
+
+            <div>
+              <label for="col_current_price_cents">current_price_cents</label>
+              <textarea id="col_current_price_cents" rows="10" placeholder="99900&#10;79900&#10;..."></textarea>
+            </div>
+          </div>
+
+          <div class="kicker bulkKickerTop2">
+            Notes: We are not doing coupons here. If you paste price, we will set <code>current_price_observed_at</code> to now.
+          </div>
+        </section>
+
+        <div class="hr"></div>
+
+        <section>
+          <h3>Preview and validation</h3>
+          <p class="kicker">
+            This area will show row count, missing fields, and a preview table before import.
+            Import should be blocked if required columns are missing or line counts do not match.
+          </p>
+
+          <div class="bulkRow" style="gap:10px;align-items:center;">
+            <button class="btn" id="btnPreview" type="button">Preview rows</button>
+            <button class="btn" id="btnValidate" type="button">Validate only</button>
+          </div>
+
+          <div id="bulkSummary" class="kicker bulkKickerTop2">No preview yet.</div>
+          <div id="bulkErrors" style="margin-top:10px;"></div>
+
+          <div class="bulkTableWrap">
+            <table id="bulkTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>pci</th>
+                  <th>model_name</th>
+                  <th>version</th>
+                  <th>color</th>
+                  <th>model_number</th>
+                  <th>brand</th>
+                  <th>store_sku</th>
+                  <th>url</th>
+                  <th>current_price_cents</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- JS will fill preview rows here -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="hr"></div>
+        <div class="kicker">
+          Required mindset: you paste columns, not CSV. The importer aligns by line number.
+          If one column has fewer lines, that row is missing that field.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- No JS included yet, per your request -->
+</body>
+</html>

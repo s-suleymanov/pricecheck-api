@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PriceCheck Admin Login</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+  <link rel="icon" type="image/svg+xml" href="/logo/logo.svg">
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <img src="/logo/logo.svg" alt="PriceCheck" />
+      </div>
+    </div>
+
+    <section class="hero">
+      <h1>Building the future. One PriceCheck at a time.</h1>
+      <p>Enter your admin credentials to continue.</p>
+    </section>
+
+    <section class="card">
+      <div class="cardHeader">
+        <div>
+          <h2>Login</h2>
+          <p>Secured by Armis and CloudNET.</p>
+        </div>
+        <div class="btnRow">
+          <span class="pill" id="pillStatus">Status: not signed in</span>
+        </div>
+      </div>
+
+      <div class="cardBody">
+        <label class="label" for="user">Username</label>
+        <input class="input" id="user" autocomplete="username" placeholder="ADMIN_USER" />
+
+        <label class="label" for="pass">Password</label>
+        <input class="input" id="pass" type="password" autocomplete="current-password" placeholder="ADMIN_PASS" />
+
+        <div class="btnRow" style="margin-top:12px">
+          <button class="btn btnPrimary" id="btnLogin" type="button" style="min-width:140px">Sign in</button>
+        </div>
+
+        <div class="kicker" id="msg" style="margin-top:10px"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    async function apiJson(url, opts = {}) {
+      const res = await fetch(url, {
+        cache: "no-store",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        ...opts,
+      });
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+      if (!res.ok) throw new Error((data && data.error) ? data.error : `HTTP ${res.status}`);
+      return data;
+    }
+
+    async function login() {
+      const u = ($("user").value || "").trim();
+      const p = ($("pass").value || "").trim();
+      $("msg").textContent = "Signing in...";
+      try {
+        await apiJson("/admin/api/login", {
+          method: "POST",
+          body: JSON.stringify({ user: u, pass: p })
+        });
+        $("msg").textContent = "Signed in. Redirecting...";
+        location.href = "/admin/";
+      } catch (e) {
+        $("msg").textContent = "Login failed.";
+        $("pillStatus").textContent = "Status: failed";
+        $("pillStatus").className = "pill pillBad";
+      }
+    }
+
+    $("btnLogin").onclick = () => login();
+    $("pass").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") login();
+    });
+  </script>
+</body>
+</html>
