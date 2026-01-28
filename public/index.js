@@ -90,19 +90,6 @@
     return avatarHtmlForPost(p);
   }
 
-  function wireHomeSearchRouter() {
-    const form = document.getElementById("homeSearchForm");
-    const input = form?.querySelector('input[name="q"]');
-    if (!form || !input) return;
-
-    if (!window.pcSearch) {
-      console.warn("pcSearch missing. Include /search.js before /index.js");
-      return;
-    }
-    window.pcSearch.bindForm(form, input);
-    window.pcSearch.attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
-  }
-
   function parseDate(v) {
     const s = safeText(v).trim();
     if (!s) return null;
@@ -610,7 +597,6 @@
   }
 
   // Boot (fast path)
-  wireHomeSearchRouter();
   wireTabsWhenReady();
   setupLazyInsights();
 })();
