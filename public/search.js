@@ -348,6 +348,41 @@ function applyInlineTopSuggestion() {
         }));
     }
 
+        async function fetchPopular() {
+      // Only show popular when input is empty
+      if (norm(input.value)) return;
+
+      const qKey = "__popular__";
+      if (qKey === lastQ) return;
+      lastQ = qKey;
+
+      if (aborter) aborter.abort();
+      aborter = new AbortController();
+
+      try {
+        const url = new URL(endpoint, location.origin);
+        url.searchParams.set("popular", "1");
+        url.searchParams.set("limit", String(maxItems));
+
+        const res = await fetch(url.toString(), { signal: aborter.signal, cache: "no-store" });
+        if (!res.ok) throw new Error(`popular ${res.status}`);
+        const data = await res.json();
+
+        const api = Array.isArray(data?.results) ? data.results : [];
+        items = api
+          .filter((x) => x && (x.kind === "brand" || x.kind === "category") && x.value)
+          .slice(0, maxItems);
+
+        active = -1;
+        render();
+        clearInlineOnly(); // do not inline-complete for popular
+      } catch (e) {
+        if (String(e?.name) === "AbortError") return;
+        console.error(e);
+        close();
+      }
+    }
+
     async function fetchSuggestions(q) {
       const qq = norm(q);
       if (!qq) return close();
@@ -415,11 +450,23 @@ function applyInlineTopSuggestion() {
     input.setAttribute("aria-expanded", "false");
 
     input.addEventListener("input", () => {
-      // If there is a selection (the ghost part), typing replaces it naturally.
-      // Record the user-intended prefix before suggestions change anything.
-      inlineBase = input.value;
-      inlineOn = false;
+    inlineBase = input.value;
+    inlineOn = false;
+
+      if (!norm(input.value)) {
+        fetchPopular();
+        return;
+      }
+
       debouncedFetch(input.value);
+    });
+
+        input.addEventListener("focus", () => {
+      if (!norm(input.value)) {
+        fetchPopular();
+      } else {
+        debouncedFetch(input.value);
+      }
     });
 
     input.addEventListener("keydown", (e) => {
@@ -447,7 +494,8 @@ function applyInlineTopSuggestion() {
 
       if (box.hidden) {
         if (e.key === "ArrowDown") {
-          debouncedFetch(input.value);
+          if (!norm(input.value)) fetchPopular();
+          else debouncedFetch(input.value);
         }
         return;
       }

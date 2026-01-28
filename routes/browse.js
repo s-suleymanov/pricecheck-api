@@ -67,7 +67,11 @@ const PRODUCT_KEY_SQL =
 // GET /api/suggest?q=son&limit=8
 router.get("/api/suggest", async (req, res) => {
   const q = normText(req.query.q);
-  if (!q) return res.json({ ok: true, q: "", results: [] });
+   const popular =
+    String(req.query.popular || "").trim() === "1" ||
+    String(req.query.popular || "").trim().toLowerCase() === "true";
+  
+  if (!q && !popular) return res.json({ ok: true, q: "", results: [] });
 
   const limit = clampInt(req.query.limit, 1, 20, 8);
   const half = Math.max(1, Math.ceil(limit / 2));
@@ -81,7 +85,53 @@ router.get("/api/suggest", async (req, res) => {
   const client = await pool.connect();
   try {
     // 1) Facets: brand + category
-// Pass 1: prefix/contains via LIKE
+    // Pass 1: prefix/contains via LIKE
+  
+ if (popular) {
+      const popularSql = `
+        WITH base AS (
+          SELECT
+            ${PRODUCT_KEY_SQL} AS product_key,
+            COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+            brand,
+            category
+          FROM public.catalog
+          WHERE (
+            (model_number IS NOT NULL AND btrim(model_number) <> '')
+            OR (pci IS NOT NULL AND btrim(pci) <> '')
+            OR (upc IS NOT NULL AND btrim(upc) <> '')
+          )
+        ),
+        brand_counts AS (
+          SELECT
+            MIN(btrim(brand)) AS value,
+            COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products
+          FROM base
+          WHERE brand IS NOT NULL AND btrim(brand) <> ''
+          GROUP BY lower(btrim(brand))
+          ORDER BY products DESC, value ASC
+          LIMIT $1
+        ),
+        category_counts AS (
+          SELECT
+            MIN(btrim(category)) AS value,
+            COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products
+          FROM base
+          WHERE category IS NOT NULL AND btrim(category) <> ''
+          GROUP BY lower(btrim(category))
+          ORDER BY products DESC, value ASC
+          LIMIT $2
+        )
+        SELECT 'category'::text AS kind, value, products FROM category_counts
+        UNION ALL
+        SELECT 'brand'::text AS kind, value, products FROM brand_counts
+      `;
+
+      const r = await client.query(popularSql, [half, limit - half]);
+      const results = Array.isArray(r.rows) ? r.rows : [];
+      return res.json({ ok: true, q: "", results });
+    }
+
 const facetsLikeSql = `
   WITH base AS (
     SELECT
