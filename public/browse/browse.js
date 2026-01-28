@@ -21,6 +21,8 @@
     // server response
     kind: "product", // "brand" | "category" | "product"
     value: "",
+    brand: "",
+    category: "",
     total: 0,
     pages: 1,
     results: [],
@@ -53,10 +55,24 @@
     if (el) el.hidden = !show;
   }
 
-  function readUrl() {
+    function readUrl() {
+    // 1) query params (brand/category) take priority
+    const sp = new URLSearchParams(location.search);
+    const b = norm(sp.get("brand") || "");
+    const c = norm(sp.get("category") || "");
+
+    state.brand = b;
+    state.category = c;
+
+    // 2) path-based browse (slug/page)
     const parsed = parseBrowsePath(location.pathname);
     state.q = norm(parsed.q);
     state.page = parsed.page;
+
+    // If brand/category is set, we are not using q
+    if (state.brand || state.category) {
+      state.q = "";
+    }
   }
 
   function fmtPrice(cents) {
@@ -124,8 +140,16 @@
     setPager();
   }
 
-  function writeUrl({ replace = false } = {}) {
-    const path = buildBrowsePath(state.q, state.page);
+    function writeUrl({ replace = false } = {}) {
+    let path = buildBrowsePath(state.q, state.page);
+
+    const sp = new URLSearchParams();
+    if (state.brand) sp.set("brand", state.brand);
+    if (state.category) sp.set("category", state.category);
+
+    const qs = sp.toString();
+    if (qs) path += `?${qs}`;
+
     if (replace) history.replaceState({}, "", path);
     else history.pushState({}, "", path);
   }
@@ -366,7 +390,7 @@ function animateGridCards(gridEl) {
     state.value = "";
 
     try {
-      if (!state.q) {
+      if (!state.q && !state.brand && !state.category) {
         setLoading(false);
         setTitle("Browse PriceCheck");
         setMeta("Search for a brand, category, or product name.");
@@ -377,6 +401,30 @@ function animateGridCards(gridEl) {
         return;
       }
 
+           // If brand/category filters exist, use /api/browse
+      if (state.brand || state.category) {
+        const qs = new URLSearchParams({
+          page: String(state.page),
+          limit: String(state.limit),
+        });
+        if (state.brand) qs.set("brand", state.brand);
+        if (state.category) qs.set("category", state.category);
+
+        const data = await apiJson(`/api/browse?${qs.toString()}`);
+        if (reqId !== state.lastReqId) return;
+
+        state.kind = data.type || "product";
+        state.value = data.value || "";
+        state.total = typeof data.total === "number" ? data.total : 0;
+        state.pages = typeof data.pages === "number" ? data.pages : 1;
+        state.results = Array.isArray(data.results) ? data.results : [];
+        state.also = [];
+        setLoading(false);
+        render();
+        return;
+      }
+
+      // Otherwise use /api/search?q=...
       const qs = new URLSearchParams({
         q: state.q,
         page: String(state.page),
@@ -407,6 +455,8 @@ function animateGridCards(gridEl) {
     // When a user clicks the "also" facet card, we just set q to that facet value
     // The server will then resolve it as brand/category and return the right list
     state.q = norm(value);
+    state.brand = "";
+    state.category = "";
     state.page = 1;
     writeUrl({ replace: false });
     load();

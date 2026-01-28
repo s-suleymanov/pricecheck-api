@@ -185,6 +185,8 @@
 
     const endpoint = String(opts.endpoint || "/api/suggest");
     const maxItems = Number(opts.limit || 8);
+    let inlineBase = "";     // what the user actually typed
+    let inlineOn = false;    // whether we currently have an inline completion applied
 
     // Ensure parent is positioned
     const parent =
@@ -212,6 +214,49 @@
     let lastQ = "";
     let aborter = null;
 
+    function caretAtEnd() {
+  try {
+    return input.selectionStart === input.selectionEnd && input.selectionEnd === input.value.length;
+  } catch {
+    return true;
+  }
+}
+
+function clearInlineOnly() {
+  inlineOn = false;
+  inlineBase = "";
+}
+
+function applyInlineTopSuggestion() {
+  if (!items.length) return clearInlineOnly();
+  if (!caretAtEnd()) return clearInlineOnly();
+  if (active >= 0) return clearInlineOnly(); // user is navigating, do not inline-complete
+
+  const typed = norm(inlineBase || input.value);
+  if (!typed) return clearInlineOnly();
+
+  const top = items[0];
+  if (!top || !top.value) return clearInlineOnly();
+
+  const sug = String(top.value).trim();
+  if (!sug) return clearInlineOnly();
+
+  const t = typed.toLowerCase();
+  const s = sug.toLowerCase();
+
+  // Only inline-complete if suggestion starts with what user typed
+  if (!s.startsWith(t)) return clearInlineOnly();
+
+  if (sug.length === typed.length) return clearInlineOnly();
+
+  // Apply: set full suggestion, select the autocompleted tail
+  input.value = sug;
+  try {
+    input.setSelectionRange(typed.length, sug.length);
+  } catch {}
+  inlineOn = true;
+}
+
     function close() {
       parent.classList.remove("is-open");
       box.hidden = true;
@@ -238,6 +283,7 @@
           const pill =
             it.kind === "brand" ? "Brand" :
             it.kind === "category" ? "Category" :
+            it.kind === "combo" ? "Filter" :
             "Page";
 
           const count = Number(it.products || 0);
@@ -272,14 +318,13 @@
       render();
     }
 
-    function pick(idx) {
+        function pick(idx) {
       const it = items[idx];
       if (!it) return;
 
       close();
 
-      // Pages go directly
-      if (it.kind === "page" && it.href) {
+      if (it.href) {
         location.href = String(it.href);
         return;
       }
@@ -327,7 +372,11 @@
         const api = Array.isArray(data?.results) ? data.results : [];
 
         const facets = api
-          .filter((x) => x && (x.kind === "brand" || x.kind === "category") && x.value)
+          .filter((x) =>
+            x &&
+            (x.kind === "brand" || x.kind === "category" || x.kind === "combo") &&
+            x.value
+          )
           .slice(0, maxItems);
 
         // Merge: built-in pages first, then API facets, keep within maxItems
@@ -346,6 +395,7 @@
 
         active = -1;
         render();
+        applyInlineTopSuggestion();
       } catch (e) {
         if (String(e?.name) === "AbortError") return;
         console.error(e);
@@ -365,10 +415,36 @@
     input.setAttribute("aria-expanded", "false");
 
     input.addEventListener("input", () => {
+      // If there is a selection (the ghost part), typing replaces it naturally.
+      // Record the user-intended prefix before suggestions change anything.
+      inlineBase = input.value;
+      inlineOn = false;
       debouncedFetch(input.value);
     });
 
     input.addEventListener("keydown", (e) => {
+      // Accept inline completion with Tab or ArrowRight
+      if (inlineOn && (e.key === "Tab" || e.key === "ArrowRight")) {
+        e.preventDefault();
+        try {
+          input.setSelectionRange(input.value.length, input.value.length);
+        } catch {}
+        clearInlineOnly();
+        return;
+      }
+
+      // Cancel inline completion (revert to what user typed) with Escape
+      if (inlineOn && e.key === "Escape") {
+        e.preventDefault();
+        input.value = inlineBase || "";
+        try {
+          input.setSelectionRange(input.value.length, input.value.length);
+        } catch {}
+        clearInlineOnly();
+        close();
+        return;
+      }
+
       if (box.hidden) {
         if (e.key === "ArrowDown") {
           debouncedFetch(input.value);
@@ -441,4 +517,20 @@
   }
 
   window.pcSearch = { route, bindForm, shouldGoDashboard, attachAutocomplete };
+
+// Auto-wire: attach autocomplete + submit routing on common inputs
+document.addEventListener("DOMContentLoaded", () => {
+  const input =
+    document.querySelector(".nav-search__input") ||
+    document.querySelector(".home-search__input") ||
+    document.querySelector('input[type="search"]');
+
+  if (!input) return;
+
+  const form = input.closest("form");
+  if (form) bindForm(form, input);
+
+  attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
+});
+
 })();

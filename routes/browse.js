@@ -24,11 +24,19 @@ function normLower(v) {
   return normText(v).toLowerCase();
 }
 
+function tokenize(q) {
+  return String(q || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]+/g, " ")
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
+
 // Serve browse page (SPA HTML for all browse paths)
 const BROWSE_HTML = path.join(__dirname, "..", "public", "browse", "index.html");
 
 router.get("/browse", (_req, res) => res.redirect(301, "/browse/"));
-
 router.get("/browse/", (_req, res) => res.sendFile(BROWSE_HTML));
 router.get("/browse/:q/", (_req, res) => res.sendFile(BROWSE_HTML));
 router.get("/browse/:q/page/:n/", (_req, res) => res.sendFile(BROWSE_HTML));
@@ -37,6 +45,24 @@ router.get("/browse/:q/page/:n/", (_req, res) => res.sendFile(BROWSE_HTML));
 // - Treat NULL/empty as '' so base variants still show
 // - Group by lower(trim(version)) ignoring case differences
 const VERSION_NORM_SQL = "COALESCE(NULLIF(lower(btrim(c.version)), ''), '')";
+
+// Full-text document for fuzzy-ish multi-word search (order independent)
+// (kept for later use)
+const FTS_DOC_SQL =
+  "to_tsvector('simple', " +
+  "coalesce(c.model_name,'') || ' ' || coalesce(c.model_number,'') || ' ' || " +
+  "coalesce(c.version,'') || ' ' || coalesce(c.brand,'') || ' ' || coalesce(c.category,'')" +
+  ")";
+
+// A stable key even when model_number is missing.
+// Uses model_number first, then pci, then normalized upc, then id.
+const PRODUCT_KEY_SQL =
+  "COALESCE(" +
+  "NULLIF(upper(btrim(model_number)), '')," +
+  "NULLIF(upper(btrim(pci)), '')," +
+  "NULLIF(public.norm_upc(upc), '')," +
+  "id::text" +
+  ")";
 
 // GET /api/suggest?q=son&limit=8
 router.get("/api/suggest", async (req, res) => {
@@ -49,63 +75,332 @@ router.get("/api/suggest", async (req, res) => {
   const qLower = normLower(q);
   const like = `%${qLower}%`;
 
+  const toks = tokenize(qLower);
+  const tokArr = toks.slice(0, 12);
+
   const client = await pool.connect();
   try {
-    // "products" means distinct variants: (model_number + version_norm)
-    const sql = `
+    // 1) Facets: brand + category
+// Pass 1: prefix/contains via LIKE
+const facetsLikeSql = `
+  WITH base AS (
+    SELECT
+      ${PRODUCT_KEY_SQL} AS product_key,
+      COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+      brand,
+      category
+    FROM public.catalog
+    WHERE (
+      (model_number IS NOT NULL AND btrim(model_number) <> '')
+      OR (pci IS NOT NULL AND btrim(pci) <> '')
+      OR (upc IS NOT NULL AND btrim(upc) <> '')
+    )
+  ),
+  brand_counts AS (
+    SELECT
+      lower(btrim(brand)) AS facet_norm,
+      MIN(btrim(brand)) AS facet_label,
+      COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products
+    FROM base
+    WHERE brand IS NOT NULL AND btrim(brand) <> ''
+      AND lower(btrim(brand)) LIKE $1
+    GROUP BY lower(btrim(brand))
+    ORDER BY products DESC, facet_label ASC
+    LIMIT $2
+  ),
+  category_counts AS (
+    SELECT
+      lower(btrim(category)) AS facet_norm,
+      MIN(btrim(category)) AS facet_label,
+      COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products
+    FROM base
+    WHERE category IS NOT NULL AND btrim(category) <> ''
+      AND lower(btrim(category)) LIKE $1
+    GROUP BY lower(btrim(category))
+    ORDER BY products DESC, facet_label ASC
+    LIMIT $3
+  )
+  SELECT 'brand'::text AS kind, facet_label AS value, products FROM brand_counts
+  UNION ALL
+  SELECT 'category'::text AS kind, facet_label AS value, products FROM category_counts
+`;
+
+const facetsFuzzySql = `
+  WITH base AS (
+    SELECT
+      ${PRODUCT_KEY_SQL} AS product_key,
+      COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+      brand,
+      category
+    FROM public.catalog
+    WHERE (
+      (model_number IS NOT NULL AND btrim(model_number) <> '')
+      OR (pci IS NOT NULL AND btrim(pci) <> '')
+      OR (upc IS NOT NULL AND btrim(upc) <> '')
+    )
+  ),
+  brand_counts AS (
+    SELECT
+      lower(btrim(brand)) AS facet_norm,
+      MIN(btrim(brand)) AS facet_label,
+      COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products,
+      similarity(lower(btrim(brand)), $1) AS sim
+    FROM base
+    WHERE brand IS NOT NULL AND btrim(brand) <> ''
+      AND lower(btrim(brand)) % $1
+    GROUP BY lower(btrim(brand))
+    ORDER BY sim DESC, products DESC, facet_label ASC
+    LIMIT $2
+  ),
+  category_counts AS (
+    SELECT
+      lower(btrim(category)) AS facet_norm,
+      MIN(btrim(category)) AS facet_label,
+      COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products,
+      similarity(lower(btrim(category)), $1) AS sim
+    FROM base
+    WHERE category IS NOT NULL AND btrim(category) <> ''
+      AND lower(btrim(category)) % $1
+    GROUP BY lower(btrim(category))
+    ORDER BY sim DESC, products DESC, facet_label ASC
+    LIMIT $3
+  )
+  SELECT 'brand'::text AS kind, facet_label AS value, products FROM brand_counts
+  UNION ALL
+  SELECT 'category'::text AS kind, facet_label AS value, products FROM category_counts
+`;
+
+let facetRows = [];
+{
+  const r1 = await client.query(facetsLikeSql, [like, half, half]);
+  facetRows = r1.rows || [];
+}
+
+// If LIKE returns nothing and query is long enough, do trigram fuzzy
+if ((!facetRows || facetRows.length === 0) && qLower.length >= 3) {
+  try {
+    const r2 = await client.query(facetsFuzzySql, [qLower, half, half]);
+    facetRows = r2.rows || [];
+  } catch (e) {
+    console.warn("fuzzy facets disabled (pg_trgm missing?):", e?.message || e);
+  }
+}
+
+    // 2) Brand pick: exact token match, then fuzzy token match (pg_trgm similarity)
+    const brandPickSql = `
       WITH base AS (
         SELECT
-          upper(btrim(model_number)) AS model_number,
+          ${PRODUCT_KEY_SQL} AS product_key,
           COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
-          brand,
-          category
+          btrim(brand) AS brand
         FROM public.catalog
-        WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
+        WHERE (
+          (model_number IS NOT NULL AND btrim(model_number) <> '')
+          OR (pci IS NOT NULL AND btrim(pci) <> '')
+          OR (upc IS NOT NULL AND btrim(upc) <> '')
+        )
+          AND brand IS NOT NULL AND btrim(brand) <> ''
       ),
-      brand_counts AS (
+      b AS (
         SELECT
-          lower(btrim(brand)) AS facet_norm,
-          MIN(btrim(brand)) AS facet_label,
-          COUNT(DISTINCT (model_number || '|' || version_norm))::int AS products
+          MIN(brand) AS label,
+          lower(brand) AS norm,
+          COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products
         FROM base
-        WHERE brand IS NOT NULL AND btrim(brand) <> ''
-          AND lower(btrim(brand)) LIKE $1
-        GROUP BY lower(btrim(brand))
-        ORDER BY products DESC, facet_label ASC
-        LIMIT $2
-      ),
-      category_counts AS (
-        SELECT
-          lower(btrim(category)) AS facet_norm,
-          MIN(btrim(category)) AS facet_label,
-          COUNT(DISTINCT (model_number || '|' || version_norm))::int AS products
-        FROM base
-        WHERE category IS NOT NULL AND btrim(category) <> ''
-          AND lower(btrim(category)) LIKE $1
-        GROUP BY lower(btrim(category))
-        ORDER BY products DESC, facet_label ASC
-        LIMIT $3
+        WHERE lower(brand) = ANY($1::text[])
+        GROUP BY lower(brand)
+        ORDER BY products DESC, length(lower(brand)) DESC, MIN(brand) ASC
+        LIMIT 1
       )
-      SELECT 'brand'::text AS kind, facet_label AS value, products
-      FROM brand_counts
-      UNION ALL
-      SELECT 'category'::text AS kind, facet_label AS value, products
-      FROM category_counts
+      SELECT label, norm, products FROM b
     `;
 
-    const { rows } = await client.query(sql, [like, half, half]);
+    const brandPickFuzzySql = `
+  WITH base AS (
+    SELECT
+      ${PRODUCT_KEY_SQL} AS product_key,
+      COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+      btrim(brand) AS brand
+    FROM public.catalog
+    WHERE (
+      (model_number IS NOT NULL AND btrim(model_number) <> '')
+      OR (pci IS NOT NULL AND btrim(pci) <> '')
+      OR (upc IS NOT NULL AND btrim(upc) <> '')
+    )
+      AND brand IS NOT NULL AND btrim(brand) <> ''
+  ),
+  scored AS (
+    SELECT
+      MIN(brand) AS label,
+      lower(brand) AS norm,
+      COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products,
+      MAX(similarity(lower(brand), t)) AS sim
+    FROM base
+    JOIN unnest($1::text[]) AS t
+      ON lower(brand) % t
+    GROUP BY lower(brand)
+  )
+  SELECT label, norm, products
+  FROM scored
+  WHERE sim >= 0.20
+  ORDER BY sim DESC, products DESC, length(norm) DESC, label ASC
+  LIMIT 1
+`;
 
-    // Keep it stable and predictable:
-    // - higher products first
-    // - then kind (brand before category)
-    // - then alphabetically
-    const results = (rows || [])
-      .sort((a, b) => {
-        const ap = Number(a.products || 0);
-        const bp = Number(b.products || 0);
-        if (bp !== ap) return bp - ap;
-        if (a.kind !== b.kind) return a.kind === "brand" ? -1 : 1;
-        return String(a.value || "").localeCompare(String(b.value || ""));
+    // 3) Category pick: contained-in-query first, then fuzzy token match (pg_trgm similarity)
+    const categoryPickSql = `
+      WITH base AS (
+        SELECT
+          ${PRODUCT_KEY_SQL} AS product_key,
+          COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+          btrim(category) AS category
+        FROM public.catalog
+        WHERE (
+          (model_number IS NOT NULL AND btrim(model_number) <> '')
+          OR (pci IS NOT NULL AND btrim(pci) <> '')
+          OR (upc IS NOT NULL AND btrim(upc) <> '')
+        )
+          AND category IS NOT NULL AND btrim(category) <> ''
+      ),
+      c AS (
+        SELECT
+          MIN(category) AS label,
+          lower(category) AS norm,
+          COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products,
+          CASE WHEN position(lower(category) in $1) > 0 THEN 1 ELSE 0 END AS in_query,
+          length(lower(category)) AS len
+        FROM base
+        GROUP BY lower(category)
+      )
+      SELECT label, norm, products
+      FROM c
+      WHERE in_query = 1
+      ORDER BY len DESC, products DESC, label ASC
+      LIMIT 1
+    `;
+
+    const categoryPickFuzzySql = `
+  WITH base AS (
+    SELECT
+      ${PRODUCT_KEY_SQL} AS product_key,
+      COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+      btrim(category) AS category
+    FROM public.catalog
+    WHERE (
+      (model_number IS NOT NULL AND btrim(model_number) <> '')
+      OR (pci IS NOT NULL AND btrim(pci) <> '')
+      OR (upc IS NOT NULL AND btrim(upc) <> '')
+    )
+      AND category IS NOT NULL AND btrim(category) <> ''
+  ),
+  scored AS (
+    SELECT
+      MIN(category) AS label,
+      lower(category) AS norm,
+      COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products,
+      MAX(similarity(lower(category), t)) AS sim,
+      length(lower(category)) AS len
+    FROM base
+    JOIN unnest($1::text[]) AS t
+      ON lower(category) % t
+    GROUP BY lower(category)
+  )
+  SELECT label, norm, products
+  FROM scored
+  WHERE sim >= 0.20
+  ORDER BY sim DESC, len DESC, products DESC, label ASC
+  LIMIT 1
+`;
+
+    let brandHit = null;
+    let categoryHit = null;
+
+    if (tokArr.length) {
+      const b = (await client.query(brandPickSql, [tokArr])).rows?.[0];
+      if (b && b.label) brandHit = b;
+
+      if (!brandHit) {
+        try {
+          const bf = (await client.query(brandPickFuzzySql, [tokArr])).rows?.[0];
+          if (bf && bf.label) brandHit = bf;
+        } catch (e) {
+          console.warn("fuzzy brand suggest disabled (pg_trgm/similarity missing):", e?.message || e);
+        }
+      }
+    }
+
+    if (qLower.length >= 3) {
+      const c = (await client.query(categoryPickSql, [qLower])).rows?.[0];
+      if (c && c.label) categoryHit = c;
+    }
+
+    if (!categoryHit && tokArr.length) {
+      try {
+        const cf = (await client.query(categoryPickFuzzySql, [tokArr])).rows?.[0];
+        if (cf && cf.label) categoryHit = cf;
+      } catch (e) {
+        console.warn("fuzzy category suggest disabled (pg_trgm/similarity missing):", e?.message || e);
+      }
+    }
+
+    // Combo count only if we have both
+    let comboItem = null;
+    if (brandHit && categoryHit) {
+      const comboCountSql = `
+        WITH base AS (
+          SELECT DISTINCT
+            ${PRODUCT_KEY_SQL} AS product_key,
+            COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm
+          FROM public.catalog
+          WHERE (
+            (model_number IS NOT NULL AND btrim(model_number) <> '')
+            OR (pci IS NOT NULL AND btrim(pci) <> '')
+            OR (upc IS NOT NULL AND btrim(upc) <> '')
+          )
+            AND brand IS NOT NULL AND btrim(brand) <> ''
+            AND category IS NOT NULL AND btrim(category) <> ''
+            AND lower(btrim(brand)) = lower(btrim($1))
+            AND lower(btrim(category)) = lower(btrim($2))
+        )
+        SELECT COUNT(*)::int AS products FROM base
+      `;
+
+      const comboProducts =
+        (await client.query(comboCountSql, [brandHit.label, categoryHit.label])).rows?.[0]?.products ?? 0;
+
+      if (comboProducts > 0) {
+        comboItem = {
+          kind: "combo",
+          value: `${brandHit.label} ${categoryHit.label}`,
+          brand: brandHit.label,
+          category: categoryHit.label,
+          products: comboProducts,
+          href: `/browse/?brand=${encodeURIComponent(brandHit.label)}&category=${encodeURIComponent(
+            categoryHit.label
+          )}`,
+        };
+      }
+    }
+
+    const facetResults = (facetRows || []).sort((a, b) => {
+  const ap = Number(a.products || 0);
+  const bp = Number(b.products || 0);
+  if (bp !== ap) return bp - ap;
+  if (a.kind !== b.kind) return a.kind === "brand" ? -1 : 1;
+  return String(a.value || "").localeCompare(String(b.value || ""));
+  });
+
+    const merged = [];
+    if (comboItem) merged.push(comboItem);
+    for (const r of facetResults) merged.push(r);
+
+    const seen = new Set();
+    const results = merged
+      .filter((it) => {
+        const k = `${String(it.kind)}::${String(it.value || "").toLowerCase()}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
       })
       .slice(0, limit);
 
@@ -277,7 +572,6 @@ router.get("/api/search", async (req, res) => {
       };
     }
 
-    // 2) If brand/category match exists, return that and do NOT do product search
     if (brandProducts > 0 || categoryProducts > 0) {
       let kind;
       let value;
@@ -453,8 +747,22 @@ router.get("/api/browse", async (req, res) => {
     value = category;
   }
 
-  if (!value || (type !== "brand" && type !== "category")) {
-    return res.status(400).json({ ok: false, error: "brand or category is required" });
+  const hasBrand = !!brand;
+  const hasCategory = !!category;
+
+  if (hasBrand && hasCategory) {
+    type = "combo";
+    value = `${brand} ${category}`;
+  } else if (hasBrand) {
+    type = "brand";
+    value = brand;
+  } else if (hasCategory) {
+    type = "category";
+    value = category;
+  }
+
+  if (!value || (type !== "brand" && type !== "category" && type !== "combo")) {
+    return res.status(400).json({ ok: false, error: "brand/category is required" });
   }
 
   const page = clampInt(req.query.page, 1, 1000000, 1);
@@ -470,16 +778,18 @@ router.get("/api/browse", async (req, res) => {
           COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm
         FROM public.catalog
         WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
-          AND (
+        AND (
             ($1 = 'brand' AND lower(btrim(brand)) = lower(btrim($2)))
             OR
             ($1 = 'category' AND lower(btrim(category)) = lower(btrim($2)))
+            OR
+            ($1 = 'combo' AND lower(btrim(brand)) = lower(btrim($3)) AND lower(btrim(category)) = lower(btrim($4)))
           )
       )
       SELECT COUNT(*)::int AS total
       FROM base
     `;
-    const total = (await client.query(countSql, [type, value])).rows?.[0]?.total ?? 0;
+    const total = (await client.query(countSql, [type, value, brand, category])).rows?.[0]?.total ?? 0;
 
     const listSql = `
       WITH picked AS (
@@ -505,6 +815,8 @@ router.get("/api/browse", async (req, res) => {
             ($1 = 'brand' AND lower(btrim(c.brand)) = lower(btrim($2)))
             OR
             ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
+            OR
+            ($1 = 'combo' AND lower(btrim(c.brand)) = lower(btrim($3)) AND lower(btrim(c.category)) = lower(btrim($4)))
           )
         ORDER BY
           upper(btrim(c.model_number)),
@@ -516,7 +828,7 @@ router.get("/api/browse", async (req, res) => {
         SELECT *
         FROM picked
         ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number, version_norm
-        LIMIT $3 OFFSET $4
+        LIMIT $5 OFFSET $6
       ),
       anchors AS (
         SELECT
@@ -562,12 +874,14 @@ router.get("/api/browse", async (req, res) => {
       ORDER BY a.brand NULLS LAST, a.category NULLS LAST, a.model_name NULLS LAST, a.model_number, a.version_norm
     `;
 
-    const { rows } = await client.query(listSql, [type, value, limit, offset]);
+    const { rows } = await client.query(listSql, [type, value, brand, category, limit, offset]);
 
     res.json({
       ok: true,
       type,
       value,
+      brand: hasBrand ? brand : "",
+      category: hasCategory ? category : "",
       page,
       limit,
       total,
@@ -593,7 +907,6 @@ router.get("/api/browse_facets", async (req, res) => {
 
   const client = await pool.connect();
   try {
-    // Facet "products" now means distinct variants (model_number + version), not just model_number.
     const sql = `
       WITH base AS (
         SELECT
