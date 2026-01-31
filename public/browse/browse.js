@@ -240,7 +240,7 @@
 
     // subtitle: category • variant (no brand)
     const subtitle = version
-      ? (category ? `${category} • ${version}` : version)
+      ? (category ? `${version} ${category}` : version)
       : category;
 
     return `
