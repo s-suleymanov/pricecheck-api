@@ -344,8 +344,8 @@ function animateGridCards(gridEl) {
     }
 
     const title = q
-      ? `${q} Price Comparison and Deals`
-      : "Compare Product Prices Across Stores | PriceCheck";
+      ? `${q} Price Comparison and Deals - PriceCheck`
+      : "Compare Product Prices Across Stores - PriceCheck";
 
     setHead({
       title,
