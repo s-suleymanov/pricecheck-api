@@ -144,7 +144,7 @@ router.get('/api/research/indices', (req, res) => {
 
 // Top gainers - try DB, fall back to snapshot
 router.get('/api/research/gainers', async (req, res) => {
-  const sql = `
+    const sql = `
     with last7 as (
       select
         coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) as prod_key,
@@ -156,26 +156,57 @@ router.get('/api/research/gainers', async (req, res) => {
       group by 1
     ),
     latest as (
-      select distinct on (coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)))
-        coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) as prod_key,
-        lower(btrim(store)) as store,
-        coalesce(nullif(title,''), 'Unknown') as title,
-        coalesce(effective_price_cents, price_cents) as price_cents,
-        observed_at
-      from public.price_history
-      where coalesce(effective_price_cents, price_cents) is not null
-        and coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) is not null
-      order by coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)), observed_at desc
+      select distinct on (coalesce(nullif(upper(btrim(ph.pci)),''), norm_upc(ph.upc)))
+        coalesce(nullif(upper(btrim(ph.pci)),''), norm_upc(ph.upc)) as prod_key,
+        lower(btrim(ph.store)) as store,
+        ph.store_sku,
+        ph.pci,
+        ph.upc,
+        coalesce(ph.effective_price_cents, ph.price_cents) as price_cents,
+        ph.observed_at
+      from public.price_history ph
+      where coalesce(ph.effective_price_cents, ph.price_cents) is not null
+        and coalesce(nullif(upper(btrim(ph.pci)),''), norm_upc(ph.upc)) is not null
+      order by coalesce(nullif(upper(btrim(ph.pci)),''), norm_upc(ph.upc)), ph.observed_at desc
+    ),
+    meta as (
+      select
+        l.prod_key,
+        coalesce(
+          nullif(btrim(cp.model_name),''),
+          nullif(btrim(cu.model_name),''),
+          nullif(btrim(li.title),''),
+          'Unknown'
+        ) as title,
+        coalesce(
+          nullif(btrim(cp.category),''),
+          nullif(btrim(cu.category),''),
+          'Uncategorized'
+        ) as category
+      from latest l
+      left join public.listings li
+        on lower(btrim(li.store)) = l.store
+      and norm_sku(li.store_sku) = norm_sku(l.store_sku)
+      left join public.catalog cp
+        on l.pci is not null
+      and btrim(l.pci) <> ''
+      and upper(btrim(cp.pci)) = upper(btrim(l.pci))
+      left join public.catalog cu
+        on l.upc is not null
+      and btrim(l.upc) <> ''
+      and norm_upc(cu.upc) = norm_upc(l.upc)
     ),
     chg as (
       select
         l.prod_key,
         l.store,
-        l.title,
+        m.title,
+        m.category,
         l.price_cents,
         ((l.price_cents - s.p50_7d)::numeric / nullif(s.p50_7d,0)) as change_ratio
       from latest l
       join last7 s on s.prod_key = l.prod_key
+      left join meta m on m.prod_key = l.prod_key
       where s.p50_7d > 0
     ),
     cheapest as (
@@ -196,15 +227,7 @@ router.get('/api/research/gainers', async (req, res) => {
     )
     select
       chg.title as title,
-      coalesce(
-        (select c.category from public.catalog c
-          where c.pci is not null and upper(btrim(c.pci)) = chg.prod_key
-          limit 1),
-        (select c.category from public.catalog c
-          where c.upc is not null and norm_upc(c.upc) = chg.prod_key
-          limit 1),
-        'Uncategorized'
-      ) as category,
+      chg.category as category,
       cheapest.cheapest_store as store,
       chg.change_ratio
     from chg
@@ -255,26 +278,57 @@ router.get('/api/research/losers', async (req, res) => {
       group by 1
     ),
     latest as (
-      select distinct on (coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)))
-        coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) as prod_key,
-        lower(btrim(store)) as store,
-        coalesce(nullif(title,''), 'Unknown') as title,
-        coalesce(effective_price_cents, price_cents) as price_cents,
-        observed_at
-      from public.price_history
-      where coalesce(effective_price_cents, price_cents) is not null
-        and coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)) is not null
-      order by coalesce(nullif(upper(btrim(pci)),''), norm_upc(upc)), observed_at desc
+      select distinct on (coalesce(nullif(upper(btrim(ph.pci)),''), norm_upc(ph.upc)))
+        coalesce(nullif(upper(btrim(ph.pci)),''), norm_upc(ph.upc)) as prod_key,
+        lower(btrim(ph.store)) as store,
+        ph.store_sku,
+        ph.pci,
+        ph.upc,
+        coalesce(ph.effective_price_cents, ph.price_cents) as price_cents,
+        ph.observed_at
+      from public.price_history ph
+      where coalesce(ph.effective_price_cents, ph.price_cents) is not null
+        and coalesce(nullif(upper(btrim(ph.pci)),''), norm_upc(ph.upc)) is not null
+      order by coalesce(nullif(upper(btrim(ph.pci)),''), norm_upc(ph.upc)), ph.observed_at desc
+    ),
+    meta as (
+      select
+        l.prod_key,
+        coalesce(
+          nullif(btrim(cp.model_name),''),
+          nullif(btrim(cu.model_name),''),
+          nullif(btrim(li.title),''),
+          'Unknown'
+        ) as title,
+        coalesce(
+          nullif(btrim(cp.category),''),
+          nullif(btrim(cu.category),''),
+          'Uncategorized'
+        ) as category
+      from latest l
+      left join public.listings li
+        on lower(btrim(li.store)) = l.store
+      and norm_sku(li.store_sku) = norm_sku(l.store_sku)
+      left join public.catalog cp
+        on l.pci is not null
+      and btrim(l.pci) <> ''
+      and upper(btrim(cp.pci)) = upper(btrim(l.pci))
+      left join public.catalog cu
+        on l.upc is not null
+      and btrim(l.upc) <> ''
+      and norm_upc(cu.upc) = norm_upc(l.upc)
     ),
     chg as (
       select
         l.prod_key,
         l.store,
-        l.title,
+        m.title,
+        m.category,
         l.price_cents,
         ((l.price_cents - s.p50_7d)::numeric / nullif(s.p50_7d,0)) as change_ratio
       from latest l
       join last7 s on s.prod_key = l.prod_key
+      left join meta m on m.prod_key = l.prod_key
       where s.p50_7d > 0
     ),
     cheapest as (
@@ -295,15 +349,7 @@ router.get('/api/research/losers', async (req, res) => {
     )
     select
       chg.title as title,
-      coalesce(
-        (select c.category from public.catalog c
-          where c.pci is not null and upper(btrim(c.pci)) = chg.prod_key
-          limit 1),
-        (select c.category from public.catalog c
-          where c.upc is not null and norm_upc(c.upc) = chg.prod_key
-          limit 1),
-        'Uncategorized'
-      ) as category,
+      chg.category as category,
       cheapest.cheapest_store as store,
       chg.change_ratio
     from chg
