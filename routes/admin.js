@@ -347,7 +347,15 @@ router.post("/admin/api/bulk", requireAdminApi, async (req, res) => {
               catalog_upserts++;
             }
           } catch (e) {
-            errors.push({ line, error: "catalog_failed" });
+            errors.push({
+              line,
+              error: "catalog_failed",
+              detail: String(e?.message || "unknown"),
+              code: e?.code || null,
+              constraint: e?.constraint || null,
+              table: e?.table || null,
+              column: e?.column || null,
+            });
           }
         }
       }
@@ -381,7 +389,7 @@ router.post("/admin/api/bulk", requireAdminApi, async (req, res) => {
               insert into public.listings
                 (store, store_sku, pci, upc, title, url, status, offer_tag, current_price_cents, current_price_observed_at)
               values
-                ($1,$2,$3,$4,$5,$6,$7,$8,$9, case when $9 is null then null else $10::timestamptz end)
+                ($1,$2,$3,$4,$5,$6,$7,$8,$9::int4, case when $9::int4 is null then null else $10::timestamptz end)
               on conflict (store, store_sku)
               do update set
                 pci = coalesce(excluded.pci, public.listings.pci),
@@ -405,7 +413,15 @@ router.post("/admin/api/bulk", requireAdminApi, async (req, res) => {
 
             listing_upserts++;
           } catch (e) {
-            errors.push({ line, error: "listing_failed" });
+            errors.push({
+              line,
+              error: "listing_failed",
+              detail: String(e?.message || "unknown"),
+              code: e?.code || null,
+              constraint: e?.constraint || null,
+              table: e?.table || null,
+              column: e?.column || null,
+            });
           }
         }
       }

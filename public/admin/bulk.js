@@ -4,6 +4,75 @@
 
   const $ = (id) => document.getElementById(id);
 
+  function ensureAfter(el, id) {
+    if (!el) return null;
+    let node = document.getElementById(id);
+    if (node) return node;
+
+    node = document.createElement("div");
+    node.id = id;
+    node.className = "kicker";
+    node.style.marginTop = "6px";
+    el.insertAdjacentElement("afterend", node);
+    return node;
+  }
+
+function renderColumnInspector(textareaId, lines, maxLen) {
+    const ta = $(textareaId);
+    if (!ta) return;
+
+    // 1) counts line
+    const meta = ensureAfter(ta, `meta_${textareaId}`);
+    const filled = Array.isArray(lines) ? lines.filter((x) => String(x || "").trim() !== "").length : 0;
+    const len = Array.isArray(lines) ? lines.length : 0;
+
+    if (meta) {
+      // show both how many pasted and how many filled relative to max rows
+      const denom = maxLen || len || 0;
+      meta.textContent =
+        denom
+          ? `Lines: ${len}. Filled: ${filled}/${denom}.`
+          : `Lines: ${len}. Filled: ${filled}.`;
+    }
+
+    // 2) entries preview (first 30)
+    const preview = ensureAfter(meta || ta, `peek_${textareaId}`);
+    if (!preview) return;
+
+    const showN = Math.min(30, Math.max(maxLen || len, len));
+    const out = [];
+    for (let i = 0; i < showN; i++) {
+      const v = (i < len) ? String(lines[i] ?? "") : "";
+      // show blanks as a visible marker so you can confirm alignment
+      out.push(String(i + 1).padStart(3, " ") + "  " + (v.trim() === "" ? "·" : v));
+    }
+
+    preview.style.whiteSpace = "pre";
+    preview.style.fontFamily = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
+    preview.style.fontSize = "12px";
+    preview.style.lineHeight = "1.35";
+    preview.style.padding = "10px 12px";
+    preview.style.border = "1px solid var(--line, #eaecef)";
+    preview.style.borderRadius = "12px";
+    preview.style.background = "rgba(0,0,0,0.02)";
+    preview.textContent = out.join("\n");
+  }
+
+  function renderAllColumnInspectors(cols, maxLen) {
+    // Catalog
+    renderColumnInspector("col_pci", cols.catalog.pci, maxLen);
+    renderColumnInspector("col_model_name", cols.catalog.model_name, maxLen);
+    renderColumnInspector("col_version", cols.catalog.version, maxLen);
+    renderColumnInspector("col_color", cols.catalog.color, maxLen);
+    renderColumnInspector("col_model_number", cols.catalog.model_number, maxLen);
+    renderColumnInspector("col_brand", cols.catalog.brand, maxLen);
+
+    // Listings
+    renderColumnInspector("col_store_sku", cols.listings.store_sku, maxLen);
+    renderColumnInspector("col_url", cols.listings.url, maxLen);
+    renderColumnInspector("col_current_price_cents", cols.listings.current_price_cents, maxLen);
+  }
+
   async function apiJson(url, opts = {}) {
     const res = await fetch(url, {
       cache: "no-store",
@@ -22,13 +91,26 @@
     return data;
   }
 
-  function linesFrom(text) {
-    return String(text || "")
-      .replace(/\r\n/g, "\n")
-      .replace(/\r/g, "\n")
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length);
+  // Normalize newlines only
+  function normalizeNewlines(text) {
+    return String(text || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  }
+
+  // Preserve empty lines to maintain alignment (critical for optional blanks).
+  // Also trims each line, and removes ONLY trailing blank lines (common paste artifact).
+  function linesFromPreserve(text) {
+    const raw = normalizeNewlines(text).split("\n").map((l) => String(l).trim());
+    // drop trailing empties only
+    while (raw.length && raw[raw.length - 1] === "") raw.pop();
+    return raw;
+  }
+
+  // For required columns: ignore all-empty input, but preserve internal empties (so you can intentionally blank a required value if you really want to see the error).
+  function linesFromRequired(text) {
+    const arr = linesFromPreserve(text);
+    // If user pasted nothing at all, return []
+    const any = arr.some((x) => x !== "");
+    return any ? arr : [];
   }
 
   function takeAt(arr, i) {
@@ -48,8 +130,6 @@
   }
 
   function normStore(x) {
-    // Manufacturer store, keep as user typed but trimmed.
-    // Backend can canonicalize further if you want.
     const s = String(x || "").trim();
     return s ? s : null;
   }
@@ -102,9 +182,8 @@
       "current_price_cents",
     ];
 
-    for (const r of rows.slice(0, 100)) {
+    for (const r of rows.slice(0, 200)) {
       const tr = document.createElement("tr");
-
       for (const k of cols) {
         const td = document.createElement("td");
         td.style.padding = "8px";
@@ -125,28 +204,54 @@
   function getWriteMode() {
     const v = String($("write_mode")?.value || "catalog_and_listings");
     if (v === "catalog_only") return "catalog_only";
-    if (v === "listings_only") return "listings_only";
     return "catalog_and_listings";
   }
 
   function readColumns() {
-    // Catalog
-    const pci = linesFrom($("col_pci")?.value);
-    const model_name = linesFrom($("col_model_name")?.value);
-    const version = linesFrom($("col_version")?.value);
-    const color = linesFrom($("col_color")?.value);
-    const model_number = linesFrom($("col_model_number")?.value);
-    const brand = linesFrom($("col_brand")?.value);
+    // Catalog (required in catalog modes)
+    const pci = linesFromRequired($("col_pci")?.value);
+    const model_name = linesFromRequired($("col_model_name")?.value);
+    const version = linesFromRequired($("col_version")?.value);
 
-    // Listings
-    const store_sku = linesFrom($("col_store_sku")?.value);
-    const url = linesFrom($("col_url")?.value);
-    const current_price_cents = linesFrom($("col_current_price_cents")?.value);
+    // Catalog (optional, allow blanks)
+    const color = linesFromPreserve($("col_color")?.value);
+    const model_number = linesFromPreserve($("col_model_number")?.value);
+    const brand = linesFromPreserve($("col_brand")?.value);
+
+    // Listings (required in listings modes)
+    const store_sku = linesFromRequired($("col_store_sku")?.value);
+    const url = linesFromPreserve($("col_url")?.value); // OPTIONAL
+    const current_price_cents = linesFromRequired($("col_current_price_cents")?.value);
 
     return {
       catalog: { pci, model_name, version, color, model_number, brand },
       listings: { store_sku, url, current_price_cents },
     };
+  }
+
+  function countFilled(arr) {
+    if (!Array.isArray(arr) || !arr.length) return 0;
+    let n = 0;
+    for (const x of arr) if (String(x || "").trim() !== "") n++;
+    return n;
+  }
+
+  function buildCountsSummary(cols, maxLen, wantCatalog, wantListings) {
+    const parts = [];
+    if (wantCatalog) {
+      parts.push(
+        `Catalog lines: pci ${cols.catalog.pci.length}, model_name ${cols.catalog.model_name.length}, version ${cols.catalog.version.length}, ` +
+        `color ${cols.catalog.color.length} (${countFilled(cols.catalog.color)}/${maxLen} filled), ` +
+        `model_number ${cols.catalog.model_number.length} (${countFilled(cols.catalog.model_number)}/${maxLen} filled), ` +
+        `brand ${cols.catalog.brand.length} (${countFilled(cols.catalog.brand)}/${maxLen} filled)`
+      );
+    }
+    if (wantListings) {
+      parts.push(
+        `Listings lines: store_sku ${cols.listings.store_sku.length}, url ${cols.listings.url.length}, current_price_cents ${cols.listings.current_price_cents.length}`
+      );
+    }
+    return parts.join(" • ");
   }
 
   function buildRowsForPreview() {
@@ -155,7 +260,6 @@
 
     const sourceStore = normStore($("source_store")?.value);
     const mode = getWriteMode();
-
     const defaultBrand = emptyToNull($("default_brand")?.value);
 
     if (!sourceStore) {
@@ -167,69 +271,77 @@
     const cols = readColumns();
 
     const wantCatalog = (mode === "catalog_only" || mode === "catalog_and_listings");
-    const wantListings = (mode === "listings_only" || mode === "catalog_and_listings");
+    const wantListings = (mode === "catalog_and_listings");
 
-    const lengths = [];
-
+    // Decide maxLen only from required columns in the active mode.
+    const reqLens = [];
     if (wantCatalog) {
-      lengths.push(cols.catalog.pci.length);
-      lengths.push(cols.catalog.model_name.length);
-      lengths.push(cols.catalog.version.length);
-      lengths.push(cols.catalog.color.length);
-      lengths.push(cols.catalog.model_number.length);
-      lengths.push(cols.catalog.brand.length);
+      reqLens.push(cols.catalog.pci.length, cols.catalog.model_name.length, cols.catalog.version.length);
     }
-
     if (wantListings) {
-      lengths.push(cols.listings.store_sku.length);
-      lengths.push(cols.listings.url.length);
-      lengths.push(cols.listings.current_price_cents.length);
+      reqLens.push(cols.listings.store_sku.length, cols.listings.current_price_cents.length);
     }
 
-    const maxLen = Math.max(0, ...lengths);
+    const maxLen = Math.max(0, ...reqLens);
+    renderAllColumnInspectors(cols, maxLen);
+
+
     if (!maxLen) {
-      addError("Paste at least one value in one of the columns.");
+      addError("Paste at least one full row in the required columns for the selected mode.");
       setSummary("Fix errors to preview.");
       return { ok: false, rows: [], options: null };
     }
 
-    // Validate required columns based on mode
+    // Required columns must exactly match maxLen.
+    function requireExact(name, arr) {
+      if (arr.length !== maxLen) addError(`${name} has ${arr.length} line(s), expected ${maxLen}.`);
+      // Also disallow internal blank lines in required columns (almost always paste mistake).
+      for (let i = 0; i < maxLen; i++) {
+        if (String(takeAt(arr, i) || "").trim() === "") {
+          addError(`${name} has an empty value at line ${i + 1}. Required columns cannot have blank lines.`);
+          break;
+        }
+      }
+    }
+
     if (wantCatalog) {
       if (!cols.catalog.pci.length) addError("Catalog: pci column is required.");
       if (!cols.catalog.model_name.length) addError("Catalog: model_name column is required.");
       if (!cols.catalog.version.length) addError("Catalog: version column is required.");
+
+      if (cols.catalog.pci.length) requireExact("pci", cols.catalog.pci);
+      if (cols.catalog.model_name.length) requireExact("model_name", cols.catalog.model_name);
+      if (cols.catalog.version.length) requireExact("version", cols.catalog.version);
     }
 
     if (wantListings) {
       if (!cols.listings.store_sku.length) addError("Listings: store_sku column is required.");
-      if (!cols.listings.url.length) addError("Listings: url column is required.");
       if (!cols.listings.current_price_cents.length) addError("Listings: current_price_cents column is required.");
+
+      if (cols.listings.store_sku.length) requireExact("store_sku", cols.listings.store_sku);
+      if (cols.listings.current_price_cents.length) requireExact("current_price_cents", cols.listings.current_price_cents);
+
+      // url is optional, but if provided it cannot exceed maxLen
+      validateOptional("url", cols.listings.url);
     }
 
-    // Validate line counts match exactly across pasted columns for the selected mode.
-    // This is the "guided" part: no silent misalignment.
-    function requireSameLen(name, arr) {
-      if (arr.length === 0) return;
-      if (arr.length !== maxLen) addError(`${name} has ${arr.length} lines, but expected ${maxLen}.`);
+
+    // Optional columns may be:
+    // - length 0 (not provided)
+    // - length == maxLen (full alignment)
+    // - length < maxLen IF they truly ended early (we will treat missing as blank at bottom)
+    // But if user wants blanks in the middle, they must preserve them by leaving empty lines, and that naturally gives length == maxLen.
+    function validateOptional(name, arr) {
+      if (!arr.length) return;
+      if (arr.length > maxLen) addError(`${name} has ${arr.length} line(s), expected at most ${maxLen}.`);
     }
 
     if (wantCatalog) {
-      requireSameLen("pci", cols.catalog.pci);
-      requireSameLen("model_name", cols.catalog.model_name);
-      requireSameLen("version", cols.catalog.version);
-      // Optional but if present must match
-      if (cols.catalog.color.length) requireSameLen("color", cols.catalog.color);
-      if (cols.catalog.model_number.length) requireSameLen("model_number", cols.catalog.model_number);
-      if (cols.catalog.brand.length) requireSameLen("brand", cols.catalog.brand);
+      validateOptional("color", cols.catalog.color);
+      validateOptional("model_number", cols.catalog.model_number);
+      validateOptional("brand", cols.catalog.brand);
     }
 
-    if (wantListings) {
-      requireSameLen("store_sku", cols.listings.store_sku);
-      requireSameLen("url", cols.listings.url);
-      requireSameLen("current_price_cents", cols.listings.current_price_cents);
-    }
-
-    // If any errors were appended, stop.
     const hadErrors = $("bulkErrors")?.children?.length > 0;
     if (hadErrors) {
       setSummary("Fix errors to preview.");
@@ -238,6 +350,7 @@
 
     const rows = [];
     for (let i = 0; i < maxLen; i++) {
+      const brandMaybe = emptyToNull(takeAt(cols.catalog.brand, i));
       const r = {
         __line: i + 1,
 
@@ -246,9 +359,7 @@
         upc: null,
 
         // catalog fields
-        brand: wantCatalog
-          ? (emptyToNull(takeAt(cols.catalog.brand, i)) || defaultBrand)
-          : null,
+        brand: wantCatalog ? (brandMaybe || defaultBrand) : null,
         category: null,
         model_number: wantCatalog ? emptyToNull(takeAt(cols.catalog.model_number, i)) : null,
         model_name: wantCatalog ? emptyToNull(takeAt(cols.catalog.model_name, i)) : null,
@@ -278,9 +389,12 @@
       doHistory: false,
     };
 
+    const counts = buildCountsSummary(cols, maxLen, wantCatalog, wantListings);
+
     setSummary(
       `Ready. Rows: ${rows.length}. Mode: ${mode.replaceAll("_", " ")}. ` +
-      `Catalog: ${options.doCatalog ? "on" : "off"}, Listings: ${options.doListings ? "on" : "off"}.`
+      `Catalog: ${options.doCatalog ? "on" : "off"}, Listings: ${options.doListings ? "on" : "off"}. ` +
+      `(${counts})`
     );
 
     renderTableRows(rows);
@@ -289,7 +403,6 @@
   }
 
   function pasteTemplate() {
-    // Minimal "columns" template. Each textarea gets example lines.
     $("source_store").value = "NIU";
     $("default_brand").value = "NIU";
     $("write_mode").value = "catalog_and_listings";
@@ -297,9 +410,14 @@
     $("col_pci").value = ["PCI123ABC", "PCI123ABD"].join("\n");
     $("col_model_name").value = ["NIU KQi 3 Electric scooter", "NIU KQi 3 Electric scooter"].join("\n");
     $("col_version").value = ["KQi 3 Pro", "KQi 3 Sport"].join("\n");
-    $("col_color").value = ["Black", "Black"].join("\n");
+
+    // Example: second row has no color (blank line preserved)
+    $("col_color").value = ["Black", ""].join("\n");
+
     $("col_model_number").value = ["kqi3_2025", "kqi3_2025"].join("\n");
-    $("col_brand").value = ["NIU", "NIU"].join("\n");
+
+    // Example: second row brand left blank to use Default brand
+    $("col_brand").value = ["NIU", ""].join("\n");
 
     $("col_store_sku").value = ["KQi3Pro-Black", "KQi3Sport-Black"].join("\n");
     $("col_url").value = ["https://www.niu.com/products/kqi-3-pro", "https://www.niu.com/products/kqi-3-sport"].join("\n");
@@ -393,13 +511,34 @@
 
     $("btnImport")?.addEventListener("click", doImport);
 
-    // If user changes mode, wipe preview so they don't import stale view
     $("write_mode")?.addEventListener("change", () => {
       clearErrors();
       clearTable();
       setSummary("Mode changed. Click Preview rows.");
       setStatus("Ready.");
     });
+
+    const watchIds = [
+      "col_pci","col_model_name","col_version","col_color","col_model_number","col_brand",
+      "col_store_sku","col_url","col_current_price_cents"
+    ];
+
+    for (const id of watchIds) {
+      $(id)?.addEventListener("input", () => {
+        const cols = readColumns();
+        // pick a maxLen that is stable enough for live feedback:
+        const mode = getWriteMode();
+        const wantCatalog = (mode === "catalog_only" || mode === "catalog_and_listings");
+        const wantListings = (mode === "listings_only" || mode === "catalog_and_listings");
+        const reqLens = [];
+        if (wantCatalog) reqLens.push(cols.catalog.pci.length, cols.catalog.model_name.length, cols.catalog.version.length);
+        if (wantListings) reqLens.push(cols.listings.store_sku.length, cols.listings.current_price_cents.length);
+        const maxLen = Math.max(0, ...reqLens);
+        renderAllColumnInspectors(cols, maxLen);
+      });
+    }
+
+    setStatus("Ready.");
   }
 
   document.addEventListener("DOMContentLoaded", wire);
