@@ -89,6 +89,7 @@ async function findSeedFromListings(client, parsed) {
       from public.listings
       where lower(btrim(store)) = 'amazon'
         and norm_sku(store_sku) = norm_sku($1)
+        and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
       order by current_price_observed_at desc nulls last, created_at desc
       limit 1
       `,
@@ -115,6 +116,7 @@ async function findSeedFromListings(client, parsed) {
       select store, store_sku, upc, pci, title, url, current_price_cents, current_price_observed_at, created_at
       from public.listings
       where norm_upc(upc) = norm_upc($1)
+        and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
       order by current_price_observed_at desc nulls last, created_at desc
       limit 1
       `,
@@ -134,6 +136,7 @@ async function findSeedFromListings(client, parsed) {
       from public.listings
       where pci is not null and btrim(pci) <> ''
         and upper(btrim(pci)) = upper(btrim($1))
+        and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
       order by current_price_observed_at desc nulls last, created_at desc
       limit 1
       `,
@@ -154,6 +157,7 @@ async function findSeedFromListings(client, parsed) {
       from public.listings
       where replace(lower(btrim(store)), ' ', '') = $1
         and norm_sku(store_sku) = norm_sku($2)
+        and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
       order by current_price_observed_at desc nulls last, created_at desc
       limit 1
       `,
@@ -300,6 +304,7 @@ async function getOffersForSelectedVariant(client, selectedKeys) {
         or
         ($2::text <> '' and norm_upc(upc) = norm_upc($2))
       )
+      and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
     `,
     [pci, upc]
   );
@@ -396,6 +401,7 @@ async function resolveSelectedVariant(client, rawKey) {
       from public.listings
       where lower(btrim(store)) = 'amazon'
         and norm_sku(store_sku) = norm_sku($1)
+        and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
       order by current_price_observed_at desc nulls last, created_at desc
       limit 1
       `,
@@ -414,6 +420,7 @@ async function resolveSelectedVariant(client, rawKey) {
       from public.listings
       where replace(lower(btrim(store)), ' ', '') = $1
         and norm_sku(store_sku) = norm_sku($2)
+        and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
       order by current_price_observed_at desc nulls last, created_at desc
       limit 1
       `,
@@ -453,6 +460,7 @@ async function getObservationLog(client, selectedKeys) {
         ($2::text <> '' and norm_upc(upc) = norm_upc($2))
       )
       and (current_price_observed_at is not null or created_at is not null)
+      and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
     order by coalesce(current_price_observed_at, created_at) desc
     limit 250
     `,
