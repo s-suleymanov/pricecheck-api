@@ -76,21 +76,29 @@
           <div class="grid2">
             <div>
               <div class="muted mono" id="pIds"></div>
-              <div style="margin-top:10px">
-                <label class="muted" for="variant">Variant</label>
-                <select class="variant-dropdown" id="variant"></select>
-              </div>
-              <div style="margin-top:10px" id="brandWrap" hidden>
-              <label class="muted">Brand</label>
-                <button id="brandBtn" class="ph-btn" type="button"></button>
-              </div>
-             <div style="margin-top:10px" id="categoryWrap" hidden>
+
+              <!-- Category -->
+              <div style="margin-top:10px" id="categoryWrap" hidden>
                 <label class="muted">Category</label>
                 <button id="categoryBtn" class="ph-btn" type="button"></button>
               </div>
-              <div style="margin-top:10px" id="colorWrap" hidden>
-                <label class="muted" for="color">Color</label>
-                <select class="variant-dropdown" id="color"></select>
+
+              <!-- Brand -->
+              <div style="margin-top:10px" id="brandWrap" hidden>
+                <label class="muted">Brand</label>
+                <button id="brandBtn" class="ph-btn" type="button"></button>
+              </div>
+
+              <!-- Family -->
+              <div style="margin-top:10px" id="familyWrap" hidden>
+                <label class="muted">Family</label>
+                <div class="ph-btn" id="familyVal" style="cursor:default;"></div>
+              </div>
+
+              <!-- Model -->
+              <div style="margin-top:10px">
+                <label class="muted" for="variant">Model</label>
+                <select class="variant-dropdown" id="variant"></select>
               </div>
             </div>
             <div>
@@ -190,6 +198,18 @@
             <h3>Store Coverage</h3>
             <div class="bars" id="coverage"></div>
             <p class="note">Higher percentages indicate this store is recommended more often based on our metrics.</p>
+          </section>
+
+          <!-- Variant (new catalog.variant dropdown placeholder) -->
+          <section class="card" id="variant2Card" hidden>
+            <h3 style="margin-bottom: 9px;">Variant</h3>
+            <div class="pill-row" id="variant2Pills"></div>
+          </section>
+
+          <!-- Color (moved from header into its own card) -->
+          <section class="card" id="colorCard" hidden>
+            <h3 style="margin-bottom: 9px;">Color</h3>
+            <div class="pill-row" id="colorPills"></div>
           </section>
 
           <section class="card" id="couponCard" hidden>

@@ -36,11 +36,17 @@ function isLikelyASIN(s) {
   return /^[A-Z0-9]{10}$/i.test(v);
 }
 
-function normStoreName(s) {
+function normStoreKey(s) {
+  // Normalize to your canonical store keys used by frontend storeKey()
   const k = String(s || '').trim().toLowerCase();
-  if (k === 'best buy') return 'bestbuy';
-  if (k === 'bestbuy') return 'bestbuy';
-  return k;
+  if (!k) return '';
+  const compact = k.replace(/\s+/g, '');
+  if (compact === 'bestbuy') return 'bestbuy';
+  if (compact === 'walmart') return 'walmart';
+  if (compact === 'amazon') return 'amazon';
+  if (compact === 'target') return 'target';
+  if (compact === 'apple') return 'apple';
+  return compact;
 }
 
 function storeForKind(kind) {
@@ -70,6 +76,17 @@ function parseKey(rawKey) {
   return { kind: 'raw', value: v };
 }
 
+function normSkuLocal(v) {
+  const s = String(v || '').trim().toUpperCase().replace(/[^0-9A-Z]/g, '');
+  return s || null;
+}
+
+function uniqOfferKey(store, storeSku) {
+  const st = normStoreKey(store);
+  const sku = normSkuLocal(storeSku);
+  return `${st}:S:${sku || ''}`;
+}
+
 // -------------------------
 // resolution flow (listings -> catalog)
 // -------------------------
@@ -77,11 +94,12 @@ function parseKey(rawKey) {
 /**
  * Step 1: resolve a "seed" from listings based on input key.
  * ASIN is allowed ONLY to find PCI/UPC from Amazon listing.
+ * Also keep the actual seed listing row (so the dashboard can show it even if PCI/UPC are missing).
  */
 async function findSeedFromListings(client, parsed) {
   const { kind, value } = parsed;
 
-  // ASIN means Amazon listing, ASIN stored in listings.store_sku where store='Amazon'
+  // ASIN means Amazon listing, ASIN stored in listings.store_sku where store='amazon'
   if (kind === 'asin') {
     const r = await client.query(
       `
@@ -99,7 +117,6 @@ async function findSeedFromListings(client, parsed) {
     if (r.rowCount) {
       const row = r.rows[0];
       return {
-        // keep asin only as "input echo", never for matching
         asin_input: value,
         upc: row.upc || null,
         pci: row.pci || null,
@@ -179,7 +196,7 @@ async function findSeedFromListings(client, parsed) {
 
 /**
  * Step 2: catalog identity via PCI -> UPC.
- * IMPORTANT: no catalog.asin usage anywhere (column removed).
+ * IMPORTANT: no catalog.asin usage anywhere.
  */
 async function resolveCatalogIdentity(client, seedKeys) {
   const pci = seedKeys?.pci ? String(seedKeys.pci).trim() : '';
@@ -191,7 +208,9 @@ async function resolveCatalogIdentity(client, seedKeys) {
   if (pci) {
     const r = await client.query(
       `
-      select id, upc, pci, model_name, model_number, brand, category, image_url, version, color, created_at, dropship_warning, recall_url, coverage_warning
+      select id, upc, pci, model_name, model_number, brand, category, image_url,
+             version, color, variant, created_at,
+             dropship_warning, recall_url, coverage_warning
       from public.catalog
       where pci is not null and btrim(pci) <> ''
         and upper(btrim(pci)) = upper(btrim($1))
@@ -208,7 +227,9 @@ async function resolveCatalogIdentity(client, seedKeys) {
   if (upc) {
     const r = await client.query(
       `
-      select id, upc, pci, model_name, model_number, brand, category, image_url, version, color, created_at, dropship_warning, recall_url, coverage_warning
+      select id, upc, pci, model_name, model_number, brand, category, image_url,
+             version, color, variant, created_at,
+             dropship_warning, recall_url, coverage_warning
       from public.catalog
       where norm_upc(upc) = norm_upc($1)
       order by created_at desc
@@ -226,6 +247,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
 /**
  * Step 3: variants come from catalog by model_number.
  * Variant key priority: pci -> upc (NO asin keys).
+ * Include catalog.variant (you have that column now).
  */
 async function getVariantsFromCatalog(client, catalogIdentity) {
   const modelNumber = catalogIdentity?.model_number ? String(catalogIdentity.model_number).trim() : '';
@@ -233,158 +255,196 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
 
   const r = await client.query(
     `
-    select id, upc, pci, model_name, model_number, brand, category, image_url, version, color, created_at
+    select id, upc, pci, model_name, model_number, brand, category, image_url,
+           version, color, variant, created_at
     from public.catalog
     where model_number is not null and btrim(model_number) <> ''
       and upper(btrim(model_number)) = upper(btrim($1))
     order by
       (case when version is null or btrim(version) = '' then 1 else 0 end),
       version nulls last,
-      (case when model_name is null or btrim(model_name) = '' then 1 else 0 end),
-      model_name nulls last,
+      (case when variant is null or btrim(variant) = '' then 1 else 0 end),
+      variant nulls last,
+      (case when color is null or btrim(color) = '' then 1 else 0 end),
+      color nulls last,
       id
     limit 500
     `,
     [modelNumber]
   );
 
- return r.rows.map((row) => {
-  const v = row.version && String(row.version).trim();
-  const c = row.color && String(row.color).trim();
+  return r.rows
+    .map((row) => {
+      const key =
+        (row.pci && String(row.pci).trim() ? `pci:${String(row.pci).trim()}` : null) ||
+        (row.upc && String(row.upc).trim() ? `upc:${String(row.upc).trim()}` : null);
 
-  const label =
-    (v && c ? `${v} • ${c}` : (v || c)) ||
-    (row.model_name && String(row.model_name).trim()) ||
-    'Default';
+      // If a catalog row has neither PCI nor UPC, it is not selectable as a variant anchor.
+      if (!key) return null;
 
-    const key =
-      (row.pci && String(row.pci).trim() ? `pci:${String(row.pci).trim()}` : null) ||
-      (row.upc && String(row.upc).trim() ? `upc:${String(row.upc).trim()}` : null);
+      const v = row.version && String(row.version).trim();
+      const c = row.color && String(row.color).trim();
+      const label =
+        (v && c ? `${v} • ${c}` : (v || c)) ||
+        (row.model_name && String(row.model_name).trim()) ||
+        'Default';
 
-    return {
-      id: row.id,
-      key,
-      upc: row.upc || null,
-      pci: row.pci || null,
-      model_name: row.model_name || null,
-      model_number: row.model_number || null,
-      variant_label: label,
-      version: row.version || null,
-      color: row.color || null,
-      brand: row.brand || null,
-      category: row.category || null,
-      image_url: row.image_url || null
-    };
-  });
+      return {
+        id: row.id,
+        key,
+        upc: row.upc || null,
+        pci: row.pci || null,
+        model_name: row.model_name || null,
+        model_number: row.model_number || null,
+        variant_label: label,
+        version: row.version || null,
+        variant: row.variant || null,
+        color: row.color || null,
+        brand: row.brand || null,
+        category: row.category || null,
+        image_url: row.image_url || null
+      };
+    })
+    .filter(Boolean);
 }
 
-async function getOffersForSelectedVariant(client, selectedKeys) {
+const OFFER_COLS = `
+  store, store_sku, upc, pci, url, title, offer_tag,
+  current_price_cents, current_price_observed_at, created_at,
+  coupon_text,
+  coupon_type,
+  coupon_value_cents,
+  coupon_value_pct,
+  coupon_requires_clip,
+  coupon_code,
+  coupon_expires_at,
+  effective_price_cents,
+  coupon_observed_at
+`;
+
+function rowToOfferCandidate(row) {
+  const storeKey = normStoreKey(row.store);
+
+  return {
+    store: storeKey,
+    store_sku: row.store_sku || null,
+    url: row.url || null,
+    title: row.title || null,
+    offer_tag: row.offer_tag || null,
+
+    price_cents: row.current_price_cents ?? null,
+    effective_price_cents: row.effective_price_cents ?? null,
+
+    coupon_text: row.coupon_text || null,
+    coupon_type: row.coupon_type || null,
+    coupon_value_cents: row.coupon_value_cents ?? null,
+    coupon_value_pct: row.coupon_value_pct ?? null,
+    coupon_requires_clip: row.coupon_requires_clip ?? null,
+    coupon_code: row.coupon_code || null,
+    coupon_expires_at: row.coupon_expires_at || null,
+    coupon_observed_at: row.coupon_observed_at || null,
+
+    // Use coalesce for ordering and UI
+    observed_at: row.current_price_observed_at ?? row.created_at ?? null,
+
+    upc: row.upc || null,
+    pci: row.pci || null
+  };
+}
+
+/**
+ * Offers: match by PCI/UPC. If PCI/UPC missing, still return the exact seed listing.
+ * Multi-offer rule: Amazon can have multiple rows. Non-Amazon is newest per store.
+ */
+async function getOffersForSelectedVariant(client, selectedKeys, seed) {
   const pci = selectedKeys?.pci ? String(selectedKeys.pci).trim() : '';
   const upc = selectedKeys?.upc ? String(selectedKeys.upc).trim() : '';
 
-  const r = await client.query(
-    `
-    select
-      store, store_sku, upc, pci, url, title, offer_tag,
-      current_price_cents, current_price_observed_at, created_at,
+  let rows = [];
 
-      coupon_text,
-      coupon_type,
-      coupon_value_cents,
-      coupon_value_pct,
-      coupon_requires_clip,
-      coupon_code,
-      coupon_expires_at,
-      effective_price_cents,
-      coupon_observed_at
-    from public.listings
-    where
-      (
-        ($1::text <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($1)))
-        or
-        ($2::text <> '' and norm_upc(upc) = norm_upc($2))
-      )
-      and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
-    `,
-    [pci, upc]
-  );
+  // 1) If we have PCI/UPC, pull matching offers
+  if (pci || upc) {
+    const r = await client.query(
+      `
+      select ${OFFER_COLS}
+      from public.listings
+      where
+        (
+          ($1::text <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($1)))
+          or
+          ($2::text <> '' and norm_upc(upc) = norm_upc($2))
+        )
+        and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
+      order by coalesce(current_price_observed_at, created_at) desc nulls last
+      limit 2000
+      `,
+      [pci, upc]
+    );
+    rows = r.rows || [];
+  }
 
-  const amazon = [];
-  const walmart = [];
-  const bestbuy = [];
-  const nonMultiBestByStore = new Map(); // everything else: newest per store
+  // 2) Always try to include the exact seed listing (helps when PCI/UPC missing)
+  const seedStore = seed?.seed_listing?.store || null;
+  const seedSku = seed?.seed_listing?.store_sku || null;
 
-  for (const row of r.rows) {
-    const store = normStoreName(row.store);
+  if (seedStore && seedSku) {
+    const rSeed = await client.query(
+      `
+      select ${OFFER_COLS}
+      from public.listings
+      where replace(lower(btrim(store)), ' ', '') = replace(lower(btrim($1)), ' ', '')
+        and norm_sku(store_sku) = norm_sku($2)
+        and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
+      order by current_price_observed_at desc nulls last, created_at desc
+      limit 1
+      `,
+      [seedStore, seedSku]
+    );
 
-    const candidate = {
-      store,
-      store_sku: row.store_sku || null,
-      url: row.url || null,
-      title: row.title || null,
-      offer_tag: row.offer_tag || null,
-
-      price_cents: row.current_price_cents ?? null,
-      effective_price_cents: row.effective_price_cents ?? null,
-
-      coupon_text: row.coupon_text || null,
-      coupon_type: row.coupon_type || null,
-      coupon_value_cents: row.coupon_value_cents ?? null,
-      coupon_value_pct: row.coupon_value_pct ?? null,
-      coupon_requires_clip: row.coupon_requires_clip ?? null,
-      coupon_code: row.coupon_code || null,
-      coupon_expires_at: row.coupon_expires_at || null,
-      coupon_observed_at: row.coupon_observed_at || null,
-
-      observed_at: row.current_price_observed_at ?? null,
-
-      upc: row.upc || null,
-      pci: row.pci || null
-    };
-
-    // Multi-offer stores (keep multiple rows)
-    if (store === 'amazon') { amazon.push(candidate); continue; }
-    if (store === 'walmart') { walmart.push(candidate); continue; }
-    if (store === 'bestbuy') { bestbuy.push(candidate); continue; }
-
-    // All other stores: keep just newest per store
-    const prev = nonMultiBestByStore.get(store);
-    if (!prev) {
-      nonMultiBestByStore.set(store, candidate);
-      continue;
-    }
-
-    const tNew = candidate.observed_at ? new Date(candidate.observed_at).getTime() : 0;
-    const tOld = prev.observed_at ? new Date(prev.observed_at).getTime() : 0;
-
-    if (tNew > tOld) nonMultiBestByStore.set(store, candidate);
-    else if (tNew === tOld && prev.price_cents == null && candidate.price_cents != null) {
-      nonMultiBestByStore.set(store, candidate);
+    const seedRow = rSeed.rowCount ? rSeed.rows[0] : null;
+    if (seedRow) {
+      const want = uniqOfferKey(seedRow.store, seedRow.store_sku);
+      const have = new Set(rows.map(r => uniqOfferKey(r.store, r.store_sku)));
+      if (!have.has(want)) rows.push(seedRow);
     }
   }
 
-  const byNewest = (a, b) => {
+  if (!rows.length) return [];
+
+  // Convert to candidates
+  const candidates = rows.map(rowToOfferCandidate);
+
+  // Sort newest first (so first per store is newest)
+  candidates.sort((a, b) => {
     const ta = a.observed_at ? new Date(a.observed_at).getTime() : 0;
     const tb = b.observed_at ? new Date(b.observed_at).getTime() : 0;
     return tb - ta;
-  };
+  });
 
-  amazon.sort(byNewest);
-  walmart.sort(byNewest);
-  bestbuy.sort(byNewest);
+  const amazon = [];
+  const nonAmazonBestByStore = new Map(); // newest per store
+
+  for (const c of candidates) {
+    const st = normStoreKey(c.store);
+    if (!st) continue;
+
+    if (st === 'amazon') {
+      amazon.push(c);
+      continue;
+    }
+
+    if (!nonAmazonBestByStore.has(st)) {
+      nonAmazonBestByStore.set(st, c);
+    }
+  }
 
   const AMAZON_MAX = 10;
-  const WALMART_MAX = 10;
-  const BESTBUY_MAX = 10;
-
   const amazonCapped = amazon.slice(0, AMAZON_MAX);
-  const walmartCapped = walmart.slice(0, WALMART_MAX);
-  const bestbuyCapped = bestbuy.slice(0, BESTBUY_MAX);
 
-  const nonMulti = Array.from(nonMultiBestByStore.values());
-  nonMulti.sort((a, b) => a.store.localeCompare(b.store));
+  const nonAmazon = Array.from(nonAmazonBestByStore.values());
+  nonAmazon.sort((a, b) => a.store.localeCompare(b.store));
 
-  return [...amazonCapped, ...walmartCapped, ...bestbuyCapped, ...nonMulti];
+  return [...amazonCapped, ...nonAmazon];
 }
 
 async function resolveSelectedVariant(client, rawKey) {
@@ -439,15 +499,57 @@ async function resolveSelectedVariant(client, rawKey) {
   return { pci: null, upc: null };
 }
 
-async function getObservationLog(client, selectedKeys) {
+async function getObservationLog(client, selectedKeys, seed) {
   const pci = selectedKeys?.pci ? String(selectedKeys.pci).trim() : '';
   const upc = selectedKeys?.upc ? String(selectedKeys.upc).trim() : '';
+
+  // If no PCI/UPC, still show the seed listing if present
+  if (!pci && !upc) {
+    const seedStore = seed?.seed_listing?.store || null;
+    const seedSku = seed?.seed_listing?.store_sku || null;
+    if (!seedStore || !seedSku) return [];
+
+    const rSeed = await client.query(
+      `
+      select
+        coalesce(current_price_observed_at, created_at) as t,
+        store,
+        store_sku,
+        current_price_cents as price_cents,
+        effective_price_cents as effective_price_cents,
+        coupon_text as coupon_text
+      from public.listings
+      where replace(lower(btrim(store)), ' ', '') = replace(lower(btrim($1)), ' ', '')
+        and norm_sku(store_sku) = norm_sku($2)
+        and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
+      order by coalesce(current_price_observed_at, created_at) desc
+      limit 1
+      `,
+      [seedStore, seedSku]
+    );
+
+    if (!rSeed.rowCount) return [];
+
+    const r = rSeed.rows[0];
+    const t = r.t ? new Date(r.t).toISOString() : null;
+
+    return [{
+      t,
+      observed_at: t,
+      store: normStoreKey(r.store),
+      store_sku: r.store_sku || null,
+      price_cents: r.price_cents ?? null,
+      effective_price_cents: r.effective_price_cents ?? null,
+      coupon_text: r.coupon_text || null,
+      note: 'pass'
+    }];
+  }
 
   const rL = await client.query(
     `
     select
       coalesce(current_price_observed_at, created_at) as t,
-      lower(btrim(store)) as store,
+      store,
       store_sku,
       current_price_cents as price_cents,
       effective_price_cents as effective_price_cents,
@@ -474,7 +576,7 @@ async function getObservationLog(client, selectedKeys) {
       return {
         t,
         observed_at: t,
-        store: normStoreName(r.store),
+        store: normStoreKey(r.store),
         store_sku: r.store_sku || null,
         price_cents: r.price_cents ?? null,
         effective_price_cents: r.effective_price_cents ?? null,
@@ -485,8 +587,21 @@ async function getObservationLog(client, selectedKeys) {
 }
 
 async function getPriceHistoryDailyAndStats(client, selectedKeys, days) {
-  const pci = (selectedKeys?.pci || '').trim();
-  const upc = (selectedKeys?.upc || '').trim();
+  const pci = String(selectedKeys?.pci || '').trim();
+  const upc = String(selectedKeys?.upc || '').trim();
+
+  // If we do not have a stable anchor, do not run heavy history queries.
+  if (!pci && !upc) {
+    return {
+      daily: [],
+      stats: {
+        typical_low_90_cents: null,
+        typical_low_30_cents: null,
+        low_30_cents: null,
+        low_30_date: null
+      }
+    };
+  }
 
   // Daily lows
   const dailySql = `
@@ -495,7 +610,7 @@ async function getPriceHistoryDailyAndStats(client, selectedKeys, days) {
         (date_trunc('day', observed_at at time zone 'utc'))::date as d,
         coalesce(effective_price_cents, price_cents) as p
       from public.price_history
-      where observed_at >= now() - ($3::int || ' days')::interval
+      where observed_at >= now() - make_interval(days => $3::int)
         and (
           ($1 <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($1)))
           or
@@ -513,14 +628,13 @@ async function getPriceHistoryDailyAndStats(client, selectedKeys, days) {
   const dailyRes = await client.query(dailySql, [pci, upc, days]);
 
   // Stats computed from daily lows (not raw events)
-   // Stats computed from daily lows (not raw events)
   const statsSql = `
     with daily as (
       select
         (date_trunc('day', observed_at at time zone 'utc'))::date as d,
         min(coalesce(effective_price_cents, price_cents))::int as low_cents
       from public.price_history
-      where observed_at >= now() - ($3::int || ' days')::interval
+      where observed_at >= now() - make_interval(days => $3::int)
         and (
           ($1 <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($1)))
           or
@@ -606,20 +720,25 @@ router.get('/api/compare/:key', async (req, res) => {
     // 4) resolve selected variant (based on incoming key)
     const selectedBase = await resolveSelectedVariant(client, rawKey);
 
-    // Enrich through catalog (PCI -> UPC) so we stay inside the same model_number group if possible
+    // Enrich through catalog (PCI -> UPC)
     const selectedCatalog = await resolveCatalogIdentity(client, selectedBase);
+
     const selectedKeys = {
-      pci: selectedCatalog?.pci || selectedBase.pci || seed.pci || null,
-      upc: selectedCatalog?.upc || selectedBase.upc || seed.upc || null
+      pci: (selectedCatalog?.pci || selectedBase.pci || seed.pci || null),
+      upc: (selectedCatalog?.upc || selectedBase.upc || seed.upc || null)
     };
 
-    // 5) offers for selected variant (PCI/UPC only)
-    const offers = await getOffersForSelectedVariant(client, selectedKeys);
+    // 5) offers for selected variant (PCI/UPC only, but always include seed listing)
+    const offers = await getOffersForSelectedVariant(client, selectedKeys, seed);
 
-    // 6) observation log (PCI/UPC only)
-    const observed = await getObservationLog(client, selectedKeys);
+    // 6) observation log (PCI/UPC only, but seed fallback)
+    const observed = await getObservationLog(client, selectedKeys, seed);
 
+    // 7) price history (only if PCI/UPC exists)
     const history = await getPriceHistoryDailyAndStats(client, selectedKeys, 90);
+
+    const meta = selectedCatalog || catalogIdentity || null;
+    const listingTitle = seed?.seed_listing?.title ? String(seed.seed_listing.title).trim() : '';
 
     res.json({
       identity: {
@@ -629,15 +748,15 @@ router.get('/api/compare/:key', async (req, res) => {
         // keep ASIN only as an input echo for the UI, never used for matching
         asin: seed.asin_input || null,
 
-        // catalog meta
-        model_number: catalogIdentity?.model_number || null,
-        model_name: catalogIdentity?.model_name || null,
-        brand: catalogIdentity?.brand || null,
-        category: catalogIdentity?.category || null,
-        image_url: catalogIdentity?.image_url || null,
-        dropship_warning: !!selectedCatalog?.dropship_warning,
-        recall_url: selectedCatalog?.recall_url || null,
-        coverage_warning: !!selectedCatalog?.coverage_warning,
+        // catalog meta (fallback to listing title for model_name if catalog missing)
+        model_number: meta?.model_number || null,
+        model_name: (meta?.model_name || listingTitle || null),
+        brand: meta?.brand || null,
+        category: meta?.category || null,
+        image_url: meta?.image_url || null,
+        dropship_warning: !!meta?.dropship_warning,
+        recall_url: meta?.recall_url || null,
+        coverage_warning: !!meta?.coverage_warning,
 
         // selected anchors (PCI/UPC only)
         selected_pci: selectedKeys.pci || null,
@@ -646,7 +765,7 @@ router.get('/api/compare/:key', async (req, res) => {
       },
       variants,
       selected_variant: {
-         key:
+        key:
           (selectedKeys.pci ? `pci:${selectedKeys.pci}` : null) ||
           (selectedKeys.upc ? `upc:${selectedKeys.upc}` : null)
       },

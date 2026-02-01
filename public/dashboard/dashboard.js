@@ -369,8 +369,12 @@ const downloadCsvBtn = $('#downloadCsv');
 const downloadObsBtn = $('#downloadObs');
 const copyPmBtn = $('#copyPm');
 const variantSel = $('#variant');
-const colorWrap = $('#colorWrap');
-const colorSel  = $('#color');
+const variant2Card = $('#variant2Card');
+const variant2Pills = $('#variant2Pills');
+const colorCard = $('#colorCard');
+const colorPills = $('#colorPills');
+const familyWrap = $('#familyWrap');
+const familyVal  = $('#familyVal');
 
 if (downloadCsvBtn) downloadCsvBtn.addEventListener('click', downloadHistoryCsv);
 if (downloadObsBtn) downloadObsBtn.addEventListener('click', downloadObsCsv);
@@ -388,128 +392,267 @@ if (copyPmBtn) copyPmBtn.addEventListener('click', ()=>{
 
 function normLower(s){ return String(s || '').trim().toLowerCase(); }
 
-function versionsFromVariants(list){
+function valueOf(v, key){
+  const x = v?.[key];
+  const t = String(x == null ? '' : x).trim();
+  return t || '';
+}
+
+function versionOf(v){
+  // "Model" dropdown shows catalog.version first, fallback to variant_label
+  return valueOf(v, 'version') || valueOf(v, 'variant_label') || 'Default';
+}
+
+function variantOf(v){
+  // New dropdown is catalog.variant (can be blank)
+  return valueOf(v, 'variant');
+}
+
+function colorOf(v){
+  return valueOf(v, 'color');
+}
+
+function uniqList(arr){
   const seen = new Set();
   const out = [];
-  for (const v of list){
-    const ver = String(v?.version || v?.variant_label || '').trim() || 'Default';
-    const k = normLower(ver);
+  for (const s of arr){
+    const k = normLower(s);
+    if (!k) continue;
     if (seen.has(k)) continue;
     seen.add(k);
-    out.push(ver);
+    out.push(s);
   }
   return out;
 }
 
-function colorsForVersion(list, version){
-  const want = normLower(version || 'Default');
-  const seen = new Set();
-  const out = [];
-  for (const v of list){
-    const ver = String(v?.version || v?.variant_label || '').trim() || 'Default';
-    if (normLower(ver) !== want) continue;
-    const c = String(v?.color || '').trim();
-    if (!c) continue;
-    const ck = normLower(c);
-    if (seen.has(ck)) continue;
-    seen.add(ck);
-    out.push(c);
-  }
-  return out;
+function versionsFromVariants(list){
+  return uniqList(list.map(versionOf));
 }
 
-function chooseKeyForVersionColor(list, version, color){
+function variantsForVersion(list, version){
   const wantV = normLower(version || 'Default');
+  const vals = [];
+  for (const v of list){
+    if (normLower(versionOf(v)) !== wantV) continue;
+    const vv = variantOf(v);
+    if (vv) vals.push(vv);
+  }
+  return uniqList(vals);
+}
+
+function colorsForVersionVariant(list, version, variant){
+  const wantV = normLower(version || 'Default');
+  const wantVar = normLower(variant || '');
+  const vals = [];
+  for (const v of list){
+    if (normLower(versionOf(v)) !== wantV) continue;
+
+    // If a variant is selected, filter by it. If not selected, allow all.
+    const vv = variantOf(v);
+    if (wantVar && normLower(vv) !== wantVar) continue;
+
+    const c = colorOf(v);
+    if (c) vals.push(c);
+  }
+  return uniqList(vals);
+}
+
+function chooseKeyForVersionVariantColor(list, version, variant, color){
+  const wantV = normLower(version || 'Default');
+  const wantVar = normLower(variant || '');
   const wantC = normLower(color || '');
 
+  // 1) Exact match: version + variant + color
   if (wantC){
     const hit = list.find(v => {
-      const ver = String(v?.version || v?.variant_label || '').trim() || 'Default';
-      const col = String(v?.color || '').trim();
-      return normLower(ver) === wantV && normLower(col) === wantC && String(v?.key || '').trim();
+      if (normLower(versionOf(v)) !== wantV) return false;
+      if (wantVar && normLower(variantOf(v)) !== wantVar) return false;
+      if (normLower(colorOf(v)) !== wantC) return false;
+      return String(v?.key || '').trim();
     });
     if (hit) return String(hit.key).trim();
   }
 
-  const hit2 = list.find(v => {
-    const ver = String(v?.version || v?.variant_label || '').trim() || 'Default';
-    return normLower(ver) === wantV && String(v?.key || '').trim();
+  // 2) version + variant (ignore color)
+  if (wantVar){
+    const hit2 = list.find(v => {
+      if (normLower(versionOf(v)) !== wantV) return false;
+      if (normLower(variantOf(v)) !== wantVar) return false;
+      return String(v?.key || '').trim();
+    });
+    if (hit2) return String(hit2.key).trim();
+  }
+
+  // 3) version only
+  const hit3 = list.find(v => {
+    if (normLower(versionOf(v)) !== wantV) return false;
+    return String(v?.key || '').trim();
   });
-  return hit2 ? String(hit2.key).trim() : null;
+  return hit3 ? String(hit3.key).trim() : null;
 }
 
-function syncVersionColorFromSelectedKey(){
+function syncSelectorsFromSelectedKey(){
   const list = Array.isArray(state.variants) ? state.variants : [];
   const k = String(state.selectedVariantKey || '').trim();
   const hit = list.find(v => String(v?.key || '').trim() === k);
 
-  state.selectedVersion = hit ? (String(hit.version || hit.variant_label || '').trim() || 'Default') : null;
-  state.selectedColor   = hit ? (String(hit.color || '').trim() || null) : null;
+  state.selectedVersion = hit ? (versionOf(hit) || 'Default') : null;
+  state.selectedVariant2 = hit ? (variantOf(hit) || null) : null;
+  state.selectedColor   = hit ? (colorOf(hit) || null) : null;
 }
 
-function renderVersionAndColor(){
+function renderPillGroup(hostEl, options, selectedValue, onPick){
+  if (!hostEl) return;
+
+  hostEl.innerHTML = '';
+
+  for (const opt of options){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pill-choice' + (normLower(opt) === normLower(selectedValue) ? ' is-active' : '');
+    b.textContent = opt;
+
+    b.addEventListener('click', () => {
+      onPick(opt);
+    });
+
+    hostEl.appendChild(b);
+  }
+}
+
+function pushVariantSelectionAndRun(){
+  if (!state.selectedVariantKey) return;
+  applyPrettyUrl(state.selectedVariantKey, $('#pTitle')?.textContent || 'Product', 'push');
+  run(state.selectedVariantKey);
+}
+
+function renderVersionVariantColor(){
   const list = Array.isArray(state.variants) ? state.variants : [];
 
+  // ----------------
+  // Model (version)
+  // ----------------
   const versions = versionsFromVariants(list);
-  variantSel.innerHTML = '';
+  if (variantSel){
+    variantSel.innerHTML = '';
+    const desiredV = state.selectedVersion || (versions[0] || 'Default');
 
-  const desiredV = state.selectedVersion || (versions[0] || 'Default');
-  for (const ver of (versions.length ? versions : ['Default'])){
-    const opt = document.createElement('option');
-    opt.value = ver;
-    opt.textContent = ver;
-    opt.selected = normLower(ver) === normLower(desiredV);
-    variantSel.appendChild(opt);
-  }
-  state.selectedVersion = variantSel.value || 'Default';
-
-  const colors = colorsForVersion(list, state.selectedVersion);
-
-  if (colorWrap && colorSel){
-    if (colors.length >= 2){
-      colorWrap.hidden = false;
-      colorSel.innerHTML = '';
-
-      const desiredC = state.selectedColor || colors[0];
-      for (const c of colors){
-        const opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = c;
-        opt.selected = normLower(c) === normLower(desiredC);
-        colorSel.appendChild(opt);
-      }
-      state.selectedColor = colorSel.value || colors[0];
-    } else {
-      colorWrap.hidden = true;
-      colorSel.innerHTML = '';
-      state.selectedColor = colors[0] || null;
+    for (const ver of (versions.length ? versions : ['Default'])) {
+      const opt = document.createElement('option');
+      opt.value = ver;
+      opt.textContent = ver;
+      opt.selected = normLower(ver) === normLower(desiredV);
+      variantSel.appendChild(opt);
     }
+    state.selectedVersion = variantSel.value || 'Default';
+  } else {
+    state.selectedVersion = state.selectedVersion || (versions[0] || 'Default');
   }
 
-  const resolvedKey = chooseKeyForVersionColor(list, state.selectedVersion, state.selectedColor);
+  // ----------------
+// Variant (catalog.variant) as pills
+// ----------------
+const v2 = variantsForVersion(list, state.selectedVersion);
+
+if (variant2Card && variant2Pills){
+  if (v2.length >= 2) {
+    variant2Card.hidden = false;
+
+    let desiredVar = state.selectedVariant2;
+    if (desiredVar && !v2.some(x => normLower(x) === normLower(desiredVar))) desiredVar = null;
+    if (!desiredVar) desiredVar = v2[0];
+
+    state.selectedVariant2 = desiredVar;
+
+    renderPillGroup(variant2Pills, v2, state.selectedVariant2, (picked) => {
+      if (normLower(picked) === normLower(state.selectedVariant2)) return;
+
+      state.selectedVariant2 = picked;
+      state.selectedColor = null;
+
+      renderVersionVariantColor();
+
+      const resolvedKey = chooseKeyForVersionVariantColor(
+        list,
+        state.selectedVersion,
+        state.selectedVariant2,
+        state.selectedColor
+      );
+      if (resolvedKey) state.selectedVariantKey = resolvedKey;
+
+      pushVariantSelectionAndRun();
+    });
+  } else {
+    variant2Card.hidden = true;
+    if (variant2Pills) variant2Pills.innerHTML = '';
+    state.selectedVariant2 = v2[0] || null;
+  }
+} else {
+  state.selectedVariant2 = state.selectedVariant2 || (v2[0] || null);
+}
+
+// ----------------
+// Color as pills
+// ----------------
+const colors = colorsForVersionVariant(list, state.selectedVersion, state.selectedVariant2);
+
+if (colorCard && colorPills){
+  if (colors.length >= 2) {
+    colorCard.hidden = false;
+
+    let desiredC = state.selectedColor;
+    if (desiredC && !colors.some(x => normLower(x) === normLower(desiredC))) desiredC = null;
+    if (!desiredC) desiredC = colors[0];
+
+    state.selectedColor = desiredC;
+
+    renderPillGroup(colorPills, colors, state.selectedColor, (picked) => {
+      if (normLower(picked) === normLower(state.selectedColor)) return;
+
+      state.selectedColor = picked;
+
+      renderVersionVariantColor();
+
+      const resolvedKey = chooseKeyForVersionVariantColor(
+        list,
+        state.selectedVersion,
+        state.selectedVariant2,
+        state.selectedColor
+      );
+      if (resolvedKey) state.selectedVariantKey = resolvedKey;
+
+      pushVariantSelectionAndRun();
+    });
+  } else {
+    colorCard.hidden = true;
+    if (colorPills) colorPills.innerHTML = '';
+    state.selectedColor = colors[0] || null;
+  }
+} else {
+  state.selectedColor = state.selectedColor || (colors[0] || null);
+}
+
+  // Resolve to a variant.key
+  const resolvedKey = chooseKeyForVersionVariantColor(
+    list,
+    state.selectedVersion,
+    state.selectedVariant2,
+    state.selectedColor
+  );
+
   if (resolvedKey){
     state.selectedVariantKey = resolvedKey;
   }
 }
 
-// Version dropdown change
+// Model (version) dropdown change
 if (variantSel) {
   variantSel.addEventListener('change', () => {
     state.selectedVersion = variantSel.value || 'Default';
-    state.selectedColor = null; // reset, we will pick first available color for this version
-    renderVersionAndColor();
-    if (state.selectedVariantKey){
-      run(state.selectedVariantKey);
-    }
-  });
-}
-
-// Color dropdown change
-if (colorSel) {
-  colorSel.addEventListener('change', () => {
-    state.selectedColor = colorSel.value || null;
-    renderVersionAndColor();
-    if (state.selectedVariantKey){
+    state.selectedVariant2 = null;
+    state.selectedColor = null;
+    renderVersionVariantColor();
+    if (state.selectedVariantKey) {
       applyPrettyUrl(state.selectedVariantKey, $('#pTitle')?.textContent || 'Product', 'push');
       run(state.selectedVariantKey);
     }
@@ -567,7 +710,7 @@ async function run(raw){
       state.observed = Array.isArray(data.observed) ? data.observed : [];
 
       state.selectedVariantKey = chooseSelectedVariantKeyFromKey(state.lastKey, data);
-      syncVersionColorFromSelectedKey();
+      syncSelectorsFromSelectedKey();
 
       const id = data.identity || {};
       const cur = (() => {
@@ -701,6 +844,17 @@ async function run(raw){
     }
 
     const cur = getCurrentVariant() || null;
+
+    // Family (model_number)
+    const fam =
+      (id.model_number && String(id.model_number).trim()) ||
+      (cur?.model_number && String(cur.model_number).trim()) ||
+      '';
+
+    if (familyWrap && familyVal) {
+      familyWrap.hidden = !fam;
+      familyVal.textContent = fam || '';
+    }
 
     // Title: prefer offer title, otherwise catalog model_name, otherwise fallback
     let title = null;
@@ -1413,9 +1567,9 @@ function setMaybe(el, text, { asHtml = false } = {}) {
   }
 
   function renderVariants(){
-  syncVersionColorFromSelectedKey();
-  renderVersionAndColor();
-}
+    syncSelectorsFromSelectedKey();
+    renderVersionVariantColor();
+  }
 
   function renderForensics(){
     const ul = $('#forensicsList'); ul.innerHTML = '';
@@ -1662,17 +1816,18 @@ if (actSummary) actSummary.addEventListener('click', async () => {
     const items = Array.isArray(state.variants) ? state.variants : [];
     if (!items.length){ host.textContent = 'No specs available.'; return; }
 
-    const cols = [
-      ['variant', 'Variant'],
-      ['color', 'Color'],
-      ['category', 'Category'],
-      ['brand', 'Brand'],
-      ['model_name', 'Name'],
-    ];
+  const cols = [
+    ['version', 'Model'],
+    ['variant', 'Variant'],
+    ['color', 'Color'],
+    ['category', 'Category'],
+    ['brand', 'Brand'],
+    ['model_name', 'Name'],
+  ];
 
     const varies = {};
-    ['color', 'category','brand','model_name'].forEach(k=>{
-      const vals = new Set(items.map(v => (v[k] || '').trim()));
+    ['version','variant','color','category','brand','model_name'].forEach(k=>{
+      const vals = new Set(items.map(v => (String(v?.[k] || '').trim())));
       varies[k] = vals.size > 1;
     });
 
@@ -1682,19 +1837,17 @@ if (actSummary) actSummary.addEventListener('click', async () => {
 
     items.forEach(v=>{
       html += '<tr>';
+      // First column now is "Model" (version)
       const ver = String(v?.version || v?.variant_label || '').trim();
-      const label = ver || v.model_name || v.model_number || v.key || 'Variant';
-      html += `<td class="mono">${escapeHtml(label)}</td>`;
+      html += `<td class="mono">${escapeHtml(ver || 'Default')}</td>`;
 
-          ['color','category','brand','model_name'].forEach(k=>{
-            const raw = String(v?.[k] || '').trim();
-            const val =
-              raw ? raw :
-              (k === 'color' ? '—' : 'NA');
-
-            const hi = varies[k] ? ' style="background:rgba(255,230,150,.45)"' : '';
-            html += `<td${hi}>${escapeHtml(val)}</td>`;
-        });
+      // Then remaining columns in order
+      ['variant','color','category','brand','model_name'].forEach(k=>{
+        const raw = String(v?.[k] || '').trim();
+        const val = raw ? raw : (k === 'color' || k === 'variant' ? '—' : 'NA');
+        const hi = varies[k] ? ' style="background:rgba(255,230,150,.45)"' : '';
+        html += `<td${hi}>${escapeHtml(val)}</td>`;
+      });
       html += '</tr>';
     });
 

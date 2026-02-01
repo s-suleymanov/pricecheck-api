@@ -63,6 +63,31 @@ aside .note{
 .btn-das,.pill{
   display:inline-flex;align-items:center;justify-content:center;background:#fff;cursor:pointer;user-select:none
 }
+.pill-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.pill-choice{
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:999px;
+  padding:10px 14px;
+  font:inherit;
+  font-size: 0.95rem;
+  cursor:pointer;
+  line-height:1;
+}
+
+.pill-choice:hover{
+  filter:brightness(0.98);
+}
+
+.pill-choice.is-active{
+  border-color: rgba(99,102,241,.65);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+}
 .btn-das{
   padding:11px 14px;border:1px solid var(--line);border-radius:10px;
   transition:box-shadow .2s ease,border-color .2s ease
