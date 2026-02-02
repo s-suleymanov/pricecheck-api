@@ -442,7 +442,7 @@ details[open]{background:#fff}
     border-radius: 0;
     border: 0;
   }
-  .wrap{padding: 0 0 90px 0;}
+  .wrap{padding: 0 0 24px 0;}
   h1 {
     text-align: center;
     margin: 30px 0 14px;
@@ -472,10 +472,13 @@ details[open]{background:#fff}
   }
   .btn-das{
     height: 47px;
-    font-size: 20px;
+    font-size: 18px;
   }
   .grid-shell{
-    gap: 16px;
+    gap: 0px;
+  }
+  h3 {
+    font-size: 22px;
   }
   #specsMatrix table th:nth-child(3),
   #specsMatrix table td:nth-child(3){
