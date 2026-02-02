@@ -11,8 +11,9 @@
     history:[],
     historyStats: null,
     rangeDays: 30,
-    selectedVariantKey:null,   // NEW: pci:/upc
-    lastKey:null
+    selectedVariantKey:null,
+    lastKey:null,
+    families: []   
   };
 
   function setJsonLd(obj) {
@@ -156,7 +157,7 @@
 
   function absoluteImageForMeta(imageUrl) {
     const u = String(imageUrl || '').trim();
-    if (!u) return `${canonicalOriginForMeta()}/content-img/default.webp`;
+    if (!u) return `${canonicalOriginForMeta()}/logo/default.webp`;
     if (u.startsWith('http')) return u;
     return `${canonicalOriginForMeta()}${u.startsWith('/') ? '' : '/'}${u}`;
   }
@@ -408,7 +409,7 @@ const variant2Pills = $('#variant2Pills');
 const colorCard = $('#colorCard');
 const colorPills = $('#colorPills');
 const familyWrap = $('#familyWrap');
-const familyVal  = $('#familyVal');
+const familySel  = $('#familySel');
 
 if (downloadCsvBtn) downloadCsvBtn.addEventListener('click', downloadHistoryCsv);
 if (downloadObsBtn) downloadObsBtn.addEventListener('click', downloadObsCsv);
@@ -739,6 +740,26 @@ if (colorCard && colorPills){
   }
 }
 
+if (familySel) {
+  familySel.addEventListener('change', () => {
+    const nextKey = String(familySel.value || '').trim();
+    if (!nextKey) return;
+
+    // Avoid pointless reload if you're already on it
+    const curKey = String(state.lastKey || '').trim();
+    if (nextKey.toLowerCase() === curKey.toLowerCase()) return;
+
+    // New family should reset the variant selection cleanly
+    state.selectedVariantKey = null;
+    state.selectedVersion = null;
+    state.selectedVariant2 = null;
+    state.selectedColor = null;
+
+    applyPrettyUrl(nextKey, $('#pTitle')?.textContent || 'Product', 'push');
+    run(nextKey);
+  });
+}
+
 // Model (version) dropdown change
 if (variantSel) {
   variantSel.addEventListener('change', () => {
@@ -802,6 +823,7 @@ async function run(raw){
       state.history = (data.history && Array.isArray(data.history.daily)) ? data.history.daily : [];
       state.historyStats = (data.history && data.history.stats) ? data.history.stats : null;
       state.observed = Array.isArray(data.observed) ? data.observed : [];
+      state.families = Array.isArray(data.families) ? data.families : [];
 
       state.selectedVariantKey = chooseSelectedVariantKeyFromKey(state.lastKey, data);
       syncSelectorsFromSelectedKey();
@@ -908,7 +930,7 @@ async function run(raw){
 
   function hydrateHeader(){
     const id = state.identity || {};
-    const DEFAULT_IMG = '/content-img/default.webp';
+    const DEFAULT_IMG = '/logo/default.webp';
 
     {
       const warnEl = document.querySelector('#ps-warn'); // or whatever your dashboard warning element id is
@@ -938,15 +960,73 @@ async function run(raw){
 
     const cur = getCurrentVariant() || null;
 
-    // Family (model_number)
+    const brand = String(cur?.brand || id.brand || '').trim();
+    const category = String(cur?.category || id.category || '').trim();
+
+    // Family (model_number) dropdown
     const fam =
       (id.model_number && String(id.model_number).trim()) ||
       (cur?.model_number && String(cur.model_number).trim()) ||
       '';
 
-    if (familyWrap && familyVal) {
-      familyWrap.hidden = !fam;
-      familyVal.textContent = fam || '';
+    if (familyWrap && familySel) {
+      // Only show when we have a brand + a current family
+      if (!brand || !fam) {
+        familyWrap.hidden = true;
+        familySel.innerHTML = '';
+      } else {
+        familyWrap.hidden = false;
+
+        // Build unique list of families for this brand from API
+        const rows = Array.isArray(state.families) ? state.families : [];
+
+        const map = new Map(); // model_number(lower) -> { model_number, key }
+        for (const r of rows) {
+          const mn = String(r?.model_number || '').trim();
+          const k  = String(r?.key || '').trim();
+          if (!mn || !k) continue;
+          const lk = mn.toLowerCase();
+          if (!map.has(lk)) map.set(lk, { model_number: mn, key: k });
+        }
+
+        // Ensure the current family is present even if API list is missing it
+        // (we will add it only if we can find a key for it in the returned list)
+        const items = Array.from(map.values());
+
+        // Sort alphabetically, but keep current family at the top
+        items.sort((a,b) => a.model_number.localeCompare(b.model_number, undefined, { sensitivity: 'base' }));
+        const idx = items.findIndex(x => x.model_number.toLowerCase() === fam.toLowerCase());
+        if (idx > 0) {
+          const curItem = items.splice(idx, 1)[0];
+          items.unshift(curItem);
+        }
+
+        // Rebuild select
+        familySel.innerHTML = '';
+
+        // If we have nothing, fall back to showing the current family as a disabled single option
+        if (!items.length) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = fam;
+          opt.selected = true;
+          familySel.appendChild(opt);
+          familySel.disabled = true;
+        } else {
+          familySel.disabled = false;
+
+          for (const it of items) {
+            const opt = document.createElement('option');
+            opt.value = it.key;              // IMPORTANT: value is the jump key (pci:/upc:)
+            opt.textContent = it.model_number;
+            familySel.appendChild(opt);
+          }
+
+          // Select the current family if present, otherwise the first one
+          const current = items.find(x => x.model_number.toLowerCase() === fam.toLowerCase());
+          familySel.value = current ? current.key : (items[0]?.key || '');
+        }
+      }
     }
 
     // Title: prefer offer title, otherwise catalog model_name, otherwise fallback
@@ -988,9 +1068,6 @@ async function run(raw){
       img.removeAttribute('src');
       img.style.display = 'none';
     }
-
-    const brand = (cur?.brand || id.brand || '').trim();
-    const category = (cur?.category || id.category || '').trim();
 
     const bw = document.getElementById('brandWrap');
     const cw = document.getElementById('categoryWrap');

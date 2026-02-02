@@ -48,7 +48,7 @@ function slugifyTitleServer(s) {
 
 function absImageUrl(url) {
   const u = String(url || '').trim();
-  if (!u) return `${CANONICAL_ORIGIN}/content-img/default.webp`;
+  if (!u) return `${CANONICAL_ORIGIN}/logo/default.webp`;
   if (/^https?:\/\//i.test(u)) return u;
   return `${CANONICAL_ORIGIN}${u.startsWith('/') ? '' : '/'}${u}`;
 }
@@ -167,6 +167,54 @@ function storeForKind(kind) {
   if (kind === 'wal') return 'walmart';
   if (kind === 'tcin') return 'target';
   return null;
+}
+
+async function getFamiliesForBrand(client, brandRaw) {
+  const brand = String(brandRaw || '').trim();
+  if (!brand) return [];
+
+  const r = await client.query(
+    `
+    with ranked as (
+      select
+        model_number,
+        created_at,
+        pci,
+        upc,
+        case
+          when pci is not null and btrim(pci) <> '' then 0
+          when upc is not null and btrim(upc) <> '' then 1
+          else 2
+        end as key_rank
+      from public.catalog
+      where brand is not null and btrim(brand) <> ''
+        and lower(btrim(brand)) = lower(btrim($1))
+        and model_number is not null and btrim(model_number) <> ''
+    ),
+    picked as (
+      select distinct on (upper(btrim(model_number)))
+        model_number,
+        case
+          when pci is not null and btrim(pci) <> '' then 'pci:' || btrim(pci)
+          when upc is not null and btrim(upc) <> '' then 'upc:' || btrim(upc)
+          else null
+        end as key
+      from ranked
+      order by upper(btrim(model_number)), key_rank asc, created_at desc nulls last
+    )
+    select model_number, key
+    from picked
+    where key is not null and btrim(key) <> ''
+    order by lower(model_number) asc
+    limit 300
+    `,
+    [brand]
+  );
+
+  return (r.rows || []).map(x => ({
+    model_number: x.model_number,
+    key: x.key
+  }));
 }
 
 function parseKey(rawKey) {
@@ -940,6 +988,12 @@ router.get('/api/compare/:key', async (req, res) => {
     const meta = selectedCatalog || catalogIdentity || null;
     const listingTitle = seed?.seed_listing?.title ? String(seed.seed_listing.title).trim() : '';
 
+    const brand =
+      (meta?.brand && String(meta.brand).trim()) ||
+      '';
+
+    const families = brand ? await getFamiliesForBrand(client, brand) : [];
+
     res.json({
       identity: {
         // seed keys (what we found in listings)
@@ -964,6 +1018,7 @@ router.get('/api/compare/:key', async (req, res) => {
         selected_asin: null
       },
       variants,
+      families,
       selected_variant: {
         key:
           (selectedKeys.pci ? `pci:${selectedKeys.pci}` : null) ||
