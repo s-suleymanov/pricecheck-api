@@ -2,8 +2,169 @@
 const path = require('path');
 const express = require('express');
 const { Pool } = require('pg');
-
+const fs = require('fs');
 const router = express.Router();
+
+const DASHBOARD_INDEX_PATH = path.join(__dirname, '..', 'public', 'dashboard', 'index.html');
+let DASHBOARD_TEMPLATE = null;
+
+function getDashboardTemplate() {
+  if (!DASHBOARD_TEMPLATE) {
+    DASHBOARD_TEMPLATE = fs.readFileSync(DASHBOARD_INDEX_PATH, 'utf8');
+  }
+  return DASHBOARD_TEMPLATE;
+}
+
+function escAttr(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function slugifyTitleServer(s) {
+  const raw = String(s || '').trim().toLowerCase();
+  if (!raw) return 'product';
+  return raw
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'product';
+}
+
+function originFromReq(req) {
+  const env = process.env.PUBLIC_BASE_URL;
+
+  const s = String(env || '').trim().replace(/\/+$/g, '');
+  if (s) return s;
+
+  return `${req.protocol}://${req.get('host')}`;
+}
+
+function prettyDashboardPath(key, title) {
+  const slug = slugifyTitleServer(title);
+  const [kindRaw, ...rest] = String(key || '').trim().split(':');
+  const kind = (kindRaw || '').toLowerCase();
+  const value = rest.join(':').trim();
+
+  if (kind && value) return `/dashboard/${slug}/${kind}/${encodeURIComponent(value)}/`;
+  return `/dashboard/${slug}/`;
+}
+
+function upsertTag(html, pattern, replacement) {
+  const re = new RegExp(pattern, 'i');
+  if (re.test(html)) return html.replace(re, replacement);
+  // If missing, insert before </head>
+  return html.replace(/<\/head>/i, `${replacement}\n</head>`);
+}
+
+function escText(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function renderDashboardHtml(meta, robotsContent) {
+  const m = meta || {};
+
+  const titleStr = m.title || "PriceCheck Dashboard - PriceCheck";
+  const titleText = escText(titleStr);
+
+  const desc = escAttr(m.desc || "Compare prices on PriceCheck.");
+  const robots = escAttr(robotsContent || "noindex,follow");
+
+  const canonical = escAttr(m.canonicalUrl || "");
+  const img = escAttr(m.imageUrl || "");
+
+  let html = getDashboardTemplate();
+
+  // title
+  html = upsertTag(
+    html,
+    "<title[^>]*>[\\s\\S]*?</title>",
+    `<title>${titleText}</title>`
+  );
+
+  // description + robots
+  html = upsertTag(
+    html,
+    `<meta\\s+name=["']description["'][^>]*>`,
+    `<meta name="description" content="${desc}">`
+  );
+
+  html = upsertTag(
+    html,
+    `<meta\\s+name=["']robots["'][^>]*>`,
+    `<meta name="robots" content="${robots}">`
+  );
+
+  // canonical + og:url
+  if (canonical) {
+    html = upsertTag(
+      html,
+      `<link\\s+rel=["']canonical["'][^>]*>`,
+      `<link rel="canonical" href="${canonical}">`
+    );
+
+    html = upsertTag(
+      html,
+      `<meta\\s+property=["']og:url["'][^>]*>`,
+      `<meta property="og:url" content="${canonical}">`
+    );
+  }
+
+  // OG tags
+  html = upsertTag(
+    html,
+    `<meta\\s+property=["']og:title["'][^>]*>`,
+    `<meta property="og:title" content="${escAttr(titleStr)}">`
+  );
+
+  html = upsertTag(
+    html,
+    `<meta\\s+property=["']og:description["'][^>]*>`,
+    `<meta property="og:description" content="${desc}">`
+  );
+
+  if (img) {
+    html = upsertTag(
+      html,
+      `<meta\\s+property=["']og:image["'][^>]*>`,
+      `<meta property="og:image" content="${img}">`
+    );
+  }
+
+  // Twitter tags
+  html = upsertTag(
+    html,
+    `<meta\\s+name=["']twitter:card["'][^>]*>`,
+    `<meta name="twitter:card" content="summary_large_image">`
+  );
+
+  html = upsertTag(
+    html,
+    `<meta\\s+name=["']twitter:title["'][^>]*>`,
+    `<meta name="twitter:title" content="${escAttr(titleStr)}">`
+  );
+
+  html = upsertTag(
+    html,
+    `<meta\\s+name=["']twitter:description["'][^>]*>`,
+    `<meta name="twitter:description" content="${desc}">`
+  );
+
+  if (img) {
+    html = upsertTag(
+      html,
+      `<meta\\s+name=["']twitter:image["'][^>]*>`,
+      `<meta name="twitter:image" content="${img}">`
+    );
+  }
+
+  return html;
+}
 
 // Create pool here (matches your "router exports directly" server.js mount style)
 const pool = new Pool({
@@ -85,6 +246,51 @@ function uniqOfferKey(store, storeSku) {
   const st = normStoreKey(store);
   const sku = normSkuLocal(storeSku);
   return `${st}:S:${sku || ''}`;
+}
+
+async function getDashboardSeoMeta(client, rawKey, req) {
+  const parsed = parseKey(rawKey);
+
+  // Use your existing resolution chain
+  const seed = await findSeedFromListings(client, parsed);
+  const selectedBase = await resolveSelectedVariant(client, rawKey);
+  const selectedCatalog = await resolveCatalogIdentity(client, selectedBase);
+  const catalogIdentity = await resolveCatalogIdentity(client, seed);
+
+  const meta = selectedCatalog || catalogIdentity || null;
+  const listingTitle = seed?.seed_listing?.title ? String(seed.seed_listing.title).trim() : '';
+
+  const titleBase = (meta?.model_name || listingTitle || 'Product').trim();
+
+  const canonicalPci = (meta?.pci || selectedBase.pci || seed.pci || '').trim();
+  const canonicalUpc = (meta?.upc || selectedBase.upc || seed.upc || '').trim();
+
+  const canonicalKey =
+    (canonicalPci ? `pci:${canonicalPci}` : null) ||
+    (canonicalUpc ? `upc:${canonicalUpc}` : null) ||
+    null;
+
+  const origin = originFromReq(req);
+  const canonicalPath = canonicalKey ? prettyDashboardPath(canonicalKey, titleBase) : '/dashboard/';
+  const canonicalUrl = `${origin}${canonicalPath}`;
+
+  const img = (meta?.image_url || '/content-img/default.webp').trim();
+  const absImg = img.startsWith('http') ? img : `${origin}${img.startsWith('/') ? '' : '/'}${img}`;
+
+  const desc =
+    `Compare prices for ${titleBase} across stores. See price history, cross-store offers, and any verified coupons, matched to the exact variant by PCI and UPC.`;
+
+  return {
+    title: `${titleBase} - PriceCheck`,
+    titleBase,
+    desc,
+    canonicalKey,
+    canonicalPath,
+    canonicalUrl,
+    imageUrl: absImg,
+    kind: (canonicalKey ? canonicalKey.split(':')[0] : ''),
+    seed
+  };
 }
 
 // -------------------------
@@ -673,24 +879,84 @@ async function getPriceHistoryDailyAndStats(client, selectedKeys, days) {
 // -------------------------
 // routes
 // -------------------------
-router.get(['/dashboard', '/dashboard/'], (_req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
+router.get(['/dashboard', '/dashboard/'], (req, res) => {
+  // Base page, not indexable
+  const origin = originFromReq(req);
+  const meta = {
+    title: 'PriceCheck Dashboard - PriceCheck',
+    desc: 'PriceCheck dashboard.',
+    canonicalUrl: `${origin}/dashboard/`,
+    imageUrl: `${origin}/content-img/default.webp`
+  };
+  const html = renderDashboardHtml(meta, 'noindex,follow');
+  res.type('html').send(html);
 });
 
 const ALLOWED_KIND = new Set(['asin', 'upc', 'pci', 'tcin', 'bby', 'wal']);
 
-// Canonical key-in-path pages (no slug)
-router.get(['/dashboard/:kind/:value', '/dashboard/:kind/:value/'], (req, res, next) => {
+router.get(['/dashboard/:kind/:value', '/dashboard/:kind/:value/'], async (req, res, next) => {
   const kind = String(req.params.kind || '').toLowerCase();
-  if (!ALLOWED_KIND.has(kind)) return next(); // lets your 404 handler catch junk
-  res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
+  const value = String(req.params.value || '');
+  if (!ALLOWED_KIND.has(kind)) return next();
+
+  const rawKey = `${kind}:${decodeURIComponent(value)}`;
+
+  const client = await pool.connect();
+  try {
+    const meta = await getDashboardSeoMeta(client, rawKey, req);
+
+    // If we can canonicalize to PCI or UPC, redirect to the pretty canonical URL
+    if (meta.canonicalKey) {
+      return res.redirect(301, meta.canonicalPath);
+    }
+
+    // If nothing to canonicalize, serve noindex
+    const html = renderDashboardHtml(meta, 'noindex,follow');
+    return res.type('html').send(html);
+  } catch (e) {
+    console.error(e);
+    return next();
+  } finally {
+    client.release();
+  }
 });
 
-// Canonical slug + key-in-path pages
-router.get(['/dashboard/:slug/:kind/:value', '/dashboard/:slug/:kind/:value/'], (req, res, next) => {
+router.get(['/dashboard/:slug/:kind/:value', '/dashboard/:slug/:kind/:value/'], async (req, res, next) => {
   const kind = String(req.params.kind || '').toLowerCase();
+  const value = String(req.params.value || '');
   if (!ALLOWED_KIND.has(kind)) return next();
-  res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
+
+  const rawKey = `${kind}:${decodeURIComponent(value)}`;
+
+  const client = await pool.connect();
+  try {
+    const meta = await getDashboardSeoMeta(client, rawKey, req);
+
+    // If we have a canonical key, enforce:
+    // 1) canonical key (PCI preferred)
+    // 2) correct slug
+    if (meta.canonicalKey) {
+      const expectedPath = prettyDashboardPath(meta.canonicalKey, meta.titleBase);
+      const gotPath = req.path.endsWith('/') ? req.path : `${req.path}/`;
+
+      if (expectedPath !== gotPath) {
+        return res.redirect(301, expectedPath);
+      }
+
+      // PCI pages are indexable
+      const robots = meta.kind === 'pci' ? 'index,follow' : 'noindex,follow';
+      const html = renderDashboardHtml(meta, robots);
+      return res.type('html').send(html);
+    }
+
+    const html = renderDashboardHtml(meta, 'noindex,follow');
+    return res.type('html').send(html);
+  } catch (e) {
+    console.error(e);
+    return next();
+  } finally {
+    client.release();
+  }
 });
 
 router.get('/api/compare/:key', async (req, res) => {
