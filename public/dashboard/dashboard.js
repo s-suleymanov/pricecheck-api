@@ -1681,19 +1681,17 @@ function setMaybe(el, text, { asHtml = false } = {}) {
     }
     const best = getCheapestOffer();
     const id = state.identity || {};
-    const money = (cents) => (typeof cents === 'number' && cents > 0) ? fmt.format(cents / 100) : 'NA';
+    const money = v => fmt.format((v || 0) / 100);
     const bestLink = best ? (best.url || canonicalLink(best.store, best) || '') : '';
-    const bestCents = best ? bestComparableCents(best) : null;
-    const usedAfterCoupon = (best && typeof best.effective_price_cents === 'number' && bestCents === best.effective_price_cents && bestCents !== best.price_cents);
 
     const script = best ? (
-    `Hello, I would like a price match.
+`Hello, I would like a price match.
 
-    ${titleCase(best.store || 'Retailer')} is offering the same product for ${money(bestCents)}${usedAfterCoupon ? ' (after coupon)' : ''}${bestLink ? ` (${bestLink})` : ''}
+${titleCase(best.store || 'Retailer')} is offering the same product for ${money(best.price_cents)}${bestLink ? ` (${bestLink})` : ''}
 
-    Identifiers: PCI ${id.selected_pci || id.pci || 'NA'}  UPC ${id.selected_upc || id.upc || 'NA'}  ASIN ${id.selected_asin || id.asin || 'NA'}
+Identifiers: PCI ${id.selected_pci || id.pci || 'NA'}  UPC ${id.selected_upc || id.upc || 'NA'}  ASIN ${id.selected_asin || id.asin || 'NA'}
 
-    This is the same variant. Please match this price. Thank you.`
+This is the same variant. Please match this price. Thank you.`
     ) : 'Load offers to generate a script.';
 
     const ta = document.getElementById('pmScript');
