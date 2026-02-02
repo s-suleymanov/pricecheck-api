@@ -579,6 +579,29 @@ document.addEventListener("DOMContentLoaded", () => {
   if (form) bindForm(form, input);
 
   attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
+
+  // Auto-focus the search box on page load (fast typing, no click)
+  // Do not steal focus if something else is already focused.
+  if (document.activeElement && document.activeElement !== document.body) return;
+
+  // Wait 1 frame so layout is ready, then focus without scrolling.
+  requestAnimationFrame(() => {
+    // If it's hidden (rare), do nothing
+    const rect = input.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    try {
+      input.focus({ preventScroll: true });
+    } catch {
+      input.focus();
+    }
+
+    // Put caret at end (helpful if browser autofills or restores value)
+    try {
+      const v = String(input.value || "");
+      input.setSelectionRange(v.length, v.length);
+    } catch {}
+  });
 });
 
 })();
