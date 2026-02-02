@@ -424,6 +424,62 @@ if (copyPmBtn) copyPmBtn.addEventListener('click', ()=>{
   }
 });
 
+function normalizeSpaces(s){
+  return String(s ?? '').replace(/\s+/g,' ').trim();
+}
+
+function parseSizeToken(raw){
+  // Returns { kind: 'size', unitRank, value } for sortable sizes (GB/TB/inch/etc), else null
+  const s = normalizeSpaces(raw).toLowerCase();
+  if (!s) return null;
+
+  // Storage: GB / TB
+  // supports: "128GB", "128 gb", "1TB", "1 tb"
+  let m = s.match(/^(\d+(?:\.\d+)?)\s*(tb|gb)\b/);
+  if (m) {
+    const num = parseFloat(m[1]);
+    const unit = m[2];
+    const gbValue = unit === 'tb' ? num * 1024 : num;
+    return { kind: 'size', unitRank: 1, value: gbValue, unit: 'gb' };
+  }
+
+  // Inches: 11-inch, 13", 13 in, 13 inch
+  m = s.match(/^(\d+(?:\.\d+)?)\s*(?:("|inches|inch|in)\b|-?inch\b)/);
+  if (m) {
+    const num = parseFloat(m[1]);
+    return { kind: 'size', unitRank: 2, value: num, unit: 'in' };
+  }
+
+  // If you later want: mm, hz, w, mah, etc, add patterns here.
+
+  return null;
+}
+
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+function smartOptionCompare(a, b){
+  const A = normalizeSpaces(a);
+  const B = normalizeSpaces(b);
+
+  const pa = parseSizeToken(A);
+  const pb = parseSizeToken(B);
+
+  // If both are "sizes" (GB/TB/inches), sort numerically by normalized value
+  if (pa && pb && pa.kind === 'size' && pb.kind === 'size') {
+    // If different unit families, keep them grouped (storage before inches)
+    if (pa.unitRank !== pb.unitRank) return pa.unitRank - pb.unitRank;
+    if (pa.value !== pb.value) return pa.value - pb.value;
+    return collator.compare(A, B);
+  }
+
+  // If only one is a size, prefer sizes first (so storage options don't get mixed with words)
+  if (pa && !pb) return -1;
+  if (!pa && pb) return 1;
+
+  // Otherwise natural alphanumeric: A2 < A10, Gen 2 < Gen 10, etc.
+  return collator.compare(A, B);
+}
+
 function normLower(s){ return String(s || '').trim().toLowerCase(); }
 
 function valueOf(v, key){
@@ -449,13 +505,17 @@ function colorOf(v){
 function uniqList(arr){
   const seen = new Set();
   const out = [];
+
   for (const s of arr){
-    const k = normLower(s);
+    const val = normalizeSpaces(s);
+    const k = val.toLowerCase();
     if (!k) continue;
     if (seen.has(k)) continue;
     seen.add(k);
-    out.push(s);
+    out.push(val);
   }
+
+  out.sort(smartOptionCompare);
   return out;
 }
 
