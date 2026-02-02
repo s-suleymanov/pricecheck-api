@@ -143,31 +143,65 @@
     else history.replaceState({ key }, '', url);
   }
 
-  function applySeoFromData(title, imageUrl, key) {
-    const cleanTitle = String(title || 'Product').trim();
-    const pageTitle = `${cleanTitle} - PriceCheck`;
+  function canonicalOriginForMeta() {
+    const h = String(location.hostname || '').toLowerCase();
+    // Local/dev stays local
+    if (h === 'localhost' || h === '127.0.0.1' || h.endsWith('.onrender.com')) return location.origin;
 
-    document.title = pageTitle;
+    // Production canonical host (forces www)
+    if (h === 'pricechecktool.com' || h === 'www.pricechecktool.com') return 'https://www.pricechecktool.com';
 
-    const desc = `Compare prices for ${cleanTitle} across Amazon, Target, Walmart, and Best Buy. See today’s cheapest offer and any verified coupons, matched to the exact variant by PCI and UPC.`;
-
-    const canonical = prettyDashboardUrl(key, cleanTitle).toString();
-    setCanonical(canonical);
-
-    setOg('og:title', pageTitle);
-    setOg('og:description', desc);
-    setOg('og:url', canonical);
-
-    if (imageUrl) {
-      // ensure absolute for share bots
-      const abs = imageUrl.startsWith('http') ? imageUrl : `${location.origin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-      setOg('og:image', abs);
-      setMeta('twitter:image', abs);
-    }
-
-    setMeta('twitter:title', pageTitle);
-    setMeta('twitter:description', desc);
+    return location.origin;
   }
+
+  function absoluteImageForMeta(imageUrl) {
+    const u = String(imageUrl || '').trim();
+    if (!u) return `${canonicalOriginForMeta()}/content-img/default.webp`;
+    if (u.startsWith('http')) return u;
+    return `${canonicalOriginForMeta()}${u.startsWith('/') ? '' : '/'}${u}`;
+  }
+
+  function isPrettyDashboardPath() {
+    const parts = location.pathname.split('/').filter(Boolean);
+    // /dashboard/:slug/:kind/:value/
+    return parts[0] === 'dashboard'
+      && parts.length >= 4
+      && /^[a-z0-9-]+$/.test(parts[1] || '')
+      && /^[a-z]+$/i.test(parts[2] || '')
+      && !!parts[3];
+  }
+
+  function applySeoFromData(title, imageUrl, key) {
+  const cleanTitle = String(title || 'Product').trim() || 'Product';
+  const pageTitle = `${cleanTitle} - PriceCheck`;
+
+  document.title = pageTitle;
+
+  const desc = `Compare prices for ${cleanTitle} across stores. See price history, cross-store offers, and any verified coupons, matched to the exact variant by PCI and UPC.`;
+
+  // Update <meta name="description">
+  setMeta('description', desc);
+
+  // Build pretty path on the current origin (pushState must stay same-origin)
+  const pretty = prettyDashboardUrl(key, cleanTitle);
+
+  // Canonical URL can be cross-host (pricechecktool.com -> www.pricechecktool.com)
+  const canonical = `${canonicalOriginForMeta()}${pretty.pathname}`;
+
+  setCanonical(canonical);
+
+  setOg('og:title', pageTitle);
+  setOg('og:description', desc);
+  setOg('og:url', canonical);
+
+  const img = absoluteImageForMeta(imageUrl);
+  setOg('og:image', img);
+
+  setMeta('twitter:card', 'summary_large_image');
+  setMeta('twitter:title', pageTitle);
+  setMeta('twitter:description', desc);
+  setMeta('twitter:image', img);
+}
 
   function currentKeyFromUrl() {
   const parts = location.pathname.split('/').filter(Boolean);
@@ -762,11 +796,10 @@ async function run(raw){
         applySeoFromData(bestTitle, bestImg, canonicalKey);
       }
 
-      // robots: only index PCI canonical pages
+      // robots: only index the pretty PCI canonical page
       const kind = (String(canonicalKey || '').split(':')[0] || '').toLowerCase();
-      if (kind === 'pci' && isOnCanonicalKey(canonicalKey)) {
-        const robots = document.querySelector('meta[name="robots"]');
-        if (robots) robots.remove();
+      if (kind === 'pci' && isOnCanonicalKey(canonicalKey) && isPrettyDashboardPath()) {
+        setRobots('index,follow');
       } else {
         setRobots('noindex,follow');
       }
@@ -815,7 +848,7 @@ async function run(raw){
 
   function hydrateHeader(){
     const id = state.identity || {};
-    const DEFAULT_IMG = '../content-img/default.webp';
+    const DEFAULT_IMG = '/content-img/default.webp';
 
     {
       const warnEl = document.querySelector('#ps-warn'); // or whatever your dashboard warning element id is

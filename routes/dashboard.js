@@ -1,9 +1,122 @@
 // routes/dashboard.js
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const { Pool } = require('pg');
 
 const router = express.Router();
+
+// -------------------------
+// dashboard HTML template + SEO injection
+// -------------------------
+const DASHBOARD_INDEX_PATH = path.join(__dirname, '..', 'public', 'dashboard', 'index.html');
+let DASHBOARD_TEMPLATE = null;
+
+const CANONICAL_ORIGIN = 'https://www.pricechecktool.com';
+
+function getDashboardTemplate() {
+  if (!DASHBOARD_TEMPLATE) {
+    DASHBOARD_TEMPLATE = fs.readFileSync(DASHBOARD_INDEX_PATH, 'utf8');
+  }
+  return DASHBOARD_TEMPLATE;
+}
+
+function escAttr(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function escHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function slugifyTitleServer(s) {
+  const raw = String(s || '').trim().toLowerCase();
+  if (!raw) return 'product';
+  return raw
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'product';
+}
+
+function absImageUrl(url) {
+  const u = String(url || '').trim();
+  if (!u) return `${CANONICAL_ORIGIN}/content-img/default.webp`;
+  if (/^https?:\/\//i.test(u)) return u;
+  return `${CANONICAL_ORIGIN}${u.startsWith('/') ? '' : '/'}${u}`;
+}
+
+function seoDescription(title) {
+  const t = String(title || 'this product').trim();
+  return `Compare prices for ${t} across stores. See price history, cross-store offers, and any verified coupons, matched to the exact variant by PCI and UPC.`;
+}
+
+function replaceOrInsert(html, re, tag) {
+  if (re.test(html)) return html.replace(re, tag);
+  return html.replace(/<\/head>/i, `${tag}\n</head>`);
+}
+
+function setTitleTag(html, title) {
+  const tag = `<title>${escHtml(title)}</title>`;
+  return replaceOrInsert(html, /<title>[\s\S]*?<\/title>/i, tag);
+}
+
+function setMetaName(html, name, content) {
+  const re = new RegExp(`<meta\\s+[^>]*name=["']${name}["'][^>]*>`, 'i');
+  const tag = `<meta name="${name}" content="${escAttr(content)}">`;
+  return replaceOrInsert(html, re, tag);
+}
+
+function setMetaProp(html, prop, content) {
+  const re = new RegExp(`<meta\\s+[^>]*property=["']${prop}["'][^>]*>`, 'i');
+  const tag = `<meta property="${prop}" content="${escAttr(content)}">`;
+  return replaceOrInsert(html, re, tag);
+}
+
+function setCanonicalLink(html, href) {
+  const re = /<link\s+[^>]*rel=["']canonical["'][^>]*>/i;
+  const tag = `<link rel="canonical" href="${escAttr(href)}" id="pcCanonical" />`;
+  return replaceOrInsert(html, re, tag);
+}
+
+function renderDashboardHtml({ pageTitle, desc, canonicalUrl, robots, imageUrl }) {
+  let html = getDashboardTemplate();
+
+  html = setTitleTag(html, pageTitle);
+  html = setMetaName(html, 'description', desc);
+  html = setCanonicalLink(html, canonicalUrl);
+
+  html = setMetaName(html, 'robots', robots);
+
+  html = setMetaProp(html, 'og:title', pageTitle);
+  html = setMetaProp(html, 'og:description', desc);
+  html = setMetaProp(html, 'og:url', canonicalUrl);
+  html = setMetaProp(html, 'og:image', imageUrl);
+
+  html = setMetaName(html, 'twitter:card', 'summary_large_image');
+  html = setMetaName(html, 'twitter:title', pageTitle);
+  html = setMetaName(html, 'twitter:description', desc);
+  html = setMetaName(html, 'twitter:image', imageUrl);
+
+  return html;
+}
+
+function canonicalPathFromKey(key, title) {
+  const slug = slugifyTitleServer(title);
+  const [kindRaw, ...rest] = String(key || '').trim().split(':');
+  const kind = (kindRaw || '').toLowerCase();
+  const value = rest.join(':').trim();
+
+  if (kind && value) return `/dashboard/${slug}/${kind}/${encodeURIComponent(value)}/`;
+  return `/dashboard/${slug}/`;
+}
 
 // Create pool here (matches your "router exports directly" server.js mount style)
 const pool = new Pool({
@@ -670,6 +783,43 @@ async function getPriceHistoryDailyAndStats(client, selectedKeys, days) {
   return { daily: dailyRes.rows, stats };
 }
 
+async function getSeoForRawKey(client, rawKey) {
+  const parsed = parseKey(rawKey);
+
+  // seed from listings
+  const seed = await findSeedFromListings(client, parsed);
+  const hasAny =
+    !!seed?.upc || !!seed?.pci || !!seed?.seed_listing;
+
+  if (!hasAny) return null;
+
+  // catalog identity from seed (PCI -> UPC)
+  const catalogIdentity = await resolveCatalogIdentity(client, seed);
+
+  // selected keys from incoming key (asin/bby/wal/tcin can map to pci/upc)
+  const selectedBase = await resolveSelectedVariant(client, rawKey);
+  const selectedCatalog = await resolveCatalogIdentity(client, selectedBase);
+
+  const selectedKeys = {
+    pci: (selectedCatalog?.pci || selectedBase.pci || seed.pci || null),
+    upc: (selectedCatalog?.upc || selectedBase.upc || seed.upc || null)
+  };
+
+  // canonical key preference: PCI -> UPC -> fallback to incoming kind/value
+  const canonicalKey =
+    (selectedKeys.pci ? `pci:${String(selectedKeys.pci).trim()}` : null) ||
+    (selectedKeys.upc ? `upc:${String(selectedKeys.upc).trim()}` : null) ||
+    `${parsed.kind}:${parsed.value}`;
+
+  const meta = selectedCatalog || catalogIdentity || null;
+  const listingTitle = seed?.seed_listing?.title ? String(seed.seed_listing.title).trim() : '';
+
+  const title = String(meta?.model_name || listingTitle || 'Product').trim() || 'Product';
+  const image_url = meta?.image_url ? String(meta.image_url).trim() : '';
+
+  return { title, image_url: image_url || null, canonicalKey };
+}
+
 // -------------------------
 // routes
 // -------------------------
@@ -679,19 +829,68 @@ router.get(['/dashboard', '/dashboard/'], (_req, res) => {
 
 const ALLOWED_KIND = new Set(['asin', 'upc', 'pci', 'tcin', 'bby', 'wal']);
 
-// Canonical key-in-path pages (no slug)
-router.get(['/dashboard/:kind/:value', '/dashboard/:kind/:value/'], (req, res, next) => {
-  const kind = String(req.params.kind || '').toLowerCase();
-  if (!ALLOWED_KIND.has(kind)) return next(); // lets your 404 handler catch junk
-  res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
-});
-
-// Canonical slug + key-in-path pages
-router.get(['/dashboard/:slug/:kind/:value', '/dashboard/:slug/:kind/:value/'], (req, res, next) => {
+async function serveDashboardIndexWithSeo(req, res, next) {
   const kind = String(req.params.kind || '').toLowerCase();
   if (!ALLOWED_KIND.has(kind)) return next();
-  res.sendFile(path.join(__dirname, '..', 'public', 'dashboard', 'index.html'));
-});
+
+  const value = String(req.params.value || '').trim();
+  const rawKey = `${kind}:${value}`;
+
+  const client = await pool.connect();
+  try {
+    const seo = await getSeoForRawKey(client, rawKey);
+
+    // No match, serve the generic dashboard
+    if (!seo) {
+      return res.sendFile(DASHBOARD_INDEX_PATH);
+    }
+
+    const canonicalPath = canonicalPathFromKey(seo.canonicalKey, seo.title);
+    const canonicalUrl = `${CANONICAL_ORIGIN}${canonicalPath}`;
+
+    const pageTitle = `${seo.title} - PriceCheck`;
+    const desc = seoDescription(seo.title);
+    const imageUrl = absImageUrl(seo.image_url);
+
+    // Index only the pretty, correct-slug, PCI canonical page
+    const canonicalKind = String(seo.canonicalKey || '').split(':')[0].toLowerCase();
+    const canonicalVal  = String(seo.canonicalKey || '').split(':').slice(1).join(':').trim();
+
+    const reqSlug = req.params.slug ? String(req.params.slug).trim() : '';
+    const wantSlug = slugifyTitleServer(seo.title);
+
+    const isPretty = !!req.params.slug;
+    const isCanonicalPci =
+      canonicalKind === 'pci' &&
+      kind === 'pci' &&
+      String(value).trim().toUpperCase() === String(canonicalVal).trim().toUpperCase() &&
+      isPretty &&
+      reqSlug === wantSlug;
+
+    const robots = isCanonicalPci ? 'index,follow' : 'noindex,follow';
+
+    const html = renderDashboardHtml({
+      pageTitle,
+      desc,
+      canonicalUrl,
+      robots,
+      imageUrl
+    });
+
+    return res.status(200).type('html').send(html);
+  } catch (e) {
+    console.error(e);
+    return res.sendFile(DASHBOARD_INDEX_PATH);
+  } finally {
+    client.release();
+  }
+}
+
+// Canonical key-in-path pages (no slug)
+router.get(['/dashboard/:kind/:value', '/dashboard/:kind/:value/'], serveDashboardIndexWithSeo);
+
+// Canonical slug + key-in-path pages
+router.get(['/dashboard/:slug/:kind/:value', '/dashboard/:slug/:kind/:value/'], serveDashboardIndexWithSeo);
 
 router.get('/api/compare/:key', async (req, res) => {
   const rawKey = req.params.key;
@@ -703,8 +902,9 @@ router.get('/api/compare/:key', async (req, res) => {
     // 1) seed keys come from listings resolution (TCIN/BBY/WAL/ASIN all work here)
     const seed = await findSeedFromListings(client, parsed);
 
-    // If literally nothing was found and user didn't provide a meaningful key
-    if (!seed?.asin_input && !seed?.upc && !seed?.pci && !seed?.seed_listing) {
+    // If literally nothing was found (must have a listing row, or at least a PCI/UPC anchor)
+    const hasMatch = !!seed?.seed_listing || !!seed?.upc || !!seed?.pci;
+    if (!hasMatch) {
       return res.status(404).json({
         error: 'not_found',
         hint: 'Try prefixes like asin:..., upc:..., pci:..., bby:..., wal:..., tcin:...'
