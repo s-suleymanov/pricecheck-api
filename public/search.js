@@ -461,13 +461,37 @@ function applyInlineTopSuggestion() {
       debouncedFetch(input.value);
     });
 
-        input.addEventListener("focus", () => {
+      function isHomeDesktop() {
+  const p = (location.pathname || "/").toLowerCase();
+  const isHome = p === "/" || p === "/index.html";
+
+  const desktop = window.matchMedia
+    ? window.matchMedia("(min-width: 821px)").matches
+    : window.innerWidth >= 821;
+
+    return isHome && desktop;
+  }
+
+  function isHomeInput() {
+    return input.classList.contains("home-search__input");
+  }
+
+  input.addEventListener("focus", () => {
+    // Only auto-open popular on DESKTOP HOMEPAGE input
+    if (isHomeDesktop() && isHomeInput()) {
       if (!norm(input.value)) {
         fetchPopular();
       } else {
         debouncedFetch(input.value);
       }
-    });
+      return;
+    }
+
+    // Everywhere else: only suggest if user already typed/pasted
+    if (norm(input.value)) {
+      debouncedFetch(input.value);
+    }
+  });
 
     input.addEventListener("keydown", (e) => {
       // Accept inline completion with Tab or ArrowRight
@@ -580,11 +604,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -----------------------------
-  // Auto-focus: HOME ONLY
+  // Auto-focus + auto-open: HOME DESKTOP ONLY
   // -----------------------------
   const path = (location.pathname || "/").toLowerCase();
   const isHome = path === "/" || path === "/index.html";
-  if (!isHome) return;
+
+  // Treat "mobile viewpoint" as a narrow layout (you can tune 820 if you want)
+  const isDesktopViewport = () => {
+    // matchMedia is best because it tracks viewport changes reliably
+    if (window.matchMedia) return window.matchMedia("(min-width: 821px)").matches;
+    return window.innerWidth >= 821;
+  };
+
+  // Only run homepage auto behaviors on desktop
+  const allowHomeAuto = isHome && isDesktopViewport();
+  if (!allowHomeAuto) return;
 
   // Only focus the homepage input that explicitly opts in
   const homeInput = document.querySelector('.home-search__input[data-pc-autofocus="1"]');
@@ -608,6 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const v = String(homeInput.value || "");
       homeInput.setSelectionRange(v.length, v.length);
     } catch {}
+    homeInput.dispatchEvent(new Event("focus"));
   });
 });
 
