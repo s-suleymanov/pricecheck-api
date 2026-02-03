@@ -650,7 +650,7 @@ function renderVersionVariantColor(){
 const v2 = variantsForVersion(list, state.selectedVersion);
 
 if (variant2Card && variant2Pills){
-  if (v2.length >= 2) {
+  if (v2.length >= 1) {
     variant2Card.hidden = false;
 
     let desiredVar = state.selectedVariant2;
@@ -679,8 +679,8 @@ if (variant2Card && variant2Pills){
     });
   } else {
     variant2Card.hidden = true;
-    if (variant2Pills) variant2Pills.innerHTML = '';
-    state.selectedVariant2 = v2[0] || null;
+    variant2Pills.innerHTML = '';
+    state.selectedVariant2 = null;
   }
 } else {
   state.selectedVariant2 = state.selectedVariant2 || (v2[0] || null);
