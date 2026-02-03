@@ -33,6 +33,150 @@ function tokenize(q) {
     .filter(Boolean);
 }
 
+async function didYouMeanForQuery(client, qLower) {
+  const q = normLower(qLower);
+  if (!q || q.length < 2) return null;
+  const toks = tokenize(q);
+  const allowCombo = toks.length >= 2;
+
+  // If pg_trgm is not installed, similarity() and the % operator will fail.
+  // We catch and return null so the API still works.
+  try {
+    // Combo (brand + category) suggestion
+    if (allowCombo) {
+      const comboSql = `
+        WITH base AS (
+          SELECT
+            ${PRODUCT_KEY_SQL} AS product_key,
+            COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+            btrim(brand) AS brand,
+            btrim(category) AS category
+          FROM public.catalog
+          WHERE (
+            (model_number IS NOT NULL AND btrim(model_number) <> '')
+            OR (pci IS NOT NULL AND btrim(pci) <> '')
+            OR (upc IS NOT NULL AND btrim(upc) <> '')
+          )
+            AND brand IS NOT NULL AND btrim(brand) <> ''
+            AND category IS NOT NULL AND btrim(category) <> ''
+        ),
+        combos AS (
+          SELECT
+            MIN(brand) AS brand_label,
+            MIN(category) AS category_label,
+            COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products,
+            similarity(lower(MIN(brand) || ' ' || MIN(category)), $1) AS sim
+          FROM base
+          GROUP BY lower(brand), lower(category)
+        )
+        SELECT brand_label, category_label, products, sim
+        FROM combos
+        WHERE sim >= 0.24
+        ORDER BY sim DESC, products DESC, brand_label ASC, category_label ASC
+        LIMIT 1
+      `;
+
+      const comboRow = (await client.query(comboSql, [q])).rows?.[0];
+      if (comboRow?.brand_label && comboRow?.category_label) {
+        const href =
+          `/browse/?brand=${encodeURIComponent(comboRow.brand_label)}` +
+          `&category=${encodeURIComponent(comboRow.category_label)}`;
+
+        return {
+          kind: "combo",
+          value: `${comboRow.brand_label} ${comboRow.category_label}`,
+          brand: comboRow.brand_label,
+          category: comboRow.category_label,
+          href,
+        };
+      }
+    }
+
+    // Brand-only suggestion
+    const brandSql = `
+      WITH base AS (
+        SELECT
+          ${PRODUCT_KEY_SQL} AS product_key,
+          COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+          btrim(brand) AS brand
+        FROM public.catalog
+        WHERE (
+          (model_number IS NOT NULL AND btrim(model_number) <> '')
+          OR (pci IS NOT NULL AND btrim(pci) <> '')
+          OR (upc IS NOT NULL AND btrim(upc) <> '')
+        )
+          AND brand IS NOT NULL AND btrim(brand) <> ''
+      ),
+      brands AS (
+        SELECT
+          MIN(brand) AS label,
+          COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products,
+          similarity(lower(MIN(brand)), $1) AS sim
+        FROM base
+        GROUP BY lower(brand)
+      )
+      SELECT label, products, sim
+      FROM brands
+      WHERE sim >= 0.26
+      ORDER BY sim DESC, products DESC, label ASC
+      LIMIT 1
+    `;
+
+    const brandRow = (await client.query(brandSql, [q])).rows?.[0];
+    if (brandRow?.label) {
+      return {
+        kind: "brand",
+        value: brandRow.label,
+        href: `/browse/?brand=${encodeURIComponent(brandRow.label)}`,
+      };
+    }
+
+    // Category-only suggestion
+    const catSql = `
+      WITH base AS (
+        SELECT
+          ${PRODUCT_KEY_SQL} AS product_key,
+          COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+          btrim(category) AS category
+        FROM public.catalog
+        WHERE (
+          (model_number IS NOT NULL AND btrim(model_number) <> '')
+          OR (pci IS NOT NULL AND btrim(pci) <> '')
+          OR (upc IS NOT NULL AND btrim(upc) <> '')
+        )
+          AND category IS NOT NULL AND btrim(category) <> ''
+      ),
+      cats AS (
+        SELECT
+          MIN(category) AS label,
+          COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products,
+          similarity(lower(MIN(category)), $1) AS sim
+        FROM base
+        GROUP BY lower(category)
+      )
+      SELECT label, products, sim
+      FROM cats
+      WHERE sim >= 0.26
+      ORDER BY sim DESC, products DESC, label ASC
+      LIMIT 1
+    `;
+
+    const catRow = (await client.query(catSql, [q])).rows?.[0];
+    if (catRow?.label) {
+      return {
+        kind: "category",
+        value: catRow.label,
+        href: `/browse/?category=${encodeURIComponent(catRow.label)}`,
+      };
+    }
+
+    return null;
+  } catch (e) {
+    console.warn("did_you_mean disabled (pg_trgm missing?):", e?.message || e);
+    return null;
+  }
+}
+
 // Serve browse page (SPA HTML for all browse paths)
 const BROWSE_HTML = path.join(__dirname, "..", "public", "browse", "index.html");
 
@@ -678,6 +822,24 @@ router.get("/api/search", async (req, res) => {
       FROM base
     `;
     const total = (await client.query(countSql, [like])).rows?.[0]?.total ?? 0;
+
+    // If nothing matched at all, offer a "did you mean" suggestion
+    if (total === 0) {
+      const dym = await didYouMeanForQuery(client, qLower);
+
+      return res.json({
+        ok: true,
+        kind: "product",
+        value: q,
+        page,
+        limit,
+        total: 0,
+        pages: 1,
+        results: [],
+        also: [],
+        did_you_mean: dym,
+      });
+    }
 
     const listSql = `
       WITH picked AS (

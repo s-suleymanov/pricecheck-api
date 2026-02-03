@@ -8,9 +8,11 @@
     meta: () => $("#meta"),
     grid: () => $("#grid"),
     empty: () => $("#empty"),
+    emptyInline: () => $("#emptyInline"),
     prev: () => $("#prev"),
     next: () => $("#next"),
     pageLabel: () => $("#pageLabel"),
+    pager: () => document.querySelector(".pager"),
   };
 
   const state = {
@@ -27,6 +29,7 @@
     pages: 1,
     results: [],
     also: [],
+    didYouMean: null,
 
     loading: false,
     lastReqId: 0,
@@ -35,6 +38,21 @@
 
   function setText(el, txt) {
     if (el) el.textContent = txt ?? "";
+  }
+
+  function setInlineEmptyHtml(html) {
+  const el = els.emptyInline();
+  if (el) el.innerHTML = html || "";
+  }
+
+  function showInlineEmpty(show) {
+    const el = els.emptyInline();
+    if (el) el.hidden = !show;
+  }
+
+  function clearEmptyStates() {
+    showInlineEmpty(false);
+    showEmpty(false); // keeps legacy #empty hidden unless you explicitly show it for errors
   }
 
   function setTitle(txt) {
@@ -48,6 +66,20 @@
   function setEmptyText(txt) {
     const el = els.empty();
     if (el) el.textContent = txt || "No results.";
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function setEmptyHtml(html) {
+    const el = els.empty();
+    if (el) el.innerHTML = html || "";
   }
 
   function showEmpty(show) {
@@ -69,9 +101,11 @@
     state.q = norm(parsed.q);
     state.page = parsed.page;
 
-    // If brand/category is set, we are not using q
+    // If brand/category is set, we are not using q, and page comes from ?page=
     if (state.brand || state.category) {
       state.q = "";
+      const qp = parseInt(sp.get("page") || "1", 10);
+      state.page = Number.isFinite(qp) && qp > 0 ? qp : 1;
     }
   }
 
@@ -126,13 +160,22 @@
   }
 
   function setPager() {
-    const label = els.pageLabel();
-    setText(label, state.pages ? `Page ${state.page} of ${state.pages}` : "");
+    const pages = Number.isFinite(state.pages) ? state.pages : 1;
 
+    const pager = els.pager();
+    const label = els.pageLabel();
     const prev = els.prev();
     const next = els.next();
-    if (prev) prev.disabled = state.loading || state.page <= 1;
-    if (next) next.disabled = state.loading || state.page >= state.pages;
+
+    const shouldShow = pages > 1;
+
+    // Force-hide/show the entire pager container
+    if (pager) pager.style.display = shouldShow ? "flex" : "none";
+
+    setText(label, shouldShow ? `Page ${state.page} of ${pages}` : "");
+
+    if (prev) prev.disabled = !shouldShow || state.loading || state.page <= 1;
+    if (next) next.disabled = !shouldShow || state.loading || state.page >= pages;
   }
 
   function setLoading(on) {
@@ -140,12 +183,18 @@
     setPager();
   }
 
-    function writeUrl({ replace = false } = {}) {
-    let path = buildBrowsePath(state.q, state.page);
+  function writeUrl({ replace = false } = {}) {
+  let path = buildBrowsePath(state.q, state.page);
 
-    const sp = new URLSearchParams();
+  const sp = new URLSearchParams();
     if (state.brand) sp.set("brand", state.brand);
     if (state.category) sp.set("category", state.category);
+
+    // IMPORTANT: when using brand/category filters, put page in the query string
+    if (state.brand || state.category) {
+      path = "/browse/"; // do not use /browse/{slug}/ in this mode
+      if (state.page > 1) sp.set("page", String(state.page));
+    }
 
     const qs = sp.toString();
     if (qs) path += `?${qs}`;
@@ -323,9 +372,17 @@ function animateGridCards(gridEl) {
 
     const q = (state.value || state.q || "").trim();
     const isPaged = state.page > 1;
-    const canonical = q
-      ? `${location.origin}${buildBrowsePath(q, 1)}`
-      : `${location.origin}/browse/`;
+    let canonical;
+    if (state.brand || state.category) {
+      const csp = new URLSearchParams();
+      if (state.brand) csp.set("brand", state.brand);
+      if (state.category) csp.set("category", state.category);
+      canonical = `${location.origin}/browse/${csp.toString() ? "?" + csp.toString() : ""}`;
+    } else {
+      canonical = q
+        ? `${location.origin}${buildBrowsePath(q, 1)}`
+        : `${location.origin}/browse/`;
+    }
     const robots = !q
       ? "noindex,follow"
       : (isPaged ? "noindex,follow" : "index,follow");
@@ -337,8 +394,11 @@ function animateGridCards(gridEl) {
     if (state.lastError) {
       setMeta(state.lastError);
       grid.innerHTML = "";
+      showInlineEmpty(false);
+
       setEmptyText(state.lastError);
       showEmpty(true);
+
       setPager();
       return;
     }
@@ -372,8 +432,43 @@ function animateGridCards(gridEl) {
     grid.innerHTML = parts.join("");
     animateGridCards(grid);
 
-    setEmptyText("No results.");
-    showEmpty(parts.length === 0);
+    if (parts.length === 0) {
+  const rawQ = (state.q || "").trim();
+  const dym = state.didYouMean && state.didYouMean.value ? state.didYouMean : null;
+
+  if (dym) {
+    const shownQ = rawQ ? `"${escapeHtml(rawQ)}"` : "your search";
+    const href = String(dym.href || "").trim();
+
+    setInlineEmptyHtml(`
+      <div class="msg">
+        <span>No results for <strong>${shownQ}</strong>.</span>
+        <span>Did you mean</span>
+      <span class="dym-wrap">
+        <a class="pc-dym" data-dym="1" href="${escapeHtml(href)}">${escapeHtml(dym.value)}</a><span class="pc-dym-q">?</span>
+      </span>
+      <span class="kbd" aria-hidden="true">Enter</span>
+      </div>
+    `);
+  } else {
+    // No suggestion available: keep it minimal
+    const shownQ = rawQ ? `"${escapeHtml(rawQ)}"` : "your search";
+    setInlineEmptyHtml(`
+      <div class="msg">
+        <span>No results for <strong>${shownQ}</strong>.</span>
+      </div>
+    `);
+  }
+
+  showInlineEmpty(true);
+
+  // Do not show the big empty card for normal no-results
+  showEmpty(false);
+} else {
+  showInlineEmpty(false);
+  showEmpty(false);
+}
+
     setPager();
   }
 
@@ -388,6 +483,7 @@ function animateGridCards(gridEl) {
     state.pages = 1;
     state.kind = "product";
     state.value = "";
+    state.didYouMean = null;
 
     try {
       if (!state.q && !state.brand && !state.category) {
@@ -440,6 +536,7 @@ function animateGridCards(gridEl) {
       state.pages = typeof data.pages === "number" ? data.pages : 1;
       state.results = Array.isArray(data.results) ? data.results : [];
       state.also = Array.isArray(data.also) ? data.also : [];
+      state.didYouMean = data.did_you_mean || null;
 
       setLoading(false);
       render();
@@ -462,7 +559,7 @@ function animateGridCards(gridEl) {
     load();
   }
 
-  function wire() {
+    function wire() {
     const prev = els.prev();
     const next = els.next();
     const grid = els.grid();
@@ -494,6 +591,25 @@ function animateGridCards(gridEl) {
         navTo(btn.getAttribute("data-nav-kind") || "product", value);
       });
     }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+
+      // Don’t hijack Enter if user is typing in an input/textarea/select
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if (e.target && e.target.isContentEditable) return;
+
+      // Only when our inline did-you-mean is showing
+      const inline = els.emptyInline();
+      if (!inline || inline.hidden) return;
+
+      const dym = inline.querySelector('a.pc-dym[data-dym="1"][href]');
+      if (!dym) return;
+
+      e.preventDefault();
+      location.href = dym.getAttribute("href");
+    });
 
     window.addEventListener("popstate", () => {
       readUrl();

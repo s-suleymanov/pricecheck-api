@@ -40,7 +40,59 @@ h1{
 
 .muted{
   color: var(--muted);
-  font-size: 14px;
+}
+
+/* Inline empty state under H1 (desktop + mobile) */
+.empty-inline{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 20px;
+}
+
+.controls .row #meta:empty{
+  display: none;
+}
+
+.dym-wrap{ display:inline; }
+.pc-dym-q{ margin-left:1px; }
+
+.empty-inline .msg{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.empty-inline .msg strong{
+  color: #111;
+  font-weight: 600;
+}
+
+.empty-inline a.pc-dym{
+  color: #111;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.empty-inline .kbd{
+  padding: 8px 10px;
+  margin-top: 1px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.8);
+  color: #111;
+  font-size: 16px;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Optional: make it feel tighter on small screens */
+@media (max-width: 520px){
+  .empty-inline{ font-size: 20px; }
+  .empty-inline .kbd{ display: none; }
 }
 
 /* card base */
@@ -98,6 +150,39 @@ h1{
   color: inherit;
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
   box-shadow: 0 10px 22px rgba(0,0,0,0.04);
+}
+
+#empty{
+  font-size: 18px;
+  margin-top: 16px;
+  padding: 18px;
+  text-align: center;
+  color: var(--muted);
+  border: 1px dashed rgba(0,0,0,0.14);
+  background: #fff;
+  box-shadow: none;
+}
+
+#empty .empty-title{
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 6px;
+}
+
+#empty .empty-suggest{
+  margin-top: 6px;
+}
+
+#empty .empty-tip{
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+#empty a.pc-dym{
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 600;
 }
 
 .card.item:hover{
@@ -175,17 +260,6 @@ h1{
 
 /* Hide mobile-only row on desktop */
 .row2{ display: none; }
-
-/* Empty state */
-#empty{
-  margin-top: 16px;
-  padding: 18px;
-  text-align: center;
-  color: var(--muted);
-  border: 1px dashed rgba(0,0,0,0.14);
-  background: #fff;
-  box-shadow: none;
-}
 
 /* ===== Mobile/Tablet: switch back to cards ===== */
 @media (max-width: 860px){
