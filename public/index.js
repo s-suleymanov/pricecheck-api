@@ -1,5 +1,85 @@
 // public/index.js
 (() => {
+
+  // -----------------------------
+  // PWA: service worker + install prompt (home only)
+  // -----------------------------
+  const installBtn = document.getElementById("installAppBtn");
+
+  function isStandalone() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
+  function canUseSW() {
+    return "serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost");
+  }
+
+  // Register SW as early as possible
+  if (canUseSW()) {
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
+  }
+
+  let deferredInstall = null;
+
+  function showInstall(show) {
+    if (!installBtn) return;
+    installBtn.style.display = show ? "" : "none";
+  }
+
+  // Already installed, do not show
+  if (installBtn && isStandalone()) showInstall(false);
+
+  // Chrome/Edge: capture install prompt
+  window.addEventListener("beforeinstallprompt", (e) => {
+    // Stop mini-infobar
+    e.preventDefault();
+    deferredInstall = e;
+    if (!isStandalone()) showInstall(true);
+  });
+
+  // If user installs from browser UI, hide button after
+  window.addEventListener("appinstalled", () => {
+    deferredInstall = null;
+    showInstall(false);
+  });
+
+  // Click handler
+  if (installBtn) {
+    installBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+
+      if (isStandalone()) {
+        showInstall(false);
+        return;
+      }
+
+      // If we have a real prompt, use it
+      if (deferredInstall) {
+        deferredInstall.prompt();
+        try { await deferredInstall.userChoice; } catch {}
+        deferredInstall = null;
+        showInstall(false);
+        return;
+      }
+
+      // No prompt available (Safari iOS, or not eligible yet)
+      const ua = navigator.userAgent || "";
+      const isIOS = /iPhone|iPad|iPod/i.test(ua);
+      const isSafari = isIOS && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS/i.test(ua);
+
+      if (isSafari) {
+        alert("On iPhone: tap Share, then Add to Home Screen.");
+        return;
+      }
+
+      // Not eligible yet (usually means: not served over https, missing icons, or browser rules not met)
+      alert("Install is not available yet. Try again after a little browsing, and make sure you are on https.");
+    });
+  }
+
+  // Default: keep hidden until beforeinstallprompt fires
+  showInstall(false);
+
   const $ = (s) => document.querySelector(s);
 
   const LOGO_DIR = "/insights/logo";

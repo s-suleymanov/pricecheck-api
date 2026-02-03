@@ -11,8 +11,13 @@
   <meta name="robots" content="index,follow,max-image-preview:large" />
 
   <link rel="icon" href="/logo/logo.svg" type="image/svg+xml" />
-  <link rel="icon" href="/logo/logo.png" type="image/png" sizes="512x512" />
-  <link rel="apple-touch-icon" href="/logo/logo.png" />
+  <link rel="icon" href="/logo/icon-512.png" type="image/png" sizes="512x512" />
+  <link rel="apple-touch-icon" href="/logo/icon-192.png" />
+
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#111111" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PriceCheck" />
@@ -86,11 +91,11 @@
 <body style="margin:0;">
   <header style="padding: 20px;">
         <div class="home-top">
-        <a class="home-top__link" href=""></a>
+        <a class="home-top__link" href="/overview/">Overview</a>
 
       <div class="home-top__right">
-        <a class="home-top__link" href="/overview/">Overview</a>
-        <a class="btn btn--outline home-top__btn" href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en">Add to Chrome</a>
+        <a class="home-top__link" href="#" id="installAppBtn" style="display:none;">Install App</a>
+        <a class="btn btn--outline home-top__btn" href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en">Get Extension</a>
       </div>
     </div>
   </header>
