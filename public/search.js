@@ -566,40 +566,47 @@ function applyInlineTopSuggestion() {
 
   window.pcSearch = { route, bindForm, shouldGoDashboard, attachAutocomplete };
 
-// Auto-wire: attach autocomplete + submit routing on common inputs
+// Auto-wire: bind + autocomplete on any visible search inputs.
+// Auto-focus is homepage-only and only for the input that opts in.
 document.addEventListener("DOMContentLoaded", () => {
-  const input =
-    document.querySelector(".nav-search__input") ||
-    document.querySelector(".home-search__input") ||
-    document.querySelector('input[type="search"]');
+  const inputs = Array.from(
+    document.querySelectorAll(".home-search__input, .nav-search__input")
+  );
 
-  if (!input) return;
+  for (const input of inputs) {
+    const form = input.closest("form");
+    if (form) bindForm(form, input);
+    attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
+  }
 
-  const form = input.closest("form");
-  if (form) bindForm(form, input);
+  // -----------------------------
+  // Auto-focus: HOME ONLY
+  // -----------------------------
+  const path = (location.pathname || "/").toLowerCase();
+  const isHome = path === "/" || path === "/index.html";
+  if (!isHome) return;
 
-  attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
+  // Only focus the homepage input that explicitly opts in
+  const homeInput = document.querySelector('.home-search__input[data-pc-autofocus="1"]');
+  if (!homeInput) return;
 
-  // Auto-focus the search box on page load (fast typing, no click)
-  // Do not steal focus if something else is already focused.
-  if (document.activeElement && document.activeElement !== document.body) return;
+  // Do not steal focus if something else is already focused
+  const ae = document.activeElement;
+  if (ae && ae !== document.body && ae !== document.documentElement) return;
 
-  // Wait 1 frame so layout is ready, then focus without scrolling.
   requestAnimationFrame(() => {
-    // If it's hidden (rare), do nothing
-    const rect = input.getBoundingClientRect();
+    const rect = homeInput.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
 
     try {
-      input.focus({ preventScroll: true });
+      homeInput.focus({ preventScroll: true });
     } catch {
-      input.focus();
+      homeInput.focus();
     }
 
-    // Put caret at end (helpful if browser autofills or restores value)
     try {
-      const v = String(input.value || "");
-      input.setSelectionRange(v.length, v.length);
+      const v = String(homeInput.value || "");
+      homeInput.setSelectionRange(v.length, v.length);
     } catch {}
   });
 });
