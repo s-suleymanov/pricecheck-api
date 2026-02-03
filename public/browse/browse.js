@@ -272,7 +272,7 @@
     return `/dashboard/${slug}/${kind}/${encodeURIComponent(value)}/`;
   }
 
-  function cardProduct(r) {
+  function cardProduct(r, { isFirst = false } = {}) {
     const dashKey = String(r.dashboard_key || "").trim();
 
     const displayName = r.model_name || r.title || r.model_number || "Untitled";
@@ -292,14 +292,18 @@
       ? (category ? `${version} ${category}` : version)
       : category;
 
+    const enterHint = isFirst
+      ? `<span class="kbd pc-enter-kbd" aria-hidden="true">Enter</span>`
+      : "";
+
     return `
-      <a class="card item" href="${href}">
+      <a class="card item" href="${href}" ${isFirst ? 'data-first-card="1"' : ""}>
         <div class="thumb">
           ${img}
         </div>
 
         <div class="body">
-          <div class="name">${displayName}</div>
+          <div class="name">${displayName} ${enterHint}</div>
           <div class="subtitle">${subtitle}</div>
         </div>
 
@@ -396,8 +400,9 @@ function animateGridCards(gridEl) {
       grid.innerHTML = "";
       showInlineEmpty(false);
 
-      setEmptyText(state.lastError);
-      showEmpty(true);
+      setInlineEmptyHtml(`<div class="msg"><span>${escapeHtml(state.lastError)}</span></div>`);
+      showInlineEmpty(true);
+      showEmpty(false);
 
       setPager();
       return;
@@ -426,7 +431,9 @@ function animateGridCards(gridEl) {
     }
 
     if (Array.isArray(state.results) && state.results.length) {
-      for (const r of state.results) parts.push(cardProduct(r));
+      for (let i = 0; i < state.results.length; i++) {
+        parts.push(cardProduct(state.results[i], { isFirst: i === 0 }));
+      }
     }
 
     grid.innerHTML = parts.join("");
@@ -600,15 +607,27 @@ function animateGridCards(gridEl) {
       if (tag === "input" || tag === "textarea" || tag === "select") return;
       if (e.target && e.target.isContentEditable) return;
 
-      // Only when our inline did-you-mean is showing
-      const inline = els.emptyInline();
-      if (!inline || inline.hidden) return;
+      if (tag === "button" || tag === "a") return;
 
-      const dym = inline.querySelector('a.pc-dym[data-dym="1"][href]');
-      if (!dym) return;
+      // 1) If our inline did-you-mean is showing, Enter goes there (existing behavior)
+      const inline = els.emptyInline();
+      if (inline && !inline.hidden) {
+        const dym = inline.querySelector('a.pc-dym[data-dym="1"][href]');
+        if (!dym) return;
+        e.preventDefault();
+        location.href = dym.getAttribute("href");
+        return;
+      }
+
+      // 2) Otherwise, if we have result cards, Enter goes to the first card
+      const grid = els.grid();
+      if (!grid) return;
+
+      const first = grid.querySelector('a.card.item[data-first-card="1"][href]');
+      if (!first) return;
 
       e.preventDefault();
-      location.href = dym.getAttribute("href");
+      first.click(); // triggers normal navigation
     });
 
     window.addEventListener("popstate", () => {
