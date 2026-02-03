@@ -491,7 +491,7 @@ function valueOf(v, key){
 
 function versionOf(v){
   // "Model" dropdown shows catalog.version first, fallback to variant_label
-  return valueOf(v, 'version') || valueOf(v, 'variant_label') || 'Default';
+    return valueOf(v, 'version') || 'Default';
 }
 
 function variantOf(v){
@@ -2007,7 +2007,7 @@ if (actSummary) actSummary.addEventListener('click', async () => {
     items.forEach(v=>{
       html += '<tr>';
       // First column now is "Model" (version)
-      const ver = String(v?.version || v?.variant_label || '').trim();
+      const ver = String(v?.version || '').trim();
       html += `<td class="mono">${escapeHtml(ver || 'Default')}</td>`;
 
       // Then remaining columns in order
