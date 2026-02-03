@@ -69,6 +69,62 @@ aside .note{
   gap:10px;
 }
 
+/* Desktop/tablet: fixed layout + controlled widths */
+#specsMatrix table{
+  width: 100%;
+  table-layout: fixed;
+}
+
+#specsMatrix th:nth-child(1),
+#specsMatrix td:nth-child(1){ width: 110px; }  /* Model */
+#specsMatrix th:nth-child(2),
+#specsMatrix td:nth-child(2){ width: 110px; }  /* Variant */
+#specsMatrix th:nth-child(3),
+#specsMatrix td:nth-child(3){ width: 110px; }  /* Color */
+#specsMatrix th:nth-child(4),
+#specsMatrix td:nth-child(4){ width: 150px; }  /* Category */
+
+/* Name wraps normally */
+#specsMatrix th:nth-child(5),
+#specsMatrix td:nth-child(5){
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Mobile: stop squishing columns, hide Category, allow horizontal scroll */
+@media (max-width: 520px){
+  /* kill the fixed layout behavior on mobile */
+  #specsMatrix table{
+    table-layout: auto;
+    min-width: 520px; /* so it scrolls instead of crushing Name into 1-char width */
+  }
+
+  /* wrapper scroll */
+  #specsMatrix{
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* remove the forced widths on mobile */
+  #specsMatrix th,
+  #specsMatrix td{
+    width: auto !important;
+  }
+
+  /* hide Category column on mobile */
+  #specsMatrix th:nth-child(4),
+  #specsMatrix td:nth-child(4){
+    display: none;
+  }
+
+  /* keep Name readable */
+  #specsMatrix th:nth-child(5),
+  #specsMatrix td:nth-child(5){
+    min-width: 220px;
+    overflow-wrap: anywhere;
+  }
+}
+
 .pill-choice{
   border:1px solid var(--line);
   background:var(--surface);
@@ -479,10 +535,6 @@ details[open]{background:#fff}
   }
   h3 {
     font-size: 22px;
-  }
-  #specsMatrix table th:nth-child(3),
-  #specsMatrix table td:nth-child(3){
-    display: none;
   }
   #pTitle{
     font-size: 30px;

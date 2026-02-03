@@ -1991,12 +1991,11 @@ if (actSummary) actSummary.addEventListener('click', async () => {
     ['variant', 'Variant'],
     ['color', 'Color'],
     ['category', 'Category'],
-    ['brand', 'Brand'],
     ['model_name', 'Name'],
   ];
 
     const varies = {};
-    ['version','variant','color','category','brand','model_name'].forEach(k=>{
+    ['version','variant','color','category','model_name'].forEach(k=>{
       const vals = new Set(items.map(v => (String(v?.[k] || '').trim())));
       varies[k] = vals.size > 1;
     });
@@ -2012,7 +2011,7 @@ if (actSummary) actSummary.addEventListener('click', async () => {
       html += `<td class="mono">${escapeHtml(ver || 'Default')}</td>`;
 
       // Then remaining columns in order
-      ['variant','color','category','brand','model_name'].forEach(k=>{
+      ['variant','color','category','model_name'].forEach(k=>{
         const raw = String(v?.[k] || '').trim();
         const val = raw ? raw : (k === 'color' || k === 'variant' ? '—' : 'NA');
         const hi = varies[k] ? ' style="background:rgba(255,230,150,.45)"' : '';
