@@ -994,12 +994,8 @@ async function run(raw){
         const items = Array.from(map.values());
 
         // Sort alphabetically, but keep current family at the top
-        items.sort((a,b) => a.model_number.localeCompare(b.model_number, undefined, { sensitivity: 'base' }));
-        const idx = items.findIndex(x => x.model_number.toLowerCase() === fam.toLowerCase());
-        if (idx > 0) {
-          const curItem = items.splice(idx, 1)[0];
-          items.unshift(curItem);
-        }
+        const famCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+        items.sort((a, b) => famCollator.compare(a.model_number, b.model_number));
 
         // Rebuild select
         familySel.innerHTML = '';
