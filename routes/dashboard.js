@@ -414,6 +414,33 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
   const modelNumber = catalogIdentity?.model_number ? String(catalogIdentity.model_number).trim() : '';
   if (!modelNumber) return [];
 
+  const brand = catalogIdentity?.brand ? String(catalogIdentity.brand).trim() : '';
+  const category = catalogIdentity?.category ? String(catalogIdentity.category).trim() : '';
+
+  // If we don't have a brand, it's not safe to use model_number as a group key.
+  // Return just the identity row as a single-variant list (prevents cross-brand bleed).
+  if (!brand) {
+    const row = catalogIdentity;
+    const key =
+      (row.pci && String(row.pci).trim() ? `pci:${String(row.pci).trim()}` : null) ||
+      (row.upc && String(row.upc).trim() ? `upc:${String(row.upc).trim()}` : null);
+    return key ? [{
+      id: row.id,
+      key,
+      upc: row.upc || null,
+      pci: row.pci || null,
+      model_name: row.model_name || null,
+      model_number: row.model_number || null,
+      variant_label: (row.version && row.color) ? `${row.version} • ${row.color}` : (row.version || row.color || 'Default'),
+      version: row.version || null,
+      variant: row.variant || null,
+      color: row.color || null,
+      brand: row.brand || null,
+      category: row.category || null,
+      image_url: row.image_url || null
+    }] : [];
+  }
+
   const r = await client.query(
     `
     select id, upc, pci, model_name, model_number, brand, category, image_url,
@@ -421,6 +448,14 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
     from public.catalog
     where model_number is not null and btrim(model_number) <> ''
       and upper(btrim(model_number)) = upper(btrim($1))
+      and brand is not null and btrim(brand) <> ''
+      and lower(btrim(brand)) = lower(btrim($2))
+      and (
+        $3::text = '' 
+        or category is null 
+        or btrim(category) = '' 
+        or lower(btrim(category)) = lower(btrim($3))
+      )
     order by
       (case when version is null or btrim(version) = '' then 1 else 0 end),
       version nulls last,
@@ -431,16 +466,15 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
       id
     limit 500
     `,
-    [modelNumber]
+    [modelNumber, brand, category]
   );
 
-  return r.rows
+  return (r.rows || [])
     .map((row) => {
       const key =
         (row.pci && String(row.pci).trim() ? `pci:${String(row.pci).trim()}` : null) ||
         (row.upc && String(row.upc).trim() ? `upc:${String(row.upc).trim()}` : null);
 
-      // If a catalog row has neither PCI nor UPC, it is not selectable as a variant anchor.
       if (!key) return null;
 
       const v = row.version && String(row.version).trim();
