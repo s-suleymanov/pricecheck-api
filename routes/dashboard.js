@@ -414,8 +414,7 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
   const modelNumber = catalogIdentity?.model_number ? String(catalogIdentity.model_number).trim() : '';
   if (!modelNumber) return [];
 
-  const brand = catalogIdentity?.brand ? String(catalogIdentity.brand).trim() : '';
-  const category = catalogIdentity?.category ? String(catalogIdentity.category).trim() : '';
+    const brand = catalogIdentity?.brand ? String(catalogIdentity.brand).trim() : '';
 
   // If we don't have a brand, it's not safe to use model_number as a group key.
   // Return just the identity row as a single-variant list (prevents cross-brand bleed).
@@ -441,7 +440,7 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
     }] : [];
   }
 
-  const r = await client.query(
+    const r = await client.query(
     `
     select id, upc, pci, model_name, model_number, brand, category, image_url,
            version, color, variant, created_at
@@ -450,12 +449,6 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
       and upper(btrim(model_number)) = upper(btrim($1))
       and brand is not null and btrim(brand) <> ''
       and lower(btrim(brand)) = lower(btrim($2))
-      and (
-        $3::text = '' 
-        or category is null 
-        or btrim(category) = '' 
-        or lower(btrim(category)) = lower(btrim($3))
-      )
     order by
       (case when version is null or btrim(version) = '' then 1 else 0 end),
       version nulls last,
@@ -463,10 +456,13 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
       variant nulls last,
       (case when color is null or btrim(color) = '' then 1 else 0 end),
       color nulls last,
+      -- optional: keep ordering stable when mixing categories
+      (case when category is null or btrim(category) = '' then 1 else 0 end),
+      lower(btrim(category)) nulls last,
       id
     limit 500
     `,
-    [modelNumber, brand, category]
+    [modelNumber, brand]
   );
 
   return (r.rows || [])
