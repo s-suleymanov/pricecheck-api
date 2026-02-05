@@ -430,6 +430,16 @@ details[open]{background:#fff}
   color: var(--ink);
 }
 
+/* Make id pills clickable without changing their look */
+#pIds .id-pill.is-copy{
+  cursor: pointer;
+  user-select: none;
+}
+
+#pIds .id-pill.is-copy:active{
+  transform: translateY(1px);
+}
+
 /* Dropshipping warning banner */
 .pc-warn{
   display:flex;

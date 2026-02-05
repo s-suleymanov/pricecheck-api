@@ -775,6 +775,7 @@ if (variantSel) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  wireIdPillsCopy();
   const key = currentKeyFromUrl() || "";
   if (!key.trim()) {
     document.getElementById("pTitle").textContent = "Search a product to view the dashboard.";
@@ -1046,7 +1047,10 @@ async function run(raw){
     if (selUpc) parts.push(`UPC ${selUpc}`);
     if (selAsin) parts.push(`ASIN ${selAsin}`);
 
-    $('#pIds').innerHTML = parts.map(p => `<span class="id-pill">${escapeHtml(p)}</span>`).join('');
+    const pIdsEl = $('#pIds');
+    pIdsEl.innerHTML = parts
+      .map(p => `<span class="id-pill is-copy" data-copy="${escapeHtml(p)}" role="button" tabindex="0">${escapeHtml(p)}</span>`)
+      .join('');
 
     const img = $('#pImg');
     const src =
@@ -1886,6 +1890,77 @@ function intelligenceContext() {
   const highest = priced[0] || null;
 
   return { id, v, title, offers, cheapest, highest };
+}
+
+async function copyText(text){
+  const t = String(text || '').trim();
+  if (!t) return false;
+
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(t);
+      return true;
+    }
+  } catch {}
+
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = t;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return !!ok;
+  } catch {}
+
+  return false;
+}
+
+function parseIdPillValue(raw){
+  // "PCI NZQ8GS34" -> "NZQ8GS34", "UPC 0123..." -> digits, "ASIN B0..." -> asin
+  const s = String(raw || '').trim();
+  const m = s.match(/^(PCI|UPC|ASIN)\s+(.+)$/i);
+  return (m ? String(m[2] || '').trim() : s);
+}
+
+function wireIdPillsCopy(){
+  const host = document.getElementById('pIds');
+  if (!host || host._pcCopyBound) return;
+  host._pcCopyBound = true;
+
+  async function handle(el){
+    if (!el) return;
+    const raw = el.getAttribute('data-copy') || el.textContent || '';
+    const val = parseIdPillValue(raw);
+    const ok = await copyText(val);
+
+    if (!ok) return;
+
+    // Useful feedback without changing styling: temporarily swap the text
+    const original = el.textContent;
+    el.textContent = 'Copied';
+    clearTimeout(el._pcCopyT);
+    el._pcCopyT = setTimeout(() => { el.textContent = original; }, 900);
+  }
+
+  host.addEventListener('click', (e) => {
+    const el = e.target && e.target.closest ? e.target.closest('.id-pill.is-copy') : null;
+    if (!el) return;
+    handle(el);
+  });
+
+  host.addEventListener('keydown', (e) => {
+    const el = e.target && e.target.classList && e.target.classList.contains('is-copy') ? e.target : null;
+    if (!el) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handle(el);
+    }
+  });
 }
 
 async function copyAndNote(text, note) {
