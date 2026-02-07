@@ -394,20 +394,33 @@ function applyInlineTopSuggestion() {
       render();
     }
 
-        function pick(idx) {
+    function pick(idx) {
       const it = items[idx];
       if (!it) return;
 
+      const chosen = String(it.value || "").trim();
+
+      // Always reflect the user's click in the box before we navigate.
+      if (chosen) input.value = chosen;
+
       close();
 
+      // If suggestion is a direct link, still persist when it goes to browse.
       if (it.href) {
+        try {
+          const u = new URL(String(it.href), location.origin);
+          const p = (u.pathname || "/").toLowerCase();
+          const isBrowseHref = p === "/browse/" || p.startsWith("/browse/");
+          if (isBrowseHref && chosen) persistBrowseValue(chosen);
+        } catch (_e) {}
+
         location.href = String(it.href);
         return;
       }
 
-      // Otherwise, put the chosen label in the input, then route normally
-      input.value = String(it.value || "").trim();
-      route(input.value);
+      // Otherwise route normally, but persist if this query will go to browse.
+      if (chosen) persistBrowseValue(chosen);
+      route(chosen);
     }
 
     function builtinMatches(q) {
