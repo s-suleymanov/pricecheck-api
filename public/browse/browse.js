@@ -284,13 +284,8 @@
 
     const warn = r.dropship_warning ? `<span class="warn">Dropshipping risk</span>` : "";
 
-    const category = (r.category || "").trim();
-    const version = (r.version || "").trim();
-
-    // subtitle: category • variant (no brand)
-    const subtitle = version
-      ? (category ? `${version} ${category}` : version)
-      : category;
+    const brand = (r.brand || "").trim();
+    const brandLine = brand ? brand : ""; // keep empty if missing
 
     const enterHint = isFirst
       ? `<span class="kbd pc-enter-kbd" aria-hidden="true">Enter</span>`
@@ -303,11 +298,8 @@
         </div>
 
         <div class="body">
-          <div class="name">${displayName} ${enterHint}</div>
-          <div class="subtitle">${subtitle}</div>
-        </div>
-
-        <div class="right">
+          <div class="subtitle">${escapeHtml(brandLine)}</div>
+          <div class="name">${escapeHtml(displayName)} ${enterHint}</div>
           <div class="price">${fmtPrice(r.best_price_cents)}</div>
           ${warn}
         </div>
