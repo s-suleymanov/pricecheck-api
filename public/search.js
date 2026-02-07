@@ -26,6 +26,75 @@
     return /^[A-Z][A-Z0-9]{7}$/i.test(t) && /\d/.test(t);
   }
 
+    // -----------------------------
+  // Browse-only persistence
+  // -----------------------------
+  const STORAGE_KEY = "pc_browse_search_value";
+
+  function isBrowsePage() {
+    const p = (location.pathname || "/").toLowerCase();
+    return p === "/browse/" || p.startsWith("/browse/");
+  }
+
+  function safeGetSession(key) {
+    try { return sessionStorage.getItem(key); } catch { return null; }
+  }
+  function safeSetSession(key, val) {
+    try { sessionStorage.setItem(key, val); } catch {}
+  }
+  function safeDelSession(key) {
+    try { sessionStorage.removeItem(key); } catch {}
+  }
+
+  // If the user clicked the logo, clear persisted search exactly once.
+  function consumeClearOnceFlag() {
+    const v = safeGetSession("pc_clear_search_once");
+    if (v === "1") {
+      safeDelSession("pc_clear_search_once");
+      safeDelSession(STORAGE_KEY);
+      return true;
+    }
+    return false;
+  }
+
+  function persistBrowseValue(raw) {
+    consumeClearOnceFlag();
+
+    const v = norm(raw);
+    if (!v) return;
+    if (builtinHrefFromRaw(v)) return;
+    if (dashboardKeyFromRaw(v)) return;
+
+    safeSetSession(STORAGE_KEY, v);
+  }
+
+  function readPersistedBrowseValue() {
+    return safeGetSession(STORAGE_KEY) || "";
+  }
+
+  // Public helper used by partials.js after header loads.
+  function restoreInputValue(inputEl, opts = {}) {
+    const input = inputEl;
+    if (!input) return;
+
+    // Always consume the clear-once flag early, so we do not restore after logo click.
+    consumeClearOnceFlag();
+
+    if (!isBrowsePage()) return;
+
+    // Only restore if empty unless force=true
+    const force = !!opts.force;
+    if (!force && norm(input.value)) return;
+
+    const saved = readPersistedBrowseValue();
+    if (!saved) return;
+
+    input.value = saved;
+    try {
+      input.setSelectionRange(saved.length, saved.length);
+    } catch {}
+  }
+
   // -----------------------------
   // Built-in nav destinations
   // -----------------------------
@@ -163,11 +232,18 @@
   }
 
   function bindForm(formEl, inputEl) {
-  if (!formEl || !inputEl) return;
+    if (!formEl || !inputEl) return;
 
-  formEl.addEventListener("submit", (e) => {
+    formEl.addEventListener("submit", (e) => {
       e.preventDefault();
-      route(inputEl.value);
+
+      const v = norm(inputEl.value);
+      if (!v) return;
+
+      // Persist only if this search will go to browse (destination-based).
+      persistBrowseValue(v);
+
+      route(v);
     });
   }
 
@@ -448,6 +524,7 @@ function applyInlineTopSuggestion() {
     input.setAttribute("autocomplete", "off");
     input.setAttribute("aria-controls", box.id);
     input.setAttribute("aria-expanded", "false");
+    restoreInputValue(input, { force: false });
 
     input.addEventListener("input", () => {
     inlineBase = input.value;
@@ -588,16 +665,16 @@ function applyInlineTopSuggestion() {
     return { close };
   }
 
-  window.pcSearch = { route, bindForm, shouldGoDashboard, attachAutocomplete };
+    window.pcSearch = { route, bindForm, shouldGoDashboard, attachAutocomplete, restoreInputValue };
 
 // Auto-wire: bind + autocomplete on any visible search inputs.
 // Auto-focus is homepage-only and only for the input that opts in.
 document.addEventListener("DOMContentLoaded", () => {
-  const inputs = Array.from(
-    document.querySelectorAll(".home-search__input, .nav-search__input")
-  );
+  // Only auto-wire the homepage search input here.
+  // The header search is injected later via partials and wired in partials.js.
+  const homeInputs = Array.from(document.querySelectorAll(".home-search__input"));
 
-  for (const input of inputs) {
+  for (const input of homeInputs) {
     const form = input.closest("form");
     if (form) bindForm(form, input);
     attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
