@@ -27,8 +27,7 @@ body{
 /* wider, modern container */
 .wrap{
   width: min(1280px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 28px 0 36px;
+  margin: 0 auto; padding-bottom: 40px;
 }
 
 h1{

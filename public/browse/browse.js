@@ -4,7 +4,6 @@
   const norm = (s) => String(s ?? "").trim();
 
   const els = {
-    title: () => $("#title"),
     meta: () => $("#meta"),
     grid: () => $("#grid"),
     empty: () => $("#empty"),
@@ -53,10 +52,6 @@
   function clearEmptyStates() {
     showInlineEmpty(false);
     showEmpty(false); // keeps legacy #empty hidden unless you explicitly show it for errors
-  }
-
-  function setTitle(txt) {
-    setText(els.title(), txt || "Browse PriceCheck");
   }
 
   function setMeta(txt) {
@@ -360,12 +355,6 @@ function animateGridCards(gridEl) {
     const grid = els.grid();
     if (!grid) return;
 
-    // title behavior:
-    // - if server resolved brand/category, show that label
-    // - else show the raw query
-    const titleText = state.value || state.q || "Browse PriceCheck";
-    setTitle(titleText);
-
     const q = (state.value || state.q || "").trim();
     const isPaged = state.page > 1;
     let canonical;
@@ -487,7 +476,6 @@ function animateGridCards(gridEl) {
     try {
       if (!state.q && !state.brand && !state.category) {
         setLoading(false);
-        setTitle("Browse PriceCheck");
         setMeta("Search for a brand, category, or product name.");
         const grid = els.grid();
         if (grid) grid.innerHTML = "";
