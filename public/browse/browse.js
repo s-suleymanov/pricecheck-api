@@ -39,6 +39,8 @@
     loading: false,
     lastReqId: 0,
     lastError: "",
+
+    animateNextRender: true,
   };
 
   function setText(el, txt) {
@@ -244,7 +246,47 @@ function readUrl() {
 
   if (prev) prev.disabled = !shouldShow || state.loading || state.page <= 1;
   if (next) next.disabled = !shouldShow || state.loading || state.page >= pages;
-}
+  }
+
+  function hardScrollTop() {
+    // No smooth animation, ever
+    try {
+      document.documentElement.style.scrollBehavior = "auto";
+      document.body.style.scrollBehavior = "auto";
+    } catch (_e) {}
+
+    // Jump instantly
+    window.scrollTo(0, 0);
+
+    // restore (optional)
+    try {
+      document.documentElement.style.scrollBehavior = "";
+      document.body.style.scrollBehavior = "";
+    } catch (_e) {}
+  }
+
+  function startPageTransitionUI() {
+    // Immediately remove old content so there is no “flash” of stale cards
+    const grid = els.grid();
+    if (grid) {
+      grid.innerHTML = "";
+      // Also remove any per-card inline delay vars lingering if you ever reuse nodes
+      grid.style.removeProperty("--pc-delay");
+    }
+
+    // Hide empty states immediately (avoid a brief flicker)
+    showInlineEmpty(false);
+    showEmpty(false);
+
+    // Clear meta so it doesn’t show stale “Showing X-Y of Z”
+    setMeta("");
+
+    // Disable pager buttons immediately
+    setLoading(true);
+
+    // Jump to top immediately
+    hardScrollTop();
+  }
 
   function setLoading(on) {
     state.loading = !!on;
@@ -506,11 +548,21 @@ function renderBrandPanel() {
     side.hidden = false;
   }
 
-function animateGridCards(gridEl) {
+  function animateGridCards(gridEl, { animate = true } = {}) {
   if (!gridEl) return;
 
   const cards = Array.from(gridEl.querySelectorAll(".card.item"));
   if (!cards.length) return;
+
+  if (!animate) {
+    // Ensure no entering classes remain
+    for (const el of cards) {
+      el.classList.remove("pc-enter");
+      el.classList.remove("pc-enter-active");
+      el.style.removeProperty("--pc-delay");
+    }
+    return;
+  }
 
   for (let i = 0; i < cards.length; i++) {
     const el = cards[i];
@@ -521,10 +573,8 @@ function animateGridCards(gridEl) {
     el.style.setProperty("--pc-delay", `${delay}ms`);
   }
 
-  // Force a style/layout read so the browser commits pc-enter first
   gridEl.getBoundingClientRect();
 
-  // Two RAFs pushes the "active" flip past the first paint
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       for (const el of cards) el.classList.add("pc-enter-active");
@@ -610,7 +660,8 @@ function animateGridCards(gridEl) {
     }
 
     grid.innerHTML = parts.join("");
-    animateGridCards(grid);
+    animateGridCards(grid, { animate: !!state.animateNextRender });
+    state.animateNextRender = true;
 
     if (parts.length === 0) {
   const rawQ = (state.q || "").trim();
@@ -758,10 +809,16 @@ function animateGridCards(gridEl) {
     const next = els.next();
     const grid = els.grid();
 
-    if (prev) {
+        if (prev) {
       prev.addEventListener("click", () => {
         if (state.loading || state.page <= 1) return;
+
         state.page -= 1;
+
+        // Pager navigation should feel instant: no old cards visible, no animation
+        state.animateNextRender = false;
+        startPageTransitionUI();
+
         writeUrl({ replace: false });
         load();
       });
@@ -770,7 +827,13 @@ function animateGridCards(gridEl) {
     if (next) {
       next.addEventListener("click", () => {
         if (state.loading || state.page >= state.pages) return;
+
         state.page += 1;
+
+        // Pager navigation should feel instant: no old cards visible, no animation
+        state.animateNextRender = false;
+        startPageTransitionUI();
+
         writeUrl({ replace: false });
         load();
       });
