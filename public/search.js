@@ -99,10 +99,10 @@
   // Built-in nav destinations
   // -----------------------------
   const BUILTIN_PAGES = [
-    { key: "support",  label: "Support",  href: "/support/" },
-    { key: "policy",   label: "Privacy Policy", href: "/privacy-policy/" },
-    { key: "partners", label: "Partners", href: "/partners/" },
-    { key: "overview", label: "Overview", href: "/overview/" }
+    //{ key: "support",  label: "Support",  href: "/support/" },
+    //{ key: "policy",   label: "Privacy Policy", href: "/privacy-policy/" },
+    //{ key: "partners", label: "Partners", href: "/partners/" },
+    //{ key: "overview", label: "Overview", href: "/overview/" }
   ];
 
   function normalizeBuiltinKey(raw) {
