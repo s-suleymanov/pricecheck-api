@@ -43,11 +43,12 @@
 
     if (onBrowse) {
       const v = browseValueFromUrl();
-      input.value = v || "";
+      const vv = String(v || "").toLowerCase();
+      input.value = vv;
 
       // Keep session persistence aligned with what the URL says
       try {
-        if (v) sessionStorage.setItem("pc_browse_search_value", v);
+        if (vv) sessionStorage.setItem("pc_browse_search_value", vv);
         else sessionStorage.removeItem("pc_browse_search_value");
       } catch (_e) {}
 

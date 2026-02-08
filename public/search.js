@@ -62,10 +62,9 @@
 
     const v = norm(raw);
     if (!v) return;
-    if (builtinHrefFromRaw(v)) return;
     if (dashboardKeyFromRaw(v)) return;
 
-    safeSetSession(STORAGE_KEY, v);
+    safeSetSession(STORAGE_KEY, v.toLowerCase());
   }
 
   function readPersistedBrowseValue() {
@@ -89,47 +88,11 @@
     const saved = readPersistedBrowseValue();
     if (!saved) return;
 
-    input.value = saved;
+    const s = String(saved || "").toLowerCase();
+    input.value = s;
     try {
-      input.setSelectionRange(saved.length, saved.length);
+      input.setSelectionRange(s.length, s.length);
     } catch {}
-  }
-
-  // -----------------------------
-  // Built-in nav destinations
-  // -----------------------------
-  const BUILTIN_PAGES = [
-    //{ key: "support",  label: "Support",  href: "/support/" },
-    //{ key: "policy",   label: "Privacy Policy", href: "/privacy-policy/" },
-    //{ key: "partners", label: "Partners", href: "/partners/" },
-    //{ key: "overview", label: "Overview", href: "/overview/" }
-  ];
-
-  function normalizeBuiltinKey(raw) {
-    const t = norm(raw).toLowerCase();
-    if (!t) return "";
-
-    // Strip scheme/host if someone pastes a full site URL for your pages
-    // Example: https://pricechecktool.com/support -> support
-    try {
-      if (/^https?:\/\//i.test(t)) {
-        const u = new URL(t);
-        const p = String(u.pathname || "/").toLowerCase();
-        const cleaned = p.replace(/^\/+|\/+$/g, ""); // trim slashes
-        return cleaned;
-      }
-    } catch (_e) {}
-
-    // Strip leading/trailing slashes and collapse spaces
-    return t.replace(/^\/+|\/+$/g, "").trim();
-  }
-
-  function builtinHrefFromRaw(raw) {
-    const k = normalizeBuiltinKey(raw);
-    if (!k) return null;
-    const hit = BUILTIN_PAGES.find((p) => p.key === k);
-    if (!hit) return null;
-    return new URL(hit.href, location.origin).toString();
   }
 
   // Derive a normalized dashboard key from any input: prefix form, raw ID, or URL.
@@ -212,13 +175,6 @@
   function route(raw) {
     const v = norm(raw);
     if (!v) return;
-
-    // 0) built-in nav pages first
-    const builtinHref = builtinHrefFromRaw(v);
-    if (builtinHref) {
-      location.href = builtinHref;
-      return;
-    }
 
     // 1) dashboard keys
     const key = dashboardKeyFromRaw(v);
@@ -303,35 +259,37 @@ function clearInlineOnly() {
   inlineBase = "";
 }
 
-function applyInlineTopSuggestion() {
-  if (!items.length) return clearInlineOnly();
-  if (!caretAtEnd()) return clearInlineOnly();
-  if (active >= 0) return clearInlineOnly(); // user is navigating, do not inline-complete
+    function applyInlineTopSuggestion() {
+      if (!items.length) return clearInlineOnly();
+      if (!caretAtEnd()) return clearInlineOnly();
+      if (active >= 0) return clearInlineOnly();
 
-  const typed = norm(inlineBase || input.value);
-  if (!typed) return clearInlineOnly();
+      const typedRaw = String(inlineBase || input.value || "");
+      const typed = typedRaw.trim();
+      if (!typed) return clearInlineOnly();
 
-  const top = items[0];
-  if (!top || !top.value) return clearInlineOnly();
+      const top = items[0];
+      if (!top) return clearInlineOnly();
 
-  const sug = String(top.value).trim();
-  if (!sug) return clearInlineOnly();
+      const sug = String(top.fill || top.value || "").trim().toLowerCase();
+      if (!sug) return clearInlineOnly();
 
-  const t = typed.toLowerCase();
-  const s = sug.toLowerCase();
+      const t = typed.toLowerCase();
+      const s = sug; // already lower
 
-  // Only inline-complete if suggestion starts with what user typed
-  if (!s.startsWith(t)) return clearInlineOnly();
+      if (!s.startsWith(t)) return clearInlineOnly();
+      if (s.length === t.length) return clearInlineOnly();
 
-  if (sug.length === typed.length) return clearInlineOnly();
+      // Preserve whatever the user typed for the prefix, but force the completion tail lowercase.
+      const filled = typedRaw + sug.slice(typedRaw.length);
 
-  // Apply: set full suggestion, select the autocompleted tail
-  input.value = sug;
-  try {
-    input.setSelectionRange(typed.length, sug.length);
-  } catch {}
-  inlineOn = true;
-}
+      input.value = filled;
+      try {
+        input.setSelectionRange(typedRaw.length, filled.length);
+      } catch {}
+
+      inlineOn = true;
+    }
 
     function close() {
       parent.classList.remove("is-open");
@@ -369,7 +327,7 @@ function applyInlineTopSuggestion() {
           return `
             <div class="${cls}" role="option" id="${id}" data-idx="${idx}" aria-selected="${idx === active}">
               <div class="pc-ac__left">
-                <div class="pc-ac__label">${escapeHtml(String(it.value || ""))}</div>
+                <div class="pc-ac__label">${escapeHtml(String(it.value || "").toLowerCase())}</div>
               </div>
               <div class="pc-ac__meta">
                 <span class="pc-ac__pill">${pill}</span>
@@ -398,15 +356,15 @@ function applyInlineTopSuggestion() {
       const it = items[idx];
       if (!it) return;
 
-      const chosen = String(it.value || "").trim();
+      const display = String(it.value || "").trim();
+      const chosen = String(it.fill || it.value || "").trim().toLowerCase();
 
-      // Always reflect the user's click in the box before we navigate.
       if (chosen) input.value = chosen;
 
       close();
 
-      // If suggestion is a direct link, still persist when it goes to browse.
       if (it.href) {
+        // Persist only if this suggestion goes to browse.
         try {
           const u = new URL(String(it.href), location.origin);
           const p = (u.pathname || "/").toLowerCase();
@@ -418,26 +376,11 @@ function applyInlineTopSuggestion() {
         return;
       }
 
-      // Otherwise route normally, but persist if this query will go to browse.
       if (chosen) persistBrowseValue(chosen);
       route(chosen);
     }
 
-    function builtinMatches(q) {
-      const qq = norm(q).toLowerCase();
-      if (!qq) return [];
-
-      // Show built-ins on prefix match: "sup" -> Support
-      return BUILTIN_PAGES
-        .filter((p) => p.key.startsWith(qq) || p.label.toLowerCase().startsWith(qq))
-        .map((p) => ({
-          kind: "page",
-          value: p.label,
-          href: new URL(p.href, location.origin).toString(),
-        }));
-    }
-
-        async function fetchPopular() {
+    async function fetchPopular() {
       // Only show popular when input is empty
       if (norm(input.value)) return;
 
@@ -460,7 +403,11 @@ function applyInlineTopSuggestion() {
         const api = Array.isArray(data?.results) ? data.results : [];
         items = api
           .filter((x) => x && (x.kind === "brand" || x.kind === "category") && x.value)
-          .slice(0, maxItems);
+          .slice(0, maxItems)
+          .map((x) => ({
+            ...x,
+            fill: String(x.value || "").trim().toLowerCase(),
+          }));
 
         active = -1;
         render();
@@ -478,8 +425,6 @@ function applyInlineTopSuggestion() {
 
       if (qq === lastQ) return;
       lastQ = qq;
-
-      const builtins = builtinMatches(qq);
 
       if (aborter) aborter.abort();
       aborter = new AbortController();
@@ -501,21 +446,22 @@ function applyInlineTopSuggestion() {
             (x.kind === "brand" || x.kind === "category" || x.kind === "combo") &&
             x.value
           )
-          .slice(0, maxItems);
+          .slice(0, maxItems)
+          .map((x) => ({
+            ...x,
+            fill: String(x.value || "").trim().toLowerCase(),
+          }));
 
-        // Merge: built-in pages first, then API facets, keep within maxItems
-        const merged = [];
-        for (const b of builtins) merged.push(b);
-        for (const f of facets) merged.push(f);
-
-        // Dedup by (kind + value) just in case
+        // No built-in pages. Use API facets only.
         const seen = new Set();
-        items = merged.filter((it) => {
-          const k = `${it.kind}::${String(it.value || "").toLowerCase()}`;
-          if (seen.has(k)) return false;
-          seen.add(k);
-          return true;
-        }).slice(0, maxItems);
+        items = facets
+          .filter((it) => {
+            const k = `${it.kind}::${String(it.value || "").toLowerCase()}`;
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          })
+          .slice(0, maxItems);
 
         active = -1;
         render();
@@ -524,11 +470,7 @@ function applyInlineTopSuggestion() {
         if (String(e?.name) === "AbortError") return;
         console.error(e);
 
-        // If API fails, still show built-ins if any
-        const onlyBuiltins = builtinMatches(qq).slice(0, maxItems);
-        items = onlyBuiltins;
-        active = -1;
-        render();
+        close();
       }
     }
 

@@ -10,20 +10,26 @@
     emptyInline: () => $("#emptyInline"),
     prev: () => $("#prev"),
     next: () => $("#next"),
-    pageLabel: () => $("#pageLabel"),
     pager: () => document.querySelector(".pager"),
+    sidecol: () => $("#sidecol"),
+    brandPanel: () => $("#brandPanel"),
   };
 
   const state = {
     q: "",
     page: 1,
     limit: 36,
+    sideCats: [],
+    sideFams: [],
+    sideFacetKey: "",
 
     // server response
     kind: "product", // "brand" | "category" | "product"
     value: "",
     brand: "",
     category: "",
+    family: "",
+    familyNorm: "",
     total: 0,
     pages: 1,
     results: [],
@@ -47,11 +53,6 @@
   function showInlineEmpty(show) {
     const el = els.emptyInline();
     if (el) el.hidden = !show;
-  }
-
-  function clearEmptyStates() {
-    showInlineEmpty(false);
-    showEmpty(false); // keeps legacy #empty hidden unless you explicitly show it for errors
   }
 
   function setMeta(txt) {
@@ -82,28 +83,6 @@
     if (el) el.hidden = !show;
   }
 
-    function readUrl() {
-    // 1) query params (brand/category) take priority
-    const sp = new URLSearchParams(location.search);
-    const b = norm(sp.get("brand") || "");
-    const c = norm(sp.get("category") || "");
-
-    state.brand = b;
-    state.category = c;
-
-    // 2) path-based browse (slug/page)
-    const parsed = parseBrowsePath(location.pathname);
-    state.q = norm(parsed.q);
-    state.page = parsed.page;
-
-    // If brand/category is set, we are not using q, and page comes from ?page=
-    if (state.brand || state.category) {
-      state.q = "";
-      const qp = parseInt(sp.get("page") || "1", 10);
-      state.page = Number.isFinite(qp) && qp > 0 ? qp : 1;
-    }
-  }
-
   function fmtPrice(cents) {
     if (typeof cents !== "number") return "N/A";
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
@@ -118,60 +97,129 @@
       .replace(/^-+|-+$/g, "");
   }
 
-  function unslug(s) {
-    return String(s ?? "").replace(/-/g, " ").trim();
-  }
-
   function parseBrowsePath(pathname) {
-    // Handles:
-    // /browse/
-    // /browse/segway/
-    // /browse/segway/page/2/
-    const clean = String(pathname || "/").replace(/\/+$/g, "/");
-    const parts = clean.split("/").filter(Boolean); // ["browse", ...]
-    if (parts[0] !== "browse") return { q: "", page: 1 };
+  // Supports:
+  // /browse/
+  // /browse/<q>/
+  // /browse/<q>/page/<n>/
+  // /browse/<brand>/category/<category>/
+  // /browse/<brand>/family/<family>/
+  // /browse/<brand>/category/<category>/family/<family>/
+  // ... plus /page/<n>/ at the end
 
-    const slug = parts[1] || "";
-    let page = 1;
+  const clean = String(pathname || "/").replace(/\/+$/g, "/");
+  const parts = clean.split("/").filter(Boolean);
+  if (parts[0] !== "browse") return { q: "", page: 1, brand: "", category: "", family: "" };
 
-    if (parts[2] === "page" && parts[3]) {
-      const n = parseInt(parts[3], 10);
-      if (Number.isFinite(n) && n > 0) page = n;
-    }
+  let q = "";
+  let brand = "";
+  let category = "";
+  let family = "";
+  let page = 1;
 
-    const q = slug ? unslug(decodeURIComponent(slug)) : "";
-    return { q, page };
+  // Find optional trailing /page/<n>
+  let end = parts.length;
+  if (parts.length >= 4 && parts[parts.length - 2] === "page") {
+    const n = parseInt(parts[parts.length - 1], 10);
+    if (Number.isFinite(n) && n > 0) page = n;
+    end = parts.length - 2;
   }
 
-  function buildBrowsePath(rawQ, page) {
-    const q = norm(rawQ);
-    const p = Number.isFinite(page) && page > 0 ? page : 1;
+  // Remaining parts are:
+  // ["browse"] OR ["browse", "<q>"] OR ["browse", "<brand>", "category", "<cat>", "family", "<fam>"] etc.
+  const core = parts.slice(1, end);
 
-    if (!q) return "/browse/";
-
-    const slug = encodeURIComponent(slugify(q));
-    if (p === 1) return `/browse/${slug}/`;
-    return `/browse/${slug}/page/${p}/`;
+  if (core.length === 0) {
+    return { q: "", page, brand: "", category: "", family: "" };
   }
+
+  // Always treat first segment as the primary text (brand or general q)
+  const first = decodeURIComponent(core[0] || "");
+  q = norm(first);
+
+  // Optional filters
+  for (let i = 1; i < core.length; i += 2) {
+    const key = core[i];
+    const val = core[i + 1] != null ? decodeURIComponent(core[i + 1]) : "";
+    if (key === "category") category = norm(val);
+    if (key === "family") family = norm(val);
+  }
+
+  // If we have category/family, we consider q to be the brand string
+  if (category || family) {
+    brand = q;
+  }
+
+  return { q, page, brand, category, family };
+}
+
+function buildBrowsePath({ q, page, brand, category, family }) {
+  const p = Number.isFinite(page) && page > 0 ? page : 1;
+
+  // If brand filter mode, build filter path
+  if (brand) {
+    let path = `/browse/${encodeURIComponent(brand)}/`;
+    if (category) path += `category/${encodeURIComponent(category)}/`;
+    if (family) path += `family/${encodeURIComponent(family)}/`;
+    if (p > 1) path += `page/${p}/`;
+    return path;
+  }
+
+  // Otherwise plain q path
+  const qq = norm(q);
+  if (!qq) return "/browse/";
+  let path = `/browse/${encodeURIComponent(qq)}/`;
+  if (p > 1) path += `page/${p}/`;
+  return path;
+}
+
+function readUrl() {
+  // Back-compat: if someone comes in with old query-string URLs, translate them once
+  const sp = new URLSearchParams(location.search);
+  const oldBrand = norm(sp.get("brand") || "");
+  const oldCategory = norm(sp.get("category") || "");
+  const oldFamily = norm(sp.get("family") || "");
+  const oldPage = parseInt(sp.get("page") || "1", 10);
+  const oldPageNum = Number.isFinite(oldPage) && oldPage > 0 ? oldPage : 1;
+
+  if (oldBrand || oldCategory || oldFamily) {
+    state.brand = oldBrand;
+    state.category = oldCategory;
+    state.family = oldFamily;
+    state.familyNorm = oldFamily.toLowerCase();
+    state.q = oldBrand || ""; // brand is the primary term
+    state.page = oldPageNum;
+
+    // Rewrite URL to the new path form immediately (no query string)
+    writeUrl({ replace: true });
+    return;
+  }
+
+  const parsed = parseBrowsePath(location.pathname);
+  state.q = norm(parsed.q);
+  state.page = parsed.page;
+
+  state.brand = norm(parsed.brand);
+  state.category = norm(parsed.category);
+  state.family = norm(parsed.family);
+  state.familyNorm = state.family.toLowerCase();
+}
 
   function setPager() {
-    const pages = Number.isFinite(state.pages) ? state.pages : 1;
+  const pages = Number.isFinite(state.pages) ? state.pages : 1;
 
-    const pager = els.pager();
-    const label = els.pageLabel();
-    const prev = els.prev();
-    const next = els.next();
+  const pager = els.pager();
+  const prev = els.prev();
+  const next = els.next();
 
-    const shouldShow = pages > 1;
+  const shouldShow = pages > 1;
 
-    // Force-hide/show the entire pager container
-    if (pager) pager.style.display = shouldShow ? "flex" : "none";
+  // Force-hide/show the entire pager container
+  if (pager) pager.style.display = shouldShow ? "flex" : "none";
 
-    setText(label, shouldShow ? `Page ${state.page} of ${pages}` : "");
-
-    if (prev) prev.disabled = !shouldShow || state.loading || state.page <= 1;
-    if (next) next.disabled = !shouldShow || state.loading || state.page >= pages;
-  }
+  if (prev) prev.disabled = !shouldShow || state.loading || state.page <= 1;
+  if (next) next.disabled = !shouldShow || state.loading || state.page >= pages;
+}
 
   function setLoading(on) {
     state.loading = !!on;
@@ -179,20 +227,13 @@
   }
 
   function writeUrl({ replace = false } = {}) {
-  let path = buildBrowsePath(state.q, state.page);
-
-  const sp = new URLSearchParams();
-    if (state.brand) sp.set("brand", state.brand);
-    if (state.category) sp.set("category", state.category);
-
-    // IMPORTANT: when using brand/category filters, put page in the query string
-    if (state.brand || state.category) {
-      path = "/browse/"; // do not use /browse/{slug}/ in this mode
-      if (state.page > 1) sp.set("page", String(state.page));
-    }
-
-    const qs = sp.toString();
-    if (qs) path += `?${qs}`;
+    const path = buildBrowsePath({
+      q: state.q,
+      page: state.page,
+      brand: state.brand,
+      category: state.category,
+      family: state.family,
+    });
 
     if (replace) history.replaceState({}, "", path);
     else history.pushState({}, "", path);
@@ -325,6 +366,121 @@
     `;
   }
 
+  function uniqLower(arr) {
+    const seen = new Set();
+    const out = [];
+    for (const v of arr || []) {
+      const s = String(v || "").trim();
+      if (!s) continue;
+      const k = s.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(s);
+    }
+    return out;
+  }
+
+ function uniqFamilies(rows) {
+  // Family = model_number (already uppercased by your SQL)
+  const seen = new Set();
+  const out = [];
+  for (const r of rows || []) {
+    const fam = String(r && (r.model_number || "")).trim();
+    if (!fam) continue;
+    const k = fam.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(fam);
+  }
+  return out;
+}
+
+async function loadBrandPanelFacets(reqId) {
+    if (!state.brand) {
+      state.sideCats = [];
+      state.sideFams = [];
+      state.sideFacetKey = "";
+      return;
+    }
+
+    const key = `${state.brand.toLowerCase()}|${(state.category || "").toLowerCase()}`;
+    if (state.sideFacetKey === key && Array.isArray(state.sideCats) && state.sideCats.length) return;
+
+    const qs = new URLSearchParams({ brand: state.brand });
+    if (state.category) qs.set("category", state.category);
+
+    const data = await apiJson(`/api/brand_panel?${qs.toString()}`);
+    if (reqId !== state.lastReqId) return;
+
+    state.sideCats = Array.isArray(data.categories) ? data.categories : [];
+    state.sideFams = Array.isArray(data.families) ? data.families : [];
+    state.sideFacetKey = key;
+}
+
+function renderBrandPanel() {
+    const side = els.sidecol();
+    const panel = els.brandPanel();
+    if (!side || !panel) return;
+
+    // Only show for brand browsing (your request)
+    if (!state.brand) {
+      side.hidden = true;
+      panel.innerHTML = "";
+      return;
+    }
+
+    const brandName = String(state.brand || "").trim();
+    const total = typeof state.total === "number" ? state.total : 0;
+
+    const leftAlreadyShowsFacets = Array.isArray(state.also) && state.also.length > 0;
+
+    const cats = leftAlreadyShowsFacets
+      ? []
+      : (Array.isArray(state.sideCats) ? state.sideCats : []).slice(0, 14);
+
+    const fams = (Array.isArray(state.sideFams) ? state.sideFams : []).slice(0, 12);  
+
+    panel.innerHTML = `
+      <h2 class="side-title">${escapeHtml(brandName)}</h2>
+
+      ${cats.length ? `
+        <div class="side-block">
+          <div class="side-label">Category</div>
+          <div class="pillrow">
+            ${cats.map((c) => {
+              const active = state.category && state.category.toLowerCase() === String(c).toLowerCase();
+              return `
+                <button type="button" class="pillbtn ${active ? "is-active" : ""}"
+                  data-side-set="category" data-side-value="${escapeHtml(c)}">
+                  ${escapeHtml(c)}
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      ` : ""}
+
+      ${fams.length ? `
+        <div class="side-block">
+          <div class="side-label">Family</div>
+          <div class="pillrow">
+            ${fams.map((f) => {
+              const active = state.familyNorm && state.familyNorm === String(f).toLowerCase();
+              return `
+                <button type="button" class="pillbtn ${active ? "is-active" : ""}"
+                  data-side-set="family" data-side-value="${escapeHtml(f)}">
+                  ${escapeHtml(f)}
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      ` : ""}
+    `;
+
+    side.hidden = false;
+  }
+
 function animateGridCards(gridEl) {
   if (!gridEl) return;
 
@@ -358,16 +514,13 @@ function animateGridCards(gridEl) {
     const q = (state.value || state.q || "").trim();
     const isPaged = state.page > 1;
     let canonical;
-    if (state.brand || state.category) {
-      const csp = new URLSearchParams();
-      if (state.brand) csp.set("brand", state.brand);
-      if (state.category) csp.set("category", state.category);
-      canonical = `${location.origin}/browse/${csp.toString() ? "?" + csp.toString() : ""}`;
-    } else {
-      canonical = q
-        ? `${location.origin}${buildBrowsePath(q, 1)}`
-        : `${location.origin}/browse/`;
-    }
+    canonical = `${location.origin}${buildBrowsePath({
+      q: (state.value || state.q || "").trim(),
+      page: 1,
+      brand: state.brand,
+      category: state.category,
+      family: state.family,
+    })}`;
     const robots = !q
       ? "noindex,follow"
       : (isPaged ? "noindex,follow" : "index,follow");
@@ -384,6 +537,7 @@ function animateGridCards(gridEl) {
       setInlineEmptyHtml(`<div class="msg"><span>${escapeHtml(state.lastError)}</span></div>`);
       showInlineEmpty(true);
       showEmpty(false);
+      renderBrandPanel();
 
       setPager();
       return;
@@ -400,9 +554,22 @@ function animateGridCards(gridEl) {
       robots,
     });
 
-    const metaParts = [];
-    if (state.total) metaParts.push(`${state.total} products`);
-    setMeta(metaParts.join(" • "));
+    const page = Number.isFinite(state.page) && state.page > 0 ? state.page : 1;
+    const limit = Number.isFinite(state.limit) && state.limit > 0 ? state.limit : 0;
+
+    let metaTxt = "";
+    if (total > 0 && limit > 0) {
+      const start = (page - 1) * limit + 1;
+      const shown = Array.isArray(state.results) ? state.results.length : 0;
+      const end = Math.min((page - 1) * limit + shown, total);
+      metaTxt = `Showing ${start}-${end} of ${total}`;
+    } else if (total > 0) {
+      metaTxt = `${total} results`;
+    } else {
+    }
+
+    setMeta(metaTxt);
+
 
     const parts = [];
 
@@ -457,6 +624,7 @@ function animateGridCards(gridEl) {
   showEmpty(false);
 }
 
+    renderBrandPanel();
     setPager();
   }
 
@@ -492,7 +660,7 @@ function animateGridCards(gridEl) {
         });
         if (state.brand) qs.set("brand", state.brand);
         if (state.category) qs.set("category", state.category);
-
+        if (state.family) qs.set("family", state.family);
         const data = await apiJson(`/api/browse?${qs.toString()}`);
         if (reqId !== state.lastReqId) return;
 
@@ -502,6 +670,7 @@ function animateGridCards(gridEl) {
         state.pages = typeof data.pages === "number" ? data.pages : 1;
         state.results = Array.isArray(data.results) ? data.results : [];
         state.also = [];
+        await loadBrandPanelFacets(reqId);
         setLoading(false);
         render();
         return;
@@ -525,6 +694,19 @@ function animateGridCards(gridEl) {
       state.also = Array.isArray(data.also) ? data.also : [];
       state.didYouMean = data.did_you_mean || null;
 
+      // If search resolved to a brand, switch into brand filter mode
+      // so the sidebar shows and category pills can work.
+      if (state.kind === "brand" && state.value) {
+        state.brand = String(state.value).trim();
+        state.category = "";
+        state.family = "";
+        state.familyNorm = "";
+        state.q = state.brand;   // keep the pretty /browse/Apple/
+        state.page = 1;
+        writeUrl({ replace: true }); // becomes /browse/Apple/
+      }
+
+      await loadBrandPanelFacets(reqId);
       setLoading(false);
       render();
     } catch (e) {
@@ -576,6 +758,57 @@ function animateGridCards(gridEl) {
         const value = btn.getAttribute("data-nav-value");
         if (!value) return;
         navTo(btn.getAttribute("data-nav-kind") || "product", value);
+      });
+    }
+
+    const sidecol = els.sidecol();
+    if (sidecol) {
+      sidecol.addEventListener("click", (e) => {
+        const setBtn = e.target.closest("button[data-side-set][data-side-value]");
+        if (!setBtn) return;
+
+        const which = String(setBtn.getAttribute("data-side-set") || "");
+        const value = norm(setBtn.getAttribute("data-side-value"));
+        if (!value) return;
+
+        if (which === "category") {
+          const isActive = state.category && state.category.toLowerCase() === value.toLowerCase();
+
+          if (isActive) {
+            // Toggle off category -> back to plain brand view
+            state.category = "";
+            state.family = "";
+            state.familyNorm = "";
+          } else {
+            // Set category, and reset family because families are category-sensitive
+            state.category = value;
+            state.family = "";
+            state.familyNorm = "";
+          }
+
+          state.page = 1;
+          writeUrl({ replace: false });
+          load();
+          return;
+        }
+
+        if (which === "family") {
+          const isActive = state.family && state.family.toLowerCase() === value.toLowerCase();
+
+          if (isActive) {
+            // Toggle off family -> keep category if set, otherwise plain brand
+            state.family = "";
+            state.familyNorm = "";
+          } else {
+            state.family = value;
+            state.familyNorm = value.toLowerCase();
+          }
+
+          state.page = 1;
+          writeUrl({ replace: false });
+          load();
+          return;
+        }
       });
     }
 

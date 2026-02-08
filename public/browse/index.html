@@ -29,25 +29,35 @@
     <div id="site-header"></div>
 
         <main class="wrap">
+            <div class="layout">
+                <div class="maincol">
+                <section class="card-main controls">
+                    <div class="row" style="margin-top:10px">
+                    <div class="muted" id="meta"></div>
 
-            <section class="card-main controls">
+                    <div id="emptyInline" class="empty-inline" hidden></div>
 
-            <div class="row" style="margin-top:10px">
-                <div class="muted" id="meta"></div>
-
-                <div id="emptyInline" class="empty-inline" hidden></div>
-
-                <div class="pager">
-                <button id="prev" class="pill">Prev</button>
-                <span class="muted" id="pageLabel"></span>
-                <button id="next" class="pill">Next</button>
-                </div>
-            </div>
-        
+                    </div>
                 </section>
 
-            <section class="grid" id="grid"></section>
-        </main>
+                <section class="grid" id="grid"></section>
+
+                <section class="pager-bottom" aria-label="pagination">
+                <div class="pager">
+                    <button id="prev" class="pill">Prev</button>
+                    <button id="next" class="pill">Next</button>
+                </div>
+                </section>
+
+                </div>
+
+                <aside class="sidecol" id="sidecol" hidden>
+                <section class="card sidecard" id="brandPanel">
+                    <!-- filled by browse.js -->
+                </section>
+                </aside>
+            </div>
+            </main>
 
         <div id="site-footer"></div>
     </div>
