@@ -19,10 +19,40 @@
 
     if (!form || !input) return;
 
-        // Never show persisted browse query on non-browse pages (dashboard included).
+    // Priority: ?brand= -> ?category= -> /browse/{slug}/
+    function browseValueFromUrl() {
+      const sp = new URLSearchParams(location.search);
+      const brand = String(sp.get("brand") || "").trim();
+      const category = String(sp.get("category") || "").trim();
+      if (brand) return brand;
+      if (category) return category;
+
+      const parts = String(location.pathname || "/").split("/").filter(Boolean);
+      if (parts[0] !== "browse") return "";
+      const slug = parts[1] || "";
+      if (!slug) return "";
+
+      let decoded = slug;
+      try { decoded = decodeURIComponent(slug); } catch (_e) {}
+
+      return decoded.replace(/-/g, " ").trim();
+    }
+
     const p = (location.pathname || "/").toLowerCase();
     const onBrowse = p === "/browse/" || p.startsWith("/browse/");
-    if (!onBrowse) {
+
+    if (onBrowse) {
+      const v = browseValueFromUrl();
+      input.value = v || "";
+
+      // Keep session persistence aligned with what the URL says
+      try {
+        if (v) sessionStorage.setItem("pc_browse_search_value", v);
+        else sessionStorage.removeItem("pc_browse_search_value");
+      } catch (_e) {}
+
+      try { input.setSelectionRange(input.value.length, input.value.length); } catch (_e) {}
+    } else {
       input.value = "";
       try { input.setSelectionRange(0, 0); } catch (_e) {}
     }
