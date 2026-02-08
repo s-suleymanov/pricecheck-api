@@ -247,7 +247,7 @@ h1{
   grid-template-columns: 180px 1fr auto;
   align-items: center;
   gap: 22px;
-  padding: 18px 28px 18px 22px;
+  padding: 8px 28px 8px 22px;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
