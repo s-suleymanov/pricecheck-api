@@ -80,18 +80,24 @@
     return String(fallbackKey || '').trim() || null;
   }
 
-  function urlKeyFromPathname() {
-    const parts = location.pathname.split('/').filter(Boolean);
-    if (parts[0] !== 'dashboard') return null;
+    function urlKeyFromPathname() {
+    const parts = location.pathname.split("/").filter(Boolean);
+    if (parts[0] !== "dashboard") return null;
 
     // /dashboard/:kind/:value/
-    if (parts.length >= 3 && /^[a-z]+$/i.test(parts[1])) {
-      return `${parts[1].toLowerCase()}:${decodeURIComponent(parts[2] || '')}`;
+    if (parts.length >= 3 && isAllowedKind(parts[1])) {
+      const kind = parts[1].toLowerCase();
+      const value = decodeURIComponent(parts[2] || "");
+      const k = `${kind}:${value}`;
+      return normalizeKey(k);
     }
 
     // /dashboard/:slug/:kind/:value/
-    if (parts.length >= 4 && /^[a-z]+$/i.test(parts[2])) {
-      return `${parts[2].toLowerCase()}:${decodeURIComponent(parts[3] || '')}`;
+    if (parts.length >= 4 && isAllowedKind(parts[2])) {
+      const kind = parts[2].toLowerCase();
+      const value = decodeURIComponent(parts[3] || "");
+      const k = `${kind}:${value}`;
+      return normalizeKey(k);
     }
 
     return null;
@@ -205,25 +211,88 @@
 }
 
   function currentKeyFromUrl() {
-  const parts = location.pathname.split('/').filter(Boolean);
+    const parts = location.pathname.split("/").filter(Boolean);
+    if (parts[0] !== "dashboard") return null;
 
-  if (parts[0] === 'dashboard') {
-    // no slug
-    if (parts.length >= 3 && /^[a-z]+$/i.test(parts[1])) {
+    // /dashboard/:kind/:value/
+    if (parts.length >= 3 && isAllowedKind(parts[1])) {
       const kind = parts[1].toLowerCase();
-      const value = decodeURIComponent(parts[2] || '');
-      if (value) return `${kind}:${value}`;
+      const value = decodeURIComponent(parts[2] || "");
+      const k = `${kind}:${value}`;
+      return normalizeKey(k);
     }
-    // slug + kind + value
-    if (parts.length >= 4 && /^[a-z]+$/i.test(parts[2])) {
+
+    // /dashboard/:slug/:kind/:value/
+    if (parts.length >= 4 && isAllowedKind(parts[2])) {
       const kind = parts[2].toLowerCase();
-      const value = decodeURIComponent(parts[3] || '');
-      if (value) return `${kind}:${value}`;
+      const value = decodeURIComponent(parts[3] || "");
+      const k = `${kind}:${value}`;
+      return normalizeKey(k);
     }
+
+    return null;
   }
 
-  return null;
-}
+  const ALLOWED_KINDS = new Set(["asin", "upc", "pci", "bby", "wal", "tcin"]);
+
+  function isAllowedKind(k) {
+    return ALLOWED_KINDS.has(String(k || "").trim().toLowerCase());
+  }
+
+  function normalizeKey(raw) {
+    const t = String(raw || "").trim();
+    if (!t) return null;
+
+    // explicit prefix form: kind:value
+    const m = t.match(/^([a-z]+)\s*:\s*(.+)$/i);
+    if (m) {
+      let kind = String(m[1] || "").trim().toLowerCase();
+      let val = String(m[2] || "").trim();
+
+      // alias mapping into the allowed set
+      if (kind === "bestbuy" || kind === "sku") kind = "bby";
+      if (kind === "walmart") kind = "wal";
+      if (kind === "target") kind = "tcin";
+
+      if (!isAllowedKind(kind)) return null;
+      if (!val) return null;
+
+      if (kind === "asin") {
+        val = val.toUpperCase();
+        if (!/^[A-Z0-9]{10}$/.test(val)) return null;
+      }
+
+      if (kind === "pci") {
+        val = val.toUpperCase();
+        if (!/^[A-Z][A-Z0-9]{7}$/.test(val)) return null;
+      }
+
+      if (kind === "upc") {
+        val = val.replace(/\D/g, "");
+        if (!/^\d{12,14}$/.test(val)) return null;
+      }
+
+      if (kind === "tcin") {
+        val = val.replace(/\D/g, "");
+        if (!/^\d{8}$/.test(val)) return null;
+      }
+
+      if (kind === "bby") {
+        val = val.replace(/\D/g, "");
+        if (!/^\d{6,8}$/.test(val)) return null;
+      }
+
+      if (kind === "wal") {
+        val = val.replace(/\D/g, "");
+        if (!/^\d{6,12}$/.test(val)) return null;
+      }
+
+      return `${kind}:${val}`;
+    }
+
+    // otherwise try to infer from URLs or raw IDs
+    return keyFromInput(t);
+  }
 
   // ---------- Normalizers ----------
   function norm(s){ return String(s || '').trim(); }
@@ -302,39 +371,41 @@
     if (!text) return null;
     const t = text.trim();
 
-    if (/^(asin|upc|tcin|bby|bestbuy|sku|wal|walmart|target|pci)\s*:/i.test(t)) {
-      const parts = t.split(':');
-      const pref = (parts[0] || '').trim().toLowerCase();
-      const rest = parts.slice(1).join(':').trim();
-      if (!rest) return null;
-      if (pref === 'asin') return `asin:${rest.toUpperCase()}`;
-      if (pref === 'upc') return `upc:${rest}`;
-      if (pref === 'pci') return `pci:${rest}`;
-      // normalize some aliases
-      if (pref === 'bestbuy' || pref === 'sku') return `bby:${rest}`;
-      if (pref === 'walmart') return `wal:${rest}`;
-      if (pref === 'target') return `tcin:${rest}`;
-      return `${pref}:${rest}`;
+    // Explicit kind:value
+    const m = t.match(/^([a-z]+)\s*:\s*(.+)$/i);
+    if (m) {
+      let kind = String(m[1] || "").trim().toLowerCase();
+      let rest = String(m[2] || "").trim();
+
+      if (kind === "bestbuy" || kind === "sku") kind = "bby";
+      if (kind === "walmart") kind = "wal";
+      if (kind === "target") kind = "tcin";
+
+      if (!isAllowedKind(kind)) return null;
+      return normalizeKey(`${kind}:${rest}`);
     }
 
     const am =
       t.match(/\/dp\/([A-Z0-9]{10})/i) ||
       t.match(/\/gp\/product\/([A-Z0-9]{10})/i);
-    if (am) return `asin:${am[1].toUpperCase()}`;
+    if (am) return normalizeKey(`asin:${am[1]}`);
 
-    const tg = t.match(/target\.com\/.+\/(?:-|A-)?(\d{8})/i); if (tg) return `tcin:${tg[1]}`;
-    const bb = t.match(/bestbuy\.com\/.+\/(\d{6,8})/i);      if (bb) return `bby:${bb[1]}`;
-    const wm = t.match(/walmart\.com\/.+\/(\d{6,12})/i);     if (wm) return `wal:${wm[1]}`;
+    const tg = t.match(/target\.com\/.+\/(?:-|A-)?(\d{8})/i);
+    if (tg) return normalizeKey(`tcin:${tg[1]}`);
 
-    if (/apple\.com/i.test(t)) return t;
+    const bb = t.match(/bestbuy\.com\/.+\/(\d{6,8})/i);
+    if (bb) return normalizeKey(`bby:${bb[1]}`);
 
-    if (/^\d{7}$/.test(t)) return `bby:${t}`;
-    if (/^\d{8}$/.test(t)) return `tcin:${t}`;     // optional
-    if (/^\d{12,14}$/.test(t)) return `upc:${t}`;  // I’d change 12 -> 12,14 to match your rule
-    if (/^[A-Z0-9]{10}$/i.test(t)) return `asin:${t.toUpperCase()}`;
-    if (isLikelyPci(t)) return `pci:${t}`;
+    const wm = t.match(/walmart\.com\/.+\/(\d{6,12})/i);
+    if (wm) return normalizeKey(`wal:${wm[1]}`);
 
-    return t;
+    if (/^\d{6,8}$/.test(t)) return normalizeKey(`bby:${t}`);
+    if (/^\d{8}$/.test(t)) return normalizeKey(`tcin:${t}`);
+    if (/^\d{12,14}$/.test(t)) return normalizeKey(`upc:${t}`);
+    if (/^[A-Z0-9]{10}$/i.test(t)) return normalizeKey(`asin:${t}`);
+    if (isLikelyPci(t)) return normalizeKey(`pci:${t}`);
+
+    return null;
   }
 
   function chooseSelectedVariantKeyFromKey(key, data){
@@ -799,13 +870,14 @@ document.querySelectorAll('button.pill[data-range]').forEach(btn => {
 });
 
   // ---------- Main loader ----------
-async function run(raw){
-  const input = String(raw || '').trim();
-  const key = (/^(asin|upc|pci|tcin|bby|wal):/i.test(input))
-            ? input.toLowerCase().startsWith('asin:') ? `asin:${input.slice(5).trim().toUpperCase()}` : input
-            : keyFromInput(input);
+  async function run(raw){
+    const key = normalizeKey(raw);
 
-  if(!key){ showMessage('Enter a product URL or ID.'); return; }
+    if (!key) {
+      showMessage("Enter an ASIN, UPC, PCI, Best Buy SKU, Walmart itemId, or Target TCIN.");
+      return;
+    }
+
   state.lastKey = key;
 
     try{
