@@ -165,10 +165,14 @@ function buildBrowsePath({ q, page, brand, category, family }) {
     return path;
   }
 
-  // Otherwise plain q path
+    // Otherwise plain q path
   const qq = norm(q);
   if (!qq) return "/browse/";
-  let path = `/browse/${encodeURIComponent(qq)}/`;
+
+  // Always write slug form for the URL (matches search.js browseUrl)
+  const slug = encodeURIComponent(slugify(qq));
+  let path = `/browse/${slug}/`;
+
   if (p > 1) path += `page/${p}/`;
   return path;
 }
@@ -195,14 +199,35 @@ function readUrl() {
     return;
   }
 
-  const parsed = parseBrowsePath(location.pathname);
-  state.q = norm(parsed.q);
+    const parsed = parseBrowsePath(location.pathname);
   state.page = parsed.page;
 
   state.brand = norm(parsed.brand);
   state.category = norm(parsed.category);
   state.family = norm(parsed.family);
   state.familyNorm = state.family.toLowerCase();
+
+  const pathQ = norm(parsed.q);
+
+  // If we are in plain /browse/<slug>/ mode, de-slugify for display + API query.
+  // Prefer the persisted typed value when it matches the slug.
+  if (!state.brand && !state.category && !state.family) {
+    let saved = "";
+    try { saved = sessionStorage.getItem("pc_browse_search_value") || ""; } catch (_e) {}
+    const savedNorm = norm(saved);
+
+    const looksSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(pathQ);
+
+    if (savedNorm && slugify(savedNorm) === slugify(pathQ)) {
+      state.q = savedNorm;
+    } else if (looksSlug) {
+      state.q = pathQ.replace(/-/g, " ").trim();
+    } else {
+      state.q = pathQ;
+    }
+  } else {
+    state.q = pathQ;
+  }
 }
 
   function setPager() {

@@ -33,9 +33,29 @@ function tokenize(q) {
     .filter(Boolean);
 }
 
+// Helper SQL snippet: normalize version for grouping.
+const VERSION_NORM_SQL = "COALESCE(NULLIF(lower(btrim(c.version)), ''), '')";
+
+// Full-text document for fuzzy-ish multi-word search (kept for later use)
+const FTS_DOC_SQL =
+  "to_tsvector('simple', " +
+  "coalesce(c.model_name,'') || ' ' || coalesce(c.model_number,'') || ' ' || " +
+  "coalesce(c.version,'') || ' ' || coalesce(c.brand,'') || ' ' || coalesce(c.category,'')" +
+  ")";
+
+// A stable key even when model_number is missing.
+const PRODUCT_KEY_SQL =
+  "COALESCE(" +
+  "NULLIF(upper(btrim(model_number)), '')," +
+  "NULLIF(upper(btrim(pci)), '')," +
+  "NULLIF(public.norm_upc(upc), '')," +
+  "id::text" +
+  ")";
+
 async function didYouMeanForQuery(client, qLower) {
   const q = normLower(qLower);
   if (!q || q.length < 2) return null;
+
   const toks = tokenize(q);
   const allowCombo = toks.length >= 2;
 
@@ -177,27 +197,8 @@ const BROWSE_HTML = path.join(__dirname, "..", "public", "browse", "index.html")
 
 router.get("/browse", (_req, res) => res.redirect(301, "/browse/"));
 router.get("/browse/", (_req, res) => res.sendFile(BROWSE_HTML));
-router.get("/browse/:q/", (_req, res) => res.sendFile(BROWSE_HTML));
-router.get("/browse/:q/page/:n/", (_req, res) => res.sendFile(BROWSE_HTML));
-
-// Helper SQL snippet: normalize version for grouping.
-const VERSION_NORM_SQL = "COALESCE(NULLIF(lower(btrim(c.version)), ''), '')";
-
-// Full-text document for fuzzy-ish multi-word search (kept for later use)
-const FTS_DOC_SQL =
-  "to_tsvector('simple', " +
-  "coalesce(c.model_name,'') || ' ' || coalesce(c.model_number,'') || ' ' || " +
-  "coalesce(c.version,'') || ' ' || coalesce(c.brand,'') || ' ' || coalesce(c.category,'')" +
-  ")";
-
-// A stable key even when model_number is missing.
-const PRODUCT_KEY_SQL =
-  "COALESCE(" +
-  "NULLIF(upper(btrim(model_number)), '')," +
-  "NULLIF(upper(btrim(pci)), '')," +
-  "NULLIF(public.norm_upc(upc), '')," +
-  "id::text" +
-  ")";
+// Catch-all for deeper browse paths like /browse/Apple/category/TV/page/2/
+router.get("/browse/*", (_req, res) => res.sendFile(BROWSE_HTML));
 
 // GET /api/suggest?q=son&limit=8
 router.get("/api/suggest", async (req, res) => {
@@ -212,10 +213,9 @@ router.get("/api/suggest", async (req, res) => {
   const half = Math.max(1, Math.ceil(limit / 2));
 
   const qLower = normLower(q);
-  const like = `%${qLower}%`;
-
   const toks = tokenize(qLower);
-  const tokArr = toks.slice(0, 12);
+  const tokArr = toks;
+  const likeLoose = toks.length ? `%${toks.join("%")}%` : `%${qLower}%`;
 
   const client = await pool.connect();
   try {
@@ -354,7 +354,7 @@ router.get("/api/suggest", async (req, res) => {
 
     let facetRows = [];
     {
-      const r1 = await client.query(facetsLikeSql, [like, half, half]);
+      const r1 = await client.query(facetsLikeSql, [likeLoose, half, half]);
       facetRows = r1.rows || [];
     }
 
@@ -405,7 +405,7 @@ router.get("/api/suggest", async (req, res) => {
         WHERE (
           (model_number IS NOT NULL AND btrim(model_number) <> '')
           OR (pci IS NOT NULL AND btrim(pci) <> '')
-          OR (upc IS NOT NULL AND btrim(upc) <> '')
+          OR (upc IS NOT NULL AND btrim(pci) <> '')
         )
           AND brand IS NOT NULL AND btrim(brand) <> ''
       ),
@@ -600,7 +600,8 @@ router.get("/api/search", async (req, res) => {
   const offset = (page - 1) * limit;
 
   const qLower = normLower(q);
-  const like = `%${qLower}%`;
+  const toks = tokenize(qLower);
+  const likeLoose = toks.length ? `%${toks.join("%")}%` : `%${qLower}%`;
 
   const client = await pool.connect();
   try {
@@ -635,6 +636,7 @@ router.get("/api/search", async (req, res) => {
         (SELECT label FROM c) AS category_label,
         (SELECT products FROM c) AS category_products
     `;
+
     const facetRow = (await client.query(facetSql, [qLower])).rows?.[0] || {};
     const brandProducts = facetRow.brand_products || 0;
     const categoryProducts = facetRow.category_products || 0;
@@ -656,6 +658,7 @@ router.get("/api/search", async (req, res) => {
         SELECT COUNT(*)::int AS total
         FROM base
       `;
+
       const total = (await client.query(countSql, [type, value])).rows?.[0]?.total ?? 0;
 
       const listSql = `
@@ -803,7 +806,8 @@ router.get("/api/search", async (req, res) => {
       SELECT COUNT(*)::int AS total
       FROM base
     `;
-    const total = (await client.query(countSql, [like])).rows?.[0]?.total ?? 0;
+
+    const total = (await client.query(countSql, [likeLoose])).rows?.[0]?.total ?? 0;
 
     if (total === 0) {
       const dym = await didYouMeanForQuery(client, qLower);
@@ -904,7 +908,7 @@ router.get("/api/search", async (req, res) => {
       ORDER BY a.brand NULLS LAST, a.category NULLS LAST, a.model_name NULLS LAST, a.model_number_norm, a.version_norm
     `;
 
-    const { rows } = await client.query(listSql, [like, limit, offset]);
+    const { rows } = await client.query(listSql, [likeLoose, limit, offset]);
 
     return res.json({
       ok: true,
@@ -986,7 +990,9 @@ router.get("/api/browse", async (req, res) => {
       SELECT COUNT(*)::int AS total
       FROM base
     `;
-    const total = (await client.query(countSql, [type, value, brand, category, family || ""])).rows?.[0]?.total ?? 0;
+
+    const total =
+      (await client.query(countSql, [type, value, brand, category, family || ""])).rows?.[0]?.total ?? 0;
 
     const listSql = `
       WITH picked AS (
