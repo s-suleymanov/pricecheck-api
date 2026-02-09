@@ -32,7 +32,7 @@
   "hyperx": { "owned_by": "HP", "origin": "United States", "url": "https://hyperx.com", "Type": "Proprietary" },
   "inmotion": { "owned_by": "", "origin": "China", "url": "", "Type": "Proprietary" },
   "invanti": { "owned_by": "", "origin": "China", "url": "", "Type": "Proprietary" },
-  "jbl": { "owned_by": "", "origin": "United States", "url": "https://www.jbl.com", "Type": "Proprietary" },
+  "jbl": { "owned_by": "Samsung", "origin": "United States", "url": "https://www.jbl.com", "Type": "Proprietary" },
   "jabra": { "owned_by": "", "origin": "Denmark", "url": "https://www.jabra.com", "Type": "Proprietary" },
   "kaabo": { "owned_by": "", "origin": "China", "url": "", "Type": "Proprietary" },
   "lg": { "owned_by": "", "origin": "South Korea", "url": "https://www.lg.com", "Type": "Proprietary" },
