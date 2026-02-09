@@ -271,6 +271,87 @@ h1{
   color: #111;
   margin-bottom: 6px;
 }
+/* Brand info: bordered mini table (no heading) */
+.brandinfo{
+  margin-top: 14px;
+  padding: 12px 12px;
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.03);
+  display: grid;
+}
+
+/* rows */
+.brandinfo .bi-row{
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  column-gap: 12px;
+  padding: 7px 0;
+  align-items: center;
+}
+
+/* key and value typography matches sidebar vibe */
+.brandinfo .bi-k{
+  font-size: 16px;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+/* Brand title row with optional external link icon */
+.side-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.side-head .side-title{
+  margin: 0;
+  flex: 1;
+}
+
+.side-ext{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #111;
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+
+.side-ext svg{
+  width: 40px;
+  height: 40px;
+  fill: currentColor;
+  transform: translateX(0) translateY(6px);
+}
+
+.brandinfo .bi-v{
+  font-size: 16px;
+  color: #111;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  justify-self: end; /* gives the "table" feel */
+  text-align: right;
+}
+
+/* Owned by link should look clickable but not loud */
+.brandinfo .bi-link{
+  color: #111;
+  text-decoration: underline;
+}
+
+.brandinfo .bi-link:hover{
+  opacity: 0.85;
+}
+
+/* If the value is short, avoid awkward right-edge clipping */
+.brandinfo .bi-v:has(.bi-link){
+  white-space: nowrap;
+}
 
 #empty .empty-suggest{
   margin-top: 6px;
