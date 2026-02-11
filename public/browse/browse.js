@@ -12,7 +12,9 @@
     next: () => $("#next"),
     pager: () => document.querySelector(".pager"),
     sidecol: () => $("#sidecol"),
+    categoryPanel: () => $("#categoryPanel"),
     brandPanel: () => $("#brandPanel"),
+    familyPanel: () => $("#familyPanel"),
   };
 
   const state = {
@@ -23,8 +25,10 @@
     sideFams: [],
     sideFacetKey: "",
 
-    // server response
-    kind: "product", // "brand" | "category" | "product"
+    sideBrands: [],
+    sideBrandsFacetKey: "",
+
+    kind: "product",
     value: "",
     brand: "",
     category: "",
@@ -212,6 +216,14 @@
   // ["browse"] OR ["browse", "<q>"] OR ["browse", "<brand>", "category", "<cat>", "family", "<fam>"] etc.
   const core = parts.slice(1, end);
 
+  // Category browse URLs: /browse/category/<category>/ (plus optional /page/<n>/)
+  if (core.length >= 2 && core[0] === "category") {
+    const cat = decodeURIComponent(core[1] || "");
+    category = norm(cat);
+    q = category;
+    return { q, page, brand: "", category, family: "" };
+  }
+
   if (core.length === 0) {
     return { q: "", page, brand: "", category: "", family: "" };
   }
@@ -248,11 +260,17 @@ function buildBrowsePath({ q, page, brand, category, family }) {
     return path;
   }
 
-    // Otherwise plain q path
+  // Category-only mode: /browse/category/<Category>/
+  if (category) {
+    let path = `/browse/category/${encodeURIComponent(category)}/`;
+    if (p > 1) path += `page/${p}/`;
+    return path;
+  }
+
+  // Otherwise plain q path
   const qq = norm(q);
   if (!qq) return "/browse/";
 
-  // Always write slug form for the URL (matches search.js browseUrl)
   const slug = encodeURIComponent(slugify(qq));
   let path = `/browse/${slug}/`;
 
@@ -274,7 +292,7 @@ function readUrl() {
     state.category = oldCategory;
     state.family = oldFamily;
     state.familyNorm = oldFamily.toLowerCase();
-    state.q = oldBrand || ""; // brand is the primary term
+    state.q = oldBrand || oldCategory || "";
     state.page = oldPageNum;
 
     // Rewrite URL to the new path form immediately (no query string)
@@ -585,17 +603,91 @@ async function loadBrandPanelFacets(reqId) {
     state.sideFacetKey = key;
 }
 
-async function renderBrandPanel() {
-    const side = els.sidecol();
-    const panel = els.brandPanel();
-    if (!side || !panel) return;
+async function loadCategoryPanelFacets(reqId) {
+  if (!state.category) {
+    state.sideBrands = [];
+    state.sideBrandsFacetKey = "";
+    return;
+  }
 
-    // Only show for brand browsing (your request)
-    if (!state.brand) {
-      side.hidden = true;
-      panel.innerHTML = "";
-      return;
+  const key = state.category.toLowerCase();
+  if (state.sideBrandsFacetKey === key && Array.isArray(state.sideBrands) && state.sideBrands.length) return;
+
+  const qs = new URLSearchParams({ category: state.category });
+  const data = await apiJson(`/api/category_panel?${qs.toString()}`);
+  if (reqId !== state.lastReqId) return;
+
+  state.sideBrands = Array.isArray(data.brands) ? data.brands : [];
+  state.sideBrandsFacetKey = key;
+}
+
+async function renderCategoryPanel() {
+  const side = els.sidecol();
+  const panel = els.categoryPanel();
+  if (!side || !panel) return;
+
+  const catName = String(state.category || "").trim();
+  if (!catName) {
+    panel.innerHTML = "";
+    panel.hidden = true;
+    return;
+  }
+
+  const brands = (Array.isArray(state.sideBrands) ? state.sideBrands : []).slice(0, 14);
+
+  const total = Number.isFinite(state.total) ? state.total : 0;
+  const resultsLine = total === 1 ? "1 result found" : `${total} results found`;
+
+  panel.hidden = false;
+  panel.innerHTML = `
+    <h2 class="side-title">${escapeHtml(catName)}</h2>
+    <div class="side-sub muted">${escapeHtml(resultsLine)}</div>
+
+    ${brands.length ? `
+
+      <div class="side-block">
+        <div class="side-label">Brand</div>
+        <div class="pillrow">
+          ${brands.map((b) => {
+            const active = state.brand && state.brand.toLowerCase() === String(b).toLowerCase();
+            return `
+              <button type="button" class="pillbtn ${active ? "is-active" : ""}"
+                data-side-set="brand" data-side-value="${escapeHtml(b)}">
+                ${escapeHtml(b)}
+              </button>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    ` : ""}
+  `;
+}
+
+async function renderBrandPanel() {
+  const side = els.sidecol();
+  const panel = els.brandPanel();
+  const famPanel = els.familyPanel();
+  if (!side || !panel) return;
+
+  const hasCategory = !!String(state.category || "").trim();
+  const hasBrand = !!String(state.brand || "").trim();
+  const hasFamily = !!String(state.family || "").trim();
+
+  // Show the whole sidebar if any level is active
+  side.hidden = !(hasCategory || hasBrand || hasFamily);
+
+  // Brand card only shows when a brand is selected
+  if (!hasBrand) {
+    panel.innerHTML = "";
+    panel.hidden = true;
+    if (famPanel) {
+      famPanel.innerHTML = "";
+      famPanel.hidden = true;
     }
+    return;
+  }
+
+  panel.hidden = false;
 
     const brandName = String(state.brand || "").trim();
     const total = typeof state.total === "number" ? state.total : 0;
@@ -667,7 +759,19 @@ async function renderBrandPanel() {
       ` : ""}
     `;
 
-    side.hidden = false;
+    // Family card below the brand card (only when a family is selected)
+    if (famPanel) {
+      const famName = String(state.family || "").trim();
+      if (famName) {
+        famPanel.hidden = false;
+        famPanel.innerHTML = `
+          <h2 class="side-title">${escapeHtml(famName)}</h2>
+        `;
+      } else {
+        famPanel.innerHTML = "";
+        famPanel.hidden = true;
+      }
+    }
   }
 
   function animateGridCards(gridEl, { animate = true } = {}) {
@@ -734,6 +838,7 @@ async function renderBrandPanel() {
       setInlineEmptyHtml(`<div class="msg"><span>${escapeHtml(state.lastError)}</span></div>`);
       showInlineEmpty(true);
       showEmpty(false);
+      await renderCategoryPanel();
       await renderBrandPanel();
 
       setPager();
@@ -754,19 +859,7 @@ async function renderBrandPanel() {
     const page = Number.isFinite(state.page) && state.page > 0 ? state.page : 1;
     const limit = Number.isFinite(state.limit) && state.limit > 0 ? state.limit : 0;
 
-    let metaTxt = "";
-    if (total > 0 && limit > 0) {
-      const start = (page - 1) * limit + 1;
-      const shown = Array.isArray(state.results) ? state.results.length : 0;
-      const end = Math.min((page - 1) * limit + shown, total);
-      metaTxt = `Showing ${start}-${end} of ${total}`;
-    } else if (total > 0) {
-      metaTxt = `${total} results`;
-    } else {
-    }
-
-    setMeta(metaTxt);
-
+    setMeta("");
 
     const parts = [];
 
@@ -822,6 +915,7 @@ async function renderBrandPanel() {
   showEmpty(false);
 }
 
+    await renderCategoryPanel();
     await renderBrandPanel();
     setPager();
   }
@@ -868,6 +962,7 @@ async function renderBrandPanel() {
         state.pages = typeof data.pages === "number" ? data.pages : 1;
         state.results = Array.isArray(data.results) ? data.results : [];
         state.also = [];
+        await loadCategoryPanelFacets(reqId);
         await loadBrandPanelFacets(reqId);
         setLoading(false);
         await render();
@@ -904,6 +999,17 @@ async function renderBrandPanel() {
         writeUrl({ replace: true }); // becomes /browse/Apple/
       }
 
+      if (state.kind === "category" && state.value) {
+        state.category = String(state.value).trim();
+        state.brand = "";
+        state.family = "";
+        state.familyNorm = "";
+        state.q = state.category;
+        state.page = 1;
+        writeUrl({ replace: true }); // becomes /browse/category/<Category>/
+      }
+
+      await loadCategoryPanelFacets(reqId);
       await loadBrandPanelFacets(reqId);
       setLoading(false);
       render();
@@ -992,6 +1098,27 @@ async function renderBrandPanel() {
           } else {
             // Set category, and reset family because families are category-sensitive
             state.category = value;
+            state.family = "";
+            state.familyNorm = "";
+          }
+
+          state.page = 1;
+          writeUrl({ replace: false });
+          load();
+          return;
+        }
+
+        if (which === "brand") {
+          const isActive = state.brand && state.brand.toLowerCase() === value.toLowerCase();
+
+          if (isActive) {
+            // Toggle off brand -> back to category-only view
+            state.brand = "";
+            state.family = "";
+            state.familyNorm = "";
+          } else {
+            // Set brand while keeping the current category
+            state.brand = value;
             state.family = "";
             state.familyNorm = "";
           }

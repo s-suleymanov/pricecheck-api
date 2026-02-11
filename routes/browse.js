@@ -1176,6 +1176,51 @@ router.get("/api/brand_panel", async (req, res) => {
   }
 });
 
+// GET /api/category_panel?category=Headphones
+router.get("/api/category_panel", async (req, res) => {
+  const category = normText(req.query.category);
+  if (!category) return res.status(400).json({ ok: false, error: "category is required" });
+
+  const brandsLimit = clampInt(req.query.brands_limit, 1, 200, 120);
+
+  const client = await pool.connect();
+  try {
+    const brandsSql = `
+      WITH base AS (
+        SELECT
+          upper(btrim(model_number)) AS model_number_norm,
+          COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm,
+          btrim(brand) AS brand
+        FROM public.catalog
+        WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
+          AND category IS NOT NULL AND btrim(category) <> ''
+          AND lower(btrim(category)) = lower(btrim($1))
+          AND brand IS NOT NULL AND btrim(brand) <> ''
+      )
+      SELECT
+        MIN(brand) AS value,
+        COUNT(DISTINCT (model_number_norm || '|' || version_norm))::int AS products
+      FROM base
+      GROUP BY lower(brand)
+      ORDER BY products DESC, value ASC
+      LIMIT $2
+    `;
+
+    const brands = (await client.query(brandsSql, [category, brandsLimit])).rows || [];
+
+    return res.json({
+      ok: true,
+      category,
+      brands: brands.map((r) => r.value).filter(Boolean),
+    });
+  } catch (e) {
+    console.error("category_panel error:", e);
+    return res.status(500).json({ ok: false, error: "server_error" });
+  } finally {
+    client.release();
+  }
+});
+
 // GET /api/browse_facets?kind=category&limit=24
 router.get("/api/browse_facets", async (req, res) => {
   const kind = String(req.query.kind || "category").toLowerCase();

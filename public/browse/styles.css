@@ -33,7 +33,7 @@ body{
 .layout{
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 16px;
+  gap: 20px;
   align-items: start;
 }
 
@@ -41,7 +41,6 @@ body{
 
 .sidecol{
   top: auto;
-  margin-top: 47px;
 }
 
 .sidecard{
@@ -56,8 +55,7 @@ body{
 }
 
 .sidecard .side-sub{
-  margin-top: 6px;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--muted);
 }
 
@@ -234,9 +232,7 @@ h1{
   cursor: default;
 }
 
-/* ===== Default (desktop): Google-style list ===== */
 .grid{
-  margin-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -264,6 +260,10 @@ h1{
   border: 1px dashed rgba(0,0,0,0.14);
   background: #fff;
   box-shadow: none;
+}
+
+#sidecol > :not([hidden]) + :not([hidden]) {
+  margin-top: 20px;
 }
 
 #empty .empty-title{

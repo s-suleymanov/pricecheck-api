@@ -19,8 +19,8 @@
 
     if (!form || !input) return;
 
-    // Priority: ?brand= -> ?category= -> /browse/{slug}/
     function browseValueFromUrl() {
+      // Back-compat: old query-string URLs
       const sp = new URLSearchParams(location.search);
       const brand = String(sp.get("brand") || "").trim();
       const category = String(sp.get("category") || "").trim();
@@ -29,13 +29,30 @@
 
       const parts = String(location.pathname || "/").split("/").filter(Boolean);
       if (parts[0] !== "browse") return "";
-      const slug = parts[1] || "";
-      if (!slug) return "";
 
-      let decoded = slug;
-      try { decoded = decodeURIComponent(slug); } catch (_e) {}
+      // /browse/category/<category>/...
+      if (parts[1] === "category") {
+        let cat = parts[2] || "";
+        try { cat = decodeURIComponent(cat); } catch (_e) {}
+        return String(cat || "").trim();
+      }
 
-      return decoded.replace(/-/g, " ").trim();
+      // /browse/<brand>/category/<category>/... or /browse/<brand>/family/<family>/...
+      if (parts.length >= 2) {
+        let first = parts[1] || "";
+        try { first = decodeURIComponent(first); } catch (_e) {}
+
+        const next = String(parts[2] || "").toLowerCase();
+        if (next === "category" || next === "family" || next === "page") {
+          // This is a brand-filter URL, show the brand in the header search.
+          return String(first || "").trim();
+        }
+
+        // Otherwise /browse/<slug>/, de-slugify for display.
+        return String(first || "").replace(/-/g, " ").trim();
+      }
+
+      return "";
     }
 
     const p = (location.pathname || "/").toLowerCase();
