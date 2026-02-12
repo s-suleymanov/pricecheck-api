@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YLK9K88D1T"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-YLK9K88D1T');
+  </script>
+
+  <title>Sellers - PriceCheck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse sellers on PriceCheck. Open a seller to see associated listings and coverage.">
+  <link rel="canonical" href="https://pricechecktool.com/seller/">
+  <meta name="robots" content="index,follow">
+
+  <!-- Reuse your existing site CSS + browse grid/card CSS -->
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/browse/styles.css">
+<link rel="stylesheet" href="/seller/styles.css">
+<link rel="icon" type="image/svg+xml" href="/logo/logo.svg">
+
+  <!-- Header search + partials -->
+  <script src="/search.js" defer></script>
+  <script src="/partials/partials.js" defer></script>
+
+  <!-- Your seller page logic -->
+  <script src="/seller/seller.js" defer></script>
+</head>
+
+<body>
+  <div class="page">
+    <div id="site-header"></div>
+
+    <main class="wrap">
+  <section class="card-main seller-panel" id="sellerPanel" hidden></section>
+
+  <section class="card-main controls">
+    <div class="row">
+      <div class="muted" id="meta"></div>
+      <div id="emptyInline" class="empty-inline" hidden></div>
+    </div>
+  </section>
+
+  <section class="grid" id="grid"></section>
+
+  <section class="pager-bottom" aria-label="pagination">
+    <div class="pager">
+      <button id="prev" class="pill">Prev</button>
+      <button id="next" class="pill">Next</button>
+    </div>
+  </section>
+</main>
+
+
+    <div id="site-footer"></div>
+  </div>
+</body>
+</html>

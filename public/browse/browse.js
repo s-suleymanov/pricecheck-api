@@ -61,23 +61,6 @@
     if (el) el.hidden = !show;
   }
 
-    function normalizeExternalUrl(u) {
-    let s = String(u ?? "").trim();
-    if (!s) return "";
-    // allow protocol-relative //example.com
-    if (s.startsWith("//")) s = "https:" + s;
-    // allow bare domains like www.apple.com
-    if (!/^https?:\/\//i.test(s)) s = "https://" + s;
-
-    try {
-      const url = new URL(s);
-      if (url.protocol !== "http:" && url.protocol !== "https:") return "";
-      return url.href;
-    } catch {
-      return "";
-    }
-  }
-
   function setMeta(txt) {
     setText(els.meta(), txt || "");
   }
@@ -107,7 +90,7 @@
   }
 
   function fmtPrice(cents) {
-    if (typeof cents !== "number") return "N/A";
+    if (typeof cents !== "number") return "";
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
   }
 
@@ -120,79 +103,7 @@
       .replace(/^-+|-+$/g, "");
   }
 
-    function titleCaseWords(s) {
-    const v = String(s ?? "").trim();
-    if (!v) return "";
-    return v
-      .toLowerCase()
-      .split(/\s+/g)
-      .map(w => w ? (w[0].toUpperCase() + w.slice(1)) : "")
-      .join(" ");
-  }
-
-  function formatRank(n) {
-    const num = Number(n);
-    if (!Number.isFinite(num) || num <= 0) return "";
-    return `#${Math.trunc(num)}`;
-  }
-
-  function browseHrefForBrand(name) {
-    const v = String(name ?? "").trim();
-    if (!v) return "/browse/";
-    // Brand browse URLs are /browse/<Brand>/
-    return `/browse/${encodeURIComponent(v)}/`;
-  }
-
-  function brandInfoRow(label, valueHtml) {
-    if (!valueHtml) return "";
-    return `
-      <div class="bi-row">
-        <div class="bi-k">${escapeHtml(label)}</div>
-        <div class="bi-v">${valueHtml}</div>
-      </div>
-    `;
-  }
-
-  function renderBrandInfoMini(brandName, infoMap) {
-    const name = String(brandName || "").trim();
-    if (!name) return "";
-
-    const key = name.toLowerCase();
-    const raw = infoMap && typeof infoMap === "object" ? infoMap[key] : null;
-    if (!raw || typeof raw !== "object") return "";
-
-    const typeTxt = String(raw.type || raw.Type || "").trim();
-    const originTxt = String(raw.origin || "").trim();
-    const ownedByTxt = String(raw.owned_by || "").trim();
-
-    // If nothing exists, show nothing
-    if (!typeTxt && !originTxt && !ownedByTxt) return "";
-
-    const ownedByHtml = ownedByTxt
-      ? `<a class="bi-link" href="${browseHrefForBrand(ownedByTxt)}">${escapeHtml(ownedByTxt)}</a>`
-      : "";
-
-    // Keep labels minimal and useful
-    const originPretty = originTxt ? titleCaseWords(originTxt) : "";
-
-    return `
-      <div class="brandinfo" aria-label="Brand info">
-        ${brandInfoRow("Type", escapeHtml(typeTxt))}
-        ${brandInfoRow("Origin", escapeHtml(originPretty))}
-        ${brandInfoRow("Owned by", ownedByHtml)}
-      </div>
-    `;
-  }
-
   function parseBrowsePath(pathname) {
-  // Supports:
-  // /browse/
-  // /browse/<q>/
-  // /browse/<q>/page/<n>/
-  // /browse/<brand>/category/<category>/
-  // /browse/<brand>/family/<family>/
-  // /browse/<brand>/category/<category>/family/<family>/
-  // ... plus /page/<n>/ at the end
 
   const clean = String(pathname || "/").replace(/\/+$/g, "/");
   const parts = clean.split("/").filter(Boolean);
@@ -561,26 +472,6 @@ function readUrl() {
   return out;
 }
 
-  let _brandInfoPromise = null;
-
-  async function loadBrandInfoJson() {
-    if (_brandInfoPromise) return _brandInfoPromise;
-
-    _brandInfoPromise = (async () => {
-      try {
-        const res = await fetch("/data/brand_info.json", { headers: { Accept: "application/json" } });
-        if (!res.ok) return {};
-        const txt = await res.text().catch(() => "");
-        const data = txt ? JSON.parse(txt) : {};
-        return (data && typeof data === "object") ? data : {};
-      } catch (_e) {
-        return {};
-      }
-    })();
-
-    return _brandInfoPromise;
-  }
-
 async function loadBrandPanelFacets(reqId) {
     if (!state.brand) {
       state.sideCats = [];
@@ -689,90 +580,68 @@ async function renderBrandPanel() {
 
   panel.hidden = false;
 
-    const brandName = String(state.brand || "").trim();
-    const total = typeof state.total === "number" ? state.total : 0;
+  const brandName = String(state.brand || "").trim();
 
-    const leftAlreadyShowsFacets = Array.isArray(state.also) && state.also.length > 0;
+  const leftAlreadyShowsFacets = Array.isArray(state.also) && state.also.length > 0;
 
-    const cats = leftAlreadyShowsFacets
-      ? []
-      : (Array.isArray(state.sideCats) ? state.sideCats : []).slice(0, 14);
+  const cats = leftAlreadyShowsFacets
+    ? []
+    : (Array.isArray(state.sideCats) ? state.sideCats : []).slice(0, 14);
 
-    const fams = (Array.isArray(state.sideFams) ? state.sideFams : []).slice(0, 12);  
-    const brandInfoMap = await loadBrandInfoJson();
-    const brandInfoHtml = renderBrandInfoMini(brandName, brandInfoMap);
+  const fams = (Array.isArray(state.sideFams) ? state.sideFams : []).slice(0, 12);
 
-        const key = brandName.toLowerCase();
-    const raw = brandInfoMap && typeof brandInfoMap === "object" ? brandInfoMap[key] : null;
-    const officialUrl = raw && typeof raw === "object" ? normalizeExternalUrl(raw.url) : "";
+  panel.innerHTML = `
+    <h2 class="side-title">${escapeHtml(brandName)}</h2>
 
-    const extSvg = `
-      <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-        <path d="m216-160-56-56 464-464H360v-80h400v400h-80v-264L216-160Z"></path>
-      </svg>
-    `;
-
-    const extLink = officialUrl
-      ? `<a class="side-ext" href="${escapeHtml(officialUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Official website">${extSvg}</a>`
-      : "";
-
-    panel.innerHTML = `
-  <h2 class="side-title">
-    ${escapeHtml(brandName)}
-    ${extLink}
-  </h2>
-
-      ${brandInfoHtml}
-
-      ${cats.length ? `
-        <div class="side-block">
-          <div class="side-label">Category</div>
-          <div class="pillrow">
-            ${cats.map((c) => {
-              const active = state.category && state.category.toLowerCase() === String(c).toLowerCase();
-              return `
-                <button type="button" class="pillbtn ${active ? "is-active" : ""}"
-                  data-side-set="category" data-side-value="${escapeHtml(c)}">
-                  ${escapeHtml(c)}
-                </button>
-              `;
-            }).join("")}
-          </div>
+    ${cats.length ? `
+      <div class="side-block">
+        <div class="side-label">Category</div>
+        <div class="pillrow">
+          ${cats.map((c) => {
+            const active = state.category && state.category.toLowerCase() === String(c).toLowerCase();
+            return `
+              <button type="button" class="pillbtn ${active ? "is-active" : ""}"
+                data-side-set="category" data-side-value="${escapeHtml(c)}">
+                ${escapeHtml(c)}
+              </button>
+            `;
+          }).join("")}
         </div>
-      ` : ""}
+      </div>
+    ` : ""}
 
-      ${fams.length ? `
-        <div class="side-block">
-          <div class="side-label">Family</div>
-          <div class="pillrow">
-            ${fams.map((f) => {
-              const active = state.familyNorm && state.familyNorm === String(f).toLowerCase();
-              return `
-                <button type="button" class="pillbtn ${active ? "is-active" : ""}"
-                  data-side-set="family" data-side-value="${escapeHtml(f)}">
-                  ${escapeHtml(f)}
-                </button>
-              `;
-            }).join("")}
-          </div>
+    ${fams.length ? `
+      <div class="side-block">
+        <div class="side-label">Family</div>
+        <div class="pillrow">
+          ${fams.map((f) => {
+            const active = state.familyNorm && state.familyNorm === String(f).toLowerCase();
+            return `
+              <button type="button" class="pillbtn ${active ? "is-active" : ""}"
+                data-side-set="family" data-side-value="${escapeHtml(f)}">
+                ${escapeHtml(f)}
+              </button>
+            `;
+          }).join("")}
         </div>
-      ` : ""}
-    `;
+      </div>
+    ` : ""}
+  `;
 
-    // Family card below the brand card (only when a family is selected)
-    if (famPanel) {
-      const famName = String(state.family || "").trim();
-      if (famName) {
-        famPanel.hidden = false;
-        famPanel.innerHTML = `
-          <h2 class="side-title">${escapeHtml(famName)}</h2>
-        `;
-      } else {
-        famPanel.innerHTML = "";
-        famPanel.hidden = true;
-      }
+  // Family card below the brand card (only when a family is selected)
+  if (famPanel) {
+    const famName = String(state.family || "").trim();
+    if (famName) {
+      famPanel.hidden = false;
+      famPanel.innerHTML = `
+        <h2 class="side-title">${escapeHtml(famName)}</h2>
+      `;
+    } else {
+      famPanel.innerHTML = "";
+      famPanel.hidden = true;
     }
   }
+}
 
   function animateGridCards(gridEl, { animate = true } = {}) {
   if (!gridEl) return;
