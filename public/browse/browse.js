@@ -24,6 +24,10 @@
     sideCats: [],
     sideFams: [],
     sideFacetKey: "",
+    sellerSlug: "",
+    hasSeller: false,
+    sellerKey: "",
+    sellerLogoUrl: "",
 
     sideBrands: [],
     sideBrandsFacetKey: "",
@@ -111,6 +115,11 @@
       .replace(/['"]/g, "")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  }
+
+  function sellerSlugFromBrand(brandName) {
+    // sellers.json keys are lower slug style per your seller.js rules
+    return slugify(String(brandName || "").trim());
   }
 
   function parseBrowsePath(pathname) {
@@ -567,6 +576,61 @@ function readUrl() {
     return hex;
   }
 
+async function loadBrandSeller(reqId) {
+  const b = String(state.brand || "").trim();
+  if (!b) {
+    state.hasSeller = false;
+    state.sellerSlug = "";
+    state.sellerKey = "";
+    state.sellerLogoUrl = "";
+    return;
+  }
+
+  const slug = sellerSlugFromBrand(b);
+  const key = slug;
+
+  // Cache per brand slug so we do not refetch every render
+  if (state.sellerKey === key) return;
+
+  state.sellerKey = key;
+  state.sellerSlug = slug;
+  state.hasSeller = false;
+  state.sellerLogoUrl = "";
+
+  try {
+    const data = await apiJson(`/api/seller?id=${encodeURIComponent(slug)}`);
+    if (reqId !== state.lastReqId) return;
+
+    state.hasSeller = !!(data && data.found === true);
+
+    // Grab logo from common shapes: {seller:{logo_url}} or {logo_url}
+    const logo =
+  (data && data.seller && (
+    data.seller.logo ||            // THIS is what seller.js uses
+    data.seller.logo_url ||
+    data.seller.logoUrl ||
+    data.seller.image_url ||
+    data.seller.imageUrl
+  )) ||
+  (data && (
+    data.logo ||
+    data.logo_url ||
+    data.logoUrl ||
+    data.image_url ||
+    data.imageUrl
+  )) ||
+  "";
+
+
+    state.sellerLogoUrl = String(logo || "").trim();
+  } catch (_e) {
+    if (reqId !== state.lastReqId) return;
+    state.hasSeller = false;
+    state.sellerLogoUrl = "";
+    state.sellerKey = "";
+  }
+}
+
 async function loadBrandPanelFacets(reqId) {
     if (!state.brand) {
       state.sideCats = [];
@@ -685,8 +749,25 @@ async function renderBrandPanel() {
 
   const fams = (Array.isArray(state.sideFams) ? state.sideFams : []).slice(0, 12);
 
-  panel.innerHTML = `
-    <h2 class="side-title">${escapeHtml(brandName)}</h2>
+  const sellerBtn = (state.hasSeller && state.sellerSlug && state.sellerLogoUrl)
+  ? `
+    <a class="seller-icon"
+       href="/seller/${encodeURIComponent(state.sellerSlug)}/"
+       title="Seller information"
+       aria-label="Seller information">
+      <img class="seller-icon-img"
+        src="${escapeHtml(state.sellerLogoUrl)}"
+        alt=""
+        onerror="this.closest('a') && this.closest('a').remove()">
+    </a>
+  `
+  : "";
+
+    panel.innerHTML = `
+    <div class="side-title-row">
+      ${sellerBtn}
+      <h2 class="side-title">${escapeHtml(brandName)}</h2>
+    </div>
 
     ${cats.length ? `
       <div class="side-block">
@@ -993,6 +1074,7 @@ async function renderBrandPanel() {
         state.also = [];
         await loadCategoryPanelFacets(reqId);
         await loadBrandPanelFacets(reqId);
+        await loadBrandSeller(reqId);
         await loadFamilyPanelFacets(reqId);
         setLoading(false);
         await render();
@@ -1041,6 +1123,7 @@ async function renderBrandPanel() {
 
       await loadCategoryPanelFacets(reqId);
       await loadBrandPanelFacets(reqId);
+              await loadBrandSeller(reqId);
       await loadFamilyPanelFacets(reqId);
       setLoading(false);
       await render();
@@ -1068,6 +1151,11 @@ async function renderBrandPanel() {
     state.variantNorm = "";
     state.color = "";
     state.colorNorm = "";
+
+    state.hasSeller = false;
+    state.sellerSlug = "";
+    state.sellerKey = "";
+    state.sellerLogoUrl = "";
 
     state.page = 1;
     writeUrl({ replace: false });

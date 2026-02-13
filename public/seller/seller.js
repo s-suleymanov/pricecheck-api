@@ -199,7 +199,7 @@
     const s = norm(slug).toLowerCase();
 
     const name = norm(seller?.name) || prettyName(s);
-    const title = `${name} Seller Information | ${siteName}`;
+    const title = `${name} Seller Information - ${siteName}`;
     const desc = buildSellerDescription(seller);
 
     const canonicalPath = buildSellerPath(s);

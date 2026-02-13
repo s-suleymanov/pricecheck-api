@@ -101,7 +101,7 @@
   },
   "apple": {
     "name": "Apple",
-    "logo": "",
+    "logo": "/logo/seller/apple.png",
     "website": "https://www.apple.com",
     "owned_by": "",
     "type": "Proprietary",

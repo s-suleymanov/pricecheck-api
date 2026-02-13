@@ -54,6 +54,33 @@ body{
   margin: 0;
 }
 
+.side-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.seller-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seller-icon-img {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  object-fit: contain;
+  display: block;
+}
+
+.seller-icon-badge {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.85;
+}
+
 .sidecard .side-sub{
   font-size: 16px;
   color: var(--muted);
