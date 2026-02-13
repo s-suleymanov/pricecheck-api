@@ -12,14 +12,23 @@
   };
 
   const EXTERNAL_SVG = `
-  <svg xmlns="http://www.w3.org/2000/svg"
-       viewBox="0 -960 960 960"
-       width="20" height="20"
-       style="width:20px;height:20px;display:block"
-       aria-hidden="true" focusable="false">
-    <path d="m216-160-56-56 464-464H360v-80h400v400h-80v-264L216-160Z"/>
-  </svg>
-`;
+    <svg xmlns="http://www.w3.org/2000/svg"
+         viewBox="0 -960 960 960"
+         width="20" height="20"
+         style="width:20px;height:20px;display:block"
+         aria-hidden="true" focusable="false">
+      <path d="m216-160-56-56 464-464H360v-80h400v400h-80v-264L216-160Z"/>
+    </svg>
+  `;
+
+  function go404() {
+    location.replace("/404/");
+  }
+
+  function isValidSellerSlug(s) {
+    const v = norm(s).toLowerCase();
+    return !!v && /^[a-z0-9_-]+$/.test(v);
+  }
 
   function escapeHtml(s) {
     return String(s ?? "")
@@ -60,20 +69,192 @@
     el.hidden = !html;
   }
 
-  function parseSellerPath(pathname) {
-    // /seller/
-    // /seller/<name>/
-    const clean = String(pathname || "/").replace(/\/+$/g, "/");
-    const parts = clean.split("/").filter(Boolean);
-    if (parts[0] !== "seller") return { name: "" };
-    if (parts.length >= 2) return { name: norm(decodeURIComponent(parts[1] || "")) };
-    return { name: "" };
+  function clearUi() {
+    setMeta("");
+    setInlineEmptyHtml("");
+
+    const grid = els.grid();
+    if (grid) grid.innerHTML = "";
+
+    const panel = els.sellerPanel();
+    if (panel) {
+      panel.hidden = true;
+      panel.innerHTML = "";
+    }
+
+    const pager = els.pager();
+    if (pager) pager.style.display = "none";
   }
 
-  function buildSellerPath(name) {
-    const n = norm(name);
+  function parseSellerPath(pathname) {
+    const clean = String(pathname || "/").replace(/\/+$/g, "/");
+    const parts = clean.split("/").filter(Boolean);
+    if (parts[0] !== "seller") return { slug: "" };
+    if (parts.length >= 2) return { slug: norm(decodeURIComponent(parts[1] || "")) };
+    return { slug: "" };
+  }
+
+  function buildSellerPath(slug) {
+    const n = norm(slug).toLowerCase();
     if (!n) return "/seller/";
     return `/seller/${encodeURIComponent(n)}/`;
+  }
+
+  function prettyName(raw) {
+    const s = norm(raw);
+    if (!s) return "";
+    if (/^[a-z]{2,4}$/.test(s)) return s.toUpperCase();
+    if (s === s.toLowerCase()) return titleCaseWords(s);
+    return s;
+  }
+
+  function labelFromKey(k) {
+    const s = String(k ?? "").trim();
+    if (!s) return "";
+    const spaced = s.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+    return spaced
+      .split(" ")
+      .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : ""))
+      .join(" ");
+  }
+
+  function absUrl(pathOrUrl) {
+    const s = String(pathOrUrl ?? "").trim();
+    if (!s) return "";
+    if (/^https?:\/\//i.test(s)) return s;
+    if (s.startsWith("/")) return location.origin + s;
+    return "";
+  }
+
+  function upsertMetaByName(name, content) {
+    const c = String(content ?? "").trim();
+    if (!name) return;
+    let el = document.querySelector(`meta[name="${CSS.escape(name)}"]`);
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute("name", name);
+      document.head.appendChild(el);
+    }
+    el.setAttribute("content", c);
+  }
+
+  function upsertMetaByProp(prop, content) {
+    const c = String(content ?? "").trim();
+    if (!prop) return;
+    let el = document.querySelector(`meta[property="${CSS.escape(prop)}"]`);
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute("property", prop);
+      document.head.appendChild(el);
+    }
+    el.setAttribute("content", c);
+  }
+
+  function upsertLinkCanonical(href) {
+    const h = String(href ?? "").trim();
+    let el = document.querySelector(`link[rel="canonical"]`);
+    if (!el) {
+      el = document.createElement("link");
+      el.setAttribute("rel", "canonical");
+      document.head.appendChild(el);
+    }
+    el.setAttribute("href", h);
+  }
+
+  function upsertJsonLd(id, obj) {
+    const sid = String(id ?? "").trim() || "jsonld";
+    let el = document.getElementById(sid);
+    if (!el) {
+      el = document.createElement("script");
+      el.type = "application/ld+json";
+      el.id = sid;
+      document.head.appendChild(el);
+    }
+    el.textContent = JSON.stringify(obj);
+  }
+
+  function buildSellerDescription(seller) {
+    const parts = [];
+    const name = norm(seller?.name);
+    const type = norm(seller?.type);
+    const locationTxt = norm(seller?.location);
+    const founded = seller?.founded;
+
+    if (type) parts.push(type);
+    if (locationTxt) parts.push(`Location: ${locationTxt}`);
+    if (Number.isFinite(Number(founded)) && Number(founded) > 0) parts.push(`Founded: ${Number(founded)}`);
+
+    const rp = norm(seller?.policies?.return_period);
+    const pm = norm(seller?.policies?.price_match);
+    if (rp) parts.push(`Returns: ${rp}`);
+    if (pm) parts.push(`Price match: ${pm}`);
+
+    const base = name ? `Seller information for ${name} on PriceCheck.` : `Seller information on PriceCheck.`;
+    const tail = parts.length ? ` ${parts.join(". ")}.` : "";
+    return (base + tail).trim();
+  }
+
+  function applySellerSeo(slug, seller) {
+    const siteName = "PriceCheck";
+    const s = norm(slug).toLowerCase();
+
+    const name = norm(seller?.name) || prettyName(s);
+    const title = `${name} Seller Information | ${siteName}`;
+    const desc = buildSellerDescription(seller);
+
+    const canonicalPath = buildSellerPath(s);
+    const canonicalUrl = `${location.origin}${canonicalPath}`;
+
+    document.title = title;
+
+    upsertMetaByName("description", desc);
+    upsertMetaByName("robots", "index,follow");
+    upsertLinkCanonical(canonicalUrl);
+
+    // Open Graph
+    upsertMetaByProp("og:site_name", siteName);
+    upsertMetaByProp("og:type", "website");
+    upsertMetaByProp("og:title", title);
+    upsertMetaByProp("og:description", desc);
+    upsertMetaByProp("og:url", canonicalUrl);
+
+    const ogImage = absUrl(seller?.logo);
+    if (ogImage) upsertMetaByProp("og:image", ogImage);
+
+    // Twitter
+    upsertMetaByName("twitter:card", ogImage ? "summary_large_image" : "summary");
+    upsertMetaByName("twitter:title", title);
+    upsertMetaByName("twitter:description", desc);
+    if (ogImage) upsertMetaByName("twitter:image", ogImage);
+
+    // JSON-LD Organization
+    const org = {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name,
+      url: norm(seller?.website) || canonicalUrl,
+      logo: ogImage || undefined,
+      foundingDate:
+        Number.isFinite(Number(seller?.founded)) && Number(seller.founded) > 0
+          ? String(Number(seller.founded))
+          : undefined,
+      areaServed: norm(seller?.location) || undefined,
+      sameAs: norm(seller?.website) ? [norm(seller.website)] : undefined,
+    };
+
+    const phone = norm(seller?.contact?.phone);
+    if (phone) {
+      org.contactPoint = [
+        {
+          "@type": "ContactPoint",
+          telephone: phone,
+          contactType: "customer support",
+        },
+      ];
+    }
+
+    const cleaned = JSON.parse(JSON.stringify(org));
+    upsertJsonLd("seller-jsonld", cleaned);
   }
 
   async function apiJson(url) {
@@ -95,247 +276,183 @@
     return data;
   }
 
-  function factRow(label, valueHtml) {
-    if (!valueHtml) return "";
+  function rowsFromFlatObject(obj, opts = {}) {
+    const rows = [];
+    const hideKeys = new Set((opts.hideKeys || []).map((k) => String(k).toLowerCase().trim()));
+
+    for (const k of Object.keys(obj || {})) {
+      const keyLower = String(k).toLowerCase().trim();
+      if (hideKeys.has(keyLower)) continue;
+
+      const rawVal = obj[k];
+      if (rawVal === null || rawVal === undefined) continue;
+
+      const valStr = typeof rawVal === "boolean" ? (rawVal ? "Yes" : "No") : String(rawVal).trim();
+      if (!valStr) continue;
+
+      rows.push(`
+        <div class="seller-row">
+          <div class="seller-k">${escapeHtml(labelFromKey(k))}</div>
+          <div class="seller-v">${escapeHtml(valStr)}</div>
+        </div>
+      `);
+    }
+
+    return rows;
+  }
+
+  function renderSection(title, rowsHtml) {
+    if (!rowsHtml || !rowsHtml.length) return "";
     return `
-      <div class="seller-fact">
-        <div class="seller-k">${escapeHtml(label)}</div>
-        <div class="seller-v">${valueHtml}</div>
+      <div class="seller-section">
+        <div class="seller-section-title">${escapeHtml(title)}</div>
+        <div class="seller-table">${rowsHtml.join("")}</div>
       </div>
     `;
   }
 
-  function clearUi() {
-    setMeta("");
-    setInlineEmptyHtml("");
-
-    const grid = els.grid();
-    if (grid) grid.innerHTML = "";
-
+  function renderSellerPanel(slug, seller) {
     const panel = els.sellerPanel();
-    if (panel) {
-      panel.hidden = true;
-      panel.innerHTML = "";
-    }
+    if (!panel) return;
 
-    const pager = els.pager();
-    if (pager) pager.style.display = "none";
-  }
+    const displayName = prettyName(seller.name || slug);
 
-  function prettyName(raw) {
-  const s = norm(raw);
-  if (!s) return "";
-  if (/^[a-z]{2,4}$/.test(s)) return s.toUpperCase(); // jbl -> JBL
-  if (s === s.toLowerCase()) return titleCaseWords(s); // jabra -> Jabra
-  return s;
-}
+    const website = norm(seller.website || "");
+    const logo = norm(seller.logo || "");
 
-    function prettyName(raw) {
-  const s = norm(raw);
-  if (!s) return "";
-  if (/^[a-z]{2,4}$/.test(s)) return s.toUpperCase(); // jbl -> JBL
-  if (s === s.toLowerCase()) return titleCaseWords(s); // jabra -> Jabra
-  return s;
-}
+    const topFacts = {
+      type: seller.type || "",
+      location: seller.location || "",
+      founded: seller.founded || "",
+      owned_by: seller.owned_by || "",
+    };
 
-function labelFromKey(k) {
-  const s = String(k ?? "").trim();
-  if (!s) return "";
-  // turn owned_by -> Owned By, founded in -> Founded In
-  const spaced = s.replace(/_/g, " ").replace(/\s+/g, " ").trim();
-  return spaced
-    .split(" ")
-    .map(w => w ? (w[0].toUpperCase() + w.slice(1)) : "")
-    .join(" ");
-}
+    const topRows = rowsFromFlatObject(topFacts);
 
-function normalizeValue(v) {
-  const s = String(v ?? "").trim();
-  return s;
-}
+    const policiesRows = rowsFromFlatObject(seller.policies || {});
+    const contactRows = (() => {
+      const c = seller.contact && typeof seller.contact === "object" ? seller.contact : {};
+      const rows = [];
 
-function isUrlKey(keyLower) {
-  return keyLower === "url" || keyLower === "official_url" || keyLower === "website" || keyLower === "official site";
-}
+      if (norm(c.phone)) {
+        rows.push(`
+          <div class="seller-row">
+            <div class="seller-k">Phone</div>
+            <div class="seller-v"><a class="seller-link" href="tel:${escapeHtml(c.phone)}">${escapeHtml(c.phone)}</a></div>
+          </div>
+        `);
+      }
 
-function prettyName(raw) {
-  const s = norm(raw);
-  if (!s) return "";
-  if (/^[a-z]{2,4}$/.test(s)) return s.toUpperCase(); // jbl -> JBL
-  if (s === s.toLowerCase()) return titleCaseWords(s); // jabra -> Jabra
-  return s;
-}
+      if (c.chat_available === true || c.chat_available === false) {
+        rows.push(`
+          <div class="seller-row">
+            <div class="seller-k">Chat Available</div>
+            <div class="seller-v">${c.chat_available ? "Yes" : "No"}</div>
+          </div>
+        `);
+      }
 
-function renderSellerPanel(name, info) {
-  const panel = els.sellerPanel();
-  if (!panel) return;
+      if (norm(c.support_page)) {
+        rows.push(`
+          <div class="seller-row">
+            <div class="seller-k">Support Page</div>
+            <div class="seller-v">
+              <a class="seller-link" href="${escapeHtml(c.support_page)}" target="_blank" rel="noopener noreferrer">
+                ${escapeHtml(c.support_page)}
+              </a>
+            </div>
+          </div>
+        `);
+      }
 
-  const displayName = prettyName(name);
+      return rows;
+    })();
 
-  // Pull official URL from common keys (your API already provides official_url)
-  const officialUrl = norm(
-    info.official_url ||
-    info.url ||
-    info.website ||
-    info["Official site"] ||
-    info["Official Site"] ||
-    ""
-  );
+    const sections = [
+      renderSection("Overview", topRows),
+      renderSection("Policies", policiesRows),
+      renderSection("Support", contactRows),
+    ].filter(Boolean);
 
-  // Build dynamic rows from info object, excluding url fields
-  const rows = [];
-  const obj = (info && typeof info === "object") ? info : {};
+    const avatarFallback = escapeHtml(initials(displayName) || displayName[0] || "");
 
-  // Prefer a stable order if present, then everything else
-  const preferred = ["type", "origin", "owned_by"];
-  const seen = new Set();
+    panel.hidden = false;
+    panel.innerHTML = `
+      <div class="seller-card">
+        <div class="seller-left">
+          <div class="seller-avatar" aria-hidden="true">
+            ${
+              logo
+                ? `<img class="seller-logo" src="${escapeHtml(logo)}" alt="${escapeHtml(displayName)}" loading="lazy">`
+                : avatarFallback
+            }
+          </div>
 
-  function pushKey(k) {
-    if (!k) return;
-    const rawVal = obj[k];
-    const val = normalizeValue(rawVal);
-    if (!val) return;
-
-    const keyLower = String(k).toLowerCase().trim();
-    if (isUrlKey(keyLower)) return; // don't show official url in the table
-
-    // owned_by becomes link to /seller/<owned_by>/
-    let valueHtml = escapeHtml(val);
-    if (keyLower === "owned_by" || keyLower === "owned by") {
-      valueHtml = `<a class="seller-link" href="${buildSellerPath(val)}">${escapeHtml(val)}</a>`;
-    }
-
-    rows.push(`
-      <div class="seller-row">
-        <div class="seller-k">${escapeHtml(labelFromKey(k))}</div>
-        <div class="seller-v">${valueHtml}</div>
-      </div>
-    `);
-  }
-
-  // Add preferred keys first (support different casing)
-  for (const pk of preferred) {
-    // find matching key in object by case-insensitive compare
-    const match = Object.keys(obj).find(k => String(k).toLowerCase().trim() === pk);
-    if (match) {
-      pushKey(match);
-      seen.add(String(match).toLowerCase().trim());
-    }
-  }
-
-  // Add the rest dynamically
-  for (const k of Object.keys(obj)) {
-    const keyLower = String(k).toLowerCase().trim();
-    if (seen.has(keyLower)) continue;
-    pushKey(k);
-  }
-
-  panel.hidden = false;
-  panel.innerHTML = `
-    <div class="seller-card">
-      <div class="seller-left">
-        <div class="seller-avatar" aria-hidden="true">
-          ${escapeHtml(initials(displayName) || displayName[0] || "")}
+          <div class="seller-nameRow">
+            <div class="seller-name">${escapeHtml(displayName)}</div>
+            ${
+              website
+                ? `<a class="seller-ext" href="${escapeHtml(website)}" target="_blank" rel="noopener noreferrer" aria-label="Website">${EXTERNAL_SVG}</a>`
+                : ""
+            }
+          </div>
         </div>
 
-        <div class="seller-nameRow">
-          <div class="seller-name">${escapeHtml(displayName)}</div>
-          ${
-            officialUrl
-              ? `<a class="seller-ext" href="${escapeHtml(officialUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Official site">${EXTERNAL_SVG}</a>`
-              : ""
-          }
-        </div>
-
-        <div class="seller-actions">
-          <button type="button" class="seller-pill" data-go-browse="${escapeHtml(displayName)}">Browse</button>
+        <div class="seller-right">
+          ${sections.length ? sections.join("") : ``}
         </div>
       </div>
+    `;
+  }
 
-      <div class="seller-right">
-        ${rows.length ? `<div class="seller-table">${rows.join("")}</div>` : `<div class="seller-empty">No seller info yet.</div>`}
-      </div>
-    </div>
-  `;
-}
-
-  async function loadSeller(name) {
+  async function loadSeller(slug) {
     clearUi();
 
-    const q = norm(name);
+    const q = norm(slug).toLowerCase();
+
+    // No browse/search page. Anything without a real slug is 404.
     if (!q) {
-      setInlineEmptyHtml(`
-        <div class="msg">
-          <span>Open a seller like <strong>/seller/jabra/</strong>.</span>
-        </div>
-      `);
+      go404();
+      return;
+    }
+
+    // Invalid slug format is 404.
+    if (!isValidSellerSlug(q)) {
+      go404();
       return;
     }
 
     setMeta("Loading...");
-    const data = await apiJson(`/api/seller?name=${encodeURIComponent(q)}`);
 
-    if (!data.found || !data.info) {
-      setMeta("");
-      setInlineEmptyHtml(`
-        <div class="msg">
-          <span>No seller info found for <strong>${escapeHtml(q)}</strong>.</span>
-        </div>
-      `);
+    let data;
+    try {
+      data = await apiJson(`/api/seller?id=${encodeURIComponent(q)}`);
+    } catch {
+      go404();
+      return;
+    }
+
+    // Not in JSON: 404. No inline message.
+    if (!data || !data.found || !data.seller) {
+      go404();
       return;
     }
 
     setMeta("");
-    renderSellerPanel(q, data.info);
+    applySellerSeo(q, data.seller);
+    renderSellerPanel(q, data.seller);
 
-    // Keep the grid empty for now (no filler messages)
     const grid = els.grid();
     if (grid) grid.innerHTML = "";
   }
 
-  function wireOnce() {
-    const panel = els.sellerPanel();
-    if (!panel) return;
-
-    panel.addEventListener("click", (e) => {
-      const b1 = e.target.closest("button[data-go-browse]");
-      if (b1) {
-        const v = norm(b1.getAttribute("data-go-browse"));
-        if (v) location.href = `/browse/${encodeURIComponent(v)}/`;
-        return;
-      }
-
-      const b2 = e.target.closest("button[data-go-seller]");
-      if (b2) {
-        const v = norm(b2.getAttribute("data-go-seller"));
-        if (v) location.href = buildSellerPath(v);
-      }
-    });
-  }
-
   document.addEventListener("DOMContentLoaded", () => {
-    wireOnce();
-
     const parsed = parseSellerPath(location.pathname);
-    loadSeller(parsed.name).catch((err) => {
-      clearUi();
-      setInlineEmptyHtml(`
-        <div class="msg">
-          <span>${escapeHtml(err && err.message ? err.message : "Failed to load seller info.")}</span>
-        </div>
-      `);
-    });
+    loadSeller(parsed.slug).catch(() => go404());
 
     window.addEventListener("popstate", () => {
       const p = parseSellerPath(location.pathname);
-      loadSeller(p.name).catch((err) => {
-        clearUi();
-        setInlineEmptyHtml(`
-          <div class="msg">
-            <span>${escapeHtml(err && err.message ? err.message : "Failed to load seller info.")}</span>
-          </div>
-        `);
-      });
+      loadSeller(p.slug).catch(() => go404());
     });
   });
 })();

@@ -59,11 +59,61 @@ body {
   color: rgba(0,0,0,0.92);
 }
 
+.seller-avatar {
+  width: 92px;
+  height: 92px;
+  border-radius: 16px;
+  background: #e9e9e9;
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  letter-spacing: 0.5px;
+  user-select: none;
+  color: rgba(0,0,0,0.85);
+  overflow: hidden;
+}
+
+.seller-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.seller-section {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.seller-section:last-child {
+  margin-bottom: 0;
+}
+
+.seller-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.70);
+}
+.seller-section + .seller-section .seller-section-title {
+  margin-top: 20px;
+}
+
+.seller-pill-link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
 .seller-ext {
   display: inline-flex;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
+  margin-top: 7px;
   color: rgba(0,0,0,0.70);
   text-decoration: none;
   line-height: 0;
@@ -123,12 +173,12 @@ body {
 
 .seller-k {
   color: rgba(0,0,0,0.55);
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .seller-v {
   color: rgba(0,0,0,0.88);
-  font-size: 20px;
+  font-size: 16px;
   min-width: 0;
   word-break: break-word;
 }

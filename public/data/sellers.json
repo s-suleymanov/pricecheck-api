@@ -1,0 +1,1562 @@
+{
+  "bestbuy": {
+    "name": "Best Buy",
+    "logo": "/logo/seller/bestbuy.jpg",
+    "website": "https://www.bestbuy.com",
+    "owned_by": "",
+    "type": "Authorized Retailer",
+    "location": "United States",
+    "founded": 1966,
+    "policies": {
+      "return_period": "15 Days",
+      "restocking_fee": "No",
+      "free_shipping_threshold": "$35+",
+      "price_match": "Yes"
+    },
+    "contact": {
+      "phone": "1-888-237-8289",
+      "chat_available": true,
+      "support_page": "https://www.bestbuy.com/support"
+    }
+  },
+  "5th_wheel": {
+    "name": "5th Wheel",
+    "logo": "",
+    "website": "https://ride5thwheel.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "aovo": {
+    "name": "Aovo",
+    "logo": "",
+    "website": "https://www.aovopro.com",
+    "owned_by": "",
+    "type": "Private Label",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "anker": {
+    "name": "Anker",
+    "logo": "",
+    "website": "https://www.anker.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "apollo": {
+    "name": "Apollo",
+    "logo": "",
+    "website": "https://apolloscooters.co",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Canada",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "apple": {
+    "name": "Apple",
+    "logo": "",
+    "website": "https://www.apple.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "arlo": {
+    "name": "Arlo",
+    "logo": "",
+    "website": "https://www.arlo.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "audio_technica": {
+    "name": "Audio Technica",
+    "logo": "",
+    "website": "https://www.audio-technica.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Japan",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "bang_olufsen": {
+    "name": "Bang Olufsen",
+    "logo": "",
+    "website": "https://www.bang-olufsen.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Denmark",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "beats": {
+    "name": "Beats",
+    "logo": "",
+    "website": "https://www.beatsbydre.com",
+    "owned_by": "Apple",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "belkin": {
+    "name": "Belkin",
+    "logo": "",
+    "website": "https://www.belkin.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "bose": {
+    "name": "Bose",
+    "logo": "",
+    "website": "https://www.bose.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "bowers_wilkins": {
+    "name": "Bowers Wilkins",
+    "logo": "",
+    "website": "https://www.bowerswilkins.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United Kingdom",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "bugatti": {
+    "name": "Bugatti",
+    "logo": "",
+    "website": "https://www.bugatti.com",
+    "owned_by": "",
+    "type": "Private Label",
+    "location": "France",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "corsair": {
+    "name": "Corsair",
+    "logo": "",
+    "website": "https://www.corsair.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "creative": {
+    "name": "Creative",
+    "logo": "",
+    "website": "https://www.creative.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Singapore",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "dji": {
+    "name": "DJI",
+    "logo": "",
+    "website": "https://www.dji.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "dreame": {
+    "name": "Dreame",
+    "logo": "",
+    "website": "https://www.dreametech.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "dyson": {
+    "name": "Dyson",
+    "logo": "",
+    "website": "https://www.dyson.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United Kingdom",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "ecovacs": {
+    "name": "Ecovacs",
+    "logo": "",
+    "website": "https://www.ecovacs.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "edifier": {
+    "name": "Edifier",
+    "logo": "",
+    "website": "https://www.edifier.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "fitbit": {
+    "name": "Fitbit",
+    "logo": "",
+    "website": "https://www.fitbit.com",
+    "owned_by": "Google",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "garmin": {
+    "name": "Garmin",
+    "logo": "",
+    "website": "https://www.garmin.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "gopro": {
+    "name": "GoPro",
+    "logo": "",
+    "website": "https://gopro.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "google": {
+    "name": "Google",
+    "logo": "",
+    "website": "https://about.google",
+    "owned_by": "Alphabet",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "hiboy": {
+    "name": "Hiboy",
+    "logo": "",
+    "website": "https://hiboy.com",
+    "owned_by": "",
+    "type": "Private Label",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "huawei": {
+    "name": "Huawei",
+    "logo": "",
+    "website": "https://www.huawei.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "hyperx": {
+    "name": "HyperX",
+    "logo": "",
+    "website": "https://hyperx.com",
+    "owned_by": "HP",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "jbl": {
+    "name": "JBL",
+    "logo": "",
+    "website": "https://www.jbl.com",
+    "owned_by": "Samsung",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "jabra": {
+    "name": "Jabra",
+    "logo": "",
+    "website": "https://www.jabra.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Denmark",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "lg": {
+    "name": "LG",
+    "logo": "",
+    "website": "https://www.lg.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "South Korea",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "logitech": {
+    "name": "Logitech",
+    "logo": "",
+    "website": "https://www.logitech.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Switzerland",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "marshall": {
+    "name": "Marshall",
+    "logo": "",
+    "website": "https://www.marshall.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China, United Kingdom",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "meta": {
+    "name": "Meta",
+    "logo": "",
+    "website": "https://about.meta.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "microsoft": {
+    "name": "Microsoft",
+    "logo": "",
+    "website": "https://www.microsoft.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "niu": {
+    "name": "NIU",
+    "logo": "",
+    "website": "https://www.niu.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "narwal": {
+    "name": "Narwal",
+    "logo": "",
+    "website": "https://www.narwal.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "ninja": {
+    "name": "Ninja",
+    "logo": "",
+    "website": "https://www.ninjakitchen.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "nintendo": {
+    "name": "Nintendo",
+    "logo": "",
+    "website": "https://www.nintendo.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Japan",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "nothing": {
+    "name": "Nothing",
+    "logo": "",
+    "website": "https://nothing.tech",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United Kingdom",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "oneplus": {
+    "name": "OnePlus",
+    "logo": "",
+    "website": "https://www.oneplus.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "oura": {
+    "name": "Oura",
+    "logo": "",
+    "website": "https://ouraring.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Finland",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "playstation": {
+    "name": "PlayStation",
+    "logo": "",
+    "website": "https://www.playstation.com",
+    "owned_by": "Sony",
+    "type": "Proprietary",
+    "location": "Japan",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "poly": {
+    "name": "Poly",
+    "logo": "",
+    "website": "https://www.poly.com",
+    "owned_by": "HP",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "razer": {
+    "name": "Razer",
+    "logo": "",
+    "website": "https://www.razer.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States, Singapore",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "razor": {
+    "name": "Razor",
+    "logo": "",
+    "website": "https://www.razor.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "ring": {
+    "name": "Ring",
+    "logo": "",
+    "website": "https://ring.com",
+    "owned_by": "Amazon",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "roku": {
+    "name": "Roku",
+    "logo": "",
+    "website": "https://www.roku.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "samsung": {
+    "name": "Samsung",
+    "logo": "",
+    "website": "https://www.samsung.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "South Korea",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "segway": {
+    "name": "Segway",
+    "logo": "",
+    "website": "https://www.segway.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "sennheiser": {
+    "name": "Sennheiser",
+    "logo": "",
+    "website": "https://www.sennheiser.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Germany",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "shark": {
+    "name": "Shark",
+    "logo": "",
+    "website": "https://www.sharkclean.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "shokz": {
+    "name": "Shokz",
+    "logo": "",
+    "website": "https://shokz.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "shure": {
+    "name": "Shure",
+    "logo": "",
+    "website": "https://www.shure.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "skullcandy": {
+    "name": "Skullcandy",
+    "logo": "",
+    "website": "https://www.skullcandy.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "sonos": {
+    "name": "Sonos",
+    "logo": "",
+    "website": "https://www.sonos.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "sony": {
+    "name": "Sony",
+    "logo": "",
+    "website": "https://www.sony.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Japan",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "steelseries": {
+    "name": "SteelSeries",
+    "logo": "",
+    "website": "https://steelseries.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Denmark",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "tcl": {
+    "name": "TCL",
+    "logo": "",
+    "website": "https://www.tcl.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "turboant": {
+    "name": "TurboAnt",
+    "logo": "",
+    "website": "https://turboant.com",
+    "owned_by": "",
+    "type": "Private Label",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "turtle_beach": {
+    "name": "Turtle Beach",
+    "logo": "",
+    "website": "https://www.turtlebeach.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "valve": {
+    "name": "Valve",
+    "logo": "",
+    "website": "https://www.valvesoftware.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "western_digital": {
+    "name": "Western Digital",
+    "logo": "",
+    "website": "https://www.westerndigital.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "wyze": {
+    "name": "Wyze",
+    "logo": "",
+    "website": "https://www.wyze.com",
+    "owned_by": "",
+    "type": "Private Label",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "xbox": {
+    "name": "Xbox",
+    "logo": "",
+    "website": "https://www.xbox.com",
+    "owned_by": "Microsoft",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "xiaomi": {
+    "name": "Xiaomi",
+    "logo": "",
+    "website": "https://www.mi.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "acer": {
+    "name": "Acer",
+    "logo": "",
+    "website": "https://www.acer.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "Taiwan",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "ecobee": {
+    "name": "Ecobee",
+    "logo": "",
+    "website": "https://www.ecobee.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "eufy": {
+    "name": "Eufy",
+    "logo": "",
+    "website": "https://www.eufy.com",
+    "owned_by": "Anker",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "irobot": {
+    "name": "iRobot",
+    "logo": "",
+    "website": "https://www.irobot.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "roborock": {
+    "name": "Roborock",
+    "logo": "",
+    "website": "https://global.roborock.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "soundcore": {
+    "name": "Soundcore",
+    "logo": "",
+    "website": "https://www.soundcore.com",
+    "owned_by": "Anker",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "See Website",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
+  "amazon": {
+    "name": "Amazon",
+    "logo": "",
+    "website": "https://www.amazon.com",
+    "owned_by": "",
+    "type": "Marketplace",
+    "location": "United States",
+    "founded": 1994,
+    "policies": {
+      "return_period": "30 Days",
+      "restocking_fee": "No (mostly)",
+      "free_shipping_threshold": "$35+ (Free w/ Prime)",
+      "price_match": "No"
+    },
+    "contact": {
+      "phone": "1-888-280-4331",
+      "chat_available": true,
+      "support_page": "https://www.amazon.com/hz/contact-us"
+    }
+  },
+  "walmart": {
+    "name": "Walmart",
+    "logo": "",
+    "website": "https://www.walmart.com",
+    "owned_by": "",
+    "type": "Big Box Retailer",
+    "location": "United States",
+    "founded": 1962,
+    "policies": {
+      "return_period": "90 Days (30 for Electronics)",
+      "restocking_fee": "No",
+      "free_shipping_threshold": "$35+",
+      "price_match": "No (Online vs Store varies)"
+    },
+    "contact": {
+      "phone": "1-800-925-6278",
+      "chat_available": true,
+      "support_page": "https://www.walmart.com/help"
+    }
+  },
+  "target": {
+    "name": "Target",
+    "logo": "",
+    "website": "https://www.target.com",
+    "owned_by": "",
+    "type": "Big Box Retailer",
+    "location": "United States",
+    "founded": 1902,
+    "policies": {
+      "return_period": "90 Days (30 for Electronics)",
+      "restocking_fee": "No",
+      "free_shipping_threshold": "$35+",
+      "price_match": "Yes"
+    },
+    "contact": {
+      "phone": "1-800-440-0680",
+      "chat_available": true,
+      "support_page": "https://contactus.target.com"
+    }
+  },
+  "bh_photo": {
+    "name": "B&H Photo Video",
+    "logo": "",
+    "website": "https://www.bhphotovideo.com",
+    "owned_by": "",
+    "type": "Specialty Retailer",
+    "location": "United States",
+    "founded": 1973,
+    "policies": {
+      "return_period": "30 Days",
+      "restocking_fee": "No (15% if opened/missing parts)",
+      "free_shipping_threshold": "$49+",
+      "price_match": "Yes"
+    },
+    "contact": {
+      "phone": "1-800-606-6969",
+      "chat_available": true,
+      "support_page": "https://www.bhphotovideo.com/find/contactForm.jsp"
+    }
+  },
+  "newegg": {
+    "name": "Newegg",
+    "logo": "",
+    "website": "https://www.newegg.com",
+    "owned_by": "",
+    "type": "Online Retailer",
+    "location": "United States",
+    "founded": 2001,
+    "policies": {
+      "return_period": "30 Days",
+      "restocking_fee": "Varies (often 15% on opened items)",
+      "free_shipping_threshold": "Varies per item",
+      "price_match": "Yes (on select items)"
+    },
+    "contact": {
+      "phone": "1-800-390-1119",
+      "chat_available": true,
+      "support_page": "https://kb.newegg.com"
+    }
+  },
+  "costco": {
+    "name": "Costco",
+    "logo": "",
+    "website": "https://www.costco.com",
+    "owned_by": "",
+    "type": "Warehouse Club",
+    "location": "United States",
+    "founded": 1983,
+    "policies": {
+      "return_period": "90 Days (Electronics)",
+      "restocking_fee": "No",
+      "free_shipping_threshold": "included in price (often)",
+      "price_match": "No"
+    },
+    "contact": {
+      "phone": "1-800-955-2292",
+      "chat_available": true,
+      "support_page": "https://customerservice.costco.com"
+    }
+  }
+}
