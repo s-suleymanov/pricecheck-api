@@ -35,6 +35,10 @@ router.get("/api/browse", async (req, res) => {
   const category = normText(req.query.category);
   const family = normText(req.query.family);
   const hasFamily = !!family;
+  const variant = normText(req.query.variant);
+  const color = normText(req.query.color);
+  const hasVariant = !!variant;
+  const hasColor = !!color;
 
   if (brand) {
     type = "brand";
@@ -68,7 +72,7 @@ router.get("/api/browse", async (req, res) => {
 
   const client = await pool.connect();
   try {
-    const countSql = `
+        const countSql = `
       WITH base AS (
         SELECT DISTINCT
           upper(btrim(model_number)) AS model_number_norm,
@@ -76,6 +80,8 @@ router.get("/api/browse", async (req, res) => {
         FROM public.catalog
         WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
           AND ($5 = '' OR upper(btrim(model_number)) = upper(btrim($5)))
+          AND ($6 = '' OR (variant IS NOT NULL AND btrim(variant) <> '' AND lower(btrim(variant)) = lower(btrim($6))))
+          AND ($7 = '' OR (color IS NOT NULL AND btrim(color) <> '' AND lower(btrim(color)) = lower(btrim($7))))
           AND (
             ($1 = 'brand' AND lower(btrim(brand)) = lower(btrim($2)))
             OR
@@ -89,7 +95,8 @@ router.get("/api/browse", async (req, res) => {
     `;
 
     const total =
-      (await client.query(countSql, [type, value, brand, category, family || ""])).rows?.[0]?.total ?? 0;
+      (await client.query(countSql, [type, value, brand, category, family || "", variant || "", color || ""]))
+        .rows?.[0]?.total ?? 0;
 
     const listSql = `
       WITH picked AS (
@@ -113,6 +120,8 @@ router.get("/api/browse", async (req, res) => {
         FROM public.catalog c
         WHERE c.model_number IS NOT NULL AND btrim(c.model_number) <> ''
           AND ($5 = '' OR upper(btrim(c.model_number)) = upper(btrim($5)))
+          AND ($6 = '' OR (c.variant IS NOT NULL AND btrim(c.variant) <> '' AND lower(btrim(c.variant)) = lower(btrim($6))))
+          AND ($7 = '' OR (c.color IS NOT NULL AND btrim(c.color) <> '' AND lower(btrim(c.color)) = lower(btrim($7))))
           AND (
             ($1 = 'brand' AND lower(btrim(c.brand)) = lower(btrim($2)))
             OR
@@ -130,7 +139,7 @@ router.get("/api/browse", async (req, res) => {
         SELECT *
         FROM picked
         ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number_norm, version_norm
-        LIMIT $6 OFFSET $7
+        LIMIT $8 OFFSET $9
       ),
       anchors AS (
         SELECT
@@ -176,7 +185,17 @@ router.get("/api/browse", async (req, res) => {
       ORDER BY a.brand NULLS LAST, a.category NULLS LAST, a.model_name NULLS LAST, a.model_number_norm, a.version_norm
     `;
 
-    const { rows } = await client.query(listSql, [type, value, brand, category, family || "", limit, offset]);
+    const { rows } = await client.query(listSql, [
+      type,
+      value,
+      brand,
+      category,
+      family || "",
+      variant || "",
+      color || "",
+      limit,
+      offset,
+    ]);
 
     res.json({
       ok: true,
@@ -376,6 +395,68 @@ router.get("/api/browse_facets", async (req, res) => {
   } catch (e) {
     console.error("browse_facets error:", e);
     res.status(500).json({ ok: false, error: "server_error" });
+  } finally {
+    client.release();
+  }
+});
+
+// GET /api/family_panel?family=<model_number>&brand=<optional>&category=<optional>
+router.get("/api/family_panel", async (req, res) => {
+  const family = normText(req.query.family);
+  const brand = normText(req.query.brand);
+  const category = normText(req.query.category);
+
+  if (!family) return res.status(400).json({ ok: false, error: "family is required" });
+
+  const client = await pool.connect();
+  try {
+    const variantsSql = `
+  SELECT v
+  FROM (
+    SELECT DISTINCT
+      btrim(variant) AS v,
+      lower(btrim(variant)) AS v_sort
+    FROM public.catalog
+    WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
+      AND upper(btrim(model_number)) = upper(btrim($1))
+      AND ($2 = '' OR (brand IS NOT NULL AND btrim(brand) <> '' AND lower(btrim(brand)) = lower(btrim($2))))
+      AND ($3 = '' OR (category IS NOT NULL AND btrim(category) <> '' AND lower(btrim(category)) = lower(btrim($3))))
+      AND variant IS NOT NULL AND btrim(variant) <> ''
+  ) s
+  ORDER BY s.v_sort ASC, s.v ASC
+`;
+
+const colorsSql = `
+  SELECT c
+  FROM (
+    SELECT DISTINCT
+      btrim(color) AS c,
+      lower(btrim(color)) AS c_sort
+    FROM public.catalog
+    WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
+      AND upper(btrim(model_number)) = upper(btrim($1))
+      AND ($2 = '' OR (brand IS NOT NULL AND btrim(brand) <> '' AND lower(btrim(brand)) = lower(btrim($2))))
+      AND ($3 = '' OR (category IS NOT NULL AND btrim(category) <> '' AND lower(btrim(category)) = lower(btrim($3))))
+      AND color IS NOT NULL AND btrim(color) <> ''
+  ) s
+  ORDER BY s.c_sort ASC, s.c ASC
+`;
+
+
+    const variants = (await client.query(variantsSql, [family, brand || "", category || ""])).rows || [];
+    const colors = (await client.query(colorsSql, [family, brand || "", category || ""])).rows || [];
+
+    return res.json({
+      ok: true,
+      family,
+      brand: brand || "",
+      category: category || "",
+      variants: variants.map((r) => r.v).filter(Boolean),
+      colors: colors.map((r) => r.c).filter(Boolean),
+    });
+  } catch (e) {
+    console.error("family_panel error:", e);
+    return res.status(500).json({ ok: false, error: "server_error" });
   } finally {
     client.release();
   }

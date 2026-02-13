@@ -28,6 +28,16 @@
     sideBrands: [],
     sideBrandsFacetKey: "",
 
+    familyPanelKey: "",
+    familyVariants: [],
+    familyColors: [],
+
+    variant: "",
+    variantNorm: "",
+    color: "",
+    colorNorm: "",
+    colorMap: null,
+
     kind: "product",
     value: "",
     brand: "",
@@ -107,12 +117,14 @@
 
   const clean = String(pathname || "/").replace(/\/+$/g, "/");
   const parts = clean.split("/").filter(Boolean);
-  if (parts[0] !== "browse") return { q: "", page: 1, brand: "", category: "", family: "" };
+  if (parts[0] !== "browse") return { q: "", page: 1, brand: "", category: "", family: "", variant: "", color: "" };
 
   let q = "";
   let brand = "";
   let category = "";
   let family = "";
+  let variant = "";
+  let color = "";
   let page = 1;
 
   // Find optional trailing /page/<n>
@@ -132,11 +144,11 @@
     const cat = decodeURIComponent(core[1] || "");
     category = norm(cat);
     q = category;
-    return { q, page, brand: "", category, family: "" };
+    return { q, page, brand: "", category, family: "", variant: "", color: "" };
   }
 
   if (core.length === 0) {
-    return { q: "", page, brand: "", category: "", family: "" };
+    return { q: "", page, brand: "", category: "", family: "", variant: "", color: "" };
   }
 
   // Always treat first segment as the primary text (brand or general q)
@@ -149,17 +161,19 @@
     const val = core[i + 1] != null ? decodeURIComponent(core[i + 1]) : "";
     if (key === "category") category = norm(val);
     if (key === "family") family = norm(val);
+    if (key === "variant") variant = norm(val);
+    if (key === "color") color = norm(val);
   }
 
-  // If we have category/family, we consider q to be the brand string
-  if (category || family) {
+  if (category || family || variant || color) {
     brand = q;
   }
 
-  return { q, page, brand, category, family };
+  return { q, page, brand, category, family, variant, color };
+
 }
 
-function buildBrowsePath({ q, page, brand, category, family }) {
+function buildBrowsePath({ q, page, brand, category, family, variant, color }) {
   const p = Number.isFinite(page) && page > 0 ? page : 1;
 
   // If brand filter mode, build filter path
@@ -167,6 +181,8 @@ function buildBrowsePath({ q, page, brand, category, family }) {
     let path = `/browse/${encodeURIComponent(brand)}/`;
     if (category) path += `category/${encodeURIComponent(category)}/`;
     if (family) path += `family/${encodeURIComponent(family)}/`;
+    if (variant) path += `variant/${encodeURIComponent(variant)}/`;
+    if (color) path += `color/${encodeURIComponent(color)}/`;
     if (p > 1) path += `page/${p}/`;
     return path;
   }
@@ -218,6 +234,12 @@ function readUrl() {
   state.category = norm(parsed.category);
   state.family = norm(parsed.family);
   state.familyNorm = state.family.toLowerCase();
+  state.variant = norm(parsed.variant);
+  state.variantNorm = state.variant.toLowerCase();
+
+  state.color = norm(parsed.color);
+  state.colorNorm = state.color.toLowerCase();
+
 
   const pathQ = norm(parsed.q);
 
@@ -310,6 +332,8 @@ function readUrl() {
       brand: state.brand,
       category: state.category,
       family: state.family,
+      variant: state.variant,
+      color: state.color,
     });
 
     if (replace) history.replaceState({}, "", path);
@@ -472,6 +496,77 @@ function readUrl() {
   return out;
 }
 
+  function normKey(s) {
+    return String(s ?? "").trim().toLowerCase();
+  }
+
+  function colorKey(s) {
+    return normKey(s).replace(/\s+/g, " ");
+  }
+
+  async function loadColorMap() {
+    if (state.colorMap && typeof state.colorMap === "object") return state.colorMap;
+
+    try {
+      const res = await fetch("/data/color_hex.json", {
+        headers: { Accept: "application/json" },
+      });
+      const txt = await res.text().catch(() => "");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const json = txt ? JSON.parse(txt) : null;
+      state.colorMap = json && typeof json === "object" ? json : {};
+    } catch (_e) {
+      state.colorMap = {};
+    }
+
+    return state.colorMap;
+  }
+
+  async function loadFamilyPanelFacets(reqId) {
+    const fam = String(state.family || "").trim();
+    if (!fam) {
+      state.familyVariants = [];
+      state.familyColors = [];
+      state.familyPanelKey = "";
+      return;
+    }
+
+    const key = `${normKey(state.brand)}|${normKey(state.category)}|${normKey(fam)}`;
+    if (state.familyPanelKey === key) return;
+
+    const qs = new URLSearchParams({ family: fam });
+    if (state.brand) qs.set("brand", state.brand);
+    if (state.category) qs.set("category", state.category);
+
+    const data = await apiJson(`/api/family_panel?${qs.toString()}`);
+    if (reqId !== state.lastReqId) return;
+
+    state.familyVariants = Array.isArray(data.variants) ? data.variants : [];
+    state.familyColors = Array.isArray(data.colors) ? data.colors : [];
+    state.familyPanelKey = key;
+  }
+
+  function resolveColorHex(name, cmap) {
+    const raw = String(name ?? "").trim();
+    if (!raw) return null;
+
+    // If DB already stores hex, use it.
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw)) return raw;
+
+    const k = colorKey(raw);
+    let hex = cmap && cmap[k] ? String(cmap[k]) : "";
+
+    // grey/gray fallback
+    if (!hex && k.includes("grey")) hex = cmap && cmap[k.replace(/grey/g, "gray")] ? String(cmap[k.replace(/grey/g, "gray")]) : "";
+    if (!hex && k.includes("gray")) hex = cmap && cmap[k.replace(/gray/g, "grey")] ? String(cmap[k.replace(/gray/g, "grey")]) : "";
+
+    if (!hex) return null;
+    if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) return null;
+
+    return hex;
+  }
+
 async function loadBrandPanelFacets(reqId) {
     if (!state.brand) {
       state.sideCats = [];
@@ -628,18 +723,79 @@ async function renderBrandPanel() {
     ` : ""}
   `;
 
-  // Family card below the brand card (only when a family is selected)
-  if (famPanel) {
+    if (famPanel) {
     const famName = String(state.family || "").trim();
-    if (famName) {
-      famPanel.hidden = false;
-      famPanel.innerHTML = `
-        <h2 class="side-title">${escapeHtml(famName)}</h2>
-      `;
-    } else {
+    if (!famName) {
       famPanel.innerHTML = "";
       famPanel.hidden = true;
+      return;
     }
+
+    const variants = Array.isArray(state.familyVariants) ? state.familyVariants : [];
+    const colors = Array.isArray(state.familyColors) ? state.familyColors : [];
+
+    // NEW: if nothing to show, do not render the family card at all
+    if (!variants.length && !colors.length) {
+      famPanel.innerHTML = "";
+      famPanel.hidden = true;
+      return;
+    }
+
+    const cmap = await loadColorMap();
+
+    const variantChips = variants.length
+      ? `
+        <div class="side-block">
+          <div class="side-label">Variants</div>
+          <div class="pillrow">
+            ${variants.map((v) => {
+              const active = state.variantNorm && state.variantNorm === String(v).toLowerCase();
+              return `
+                <button type="button" class="pillbtn ${active ? "is-active" : ""}"
+                  data-side-set="variant" data-side-value="${escapeHtml(v)}">
+                  ${escapeHtml(v)}
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `
+      : "";
+
+    const colorSwatches = colors.length
+      ? `
+        <div class="side-block">
+          <div class="side-label">Colors</div>
+          <div class="pillrow">
+            ${colors.map((c) => {
+              const name = String(c || "").trim();
+              const title = escapeHtml(name);
+              const hex = resolveColorHex(name, cmap) || "#9ca3af";
+              const border = hex.toLowerCase() === "#ffffff" ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.12)";
+              const active = state.colorNorm && state.colorNorm === name.toLowerCase();
+
+              return `
+                <button type="button"
+                  class="swatchbtn ${active ? "is-active" : ""}"
+                  data-side-set="color"
+                  data-side-value="${title}"
+                  title="${title}"
+                  aria-label="${title}">
+                  <span class="pc-swatch" style="--pc-swatch:${hex}; --pc-swatch-border:${border};"></span>
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `
+      : "";
+
+    famPanel.hidden = false;
+    famPanel.innerHTML = `
+      <h2 class="side-title">${escapeHtml(famName)}</h2>
+      ${variantChips}
+      ${colorSwatches}
+    `;
   }
 }
 
@@ -690,6 +846,8 @@ async function renderBrandPanel() {
       brand: state.brand,
       category: state.category,
       family: state.family,
+      variant: state.variant,
+      color: state.color,
     })}`;
     const robots = !q
       ? "noindex,follow"
@@ -822,6 +980,8 @@ async function renderBrandPanel() {
         if (state.brand) qs.set("brand", state.brand);
         if (state.category) qs.set("category", state.category);
         if (state.family) qs.set("family", state.family);
+        if (state.variant) qs.set("variant", state.variant);
+        if (state.color) qs.set("color", state.color);
         const data = await apiJson(`/api/browse?${qs.toString()}`);
         if (reqId !== state.lastReqId) return;
 
@@ -833,6 +993,7 @@ async function renderBrandPanel() {
         state.also = [];
         await loadCategoryPanelFacets(reqId);
         await loadBrandPanelFacets(reqId);
+        await loadFamilyPanelFacets(reqId);
         setLoading(false);
         await render();
         return;
@@ -880,22 +1041,34 @@ async function renderBrandPanel() {
 
       await loadCategoryPanelFacets(reqId);
       await loadBrandPanelFacets(reqId);
+      await loadFamilyPanelFacets(reqId);
       setLoading(false);
-      render();
+      await render();
     } catch (e) {
       if (reqId !== state.lastReqId) return;
       state.lastError = e && e.message ? e.message : "Search failed.";
       setLoading(false);
-      render();
+      await render();
     }
   }
 
   function navTo(kind, value) {
-    // When a user clicks the "also" facet card, we just set q to that facet value
-    // The server will then resolve it as brand/category and return the right list
     state.q = norm(value);
+
     state.brand = "";
     state.category = "";
+    state.family = "";
+    state.familyNorm = "";
+
+    state.familyPanelKey = "";
+    state.familyVariants = [];
+    state.familyColors = [];
+
+    state.variant = "";
+    state.variantNorm = "";
+    state.color = "";
+    state.colorNorm = "";
+
     state.page = 1;
     writeUrl({ replace: false });
     load();
@@ -964,11 +1137,25 @@ async function renderBrandPanel() {
             state.category = "";
             state.family = "";
             state.familyNorm = "";
+            state.familyPanelKey = "";
+            state.familyVariants = [];
+            state.familyColors = [];
+            state.variant = "";
+            state.variantNorm = "";
+            state.color = "";
+            state.colorNorm = "";
           } else {
             // Set category, and reset family because families are category-sensitive
             state.category = value;
             state.family = "";
             state.familyNorm = "";
+            state.familyPanelKey = "";
+            state.familyVariants = [];
+            state.familyColors = [];
+            state.variant = "";
+            state.variantNorm = "";
+            state.color = "";
+            state.colorNorm = "";
           }
 
           state.page = 1;
@@ -985,11 +1172,25 @@ async function renderBrandPanel() {
             state.brand = "";
             state.family = "";
             state.familyNorm = "";
+            state.familyPanelKey = "";
+            state.familyVariants = [];
+            state.familyColors = [];
+            state.variant = "";
+            state.variantNorm = "";
+            state.color = "";
+            state.colorNorm = "";
           } else {
             // Set brand while keeping the current category
             state.brand = value;
             state.family = "";
             state.familyNorm = "";
+            state.familyPanelKey = "";
+            state.familyVariants = [];
+            state.familyColors = [];
+            state.variant = "";
+            state.variantNorm = "";
+            state.color = "";
+            state.colorNorm = "";
           }
 
           state.page = 1;
@@ -998,16 +1199,65 @@ async function renderBrandPanel() {
           return;
         }
 
-        if (which === "family") {
+                if (which === "family") {
           const isActive = state.family && state.family.toLowerCase() === value.toLowerCase();
 
           if (isActive) {
-            // Toggle off family -> keep category if set, otherwise plain brand
             state.family = "";
             state.familyNorm = "";
+            state.familyPanelKey = "";
+            state.familyVariants = [];
+            state.familyColors = [];
+
+            // clear family-scoped filters too
+            state.variant = "";
+            state.variantNorm = "";
+            state.color = "";
+            state.colorNorm = "";
           } else {
             state.family = value;
             state.familyNorm = value.toLowerCase();
+            state.familyPanelKey = "";
+            state.familyVariants = [];
+            state.familyColors = [];
+
+            // switching families should clear old selections
+            state.variant = "";
+            state.variantNorm = "";
+            state.color = "";
+            state.colorNorm = "";
+          }
+
+          state.page = 1;
+          writeUrl({ replace: false });
+          load();
+          return;
+        }
+        if (which === "variant") {
+          const isActive = state.variant && state.variant.toLowerCase() === value.toLowerCase();
+
+          if (isActive) {
+            state.variant = "";
+            state.variantNorm = "";
+          } else {
+            state.variant = value;
+            state.variantNorm = value.toLowerCase();
+          }
+
+          state.page = 1;
+          writeUrl({ replace: false });
+          load();
+          return;
+        }
+        if (which === "color") {
+          const isActive = state.color && state.color.toLowerCase() === value.toLowerCase();
+
+          if (isActive) {
+            state.color = "";
+            state.colorNorm = "";
+          } else {
+            state.color = value;
+            state.colorNorm = value.toLowerCase();
           }
 
           state.page = 1;

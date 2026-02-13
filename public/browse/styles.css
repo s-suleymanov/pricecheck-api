@@ -32,7 +32,7 @@ body{
 /* ===== Desktop layout with right sidebar ===== */
 .layout{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 350px;
   gap: 20px;
   align-items: start;
 }
@@ -49,7 +49,7 @@ body{
 }
 
 .sidecard .side-title{
-  font-size: 35px;
+  font-size: 30px;
   font-weight:500;
   margin: 0;
 }
@@ -66,12 +66,43 @@ body{
   margin-top: 12px;
 }
 
+.swatchbtn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: #fff;
+  cursor: pointer;
+}
+
+.swatchbtn:hover{
+  border-color: rgba(0,0,0,0.16);
+}
+
+.swatchbtn.is-active{
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.pc-swatch {
+  display: inline-block;
+  width: 25px;
+  height: 25px;
+  border-radius: 999px;
+  background: var(--pc-swatch, #9ca3af);
+  border: 1px solid var(--pc-swatch-border, rgba(0,0,0,0.12));
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.25) inset;
+}
+
 .sidecard .pillbtn{
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
-  padding: 0 12px;
+  padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid rgba(0,0,0,0.10);
   background: #fff;
