@@ -472,8 +472,8 @@
           <div class="price-row">
             <div class="price">${fmtPrice(r.best_price_cents)}</div>
             <div class="store-stack" data-store-stack="1"></div>
+            ${warn}
           </div>
-          ${warn}
         </div>
       </a>
     `;
