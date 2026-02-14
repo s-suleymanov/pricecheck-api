@@ -264,28 +264,28 @@ function clearInlineOnly() {
       if (!caretAtEnd()) return clearInlineOnly();
       if (active >= 0) return clearInlineOnly();
 
-      const typedRaw = String(inlineBase || input.value || "");
-      const typed = typedRaw.trim();
-      if (!typed) return clearInlineOnly();
+      const base = String(inlineBase || input.value || "");
+      if (!base) return clearInlineOnly();
+
+      // Use a trim-end view only for matching, but keep the original base for display.
+      const baseTrimEnd = base.replace(/\s+$/g, "");
+      if (!baseTrimEnd) return clearInlineOnly();
 
       const top = items[0];
-      if (!top) return clearInlineOnly();
-
-      const sug = String(top.fill || top.value || "").trim().toLowerCase();
+      const sug = String(top?.fill || top?.value || "").trim().toLowerCase();
       if (!sug) return clearInlineOnly();
 
-      const t = typed.toLowerCase();
-      const s = sug; // already lower
+      const baseLower = baseTrimEnd.toLowerCase();
+      if (!sug.startsWith(baseLower)) return clearInlineOnly();
+      if (sug.length === baseLower.length) return clearInlineOnly();
 
-      if (!s.startsWith(t)) return clearInlineOnly();
-      if (s.length === t.length) return clearInlineOnly();
-
-      // Preserve whatever the user typed for the prefix, but force the completion tail lowercase.
-      const filled = typedRaw + sug.slice(typedRaw.length);
+      // Preserve exactly what the user typed (including casing), append the lowercase tail.
+      const tail = sug.slice(baseLower.length);
+      const filled = baseTrimEnd + tail;
 
       input.value = filled;
       try {
-        input.setSelectionRange(typedRaw.length, filled.length);
+        input.setSelectionRange(baseTrimEnd.length, filled.length);
       } catch {}
 
       inlineOn = true;
@@ -297,8 +297,19 @@ function clearInlineOnly() {
       box.innerHTML = "";
       items = [];
       active = -1;
+
+      // Allow refetch on next focus (fixes: popular and suggestions not reopening after close).
+      lastQ = "";
+
+      // Cancel any in-flight request.
+      if (aborter) {
+        try { aborter.abort(); } catch {}
+      }
+      aborter = null;
+
       input.removeAttribute("aria-activedescendant");
       input.setAttribute("aria-expanded", "false");
+      clearInlineOnly();
     }
 
     function openIfAny() {
@@ -318,6 +329,7 @@ function clearInlineOnly() {
             it.kind === "brand" ? "Brand" :
             it.kind === "category" ? "Category" :
             it.kind === "combo" ? "Filter" :
+            it.kind === "family" ? "Family" :
             "Page";
 
           const count = Number(it.products || 0);
@@ -355,8 +367,6 @@ function clearInlineOnly() {
     function pick(idx) {
       const it = items[idx];
       if (!it) return;
-
-      const display = String(it.value || "").trim();
       const chosen = String(it.fill || it.value || "").trim().toLowerCase();
 
       if (chosen) input.value = chosen;
@@ -381,98 +391,104 @@ function clearInlineOnly() {
     }
 
     async function fetchPopular() {
-      // Only show popular when input is empty
-      if (norm(input.value)) return;
+  // Only show popular when input is empty
+  if (norm(input.value)) return;
 
-      const qKey = "__popular__";
-      if (qKey === lastQ) return;
-      lastQ = qKey;
+  const qKey = "__popular__";
+  // If we already fetched popular and still have items, do not refetch.
+  if (qKey === lastQ && items.length) return;
+  lastQ = qKey;
 
-      if (aborter) aborter.abort();
-      aborter = new AbortController();
+  if (aborter) aborter.abort();
+  aborter = new AbortController();
 
-      try {
-        const url = new URL(endpoint, location.origin);
-        url.searchParams.set("popular", "1");
-        url.searchParams.set("limit", String(maxItems));
+  try {
+    const url = new URL(endpoint, location.origin);
+    url.searchParams.set("popular", "1");
+    url.searchParams.set("limit", String(maxItems));
 
-        const res = await fetch(url.toString(), { signal: aborter.signal, cache: "no-store" });
-        if (!res.ok) throw new Error(`popular ${res.status}`);
-        const data = await res.json();
+    const res = await fetch(url.toString(), { signal: aborter.signal, cache: "no-store" });
+    if (!res.ok) throw new Error(`popular ${res.status}`);
+    const data = await res.json();
 
-        const api = Array.isArray(data?.results) ? data.results : [];
-        items = api
-          .filter((x) => x && (x.kind === "brand" || x.kind === "category") && x.value)
-          .slice(0, maxItems)
-          .map((x) => ({
-            ...x,
-            fill: String(x.value || "").trim().toLowerCase(),
-          }));
+    // If user typed while the request was in flight, ignore this response.
+    if (norm(input.value)) return;
 
-        active = -1;
-        render();
-        clearInlineOnly(); // do not inline-complete for popular
-      } catch (e) {
-        if (String(e?.name) === "AbortError") return;
-        console.error(e);
-        close();
-      }
-    }
+    const api = Array.isArray(data?.results) ? data.results : [];
+    items = api
+      .filter((x) => x && (x.kind === "brand" || x.kind === "category") && x.value)
+      .slice(0, maxItems)
+      .map((x) => ({
+        ...x,
+        fill: String(x.value || "").trim().toLowerCase(),
+      }));
 
-    async function fetchSuggestions(q) {
-      const qq = norm(q);
-      if (!qq) return close();
+    active = -1;
+    render();
+    clearInlineOnly(); // do not inline-complete for popular
+  } catch (e) {
+    if (String(e?.name) === "AbortError") return;
+    console.error(e);
+    close();
+  }
+}
 
-      if (qq === lastQ) return;
-      lastQ = qq;
+async function fetchSuggestions(q) {
+  const qq = norm(q);
+  if (!qq) return close();
 
-      if (aborter) aborter.abort();
-      aborter = new AbortController();
+  // If we already fetched this query and still have items, do not refetch.
+  if (qq === lastQ && items.length) return;
+  lastQ = qq;
 
-      try {
-        const url = new URL(endpoint, location.origin);
-        url.searchParams.set("q", qq);
-        url.searchParams.set("limit", String(maxItems));
+  if (aborter) aborter.abort();
+  aborter = new AbortController();
 
-        const res = await fetch(url.toString(), { signal: aborter.signal, cache: "no-store" });
-        if (!res.ok) throw new Error(`suggest ${res.status}`);
-        const data = await res.json();
+  try {
+    const url = new URL(endpoint, location.origin);
+    url.searchParams.set("q", qq);
+    url.searchParams.set("limit", String(maxItems));
 
-        const api = Array.isArray(data?.results) ? data.results : [];
+    const res = await fetch(url.toString(), { signal: aborter.signal, cache: "no-store" });
+    if (!res.ok) throw new Error(`suggest ${res.status}`);
+    const data = await res.json();
 
-        const facets = api
-          .filter((x) =>
-            x &&
-            (x.kind === "brand" || x.kind === "category" || x.kind === "combo") &&
-            x.value
-          )
-          .slice(0, maxItems)
-          .map((x) => ({
-            ...x,
-            fill: String(x.value || "").trim().toLowerCase(),
-          }));
+    // If the input changed while request was in flight, ignore stale response.
+    if (norm(input.value) !== qq) return;
 
-        // No built-in pages. Use API facets only.
-        const seen = new Set();
-        items = facets
-          .filter((it) => {
-            const k = `${it.kind}::${String(it.value || "").toLowerCase()}`;
-            if (seen.has(k)) return false;
-            seen.add(k);
-            return true;
-          })
-          .slice(0, maxItems);
+    const api = Array.isArray(data?.results) ? data.results : [];
 
-        active = -1;
-        render();
-        applyInlineTopSuggestion();
-      } catch (e) {
-        if (String(e?.name) === "AbortError") return;
-        console.error(e);
+    const facets = api
+        .filter((x) =>
+          x &&
+          (x.kind === "brand" || x.kind === "category" || x.kind === "combo" || x.kind === "family") &&
+          x.value
+        )
+      .slice(0, maxItems)
+      .map((x) => ({
+        ...x,
+        fill: String(x.value || "").trim().toLowerCase(),
+      }));
 
-        close();
-      }
-    }
+    const seen = new Set();
+    items = facets
+      .filter((it) => {
+        const k = `${it.kind}::${String(it.value || "").toLowerCase()}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .slice(0, maxItems);
+
+    active = -1;
+    render();
+    applyInlineTopSuggestion();
+  } catch (e) {
+    if (String(e?.name) === "AbortError") return;
+    console.error(e);
+    close();
+  }
+}
 
     const debouncedFetch = debounce(fetchSuggestions, 120);
 

@@ -4,6 +4,7 @@ const express = require("express");
 const pool = require("../db");
 
 const router = express.Router();
+const MAX_Q_LEN = 120;
 
 function clampInt(v, lo, hi, fallback) {
   const n = Number.parseInt(String(v ?? ""), 10);
@@ -187,9 +188,10 @@ router.get("/search", (_req, res) => res.redirect(301, "/search/"));
 router.get("/search/", (_req, res) => res.sendFile(SEARCH_HTML));
 router.get("/search/*", (_req, res) => res.sendFile(SEARCH_HTML));
 
-// GET /api/suggest?q=son&limit=8
 router.get("/api/suggest", async (req, res) => {
-  const q = normText(req.query.q);
+  res.set("Cache-Control", "no-store");
+
+  const q = normText(req.query.q).slice(0, MAX_Q_LEN);
   const popular =
     String(req.query.popular || "").trim() === "1" ||
     String(req.query.popular || "").trim().toLowerCase() === "true";
@@ -338,6 +340,46 @@ router.get("/api/suggest", async (req, res) => {
       UNION ALL
       SELECT 'category'::text AS kind, facet_label AS value, products FROM category_counts
     `;
+
+    const modelsSql = `
+  WITH picked AS (
+    SELECT DISTINCT ON (
+      upper(btrim(c.model_number)),
+      COALESCE(NULLIF(lower(btrim(c.version)), ''), '')
+    )
+      c.model_name,
+      btrim(c.model_number) AS model_number,
+      upper(btrim(c.model_number)) AS model_number_norm,
+      COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+      btrim(c.brand) AS brand,
+      btrim(c.category) AS category,
+      c.pci,
+      c.upc,
+      c.created_at,
+      c.id
+    FROM public.catalog c
+    WHERE c.model_number IS NOT NULL AND btrim(c.model_number) <> ''
+      AND (
+        lower(coalesce(c.model_name,'')) LIKE $1
+        OR lower(coalesce(c.model_number,'')) LIKE $1
+        OR lower(coalesce(c.version,'')) LIKE $1
+      )
+    ORDER BY
+      upper(btrim(c.model_number)),
+      COALESCE(NULLIF(lower(btrim(c.version)), ''), ''),
+      c.created_at DESC NULLS LAST,
+      c.id DESC
+  )
+  SELECT
+    btrim(model_number) AS value,
+    pci,
+    upc,
+    brand,
+    category
+  FROM picked
+  ORDER BY value ASC
+  LIMIT $2
+`;
 
     let facetRows = [];
     {
@@ -548,16 +590,46 @@ router.get("/api/suggest", async (req, res) => {
     }
 
     const facetResults = (facetRows || []).sort((a, b) => {
-      const ap = Number(a.products || 0);
-      const bp = Number(b.products || 0);
-      if (bp !== ap) return bp - ap;
-      if (a.kind !== b.kind) return a.kind === "brand" ? -1 : 1;
-      return String(a.value || "").localeCompare(String(b.value || ""));
-    });
+    const ap = Number(a.products || 0);
+    const bp = Number(b.products || 0);
+    if (bp !== ap) return bp - ap;
+    if (a.kind !== b.kind) return a.kind === "brand" ? -1 : 1;
+    return String(a.value || "").localeCompare(String(b.value || ""));
+  });
 
-    const merged = [];
-    if (comboItem) merged.push(comboItem);
-    for (const r of facetResults) merged.push(r);
+  // Fill remaining slots with models (families)
+  const remaining = Math.max(0, limit - (comboItem ? 1 : 0) - facetResults.length);
+  let modelResults = [];
+
+  if (remaining > 0 && qLower.length >= 2) {
+    const mr = await client.query(modelsSql, [likeLoose, remaining]);
+    const rows = Array.isArray(mr.rows) ? mr.rows : [];
+
+    modelResults = rows
+      .filter((r) => r && r.value)
+      .map((r) => {
+        const pci = String(r.pci || "").trim();
+        const upc = String(r.upc || "").trim();
+
+        let href = null;
+        if (pci) href = `/dashboard/pci/${encodeURIComponent(pci)}/`;
+        else if (upc) href = `/dashboard/upc/${encodeURIComponent(upc.replace(/\D/g, ""))}/`;
+
+        // If no PCI/UPC, still let it route as a normal typed search:
+        // we return no href and the client will route() on pick.
+        return {
+          kind: "family",
+          value: String(r.value || "").trim(), // model_number (family key)
+          products: 0,
+          href,
+        };
+      });
+  }
+
+  const merged = [];
+  if (comboItem) merged.push(comboItem);
+  for (const r of facetResults) merged.push(r);
+  for (const r of modelResults) merged.push(r);
 
     const seen = new Set();
     const results = merged
@@ -579,7 +651,9 @@ router.get("/api/suggest", async (req, res) => {
 });
 
 router.get("/api/search", async (req, res) => {
-  const q = normText(req.query.q);
+  res.set("Cache-Control", "no-store");
+
+  const q = normText(req.query.q).slice(0, MAX_Q_LEN);
   if (!q) return res.status(400).json({ ok: false, error: "q is required" });
 
   const page = clampInt(req.query.page, 1, 1000000, 1);
