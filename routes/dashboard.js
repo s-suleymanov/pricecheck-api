@@ -984,6 +984,7 @@ router.get('/api/compare/:key', async (req, res) => {
     const hasMatch = !!seed?.seed_listing || !!seed?.upc || !!seed?.pci;
     if (!hasMatch) {
       return res.status(404).json({
+        ok: false,
         error: 'not_found',
         hint: 'Try prefixes like asin:..., upc:..., pci:..., bby:..., wal:..., tcin:...'
       });
@@ -1024,7 +1025,8 @@ router.get('/api/compare/:key', async (req, res) => {
 
     const families = brand ? await getFamiliesForBrand(client, brand) : [];
 
-    res.json({
+    return res.json({
+      ok: true,
       identity: {
         // seed keys (what we found in listings)
         pci: seed.pci || null,
@@ -1060,7 +1062,7 @@ router.get('/api/compare/:key', async (req, res) => {
     });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'server_error' });
+    res.status(500).json({ ok: false, error: 'server_error' });
   } finally {
     client.release();
   }

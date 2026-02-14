@@ -19,6 +19,66 @@
       "support_page": "https://www.bestbuy.com/support"
     }
   },
+  "bjs": {
+    "name": "BJ's Wholesale Club",
+    "logo": "/logo/seller/bjs.png",
+    "website": "https://www.bjs.com",
+    "owned_by": "BJ's Wholesale Club Holdings, Inc.",
+    "type": "Warehouse Club",
+    "location": "United States",
+    "founded": 1984,
+    "policies": {
+      "return_period": "1 Year (90 days for Tech)",
+      "restocking_fee": "No",
+      "free_shipping_threshold": "$50+",
+      "price_match": "Yes (TVs only)"
+    },
+    "contact": {
+      "phone": "1-800-257-2582",
+      "chat_available": true,
+      "support_page": "https://www.bjs.com/help"
+    }
+  },
+  "abt": {
+    "name": "Abt Electronics",
+    "logo": "/logo/seller/abt.jpg",
+    "website": "https://www.abt.com",
+    "owned_by": "Abt Family",
+    "type": "Consumer Electronics & Appliances",
+    "location": "Glenview, Illinois",
+    "founded": 1936,
+    "policies": {
+      "return_period": "30 Days",
+      "restocking_fee": "Yes (on select opened items)",
+      "free_shipping_threshold": "$35+",
+      "price_match": "Yes"
+    },
+    "contact": {
+      "phone": "1-888-228-5800",
+      "chat_available": true,
+      "support_page": "https://www.abt.com/help"
+    }
+  },
+  "staples": {
+    "name": "Staples",
+    "logo": "/logo/seller/staples.png",
+    "website": "https://www.staples.com",
+    "owned_by": "Sycamore Partners",
+    "type": "Office Supply Retailer",
+    "location": "United States",
+    "founded": 1986,
+    "policies": {
+      "return_period": "30 Days (14 days for Tech)",
+      "restocking_fee": "No",
+      "free_shipping_threshold": "$59.99+",
+      "price_match": "Yes"
+    },
+    "contact": {
+      "phone": "1-800-333-3330",
+      "chat_available": true,
+      "support_page": "https://www.staples.com/hc"
+    }
+  },
   "5th_wheel": {
     "name": "5th Wheel",
     "logo": "",
@@ -101,7 +161,7 @@
   },
   "apple": {
     "name": "Apple",
-    "logo": "/logo/seller/apple.png",
+    "logo": "/logo/seller/apple.jpg",
     "website": "https://www.apple.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1441,7 +1501,7 @@
   },
   "amazon": {
     "name": "Amazon",
-    "logo": "",
+    "logo": "/logo/seller/amazon.jpg",
     "website": "https://www.amazon.com",
     "owned_by": "",
     "type": "Marketplace",
@@ -1461,7 +1521,7 @@
   },
   "walmart": {
     "name": "Walmart",
-    "logo": "",
+    "logo": "/logo/seller/walmart.png",
     "website": "https://www.walmart.com",
     "owned_by": "",
     "type": "Big Box Retailer",
@@ -1481,7 +1541,7 @@
   },
   "target": {
     "name": "Target",
-    "logo": "",
+    "logo": "/logo/seller/target.png",
     "website": "https://www.target.com",
     "owned_by": "",
     "type": "Big Box Retailer",

@@ -32,20 +32,62 @@ body{
 /* ===== Desktop layout with right sidebar ===== */
 .layout{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 350px;
+  grid-template-columns: minmax(0, 1fr) 400px;
   gap: 20px;
   align-items: start;
 }
 
-.maincol{ min-width: 0; }
+/* Hide sidebar scrollbar but keep scroll */
+@media (min-width: 861px){
+  body.has-detail .sidecol{
+    -ms-overflow-style: none;   /* IE/Edge legacy */
+    scrollbar-width: none;      /* Firefox */
+  }
 
-.sidecol{
-  top: auto;
+  body.has-detail .sidecol::-webkit-scrollbar{
+    width: 0;
+    height: 0;
+  }
+
+  body.has-detail .sidecol::-webkit-scrollbar-thumb{
+    background: transparent;
+  }
+}
+
+@media (min-width: 861px){
+
+  /* DETAIL mode: page scrolls normally, sidebar has its own scroll */
+  body.has-detail{
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Make the right column its own scroll container */
+  body.has-detail .sidecol{
+    position: sticky;
+    top: var(--pc-detail-top, 80px);
+
+    /* separate scroll area */
+    height: calc(100vh - var(--pc-detail-top, 80px));
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+
+    /* IMPORTANT: do not hide the scrollbar */
+    scrollbar-width: auto;
+    -ms-overflow-style: auto;
+  }
+
+  /* Ensure any old "sticky panel" rules don’t reintroduce overflow clipping */
+  body.has-detail #detailPanel.side-panel.detail{
+    max-height: none;
+  }
 }
 
 .sidecard{
   padding: 16px;
-  box-shadow: 0 10px 22px rgba(0,0,0,0.04);
 }
 
 .sidecard .side-title{
@@ -60,6 +102,16 @@ body{
   gap: 10px;
 }
 
+.price-from{
+  font-weight: 400;
+  color: #86868b;
+  font-size: 17px;
+}
+
+.price-amt{
+  font-weight: 600;     /* keep the actual number bold */
+}
+
 .seller-icon {
   display: inline-flex;
   align-items: center;
@@ -67,11 +119,21 @@ body{
 }
 
 .seller-icon-img {
-  width: 34px;
-  height: 34px;
+  width: 45px;
+  height: 45px;
   border-radius: 10px;
   object-fit: contain;
   display: block;
+}
+
+@media (min-width: 861px){
+  body.has-detail #detailPanel.side-panel.detail{
+    position: static !important;
+    top: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin-bottom: 20px;
+  }
 }
 
 .seller-icon-badge {
@@ -112,7 +174,7 @@ body{
 
 .swatchbtn.is-active{
   outline: 2px solid currentColor;
-  outline-offset: 2px;
+  outline-offset: 1px;
 }
 
 .pc-swatch {
@@ -125,19 +187,6 @@ body{
   box-shadow: 0 0 0 1px rgba(255,255,255,0.25) inset;
 }
 
-.sidecard .pillbtn{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(0,0,0,0.10);
-  background: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  color: #111;
-}
-
 .sidecard .pillbtn:hover{
   border-color: rgba(0,0,0,0.16);
 }
@@ -147,8 +196,9 @@ body{
 }
 
 .pillbtn.is-active {
-  outline: 2px solid currentColor;
+  outline: 1px solid #86868b;
 }
+
 .side-block { margin-top: 12px; }
 .side-label { font-size: 16px; opacity: 0.7; margin: 20px 0 8px 0; }
 
@@ -207,16 +257,109 @@ h1{
   margin-left: 4px;
 }
 
+#detailPanel.side-panel.detail{
+  display: block;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  background: #fff;
+
+  position: sticky;
+  top: 16px;
+
+  /* Do not clip content */
+  max-height: none;
+  overflow: visible;
+}
+
+.detail-expand {
+  margin-top: 1px;
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.detail-close {
+  border: none;
+  padding: 0;
+  border-radius: 10px;
+  background-color: #fff;
+  width: 34px;
+  height: 34px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.detail-head-brand {
+  font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.detail-top {
+  margin-bottom: 10px;
+}
+
+.detail-title {
+  font-size: 34px;
+  font-weight: 500;
+}
+
+.detail-img-wrap {
+  margin: 10px 0 12px;
+}
+
+.detail-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  object-fit: contain;
+  background: rgba(0,0,0,0.03);
+}
+
+.offer-price{
+  white-space: nowrap;
+}
+
+.offer-icon{
+  flex: 0 0 auto;
+}
+
+.detail-offer-price {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.offer-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.offer-icon svg {
+  display: block;
+}
+
+/* keeps alignment when no link exists */
+.offer-icon-spacer {
+  width: 28px;
+  height: 28px;
+  display: inline-block;
+}
+
 @media (max-width: 520px){
   .card.item .kbd{ display: none; }
 }
-
-.controls .row #meta:empty{
-  display: none;
-}
-
-.dym-wrap{ display:inline; }
-.pc-dym-q{ margin-left:1px; }
 
 .empty-inline .msg{
   display: flex;
@@ -228,6 +371,205 @@ h1{
 .empty-inline .msg strong{
   color: #111;
   font-weight: 600;
+}
+
+.card-variants .morelink {
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.price-row{
+  display: inline-flex;          /* keep the whole price + logos as one tight unit */
+  align-items: center;
+  justify-content: flex-start;   /* no pushing away */
+  gap: 8px;                      /* small space between price and logos */
+  margin-top: 10px;              /* keep your existing spacing where .price had it */
+}
+
+/* remove top margin from .price because the row owns spacing now */
+.price{
+  margin-top: 0;
+}
+
+/* circles */
+.store-badge{
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: #fff;
+  display: block;
+}
+
+/* store badges: vertical stack (top to bottom, no overlap, no z-index) */
+.store-stack{
+  margin-left: 10px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+/* make sure each badge is its own row */
+.store-stack > *{
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+/* ensure the image fills the box */
+.store-stack img.store-badge{
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.store-stack > * + *{
+  margin-left: -6px;       /* adjust: -4px (less) to -10px (more) */
+}
+
+/* make the +N badge match circle sizing */
+.store-badge-more,
+.store-badge-fallback{
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.card-variants{
+  display: flex;
+  flex-wrap: nowrap;      /* never allow a second row */
+  gap: 8px;
+  padding: 8px 1px 1px 1px;
+  overflow: hidden;       /* hide anything that would overflow */
+  min-width: 0;           /* critical for grid items */
+}
+
+.card-variants .pillbtn{
+  flex: 0 0 auto;          /* critical: prevents shrinking */
+  white-space: nowrap;     /* keep it one line */
+  overflow: visible;       /* no clipping inside the pill */
+  text-overflow: clip;     /* no ellipsis */
+  max-width: none;         /* in case you added one */
+}
+
+.pillbtn{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    color: #111;
+}
+
+.pillbtn:hover{
+  border-color: rgba(0,0,0,0.16);
+}
+
+.pillbtn:active{
+  transform: translateY(1px);
+}
+
+/* Detail panel spacing */
+#detailPanel .detail-variants{
+  margin-top: 6px;
+}
+
+#detailPanel .pillrow{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ===== Offers block (matches your .offer-row markup) ===== */
+.offers{
+  margin-top: 14px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.offer-row{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 20px;
+  padding-bottom: 10px;
+}
+
+.offer-row:first-child{
+  border-top: 0;
+}
+
+.offer-store{
+  min-width: 0;
+  flex: 1;
+  font-size: 18px;
+}
+
+.offer-right{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.offer-price{
+  font-weight: 550;
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+.offer-tag{
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.offer-link a{
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.offer-link a:hover{
+  text-decoration: underline;
+}
+
+/* Coupon line spans full width under the row */
+.offer-coupon{
+  grid-column: 1 / -1;
+  margin-top: -4px;
+  font-size: 13px;
+}
+
+/* Small screens: collapse to 2 columns */
+@media (max-width: 520px){
+  .offer-row{
+    grid-template-columns: 1fr auto;
+  }
+
+  .offer-tag{
+    grid-column: 1 / -1;
+    text-align: left;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .offer-link{
+    text-align: right;
+  }
 }
 
 .empty-inline a.pc-dym{
@@ -305,132 +647,10 @@ h1{
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
-  box-shadow: 0 10px 22px rgba(0,0,0,0.04);
-}
-
-#empty{
-  font-size: 18px;
-  margin-top: 16px;
-  padding: 18px;
-  text-align: center;
-  color: var(--muted);
-  border: 1px dashed rgba(0,0,0,0.14);
-  background: #fff;
-  box-shadow: none;
 }
 
 #sidecol > :not([hidden]) + :not([hidden]) {
   margin-top: 20px;
-}
-
-#empty .empty-title{
-  font-weight: 600;
-  color: #111;
-  margin-bottom: 6px;
-}
-/* Brand info: bordered mini table (no heading) */
-.brandinfo{
-  margin-top: 14px;
-  padding: 12px 12px;
-  border: 1px solid rgba(0,0,0,0.10);
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.03);
-  display: grid;
-}
-
-/* rows */
-.brandinfo .bi-row{
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  column-gap: 12px;
-  padding: 7px 0;
-  align-items: center;
-}
-
-/* key and value typography matches sidebar vibe */
-.brandinfo .bi-k{
-  font-size: 16px;
-  color: var(--muted);
-  letter-spacing: 0;
-}
-
-/* Brand title row with optional external link icon */
-.side-head{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.side-head .side-title{
-  margin: 0;
-  flex: 1;
-}
-
-.side-ext{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #111;
-  text-decoration: none;
-  flex: 0 0 auto;
-}
-
-.side-ext svg{
-  width: 40px;
-  height: 40px;
-  fill: currentColor;
-  transform: translateX(0) translateY(6px);
-}
-
-.brandinfo .bi-v{
-  font-size: 16px;
-  color: #111;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  justify-self: end; /* gives the "table" feel */
-  text-align: right;
-}
-
-/* Owned by link should look clickable but not loud */
-.brandinfo .bi-link{
-  color: #111;
-  text-decoration: underline;
-}
-
-.brandinfo .bi-link:hover{
-  opacity: 0.85;
-}
-
-/* If the value is short, avoid awkward right-edge clipping */
-.brandinfo .bi-v:has(.bi-link){
-  white-space: nowrap;
-}
-
-#empty .empty-suggest{
-  margin-top: 6px;
-}
-
-#empty .empty-tip{
-  margin-top: 10px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-#empty a.pc-dym{
-  color: inherit;
-  text-decoration: underline;
-  font-weight: 600;
-}
-
-.card.item:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 16px 34px rgba(0,0,0,0.07);
-  border-color: rgba(0,0,0,0.12);
 }
 
 .thumb{
@@ -484,7 +704,6 @@ h1{
 .price{
   font-weight: 600;
   font-size: 22px;
-  margin-top: 30px;
   white-space: nowrap;
 }
 
@@ -513,20 +732,11 @@ h1{
 
   .card{
     border-radius: 18px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
   }
 
   .card.item{
     display: block;
     padding: 0;
-    box-shadow: 0 10px 22px rgba(0,0,0,0.04);
-    transition: transform 120ms ease, box-shadow 120ms ease;
-  }
-
-  .card.item:hover{
-    transform: translateY(-2px);
-    box-shadow: 0 14px 28px rgba(0,0,0,0.06);
-    background: #fff;
   }
 
   .thumb{
