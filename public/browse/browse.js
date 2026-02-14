@@ -16,6 +16,29 @@
       .replaceAll("'", "&#39;");
   }
 
+  function safeHref(raw, { sameOrigin = false } = {}) {
+  const s = String(raw ?? "").trim();
+  if (!s) return "";
+
+  try {
+    // Base relative URLs on current origin
+    const u = new URL(s, location.origin);
+
+    // Block dangerous schemes (javascript:, data:, file:, etc.)
+    if (u.protocol !== "http:" && u.protocol !== "https:") return "";
+
+    // If we require same-origin, enforce it and return a relative path
+    if (sameOrigin) {
+      if (u.origin !== location.origin) return "";
+      return `${u.pathname}${u.search}${u.hash}`;
+    }
+
+    return u.href;
+  } catch (_e) {
+    return "";
+  }
+}
+
   function slugify(s) {
     return String(s ?? "")
       .trim()
@@ -459,7 +482,7 @@
 
     return `
       <a class="card item"
-        href="${href}"
+        href="${escapeHtml(href)}"
         data-dash-key="${escapeHtml(dashKey)}"
         data-title="${escapeHtml(displayName)}"
         data-brand="${escapeHtml(brandLine)}"
@@ -967,7 +990,7 @@ async function ensureCardVariantsLoaded(cardEl) {
     // Also update card's "From" price + store logos using ALL offers
     await updateCardPriceFromAllOffers(cardEl, Array.isArray(data?.offers) ? data.offers : []);
   } catch (_e) {
-    // If it fails, let it be. You can optionally clear data-variants-loaded here.
+      try { cardEl.removeAttribute("data-variants-loaded"); } catch (_x) {}
   }
 }
 
@@ -1496,7 +1519,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
       if (dym) {
         const shownQ = rawQ ? `"${escapeHtml(rawQ)}"` : "your search";
-        const href = String(dym.href || "").trim();
+        const href = safeHref(dym.href, { sameOrigin: true }) || "/browse/";
 
         setInlineEmptyHtml(`
           <div class="msg">
@@ -1817,7 +1840,10 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     const panel = ensureDetailPanel();
     if (!panel) return;
 
-    const dashHref = state.detailDashKey ? dashPathFromKeyAndTitle(state.detailDashKey, state.detailTitle || "product") : "/dashboard/";
+    const dashHrefRaw = state.detailDashKey
+      ? dashPathFromKeyAndTitle(state.detailDashKey, state.detailTitle || "product")
+      : "/dashboard/";
+    const dashHref = safeHref(dashHrefRaw, { sameOrigin: true }) || "/dashboard/";
     panel.hidden = false;
 
     panel.innerHTML = `
@@ -1860,9 +1886,10 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     const panel = ensureDetailPanel();
     if (!panel) return;
 
-    const dashHref = state.detailDashKey
+    const dashHrefRaw = state.detailDashKey
       ? dashPathFromKeyAndTitle(state.detailDashKey, state.detailTitle || "product")
       : "/dashboard/";
+    const dashHref = safeHref(dashHrefRaw, { sameOrigin: true }) || "/dashboard/";
 
     panel.hidden = false;
 
@@ -1997,9 +2024,10 @@ async function applyCardVariantSelection(cardEl, nextKey) {
       : "";
 
     const offerRows = renderOfferRows(offers);
-    const dashHref = state.detailDashKey
+    const dashHrefRaw = state.detailDashKey
       ? dashPathFromKeyAndTitle(state.detailDashKey, state.detailTitle || "product")
       : "/dashboard/";
+    const dashHref = safeHref(dashHrefRaw, { sameOrigin: true }) || "/dashboard/";
 
     panel.hidden = false;
     panel.innerHTML = `
@@ -2214,7 +2242,8 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
 
         const tag = String(o?.offer_tag || "").trim();
 
-        const link = String(o?.url || "").trim() || canonicalOfferLink(storeRaw, o);
+        const rawLink = String(o?.url || "").trim() || canonicalOfferLink(storeRaw, o);
+        const link = safeHref(rawLink);
         const cpn = couponLine(o);
 
         return `
@@ -2305,6 +2334,11 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
     await restoreFacetPanelsAfterDetail();
   }
 
+  function isMobileBrowseView() {
+  // Match your CSS breakpoint where .sidecol is hidden
+  return window.matchMedia("(max-width: 860px)").matches;
+  }
+
   // ----------------------------
   // Wire UI events
   // ----------------------------
@@ -2378,7 +2412,6 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
           return;
         }
 
-        // 3) card click -> open detail sidebar
         const a = e.target.closest('a.card.item[href]');
         if (!a) return;
 
@@ -2388,6 +2421,14 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
 
         const dashKey = String(a.getAttribute("data-dash-key") || "").trim();
         if (!dashKey) return;
+
+        if (isMobileBrowseView()) return;
+
+        if (state.detailOpen && normLower(state.detailDashKey) === normLower(dashKey)) {
+          e.preventDefault();
+          closeDetail();
+          return;
+        }
 
         e.preventDefault();
 
