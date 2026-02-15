@@ -2088,6 +2088,8 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   const VIP = {
     bestbuy: "Best Buy",
     bjs: "BJ's",
+    microcenter: "Micro Center",
+    gopro: "GoPro",
     bhphotovideo: "B&H Photo",
     prime: "Amazon Prime",
     hp: "HP",

@@ -19,6 +19,26 @@
       "support_page": "https://www.bestbuy.com/support"
     }
   },
+  "microcenter": {
+    "name": "Micro Center",
+    "logo": "/logo/seller/microcenter.jpg",
+    "website": "https://www.microcenter.com",
+    "owned_by": "Micro Electronics, Inc.",
+    "type": "Computer & Electronics Retailer",
+    "location": "United States",
+    "founded": 1979,
+    "policies": {
+      "return_period": "15-30 Days (Category dependent)",
+      "restocking_fee": "No (Unless parts missing/damaged)",
+      "free_shipping_threshold": "Varies (Many items in-store only)",
+      "price_match": "Yes"
+    },
+    "contact": {
+      "phone": "1-800-207-3434",
+      "chat_available": true,
+      "support_page": "https://www.microcenter.com/site/content/tech-support.aspx"
+    }
+  },
   "alibaba": {
     "name": "Alibaba.com",
     "logo": "/logo/seller/alibaba.jpg",
