@@ -312,15 +312,15 @@ h1{
 
 .detail-img-wrap {
   margin: 10px 0 12px;
+  border-radius: 12px;
+  aspect-ratio: 1 / 1;
 }
 
 .detail-img {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
-  border-radius: 12px;
   object-fit: contain;
-  background: rgba(0,0,0,0.03);
 }
 
 .offer-price{
