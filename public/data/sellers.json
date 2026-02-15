@@ -1101,7 +1101,7 @@
   },
   "segway": {
     "name": "Segway",
-    "logo": "",
+    "logo": "/logo/seller/segway.png",
     "website": "https://www.segway.com",
     "owned_by": "",
     "type": "Proprietary",

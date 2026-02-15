@@ -680,6 +680,65 @@
     });
   }
 
+    // ----------------------------
+  // Variant label sorting (capacity-aware)
+  // ----------------------------
+  const _labelCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
+  function capacityGbFromLabel(lbl) {
+    const s = String(lbl || "").trim();
+    if (!s) return null;
+
+    // Match first capacity-like token: "256GB", "1 TB", "0.5TB", etc.
+    const m = s.match(/(\d+(?:\.\d+)?)\s*(tb|gb|mb|kb)\b/i);
+    if (!m) return null;
+
+    const num = Number(m[1]);
+    if (!Number.isFinite(num)) return null;
+
+    const unit = String(m[2] || "").toLowerCase();
+
+    // Compare in GB units (only relative ordering matters)
+    const mult =
+      unit === "tb" ? 1024 :
+      unit === "gb" ? 1 :
+      unit === "mb" ? 1 / 1024 :
+      unit === "kb" ? 1 / (1024 * 1024) :
+      null;
+
+    if (mult == null) return null;
+    return num * mult;
+  }
+
+  function sortVariantOptions(options) {
+    const arr = (Array.isArray(options) ? options : []).map((o, i) => ({ ...o, _i: i }));
+
+    arr.sort((a, b) => {
+      const ag = capacityGbFromLabel(a.label);
+      const bg = capacityGbFromLabel(b.label);
+
+      // If both look like capacities, sort ascending: 256GB < 512GB < 1TB
+      if (ag != null && bg != null) {
+        if (ag < bg) return -1;
+        if (ag > bg) return 1;
+        return a._i - b._i;
+      }
+
+      // If only one is a capacity, put capacities first
+      if (ag != null && bg == null) return -1;
+      if (ag == null && bg != null) return 1;
+
+      // Fallback: natural sort ("8GB" < "16GB", "10 core" > "8 core")
+      const c = _labelCollator.compare(String(a.label || ""), String(b.label || ""));
+      if (c) return c;
+
+      // Stable tie-breaker
+      return a._i - b._i;
+    });
+
+    return arr.map(({ _i, ...rest }) => rest);
+  }
+
   function variantOptionsForSelectedKey(variants, selectedKey, contextTitle) {
   const list = Array.isArray(variants) ? variants : [];
   if (!list.length) return { options: [], activeVariant: "", curKey: "" };
@@ -726,7 +785,7 @@
     if (!map.has(lk)) map.set(lk, { label: lbl, key });
   }
 
-  const options = Array.from(map.values());
+  const options = sortVariantOptions(Array.from(map.values()));
   if (options.length < 2) return { options: [], activeVariant: "", curKey };
 
   // Do not guess the active label if the current row does not have a real label.
@@ -1087,6 +1146,37 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     })();
 
     return _colorMapPromise;
+  }
+
+  // ----------------------------
+  // Store name overrides (cached once)
+  // ----------------------------
+  const STORE_NAME_OVERRIDES = Object.create(null);
+  let STORE_OVERRIDES_LOADED = false;
+
+  async function loadNameOverridesOnce() {
+    if (STORE_OVERRIDES_LOADED) return;
+    STORE_OVERRIDES_LOADED = true;
+
+    try {
+      const res = await fetch("/data/name_overrides.json", {
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) return;
+
+      const json = await res.json();
+      const map = json && typeof json === "object" ? json.store_names : null;
+      if (!map || typeof map !== "object") return;
+
+      for (const [k, v] of Object.entries(map)) {
+        const key = String(k || "").trim().toLowerCase();
+        const val = String(v || "").trim();
+        if (!key || !val) continue;
+        STORE_NAME_OVERRIDES[key] = val;
+      }
+    } catch (_e) {
+      // Silent fallback: keep generic capitalization if JSON can't load.
+    }
   }
 
   // ----------------------------
@@ -2082,28 +2172,15 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   }
 
   function formatStoreName(storeRaw) {
-  const id = storeKeySimple(storeRaw);
+    const id = storeKeySimple(storeRaw);
 
-  // 1) VIP list for weird spacing, punctuation, acronyms
-  const VIP = {
-    bestbuy: "Best Buy",
-    bjs: "BJ's",
-    logitechg: "Logitech G",
-    microcenter: "Micro Center",
-    gopro: "GoPro",
-    bhphotovideo: "B&H Photo",
-    prime: "Amazon Prime",
-    hp: "HP",
-    abt: "Abt Electronics",
-    "5thwheel": "5th Wheel"
-  };
+    // 1) Central overrides (spacing, punctuation, acronyms)
+    if (id && STORE_NAME_OVERRIDES[id]) return STORE_NAME_OVERRIDES[id];
 
-  if (VIP[id]) return VIP[id];
-
-  // 2) Fallback: "walmart" -> "Walmart", "newegg" -> "Newegg"
-  if (!id) return String(storeRaw || "").trim();
-  return id.charAt(0).toUpperCase() + id.slice(1);
-}
+    // 2) Fallback: "walmart" -> "Walmart", "newegg" -> "Newegg"
+    if (!id) return String(storeRaw || "").trim();
+    return id.charAt(0).toUpperCase() + id.slice(1);
+  }
 
 async function storeLogoUrlForKey(storeKey) {
   const k = String(storeKey || "").trim().toLowerCase();
@@ -2632,10 +2709,13 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
   // ----------------------------
   // Boot
   // ----------------------------
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
     cacheEls();
     readUrl();
     wire();
+
+    await loadNameOverridesOnce();
+
     writeUrl({ replace: true });
     load();
   });

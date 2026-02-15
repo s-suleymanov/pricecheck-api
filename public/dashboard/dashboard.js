@@ -16,6 +16,33 @@
     families: []   
   };
 
+    // Store-name overrides loaded from /public/data/name_overrides.json
+  const STORE_NAME_OVERRIDES = Object.create(null);
+  let STORE_OVERRIDES_LOADED = false;
+
+  async function loadNameOverridesOnce(){
+    if (STORE_OVERRIDES_LOADED) return;
+    STORE_OVERRIDES_LOADED = true;
+
+    try {
+      const res = await fetch('/data/name_overrides.json', { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) return;
+      const json = await res.json();
+
+      const map = json && typeof json === 'object' ? json.store_names : null;
+      if (!map || typeof map !== 'object') return;
+
+      for (const [k, v] of Object.entries(map)) {
+        const key = String(k || '').trim().toLowerCase();
+        const val = String(v || '').trim();
+        if (!key || !val) continue;
+        STORE_NAME_OVERRIDES[key] = val;
+      }
+    } catch {
+      // Silent fallback: keep local title-casing behavior if JSON can't load.
+    }
+  }
+
   function setJsonLd(obj) {
     let el = document.querySelector('script[data-pc-jsonld="1"]');
     if (!el) {
@@ -316,47 +343,11 @@
     if (!raw) return '';
 
     const key = raw.toLowerCase();
-    const OVERRIDE = {
-      amazon: 'Amazon',
-      target: 'Target',
-      walmart: 'Walmart',
-      bestbuy: 'Best Buy',
-      bby: 'Best Buy',
-      soloperformance: 'Solo Performance',
-      radicaladventures: 'Radical Adventures',
-      brandsmart: 'BrandsMart',
-      jbl: 'JBL',
-      aliexpress: 'AliExpress',
-      macys: "Macy's",
-      niu: "NIU",
-      voromotors: "Voro Motors",
-      electricsport: 'Electric Sport',
-      electricride: 'Electric Ride',
-      apple: 'Apple',
-      dji: 'DJI',
-      segway: 'Segway',
-      iscooter: 'iScooter',
-      lg: 'LG',
-      microcenter: "Micro Center",
-      bjs: "BJ's",
-      sony: 'Sony',
-      asus: 'ASUS',
-      hp: 'HP',
-      dell: 'Dell',
-      bose: 'Bose',
-      samsclub: "Sam's Club",
-      lowes: "Lowe's",
-      ebay: "Ebay",
-      alibaba: "Alibaba",
-      aovo: "AOVO",
-      logitechg: "Logitech G",
-      macys: "Macy's",
-      "5thwheel": "5th Wheel",
-      turtlebeach: "Turtle Beach",
-      gamestop: "GameStop"
-    };
-    if (OVERRIDE[key]) return OVERRIDE[key];
 
+    // Use centralized overrides if available
+    if (STORE_NAME_OVERRIDES[key]) return STORE_NAME_OVERRIDES[key];
+
+    // If already mixed case, do not mangle it
     if (/[A-Z].*[A-Z]/.test(raw) || /[a-z].*[A-Z]/.test(raw)) return raw;
 
     return raw
@@ -416,24 +407,24 @@
     const identity = data?.identity || {};
     const k = String(key || '').trim();
 
-  function mapToExistingVariantKey(kind, rawVal){
-    const val = String(rawVal || '').trim();
-    if (!val || !variants.length) return null;
+    function mapToExistingVariantKey(kind, rawVal){
+      const val = String(rawVal || '').trim();
+      if (!val || !variants.length) return null;
 
-    if (kind === 'upc') {
-      const want = cleanUpc(val);
-      const hit = variants.find(v => cleanUpc(v?.upc) === want);
-      return hit?.key || null;
+      if (kind === 'upc') {
+        const want = cleanUpc(val);
+        const hit = variants.find(v => cleanUpc(v?.upc) === want);
+        return hit?.key || null;
+      }
+
+      if (kind === 'pci') {
+        const want = up(val);
+        const hit = variants.find(v => up(v?.pci) === want);
+        return hit?.key || null;
+      }
+
+      return null;
     }
-
-    if (kind === 'pci') {
-      const want = up(val);
-      const hit = variants.find(v => up(v?.pci) === want);
-      return hit?.key || null;
-    }
-
-    return null;
-  }
 
   if (/^(pci|upc):/i.test(k)) {
     const byKey = variants.find(v => String(v?.key || '') === k);
@@ -848,8 +839,10 @@ if (variantSel) {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   wireIdPillsCopy();
+  await loadNameOverridesOnce();
+
   const key = currentKeyFromUrl() || "";
   if (!key.trim()) {
     document.getElementById("pTitle").textContent = "Search a product to view the dashboard.";
