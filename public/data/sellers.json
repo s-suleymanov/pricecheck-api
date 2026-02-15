@@ -19,6 +19,46 @@
       "support_page": "https://www.bestbuy.com/support"
     }
   },
+  "alibaba": {
+    "name": "Alibaba.com",
+    "logo": "/logo/seller/alibaba.jpg",
+    "website": "https://www.alibaba.com",
+    "owned_by": "Alibaba Group",
+    "type": "B2B Wholesale Marketplace",
+    "location": "China",
+    "founded": 1999,
+    "policies": {
+      "return_period": "Varies by supplier (Trade Assurance: ~30 days)",
+      "restocking_fee": "Varies by supplier",
+      "free_shipping_threshold": "Varies by supplier (Negotiable)",
+      "price_match": "Negotiable (Wholesale pricing)"
+    },
+    "contact": {
+      "phone": "N/A (Online only)",
+      "chat_available": true,
+      "support_page": "https://service.alibaba.com"
+    }
+  },
+  "aliexpress": {
+    "name": "AliExpress",
+    "logo": "/logo/seller/aliexpress.png",
+    "website": "https://www.aliexpress.com",
+    "owned_by": "Alibaba Group",
+    "type": "Online Marketplace",
+    "location": "China",
+    "founded": 2010,
+    "policies": {
+      "return_period": "15 Days",
+      "restocking_fee": "Varies by seller",
+      "free_shipping_threshold": "Varies (often $10+ for Choice items)",
+      "price_match": "Yes (Select items)"
+    },
+    "contact": {
+      "phone": "N/A (Online only)",
+      "chat_available": true,
+      "support_page": "https://service.aliexpress.com"
+    }
+  },
   "bjs": {
     "name": "BJ's Wholesale Club",
     "logo": "/logo/seller/bjs.png",
@@ -79,9 +119,9 @@
       "support_page": "https://www.staples.com/hc"
     }
   },
-  "5th_wheel": {
+  "5thwheel": {
     "name": "5th Wheel",
-    "logo": "",
+    "logo": "/logo/seller/5th.jpg",
     "website": "https://ride5thwheel.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -681,7 +721,7 @@
   },
   "logitech": {
     "name": "Logitech",
-    "logo": "",
+    "logo": "/logo/seller/logi.png",
     "website": "https://www.logitech.com",
     "owned_by": "",
     "type": "Proprietary",

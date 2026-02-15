@@ -2092,6 +2092,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     prime: "Amazon Prime",
     hp: "HP",
     abt: "Abt Electronics",
+    "5thwheel": "5th Wheel"
   };
 
   if (VIP[id]) return VIP[id];
@@ -2216,17 +2217,7 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
     return "";
   }
 
-  function couponLine(o) {
-    const bits = [];
-    const t = String(o?.coupon_text || "").trim();
-    const c = String(o?.coupon_code || "").trim();
-    if (o?.coupon_requires_clip === true) bits.push("Clip coupon");
-    if (c) bits.push(`Code ${c}`);
-    if (t) bits.push(t);
-    return bits.join(" • ");
-  }
-
-    function renderOfferRows(offers) {
+  function renderOfferRows(offers) {
     const rows = (offers || [])
       .map((o) => {
         const storeRaw = String(o?.store || "").trim();
@@ -2244,11 +2235,12 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
 
         const rawLink = String(o?.url || "").trim() || canonicalOfferLink(storeRaw, o);
         const link = safeHref(rawLink);
-        const cpn = couponLine(o);
 
         return `
           <div class="offer-row">
             <div class="offer-store">${escapeHtml(store)}</div>
+
+            ${tag ? `<div class="offer-tag muted">${escapeHtml(tag)}</div>` : ""}
 
             <div class="offer-right">
               <div class="offer-price">${escapeHtml(shown || "")}</div>
@@ -2267,9 +2259,6 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
                   : `<span class="offer-icon-spacer" aria-hidden="true"></span>`
               }
             </div>
-
-            ${tag ? `<div class="offer-tag muted">${escapeHtml(tag)}</div>` : ""}
-            ${cpn ? `<div class="offer-coupon muted">${escapeHtml(cpn)}</div>` : ""}
           </div>
         `;
       })
