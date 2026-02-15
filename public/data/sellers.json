@@ -661,7 +661,7 @@
   },
   "hyperx": {
     "name": "HyperX",
-    "logo": "",
+    "logo": "/logo/seller/hyperx.jpg",
     "website": "https://hyperx.com",
     "owned_by": "HP",
     "type": "Proprietary",
@@ -1261,7 +1261,7 @@
   },
   "steelseries": {
     "name": "SteelSeries",
-    "logo": "",
+    "logo": "/logo/seller/steelseries.png",
     "website": "https://steelseries.com",
     "owned_by": "",
     "type": "Proprietary",
