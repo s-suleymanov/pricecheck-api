@@ -1081,22 +1081,22 @@
   },
   "samsung": {
     "name": "Samsung",
-    "logo": "",
+    "logo": "/logo/seller/samsung.webp",
     "website": "https://www.samsung.com",
     "owned_by": "",
-    "type": "Proprietary",
+    "type": "Manufacturer Direct / Consumer Electronics",
     "location": "South Korea",
-    "founded": null,
+    "founded": 1969,
     "policies": {
-      "return_period": "See Website",
-      "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
-      "price_match": "Unknown"
+      "return_period": "15 Days (Standard)",
+      "restocking_fee": "Yes (5% on select items)",
+      "free_shipping_threshold": "Free (Most items)",
+      "price_match": "Yes (Valid within 7 days)"
     },
     "contact": {
-      "phone": null,
-      "chat_available": false,
-      "support_page": null
+      "phone": "1-800-726-7864",
+      "chat_available": true,
+      "support_page": "https://www.samsung.com/us/support"
     }
   },
   "segway": {

@@ -349,6 +349,7 @@
       ebay: "Ebay",
       alibaba: "Alibaba",
       aovo: "AOVO",
+      logitechg: "Logitech G",
       macys: "Macy's",
       "5thwheel": "5th Wheel"
     };
