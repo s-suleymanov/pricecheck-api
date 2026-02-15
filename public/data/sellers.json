@@ -259,9 +259,9 @@
       "support_page": null
     }
   },
-  "audio_technica": {
+  "audio-technica": {
     "name": "Audio Technica",
-    "logo": "",
+    "logo": "/logo/seller/audio.png",
     "website": "https://www.audio-technica.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -601,7 +601,7 @@
   },
   "google": {
     "name": "Google",
-    "logo": "",
+    "logo": "/logo/seller/google.png",
     "website": "https://about.google",
     "owned_by": "Alphabet",
     "type": "Proprietary",
@@ -1161,7 +1161,7 @@
   },
   "shokz": {
     "name": "Shokz",
-    "logo": "",
+    "logo": "/logo/seller/shokz.png",
     "website": "https://shokz.com",
     "owned_by": "",
     "type": "Proprietary",
