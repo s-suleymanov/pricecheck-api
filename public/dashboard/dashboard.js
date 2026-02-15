@@ -351,7 +351,9 @@
       aovo: "AOVO",
       logitechg: "Logitech G",
       macys: "Macy's",
-      "5thwheel": "5th Wheel"
+      "5thwheel": "5th Wheel",
+      turtlebeach: "Turtle Beach",
+      gamestop: "GameStop"
     };
     if (OVERRIDE[key]) return OVERRIDE[key];
 

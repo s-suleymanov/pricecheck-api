@@ -181,7 +181,7 @@
   },
   "anker": {
     "name": "Anker",
-    "logo": "",
+    "logo": "/logo/seller/anker.png",
     "website": "https://www.anker.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1641,7 +1641,7 @@
   },
   "newegg": {
     "name": "Newegg",
-    "logo": "",
+    "logo": "/logo/seller/newegg.webp",
     "website": "https://www.newegg.com",
     "owned_by": "",
     "type": "Online Retailer",
