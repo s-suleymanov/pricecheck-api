@@ -1899,7 +1899,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
           ${state.detailBrand ? `<div class="detail-head-brand muted">${escapeHtml(state.detailBrand)}</div>` : ""}
         </div>
 
-        <div class="detail-head-right" style="display:flex; align-items:center; gap:10px;">
+        <div class="detail-head-right" style="display:flex; align-items:center; gap:20px;">
           <a class="detail-expand"
             href="${escapeHtml(dashHref)}"
             title="Open dashboard"
@@ -2036,7 +2036,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
           ${state.detailBrand ? `<div class="detail-head-brand muted">${escapeHtml(state.detailBrand)}</div>` : ""}
         </div>
 
-        <div class="detail-head-right" style="display:flex; align-items:center; gap:10px;">
+        <div class="detail-head-right" style="display:flex; align-items:center; gap:20px;">
           <a class="detail-expand"
             href="${escapeHtml(dashHref)}"
             title="Open dashboard"
