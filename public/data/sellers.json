@@ -321,7 +321,7 @@
   },
   "belkin": {
     "name": "Belkin",
-    "logo": "",
+    "logo": "/logo/seller/belkin.png",
     "website": "https://www.belkin.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -401,7 +401,7 @@
   },
   "corsair": {
     "name": "Corsair",
-    "logo": "",
+    "logo": "/logo/seller/corsair.jpeg",
     "website": "https://www.corsair.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -441,7 +441,7 @@
   },
   "dji": {
     "name": "DJI",
-    "logo": "",
+    "logo": "/logo/seller/dji.jpg",
     "website": "https://www.dji.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -621,7 +621,7 @@
   },
   "hiboy": {
     "name": "Hiboy",
-    "logo": "",
+    "logo": "/logo/seller/hiboy.png",
     "website": "https://hiboy.com",
     "owned_by": "",
     "type": "Private Label",
@@ -1201,7 +1201,7 @@
   },
   "skullcandy": {
     "name": "Skullcandy",
-    "logo": "",
+    "logo": "/logo/seller/skull.png",
     "website": "https://www.skullcandy.com",
     "owned_by": "",
     "type": "Proprietary",
