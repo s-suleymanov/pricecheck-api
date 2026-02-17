@@ -226,17 +226,17 @@
     "owned_by": "",
     "type": "Proprietary",
     "location": "United States",
-    "founded": null,
+    "founded": "1976",
     "policies": {
-      "return_period": "See Website",
-      "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
-      "price_match": "Unknown"
+      "return_period": "14 days",
+      "restocking_fee": "None",
+      "free_shipping_threshold": "No minimum",
+      "price_match": "Yes"
     },
     "contact": {
-      "phone": null,
-      "chat_available": false,
-      "support_page": null
+      "phone": "1-800-692-7753",
+      "chat_available": true,
+      "support_page": "https://support.apple.com"
     }
   },
   "arlo": {
@@ -260,23 +260,23 @@
     }
   },
   "audio-technica": {
-    "name": "Audio Technica",
+    "name": "Audio-Technica",
     "logo": "/logo/seller/audio.png",
     "website": "https://www.audio-technica.com",
     "owned_by": "",
     "type": "Proprietary",
     "location": "Japan",
-    "founded": null,
+    "founded": "1962",
     "policies": {
-      "return_period": "See Website",
-      "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
-      "price_match": "Unknown"
+      "return_period": "30 days",
+      "restocking_fee": "None",
+      "free_shipping_threshold": "$49",
+      "price_match": "No"
     },
     "contact": {
-      "phone": null,
+      "phone": "1-800-376-5318",
       "chat_available": false,
-      "support_page": null
+      "support_page": "https://www.audio-technica.com/en-us/support"
     }
   },
   "bang_olufsen": {
@@ -301,22 +301,22 @@
   },
   "beats": {
     "name": "Beats",
-    "logo": "",
+    "logo": "/logo/seller/beats.svg",
     "website": "https://www.beatsbydre.com",
     "owned_by": "Apple",
     "type": "Proprietary",
     "location": "United States",
-    "founded": null,
+    "founded": "2006",
     "policies": {
-      "return_period": "See Website",
-      "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
-      "price_match": "Unknown"
+      "return_period": "14 days",
+      "restocking_fee": "None",
+      "free_shipping_threshold": "No minimum",
+      "price_match": "Yes"
     },
     "contact": {
-      "phone": null,
-      "chat_available": false,
-      "support_page": null
+      "phone": "1-800-442-4000",
+      "chat_available": true,
+      "support_page": "https://www.beatsbydre.com/support"
     }
   },
   "belkin": {
@@ -326,37 +326,37 @@
     "owned_by": "",
     "type": "Proprietary",
     "location": "United States",
-    "founded": null,
+    "founded": "1983",
     "policies": {
-      "return_period": "See Website",
-      "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
-      "price_match": "Unknown"
+      "return_period": "30 days",
+      "restocking_fee": "None",
+      "free_shipping_threshold": "$75",
+      "price_match": "No"
     },
     "contact": {
-      "phone": null,
-      "chat_available": false,
-      "support_page": null
+      "phone": "1-800-223-5546",
+      "chat_available": true,
+      "support_page": "https://www.belkin.com/support-center/"
     }
   },
   "bose": {
     "name": "Bose",
-    "logo": "",
+    "logo": "/logo/seller/bose.webp",
     "website": "https://www.bose.com",
     "owned_by": "",
     "type": "Proprietary",
     "location": "United States",
-    "founded": null,
+    "founded": "1964",
     "policies": {
-      "return_period": "See Website",
-      "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
-      "price_match": "Unknown"
+      "return_period": "90 days",
+      "restocking_fee": "None",
+      "free_shipping_threshold": "$49",
+      "price_match": "Yes"
     },
     "contact": {
-      "phone": null,
-      "chat_available": false,
-      "support_page": null
+      "phone": "1-800-379-2073",
+      "chat_available": true,
+      "support_page": "https://support.bose.com"
     }
   },
   "bowers_wilkins": {
@@ -941,22 +941,22 @@
   },
   "oura": {
     "name": "Oura",
-    "logo": "",
+    "logo": "/logo/seller/oura.png",
     "website": "https://ouraring.com",
     "owned_by": "",
     "type": "Proprietary",
     "location": "Finland",
-    "founded": null,
+    "founded": "2013",
     "policies": {
-      "return_period": "See Website",
-      "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
-      "price_match": "Unknown"
+      "return_period": "30 days",
+      "restocking_fee": "None",
+      "free_shipping_threshold": "None ($15 standard shipping)",
+      "price_match": "No"
     },
     "contact": {
       "phone": null,
-      "chat_available": false,
-      "support_page": null
+      "chat_available": true,
+      "support_page": "https://support.ouraring.com"
     }
   },
   "playstation": {
