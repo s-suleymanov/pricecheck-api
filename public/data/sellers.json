@@ -19,6 +19,26 @@
       "support_page": "https://www.bestbuy.com/support"
     }
   },
+  "dell": {
+    "name": "Dell",
+    "logo": "/logo/seller/dell.png",
+    "website": "https://www.dell.com",
+    "owned_by": "",
+    "type": "Manufacturer & Direct Retailer",
+    "location": "United States",
+    "founded": 1984,
+    "policies": {
+      "return_period": "30 Days",
+      "restocking_fee": "15% (unless defective)",
+      "free_shipping_threshold": "No Minimum (Free Standard Shipping)",
+      "price_match": "Yes"
+    },
+    "contact": {
+      "phone": "1-800-624-9897",
+      "chat_available": true,
+      "support_page": "https://www.dell.com/support"
+    }
+  },
   "microcenter": {
     "name": "Micro Center",
     "logo": "/logo/seller/microcenter.jpg",
@@ -681,7 +701,7 @@
   },
   "jbl": {
     "name": "JBL",
-    "logo": "",
+    "logo": "/logo/seller/jbl.jpg",
     "website": "https://www.jbl.com",
     "owned_by": "Samsung",
     "type": "Proprietary",
