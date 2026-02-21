@@ -277,7 +277,7 @@
 
         // tabsBar is "stuck" when its top is at/above the sticky top line
         const r = tabsBar.getBoundingClientRect();
-        const stuck = (window.scrollY > 28) && (r.top <= (navH + 0.5));
+        const stuck = (window.scrollY > 30) && (r.top <= (navH + 0.5));
 
         tabsBar.classList.toggle("is-stuck", stuck);
         document.body.classList.toggle("pc-tabs-stuck", stuck);
