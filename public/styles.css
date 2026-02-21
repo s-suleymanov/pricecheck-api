@@ -1356,11 +1356,22 @@ em {
   font-size:16px;
   font-weight:550;
   line-height:1.2;
+  -webkit-line-clamp:2;
   min-height: 38.3958px;
   margin-bottom:10px;
   display:-webkit-box;
   -webkit-box-orient:vertical;
   overflow:hidden;
+}
+
+.nav-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.nav-actions .btn svg{
+  display:block;
 }
 
 .home-deal__meta{
