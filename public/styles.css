@@ -1285,6 +1285,41 @@ em {
   gap:12px;
 }
 
+/* Mobile: force 2-up grid */
+@media (max-width: 560px){
+  .home-deals{ padding: 0 12px; }
+
+  .home-deal__range {
+    display: none;
+  }
+
+  .home-deals__grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .home-deal__title{
+    font-size: 14px;
+    line-height: 1.25;
+
+    /* hard cap to 2 lines */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+
+    /* avoid the desktop fixed min-height forcing extra space */
+    min-height: calc(1.25em * 2);
+    margin-bottom: 8px;
+  }
+}
+
+/* Ultra-narrow: fall back to 1 column */
+@media (max-width: 360px){
+  .home-deals__grid{ grid-template-columns: 1fr; }
+}
+
 .home-deal{
   display:flex;
   gap:10px;
@@ -1324,7 +1359,6 @@ em {
   min-height: 38.3958px;
   margin-bottom:10px;
   display:-webkit-box;
-  -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
