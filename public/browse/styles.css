@@ -200,7 +200,7 @@ body{
 }
 
 .side-block { margin-top: 12px; }
-.side-label { font-size: 16px; opacity: 0.7; margin: 20px 0 8px 0; }
+.side-label { font-size: 16px; opacity: 0.7; margin: 10px 0 8px 0; }
 
 
 .sidecard .mini{
@@ -303,6 +303,130 @@ h1{
 
 .detail-top {
   margin-bottom: 10px;
+}
+
+/* ===== Google-style tab strip under header search ===== */
+
+/* Tabs bar: left tabs + right meta (results count + PriceCheck+ hint) */
+.pc-tabs-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.pc-tabs-left{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  min-width:0;
+}
+
+.pc-tabs-right{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  margin-left:auto;
+}
+
+.pc-tabs-count{
+  color: var(--muted);
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.pc-tabs{
+  position: sticky;
+  top: var(--pc-nav-h, 0px);
+  z-index: 90;
+  backdrop-filter: blur(8px);
+  margin: 0;
+  margin-bottom: 10px;
+  margin-top: -20px;
+
+  /* separator between tabs and page content */
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+header.nav{
+  z-index: 100;
+}
+
+.pc-tabs-inner {
+  width: min(1200px, calc(100% - 48px));
+  margin: 0 auto;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 0;            /* remove extra space above tabs */
+  min-height: 36px;      /* tighter */
+}
+
+.pc-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 4px;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  user-select: none;
+}
+
+.pc-tab:not(.is-disabled):hover {
+  color: #111;
+}
+
+.pc-tab.is-active {
+  color: #111;
+  font-weight: 600;
+}
+
+.pc-tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: #111;
+  border-radius: 999px;
+}
+
+/* Disabled tabs: keep them visually the same even on hover, but cursor changes */
+.pc-tab.is-disabled {
+  cursor: not-allowed;
+}
+
+.pc-tab.is-disabled:hover,
+.pc-tab.is-disabled:focus-visible {
+  color: var(--muted);   /* no visual change */
+}
+
+/* Far-right label */
+.pc-tabs-plus{
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  pointer-events: none;
+  margin-left: auto;   /* keep it on the far right when shown */
+  white-space: nowrap;
+}
+
+.pc-tabs.show-plus .pc-tabs-plus{
+  opacity: 1;
+  max-width: 220px;
+}
+
+/* Browse pages with tabs: header border is controlled by stuck state */
+body.has-pc-tabs header.nav{
+  border-bottom: 0 !important;
+}
+
+/* The exact moment tabs pin under the nav, show the line under the nav */
+body.has-pc-tabs.pc-tabs-stuck header.nav{
+  border-bottom: 1px solid rgba(0,0,0,0.08) !important;
 }
 
 .detail-title {

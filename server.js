@@ -23,7 +23,6 @@ app.use(express.static(path.join(__dirname, "public")));
 // feature routers
 app.use(require("./routes/browse"));
 app.use(require("./routes/dashboard"));
-app.use(require("./routes/insights"));
 app.use(require("./routes/research"));
 app.use(require("./routes/admin"));
 app.use(require("./routes/sitemap"));
@@ -31,6 +30,7 @@ app.use(require("./routes/uninstall"));
 app.use(require("./routes/support"));
 app.use(require("./routes/seller"));
 app.use(require("./routes/search"));
+app.use(require("./routes/home"));
 
 // health
 app.get("/health", (_req, res) => res.json({ ok: true }));

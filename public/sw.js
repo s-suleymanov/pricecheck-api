@@ -1,5 +1,5 @@
 /* public/sw.js */
-const VERSION = "pc-pwa-v1";
+const VERSION = "pc-pwa-v2";
 const CORE_CACHE = `${VERSION}-core`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
@@ -9,7 +9,6 @@ const CORE_ASSETS = [
   "/styles.css",
   "/index.js",
   "/search.js",
-  "/insights/logo-map.js",
   "/logo/logo.svg",
   "/logo/icon-192.png",
   "/logo/icon-512.png",

@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-YLK9K88D1T"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -31,32 +30,21 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PriceCheck" />
   <meta property="og:title" content="PriceCheck: Organizing the world’s product information" />
-  <meta
-    property="og:description"
-    content="Compare prices across retailers, understand markets, and make informed decisions."
-  />
+  <meta property="og:description" content="Compare prices across retailers, understand markets, and make informed decisions." />
   <meta property="og:url" content="https://pricechecktool.com/" />
-  <!-- Use an absolute URL. Make sure this image exists and is at least 1200x630 -->
   <meta property="og:image" content="https://pricechecktool.com/logo/home.png" />
   <meta property="og:image:alt" content="PriceCheck logo and tagline" />
 
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="PriceCheck: Organizing the world’s product information" />
-  <meta
-    name="twitter:description"
-    content="Compare prices across retailers, understand markets, and make informed decisions."
-  />
+  <meta name="twitter:description" content="Compare prices across retailers, understand markets, and make informed decisions." />
   <meta name="twitter:image" content="https://pricechecktool.com/logo/home.png" />
 
   <link rel="preload" href="/styles.css" as="style" />
   <link rel="preload" href="/logo/logo.svg" as="image" type="image/svg+xml" />
 
   <link rel="stylesheet" href="/styles.css" />
-  <link rel="stylesheet" href="/insights/styles.css" />
-  <link rel="stylesheet" href="/research/style.css" />
 
-  <!-- Structured data: Organization + WebSite (SearchAction) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -92,86 +80,134 @@
   </script>
 
   <script src="/search.js" defer></script>
-  <script src="/insights/logo-map.js" defer></script>
   <script src="/index.js" defer></script>
-  <script src="/research/research.js" defer></script>
+  <script src="/partials/partials.js" defer></script>
 </head>
 
-<body style="margin:0;">
-  <header style="padding: 20px;">
-        <div class="home-top">
-        <a class="home-top__link" href="/overview/">Overview</a>
+<body class="pc-home" style="margin:0;">
 
-      <div class="home-top__right">
-        <a class="home-top__link" href="#" id="installAppBtn" style="display:none;">Install App</a>
-        <a class="btn btn--outline home-top__btn" href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en">Get Extension</a>
-      </div>
-    </div>
-  </header>
+  <div id="site-header"></div>
+
   <main class="home-center" role="main">
     <div class="home-center__inner">
-      <section class="home-fold" aria-label="Top">
-        <div class="home-logo">
-          <h1 class="sr-only">PriceCheck</h1>
-          <div class="home-logo__word">PriceCheck</div>
-          <img src="/logo/logo.svg" alt="PriceCheck" class="home-logo__img">
-        </div>
+      <div class="home-layout">
+        <!-- MAIN FEED -->
+        <section class="home-main" aria-label="Home feed">
+          <!-- Trend pills row -->
+          <div id="homePills" class="home-pills" aria-label="Trending" hidden></div>
 
-        <form id="homeSearchForm" class="home-search" action="#" method="GET" role="search" aria-label="Search products">
-          <input
-            class="home-search__input"
-            type="search"
-            name="q"
-            placeholder="Search or paste URL, UPC, PCI, ASIN, SKU"
-            autocomplete="off"
-            spellcheck="false"
-            aria-autocomplete="list"
-            aria-expanded="false"
-            aria-controls="homeAc"
-            data-pc-autofocus="1"
-          />
-          <div class="pc-ac" id="homeAc" hidden></div>
-        </form>
+          <!-- Deals grid -->
+          <section id="homeDeals" class="home-deals" hidden></section>
+        </section>
 
-        <nav class="home-tabs" aria-label="Explore">
-          <a class="home-tab is-active" href="#news" data-home-tab="news">News</a>
-          <a class="home-tab" href="#trends" data-home-tab="trends">Trends</a>
-          <a class="home-tab" href="#updates" data-home-tab="updates">Updates</a>
-          <a class="home-tab" href="#guides" data-home-tab="guides">Guides</a>
-          <a class="home-tab" href="#blogs" data-home-tab="blogs">Blogs</a>
-        </nav>
-      </section>
+        <!-- RIGHT SIDEBAR (YouTube-ish) -->
+        <aside class="home-side" aria-label="Home sidebar">
+          <div class="home-side__inner">
+            <nav class="home-side__section" aria-label="You">
+              <div class="home-side__title">You</div>
 
-      <!-- Two-column Insights-style container (JS fills #homeInsList) -->
-      <section class="home-ins" id="homeIns" aria-label="Insights feed">
-        <div class="ins-list" id="homeInsList"></div>
-      </section>
+              <a class="home-side__item is-active" href="/" aria-current="page">
+                <span class="home-side__icon" aria-hidden="true">
+                  <svg viewBox="0 -960 960 960" width="24" height="24"><path fill="currentColor" d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z"/></svg>
+                </span>
+                <span class="home-side__label">Home</span>
+              </a>
+
+              <a class="home-side__item" href="/browse/">
+                <span class="home-side__icon" aria-hidden="true">
+                  <svg viewBox="0 -960 960 960" width="24" height="24"><path fill="currentColor" d="m300-300 280-80 80-280-280 80-80 280Zm180-120q-25 0-42.5-17.5T420-480q0-25 17.5-42.5T480-540q25 0 42.5 17.5T540-480q0 25-17.5 42.5T480-420Zm0 340q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Zm0-320Z"/></svg>
+                </span>
+                <span class="home-side__label">Explore</span>
+              </a>
+
+              <a class="home-side__item is-disabled" href="#" aria-disabled="true" tabindex="-1">
+                <span class="home-side__icon" aria-hidden="true">
+                  <svg viewBox="0 -960 960 960" width="24" height="24"><path fill="currentColor" d="M367-527q-47-47-47-113t47-113q47-47 113-47t113 47q47 47 47 113t-47 113q-47 47-113 47t-113-47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm296.5-343.5Q560-607 560-640t-23.5-56.5Q513-720 480-720t-56.5 23.5Q400-673 400-640t23.5 56.5Q447-560 480-560t56.5-23.5ZM480-640Zm0 400Z"/></svg>
+                </span>
+                <span class="home-side__label">Subscriptions</span>
+                <span class="home-side__soon" aria-hidden="true">Coming Soon</span>
+              </a>
+
+              <a class="home-side__item is-disabled" href="#" aria-disabled="true" tabindex="-1">
+                <span class="home-side__icon" aria-hidden="true">
+                  <svg viewBox="0 -960 960 960" width="24" height="24"><path fill="currentColor" d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-400Zm0 320q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Z"/></svg>
+                </span>
+                <span class="home-side__label">History</span>
+                <span class="home-side__soon" aria-hidden="true">Coming Soon</span>
+              </a>
+            </nav>
+
+            <div class="home-side__sep" role="separator" aria-hidden="true"></div>
+
+            <section class="home-side__section" aria-label="Categories">
+              <div class="home-side__title">Categories</div>
+              <div id="homeSideCategories" class="home-side__list"></div>
+              <a class="home-side__more" href="/browse/">Show more</a>
+            </section>
+
+            <div class="home-side__sep" role="separator" aria-hidden="true"></div>
+
+            <section class="home-side__section" aria-label="Brands">
+              <div class="home-side__title">Brands</div>
+              <div id="homeSideBrands" class="home-side__list"></div>
+              <a class="home-side__more" href="/browse/">Show more</a>
+            </section>
+
+            <div class="home-side__sep" role="separator" aria-hidden="true"></div>
+
+            <nav class="home-side__section" aria-label="More">
+              <div class="home-side__title">More</div>
+
+              <a class="home-side__item" href="/support/">
+                <span class="home-side__icon" aria-hidden="true">
+                  <svg viewBox="0 -960 960 960" width="24" height="24"><path fill="currentColor" d="M476-280q21 0 35.5-14.5T526-330q0-21-14.5-35.5T476-380q-21 0-35.5 14.5T426-330q0 21 14.5 35.5T476-280Zm-36-154h74q0-17 1.5-29t6.5-23q5-11 12.5-20.5T556-530q35-35 49.5-58.5T620-642q0-53-36-85.5T487-760q-55 0-93.5 27T340-658l66 26q7-27 28-43.5t49-16.5q27 0 45 14.5t18 38.5q0 17-11 36t-37 42q-17 14-27.5 27.5T453-505q-7 15-10 31.5t-3 39.5Zm40 394L360-160H200q-33 0-56.5-23.5T120-240v-560q0-33 23.5-56.5T200-880h560q33 0 56.5 23.5T840-800v560q0 33-23.5 56.5T760-160H600L480-40ZM200-240h192l88 88 88-88h192v-560H200v560Zm280-280Z"/></svg>
+                </span>
+                <span class="home-side__label">Support</span>
+              </a>
+
+              <a class="home-side__item" href="/privacy-policy">
+                <span class="home-side__icon" aria-hidden="true">
+                  <svg viewBox="0 -960 960 960" width="24" height="24"><path fill="currentColor" d="M480-480Zm0 400q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 10-.5 20t-1.5 20q-9-2-18.5-3t-19.5-1q-11 0-21 1t-21 3q1-10 1.5-19.5t.5-20.5v-189l-240-90-240 90v189q0 121 68 220t172 132q21-7 41-17t39-23v94q-19 10-39 17.5T480-80Zm194 0q-14 0-24-10t-10-24v-132q0-14 10-24t24-10h6v-40q0-33 23.5-56.5T760-400q33 0 56.5 23.5T840-320v40h6q14 0 24 10t10 24v132q0 14-10 24t-24 10H674Zm46-200h80v-40q0-17-11.5-28.5T760-360q-17 0-28.5 11.5T720-320v40Z"/></svg>
+                </span>
+                <span class="home-side__label">Policy</span>
+              </a>
+
+              <a class="home-side__item" href="/research/">
+                <span class="home-side__icon" aria-hidden="true">
+                  <svg viewBox="0 -960 960 960" width="24" height="24"><path fill="currentColor" d="M400-320q100 0 170-70t70-170q0-100-70-170t-170-70q-100 0-170 70t-70 170q0 100 70 170t170 70Zm-40-120v-280h80v280h-80Zm-140 0v-200h80v200h-80Zm280 0v-160h80v160h-80ZM824-80 597-307q-41 32-91 49.5T400-240q-134 0-227-93T80-560q0-134 93-227t227-93q134 0 227 93t93 227q0 56-17.5 106T653-363l227 227-56 56Z"/></svg>
+                </span>
+                <span class="home-side__label">Research</span>
+              </a>
+            </nav>
+          </div>
+        </aside>
+      </div>
     </div>
   </main>
 
   <footer class="home-footer" role="contentinfo">
-  <div class="home-footer__inner">
-    <nav class="home-footer__side home-footer__side--left" aria-label="Footer">
-      <a class="home-footer__link" href="https://ko-fi.com/samlyman">Donate</a>
-      <a class="home-footer__link" href="/research/">Research</a>
-      <a class="home-footer__link" href="https://pricecheck.statuspage.io/">Status</a>
-    </nav>
+    <div class="home-footer__inner">
+      <nav class="home-footer__side home-footer__side--left" aria-label="Footer">
+        <a class="home-footer__link" href="https://ko-fi.com/samlyman">Donate</a>
+        <a class="home-footer__link" href="/research/">Research</a>
+        <a class="home-footer__link" href="https://pricecheck.statuspage.io/">Status</a>
+      </nav>
 
-    <a class="home-footer__mark" href="/" aria-label="PriceCheck home">
-      <img
-        src="/logo/logo.svg"
-        alt=""
-        class="home-footer__logo"
-        aria-hidden="true"
-      />
-    </a>
+      <a class="home-footer__mark" href="/" aria-label="PriceCheck home">
+        <img
+          src="/logo/logo.svg"
+          alt=""
+          class="home-footer__logo"
+          aria-hidden="true"
+        />
+      </a>
 
-    <nav class="home-footer__side home-footer__side--right" aria-label="Footer">
-      <a class="home-footer__link" href="/partners">Partners</a>
-      <a class="home-footer__link" href="/support/">Support</a>
-      <a class="home-footer__link" href="/privacy-policy">Policy</a>
-    </nav>
-  </div>
-</footer>
+      <nav class="home-footer__side home-footer__side--right" aria-label="Footer">
+        <a class="home-footer__link" href="/partners">Partners</a>
+        <a class="home-footer__link" href="/support/">Support</a>
+        <a class="home-footer__link" href="/privacy-policy">Policy</a>
+      </nav>
+    </div>
+  </footer>
 </body>
 </html>

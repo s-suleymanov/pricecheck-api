@@ -1350,13 +1350,9 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
     const brands = (Array.isArray(state.sideBrands) ? state.sideBrands : []).slice(0, 14);
 
-    const total = Number.isFinite(state.total) ? state.total : 0;
-    const resultsLine = total === 1 ? "1 result found" : `${total} results found`;
-
     els.categoryPanel.hidden = false;
     els.categoryPanel.innerHTML = `
       <h2 class="side-title">${escapeHtml(catName)}</h2>
-      <div class="side-sub muted">${escapeHtml(resultsLine)}</div>
 
       ${brands.length ? `
         <div class="side-block">
@@ -1550,6 +1546,16 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     const q = (state.value || state.q || "").trim();
     const isPaged = state.page > 1;
 
+        // Publish results count to the tabs bar (partials.js owns the UI)
+    try {
+      const hasQuery = !!(state.brand || state.category || String(state.q || "").trim());
+      const total = typeof state.total === "number" ? state.total : 0;
+
+      // Hide on error or on empty /browse/ with no query
+      const show = !state.lastError && hasQuery;
+      window.dispatchEvent(new CustomEvent("pc:browse_results", { detail: { show, total } }));
+    } catch (_e) {}
+
     const canonical = `${location.origin}${buildBrowsePath({
       q: (state.value || state.q || "").trim(),
       page: 1,
@@ -1673,6 +1679,9 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         if (els.grid) els.grid.innerHTML = "";
         showEmpty(false);
         setPager();
+        try {
+          window.dispatchEvent(new CustomEvent("pc:browse_results", { detail: { show: false, total: 0 } }));
+        } catch (_e) {}
         return;
       }
 

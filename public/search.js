@@ -22,11 +22,11 @@
 
   function isPci(s) {
     const t = norm(s);
-    // your PCI rule: 8 chars, first letter, must contain at least one digit
+    // 8 chars, first letter, must contain at least one digit
     return /^[A-Z][A-Z0-9]{7}$/i.test(t) && /\d/.test(t);
   }
 
-    // -----------------------------
+  // -----------------------------
   // Browse-only persistence
   // -----------------------------
   const STORAGE_KEY = "pc_browse_search_value";
@@ -46,7 +46,6 @@
     try { sessionStorage.removeItem(key); } catch {}
   }
 
-  // If the user clicked the logo, clear persisted search exactly once.
   function consumeClearOnceFlag() {
     const v = safeGetSession("pc_clear_search_once");
     if (v === "1") {
@@ -71,17 +70,14 @@
     return safeGetSession(STORAGE_KEY) || "";
   }
 
-  // Public helper used by partials.js after header loads.
   function restoreInputValue(inputEl, opts = {}) {
     const input = inputEl;
     if (!input) return;
 
-    // Always consume the clear-once flag early, so we do not restore after logo click.
     consumeClearOnceFlag();
 
     if (!isBrowsePage()) return;
 
-    // Only restore if empty unless force=true
     const force = !!opts.force;
     if (!force && norm(input.value)) return;
 
@@ -95,7 +91,9 @@
     } catch {}
   }
 
-  // Derive a normalized dashboard key from any input: prefix form, raw ID, or URL.
+  // -----------------------------
+  // Dashboard key parsing
+  // -----------------------------
   function dashboardKeyFromRaw(raw) {
     const t = norm(raw);
     if (!t) return null;
@@ -116,7 +114,7 @@
       return `${pref}:${rest}`;
     }
 
-    // 2) URL parsing for major stores (do not treat https: as a key)
+    // 2) URL parsing (do not treat https: as a key)
     const am =
       t.match(/\/dp\/([A-Z0-9]{10})/i) ||
       t.match(/\/gp\/product\/([A-Z0-9]{10})/i);
@@ -134,7 +132,7 @@
     // 3) raw ID shapes
     const d = digitsOnly(t);
 
-    // ASIN: any 10 alnum with at least one digit (not only starting with B)
+    // ASIN: any 10 alnum with at least one digit
     if (/^[A-Z0-9]{10}$/i.test(t) && /\d/.test(t)) return `asin:${up(t)}`;
 
     // PCI
@@ -176,14 +174,12 @@
     const v = norm(raw);
     if (!v) return;
 
-    // 1) dashboard keys
     const key = dashboardKeyFromRaw(v);
     if (key) {
       location.href = dashboardUrlFromKey(key);
       return;
     }
 
-    // 2) browse fallback
     location.href = browseUrl(v);
   }
 
@@ -217,19 +213,19 @@
 
     const endpoint = String(opts.endpoint || "/api/suggest");
     const maxItems = Number(opts.limit || 8);
-    let inlineBase = "";     // what the user actually typed
-    let inlineOn = false;    // whether we currently have an inline completion applied
 
-    // Ensure parent is positioned
+    let inlineBase = "";
+    let inlineOn = false;
+
     const parent =
       input.closest(".nav-search") ||
       input.closest(".home-search") ||
       input.parentElement;
+
     if (parent && getComputedStyle(parent).position === "static") {
       parent.style.position = "relative";
     }
 
-    // Build / reuse dropdown
     let box = parent.querySelector(".pc-ac");
     if (!box) {
       box = document.createElement("div");
@@ -246,18 +242,27 @@
     let lastQ = "";
     let aborter = null;
 
-    function caretAtEnd() {
-  try {
-    return input.selectionStart === input.selectionEnd && input.selectionEnd === input.value.length;
-  } catch {
-    return true;
-  }
-}
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
 
-function clearInlineOnly() {
-  inlineOn = false;
-  inlineBase = "";
-}
+    function caretAtEnd() {
+      try {
+        return input.selectionStart === input.selectionEnd && input.selectionEnd === input.value.length;
+      } catch {
+        return true;
+      }
+    }
+
+    function clearInlineOnly() {
+      inlineOn = false;
+      inlineBase = "";
+    }
 
     function applyInlineTopSuggestion() {
       if (!items.length) return clearInlineOnly();
@@ -267,7 +272,6 @@ function clearInlineOnly() {
       const base = String(inlineBase || input.value || "");
       if (!base) return clearInlineOnly();
 
-      // Use a trim-end view only for matching, but keep the original base for display.
       const baseTrimEnd = base.replace(/\s+$/g, "");
       if (!baseTrimEnd) return clearInlineOnly();
 
@@ -279,7 +283,6 @@ function clearInlineOnly() {
       if (!sug.startsWith(baseLower)) return clearInlineOnly();
       if (sug.length === baseLower.length) return clearInlineOnly();
 
-      // Preserve exactly what the user typed (including casing), append the lowercase tail.
       const tail = sug.slice(baseLower.length);
       const filled = baseTrimEnd + tail;
 
@@ -298,10 +301,9 @@ function clearInlineOnly() {
       items = [];
       active = -1;
 
-      // Allow refetch on next focus (fixes: popular and suggestions not reopening after close).
+      // Allow refetch on next focus.
       lastQ = "";
 
-      // Cancel any in-flight request.
       if (aborter) {
         try { aborter.abort(); } catch {}
       }
@@ -367,8 +369,8 @@ function clearInlineOnly() {
     function pick(idx) {
       const it = items[idx];
       if (!it) return;
-      const chosen = String(it.fill || it.value || "").trim().toLowerCase();
 
+      const chosen = String(it.fill || it.value || "").trim().toLowerCase();
       if (chosen) input.value = chosen;
 
       close();
@@ -380,7 +382,7 @@ function clearInlineOnly() {
           const p = (u.pathname || "/").toLowerCase();
           const isBrowseHref = p === "/browse/" || p.startsWith("/browse/");
           if (isBrowseHref && chosen) persistBrowseValue(chosen);
-        } catch (_e) {}
+        } catch {}
 
         location.href = String(it.href);
         return;
@@ -391,174 +393,148 @@ function clearInlineOnly() {
     }
 
     async function fetchPopular() {
-  // Only show popular when input is empty
-  if (norm(input.value)) return;
+      if (norm(input.value)) return;
 
-  const qKey = "__popular__";
-  // If we already fetched popular and still have items, do not refetch.
-  if (qKey === lastQ && items.length) return;
-  lastQ = qKey;
+      const qKey = "__popular__";
+      if (qKey === lastQ && items.length) return;
+      lastQ = qKey;
 
-  if (aborter) aborter.abort();
-  aborter = new AbortController();
+      if (aborter) aborter.abort();
+      aborter = new AbortController();
 
-  try {
-    const url = new URL(endpoint, location.origin);
-    url.searchParams.set("popular", "1");
-    url.searchParams.set("limit", String(maxItems));
+      try {
+        const url = new URL(endpoint, location.origin);
+        url.searchParams.set("popular", "1");
+        url.searchParams.set("limit", String(maxItems));
 
-    const res = await fetch(url.toString(), { signal: aborter.signal, cache: "no-store" });
-    if (!res.ok) throw new Error(`popular ${res.status}`);
-    const data = await res.json();
+        const res = await fetch(url.toString(), { signal: aborter.signal, cache: "no-store" });
+        if (!res.ok) throw new Error(`popular ${res.status}`);
+        const data = await res.json();
 
-    // If user typed while the request was in flight, ignore this response.
-    if (norm(input.value)) return;
+        if (norm(input.value)) return;
 
-    const api = Array.isArray(data?.results) ? data.results : [];
-    items = api
-      .filter((x) => x && (x.kind === "brand" || x.kind === "category") && x.value)
-      .slice(0, maxItems)
-      .map((x) => ({
-        ...x,
-        fill: String(x.value || "").trim().toLowerCase(),
-      }));
+        const api = Array.isArray(data?.results) ? data.results : [];
+        items = api
+          .filter((x) => x && (x.kind === "brand" || x.kind === "category") && x.value)
+          .slice(0, maxItems)
+          .map((x) => ({ ...x, fill: String(x.value || "").trim().toLowerCase() }));
 
-    active = -1;
-    render();
-    clearInlineOnly(); // do not inline-complete for popular
-  } catch (e) {
-    if (String(e?.name) === "AbortError") return;
-    console.error(e);
-    close();
-  }
-}
+        active = -1;
+        render();
+        clearInlineOnly();
+      } catch (e) {
+        if (String(e?.name) === "AbortError") return;
+        console.error(e);
+        close();
+      }
+    }
 
-async function fetchSuggestions(q) {
-  const qq = norm(q);
-  if (!qq) return close();
+    async function fetchSuggestions(q) {
+      const qq = norm(q);
+      if (!qq) return close();
 
-  // If we already fetched this query and still have items, do not refetch.
-  if (qq === lastQ && items.length) return;
-  lastQ = qq;
+      if (qq === lastQ && items.length) return;
+      lastQ = qq;
 
-  if (aborter) aborter.abort();
-  aborter = new AbortController();
+      if (aborter) aborter.abort();
+      aborter = new AbortController();
 
-  try {
-    const url = new URL(endpoint, location.origin);
-    url.searchParams.set("q", qq);
-    url.searchParams.set("limit", String(maxItems));
+      try {
+        const url = new URL(endpoint, location.origin);
+        url.searchParams.set("q", qq);
+        url.searchParams.set("limit", String(maxItems));
 
-    const res = await fetch(url.toString(), { signal: aborter.signal, cache: "no-store" });
-    if (!res.ok) throw new Error(`suggest ${res.status}`);
-    const data = await res.json();
+        const res = await fetch(url.toString(), { signal: aborter.signal, cache: "no-store" });
+        if (!res.ok) throw new Error(`suggest ${res.status}`);
+        const data = await res.json();
 
-    // If the input changed while request was in flight, ignore stale response.
-    if (norm(input.value) !== qq) return;
+        if (norm(input.value) !== qq) return;
 
-    const api = Array.isArray(data?.results) ? data.results : [];
+        const api = Array.isArray(data?.results) ? data.results : [];
 
-    const facets = api
-        .filter((x) =>
-          x &&
-          (x.kind === "brand" || x.kind === "category" || x.kind === "combo" || x.kind === "family") &&
-          x.value
-        )
-      .slice(0, maxItems)
-      .map((x) => ({
-        ...x,
-        fill: String(x.value || "").trim().toLowerCase(),
-      }));
+        const facets = api
+          .filter((x) =>
+            x &&
+            (x.kind === "brand" || x.kind === "category" || x.kind === "combo" || x.kind === "family") &&
+            x.value
+          )
+          .slice(0, maxItems)
+          .map((x) => ({ ...x, fill: String(x.value || "").trim().toLowerCase() }));
 
-    const seen = new Set();
-    items = facets
-      .filter((it) => {
-        const k = `${it.kind}::${String(it.value || "").toLowerCase()}`;
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      })
-      .slice(0, maxItems);
+        const seen = new Set();
+        items = facets
+          .filter((it) => {
+            const k = `${it.kind}::${String(it.value || "").toLowerCase()}`;
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          })
+          .slice(0, maxItems);
 
-    active = -1;
-    render();
-    applyInlineTopSuggestion();
-  } catch (e) {
-    if (String(e?.name) === "AbortError") return;
-    console.error(e);
-    close();
-  }
-}
+        active = -1;
+        render();
+        applyInlineTopSuggestion();
+      } catch (e) {
+        if (String(e?.name) === "AbortError") return;
+        console.error(e);
+        close();
+      }
+    }
 
     const debouncedFetch = debounce(fetchSuggestions, 120);
 
     input.setAttribute("autocomplete", "off");
     input.setAttribute("aria-controls", box.id);
     input.setAttribute("aria-expanded", "false");
+
     restoreInputValue(input, { force: false });
 
+    function isHomeDesktop() {
+      const p = (location.pathname || "/").toLowerCase();
+      const isHome = p === "/" || p === "/index.html";
+      const desktop = window.matchMedia ? window.matchMedia("(min-width: 821px)").matches : window.innerWidth >= 821;
+      return isHome && desktop;
+    }
+
+    function isHomeInput() {
+      return input.classList.contains("home-search__input");
+    }
+
     input.addEventListener("input", () => {
-    inlineBase = input.value;
-    inlineOn = false;
+      inlineBase = input.value;
+      inlineOn = false;
 
       if (!norm(input.value)) {
         fetchPopular();
         return;
       }
-
       debouncedFetch(input.value);
     });
 
-      function isHomeDesktop() {
-  const p = (location.pathname || "/").toLowerCase();
-  const isHome = p === "/" || p === "/index.html";
-
-  const desktop = window.matchMedia
-    ? window.matchMedia("(min-width: 821px)").matches
-    : window.innerWidth >= 821;
-
-    return isHome && desktop;
-  }
-
-  function isHomeInput() {
-    return input.classList.contains("home-search__input");
-  }
-
-  input.addEventListener("focus", () => {
-    // Only auto-open popular on DESKTOP HOMEPAGE input
-    if (isHomeDesktop() && isHomeInput()) {
-      if (!norm(input.value)) {
-        fetchPopular();
-      } else {
-        debouncedFetch(input.value);
+    input.addEventListener("focus", () => {
+      // Only auto-open popular on desktop homepage input
+      if (isHomeDesktop() && isHomeInput()) {
+        if (!norm(input.value)) fetchPopular();
+        else debouncedFetch(input.value);
+        return;
       }
-      return;
-    }
 
-    // Everywhere else: only suggest if user already typed/pasted
-    if (norm(input.value)) {
-      debouncedFetch(input.value);
-    }
-  });
+      // Everywhere else: only suggest if user already typed/pasted
+      if (norm(input.value)) debouncedFetch(input.value);
+    });
 
     input.addEventListener("keydown", (e) => {
-      // Accept inline completion with Tab or ArrowRight
       if (inlineOn && (e.key === "Tab" || e.key === "ArrowRight")) {
         e.preventDefault();
-        try {
-          input.setSelectionRange(input.value.length, input.value.length);
-        } catch {}
+        try { input.setSelectionRange(input.value.length, input.value.length); } catch {}
         clearInlineOnly();
         return;
       }
 
-      // Cancel inline completion (revert to what user typed) with Escape
       if (inlineOn && e.key === "Escape") {
         e.preventDefault();
         input.value = inlineBase || "";
-        try {
-          input.setSelectionRange(input.value.length, input.value.length);
-        } catch {}
+        try { input.setSelectionRange(input.value.length, input.value.length); } catch {}
         clearInlineOnly();
         close();
         return;
@@ -600,7 +576,6 @@ async function fetchSuggestions(q) {
     });
 
     box.addEventListener("mousedown", (e) => {
-      // prevent input blur before click processes
       e.preventDefault();
     });
 
@@ -619,79 +594,58 @@ async function fetchSuggestions(q) {
     });
 
     input.addEventListener("blur", () => {
-      // click handler uses mousedown preventDefault, so blur usually means real blur
       setTimeout(() => close(), 0);
     });
-
-    // small HTML escape
-    function escapeHtml(s) {
-      return String(s)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
-    }
 
     return { close };
   }
 
-    window.pcSearch = { route, bindForm, shouldGoDashboard, attachAutocomplete, restoreInputValue };
-
-// Auto-wire: bind + autocomplete on any visible search inputs.
-// Auto-focus is homepage-only and only for the input that opts in.
-document.addEventListener("DOMContentLoaded", () => {
-  // Only auto-wire the homepage search input here.
-  // The header search is injected later via partials and wired in partials.js.
-  const homeInputs = Array.from(document.querySelectorAll(".home-search__input"));
-
-  for (const input of homeInputs) {
-    const form = input.closest("form");
-    if (form) bindForm(form, input);
-    attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
-  }
-
-  // -----------------------------
-  // Auto-focus + auto-open: HOME DESKTOP ONLY
-  // -----------------------------
-  const path = (location.pathname || "/").toLowerCase();
-  const isHome = path === "/" || path === "/index.html";
-
-  // Treat "mobile viewpoint" as a narrow layout (you can tune 820 if you want)
-  const isDesktopViewport = () => {
-    // matchMedia is best because it tracks viewport changes reliably
-    if (window.matchMedia) return window.matchMedia("(min-width: 821px)").matches;
-    return window.innerWidth >= 821;
+  window.pcSearch = {
+    route,
+    bindForm,
+    shouldGoDashboard,
+    attachAutocomplete,
+    restoreInputValue
   };
 
-  // Only run homepage auto behaviors on desktop
-  const allowHomeAuto = isHome && isDesktopViewport();
-  if (!allowHomeAuto) return;
+  // Auto-wire homepage input. Header input is wired by partials.js after it injects the header.
+  document.addEventListener("DOMContentLoaded", () => {
+    const homeInputs = Array.from(document.querySelectorAll(".home-search__input"));
 
-  // Only focus the homepage input that explicitly opts in
-  const homeInput = document.querySelector('.home-search__input[data-pc-autofocus="1"]');
-  if (!homeInput) return;
-
-  // Do not steal focus if something else is already focused
-  const ae = document.activeElement;
-  if (ae && ae !== document.body && ae !== document.documentElement) return;
-
-  requestAnimationFrame(() => {
-    const rect = homeInput.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-
-    try {
-      homeInput.focus({ preventScroll: true });
-    } catch {
-      homeInput.focus();
+    for (const input of homeInputs) {
+      const form = input.closest("form");
+      if (form) bindForm(form, input);
+      attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
     }
 
-    try {
-      const v = String(homeInput.value || "");
-      homeInput.setSelectionRange(v.length, v.length);
-    } catch {}
-    homeInput.dispatchEvent(new Event("focus"));
-  });
-});
+    // Homepage desktop autofocus (opt-in via data attribute)
+    const path = (location.pathname || "/").toLowerCase();
+    const isHome = path === "/" || path === "/index.html";
+    const isDesktopViewport = () => {
+      if (window.matchMedia) return window.matchMedia("(min-width: 821px)").matches;
+      return window.innerWidth >= 821;
+    };
 
+    if (!(isHome && isDesktopViewport())) return;
+
+    const homeInput = document.querySelector('.home-search__input[data-pc-autofocus="1"]');
+    if (!homeInput) return;
+
+    const ae = document.activeElement;
+    if (ae && ae !== document.body && ae !== document.documentElement) return;
+
+    requestAnimationFrame(() => {
+      const rect = homeInput.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      try { homeInput.focus({ preventScroll: true }); } catch { homeInput.focus(); }
+
+      try {
+        const v = String(homeInput.value || "");
+        homeInput.setSelectionRange(v.length, v.length);
+      } catch {}
+
+      homeInput.dispatchEvent(new Event("focus"));
+    });
+  });
 })();

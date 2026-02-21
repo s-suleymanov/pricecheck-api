@@ -26,11 +26,6 @@
   cursor: pointer;
 }
 
-/* Let the homepage content area be wide */
-.home-center__inner{
-  width: min(1220px, 92vw);
-}
-
 /* But let the feed take the full width */
 .home-ins,
 .home-news{
@@ -59,11 +54,10 @@
   flex: 1 1 520px;
   display:flex;
   justify-content:center;
-
   position: relative;           /* IMPORTANT: dropdown anchors here */
   width: 100%;
   max-width: 800px;             /* SAME as your old input cap */
-  margin-left: auto;
+  margin-left: 30px;
   margin-right: auto;
 }
 
@@ -71,7 +65,7 @@
 .nav-search__input{
   width: 100%;
   font-size: 17px;
-  height: 48px;
+  height: 44px;
   padding: 0 20px;
   border-radius: 999px;
   border: 1px solid rgba(17,24,39,.18);
@@ -90,7 +84,7 @@
 /* EXPANDED (focused): Google-like size */
 .nav-search__input:focus{
   font-size: 18px;
-  height: 56px;
+  height: 50px;
   padding: 0 18px;
   box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
 }
@@ -106,6 +100,81 @@
   box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
 }
 
+/* Home deal cards: left vertical logo stack */
+.home-deal__body{
+  display: flex;
+  gap: 12px;
+}
+
+/* Overlapping vertical stack (top icon fully visible, next ones behind it) */
+.home-deal__icons{
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0; /* gap cannot be negative, so we overlap via margins */
+}
+
+/* Control overlap amount here */
+.home-deal__icon{
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: -12px;
+  position: relative;
+}
+
+/* First one should not be pulled upward */
+.home-deal__icon:first-child{
+  margin-top: 0;
+}
+
+/* Keep the first icon on top, next ones behind it */
+.home-deal__icon:nth-child(1){ z-index: 10; }
+.home-deal__icon:nth-child(2){ z-index: 9; }
+.home-deal__icon:nth-child(3){ z-index: 8; }
+.home-deal__icon:nth-child(4){ z-index: 7; }
+
+.home-deal__content{
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.home-deal__icon{
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-deal__icon img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.home-deal__icon--fallback{
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.home-deal__icon--more{
+  background: #f3f4f6;
+}
+
 /* Keep header tidy on smaller screens */
 @media (max-width: 900px){
   .logo-head .brand{
@@ -116,6 +185,73 @@
 @media (max-width: 560px){
   .pc-ac__count{ display:none; }  /* hide only the number */
   .pc-ac__pill{ display:none; }
+}
+
+/* Search + AI circle container */
+.nav-searchwrap{
+  flex: 1 1 520px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 10px;
+  width: 100%;
+  max-width: 880px;   /* search + button total */
+  margin-left: 30px;
+  margin-right: auto;
+}
+
+/* Let the form take remaining space */
+.nav-search{
+  flex: 1 1 auto;
+  display:flex;
+  justify-content:center;
+  position: relative; /* keeps dropdown anchored */
+  width: 100%;
+  max-width: none;    /* controlled by wrap now */
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* AI circle button */
+.nav-ai{
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(17,24,39,.18);
+  background: rgba(255,255,255,.94);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+  transition: transform .12s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.nav-ai:hover{
+  transform: translateY(-1px);
+  border-color: rgba(17,24,39,.26);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+}
+
+.nav-ai:focus-visible{
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(255,220,120,.30),
+    0 0 16px 7px rgba(255,200,80,.35);
+}
+
+.nav-ai__icon{
+  width: 30px;
+  height: 30px;
+  display:block;
+  object-fit: contain;
+}
+
+/* Mobile: hide the AI button if space gets tight */
+@media (max-width: 560px){
+  .nav-ai{ display:none; }
+  .nav-searchwrap{ margin-left: 12px; }
 }
 
 
@@ -129,7 +265,7 @@ body{
   -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
 }
 
-.nav{position:fixed;top:0;left:0;right:0;background:rgba(255,255,255,.06);backdrop-filter:saturate(160%) blur(8px);border-bottom:1px solid var(--line);z-index:10}
+.nav{position:fixed;top:0;left:0;right:0;background:rgba(255,255,255,.06);backdrop-filter:saturate(160%) blur(8px);border-bottom:1px solid var(--line);z-index:1000}
 .nav{
   margin:0 auto; padding:10px 30px;
   display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -188,7 +324,7 @@ body{
 }
 
 .logo {
-    width: 46px;
+    width: 44px;
 }
 
 img.logo:hover {
@@ -945,17 +1081,292 @@ em {
   width: min(900px, 92vw);
   margin-left: auto;
   margin-right: auto;
-  margin-bottom: 0;
+  margin-bottom: 120px;
   margin-top: 10px;
 }
 
+.home-deals{
+  width: 100%;
+  max-width: none;
+  margin: 80px 0 0;
+  padding: 0 24px; /* keeps it off the edges */
+}
+
+.home-deals__head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+/* ===========================
+   Home layout: feed + sidebar
+   =========================== */
+
+.home-layout{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  padding-top: 70px;
+  padding-left: 20px;
+  padding-right: 20px;
+  align-items: start;
+}
+
+.home-main{ min-width: 0; }
+
+/* Sticky right sidebar that scrolls independently */
+.home-side{
+  position: sticky;
+  top: calc(var(--pc-nav-h, 80px) - 3px);
+  height: calc(100vh - (var(--pc-nav-h, 80px) + 14px));
+  min-height: 240px;
+}
+
+.home-side__inner{
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  -ms-overflow-style: none;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 16px;
+  padding: 10px;
+}
+
+.home-side__section{ padding: 6px; }
+.home-side__title{
+  font-size: 18px;
+  font-weight: 600;
+  margin: 6px 8px 10px;
+}
+
+.home-side__sub{
+  margin: 14px 8px 8px;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.home-side__sep{
+  height: 1px;
+  background: rgba(0,0,0,0.08);
+  margin: 10px 6px;
+}
+
+.home-side__item{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: #111;
+  user-select: none;
+}
+
+.home-side__item:hover{
+  background: rgba(0,0,0,0.04);
+}
+
+.home-side__item.is-active{
+  background: rgba(0,0,0,0.06);
+  font-weight: 600;
+}
+
+.home-side__item.is-disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.home-side__item.is-disabled:hover{
+  background: transparent;
+}
+
+.home-side__icon{
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.home-side__label{ min-width: 0; }
+.home-side__soon{
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.home-side__list .home-side__item--thin{
+  padding: 9px 12px;
+  gap: 10px;
+}
+
+.home-side__more{
+  display: inline-flex;
+  margin: 10px 8px 6px;
+  color: #111;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+/* Trend pills above the grid */
+.home-pills{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  margin: 5px 0 10px;
+  padding: 0;
+
+  flex-wrap: wrap;
+}
+
+.home-pill{
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: #fff;
+
+  text-decoration: none;
+  color: #111;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.home-pill:hover{
+  border-color: rgba(0,0,0,0.16);
+}
+
+/* Make the deals section behave inside the new grid */
+.home-main .home-deals{
+  margin: 0;
+  padding: 0;
+}
+
+/* Responsive: drop sidebar on smaller screens */
+@media (max-width: 980px){
+  .home-layout{
+    grid-template-columns: 1fr;
+  }
+
+  .home-side{
+    display: none;
+  }
+
+  .home-pills{
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+}
+
+.home-deals__title{
+  font-size: 14px;
+  font-weight: 650;
+  color:#111;
+}
+
+.home-deals__grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap:12px;
+}
+
+.home-deal{
+  display:flex;
+  gap:10px;
+  padding:10px;
+  border:1px solid rgba(0,0,0,0.08);
+  border-radius:12px;
+  background:#fff;
+  text-decoration:none;
+  color:inherit;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.home-deal:hover{
+  border-color: rgba(0,0,0,0.14);
+}
+
+.home-deal__img{
+  width:100%;
+  height:auto;
+  aspect-ratio: 1 / 1;
+  border-radius:12px;
+  object-fit: contain;
+  flex:0 0 auto;
+  display:block;
+}
+
+.home-deal__body{
+  min-width:0;
+  flex:1;
+}
+
+.home-deal__title{
+  font-size:16px;
+  font-weight:550;
+  line-height:1.2;
+  min-height: 38.3958px;
+  margin-bottom:10px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.home-deal__meta{
+  display:flex;
+  align-items:baseline;
+  gap:6px;
+  margin-bottom:4px;
+}
+
+.home-deal__price{
+  font-size:18px;
+  font-weight:600;
+}
+
+.home-deal__range{
+  font-size:14px;
+  color:#6b7280;
+}
+
+.home-deal__sub{
+  display:flex;
+  gap:10px;
+  font-size:14px;
+  color:#6b7280;
+}
+
+/* Make it denser on wide screens */
+@media (min-width: 980px){
+  .home-deals__grid{ gap:10px; }
+  .home-deal{ padding:9px; }
+}
+
 .home-fold{
-  height: calc(100vh - 110px);
-  min-height: 0;
+  min-height: calc(100vh - 110px);
+  height: auto;
+  overflow: visible;
+  padding-top: clamp(24px, 3vh, 110px);
+  padding-bottom: 24px;
   display:flex;
   flex-direction:column;
-  overflow: hidden; 
-  padding-top: clamp(24px, 11vh, 110px);
 }
 
 .home-logo,
@@ -966,8 +1377,55 @@ em {
 .home-center{
   min-height: 100vh;
   display:flex;
-  justify-content:center;
   padding-top: 0;
   align-items: flex-start;
+}
+
+/* Locked tabs should not feel "red / no sign" */
+.pc-tab.is-disabled{
+  cursor: pointer;          /* makes it feel clickable */
+  opacity: 0.75;            /* subtle "locked" hint */
+}
+
+.pc-tab.is-disabled:hover{
+  opacity: 1;
+}
+
+/* Home: keep sidebar space reserved, but hide its contents until grid is ready */
+.pc-home .home-side__inner{
+  opacity: 0;
+  visibility: hidden;
+}
+
+.pc-home.pc-home-ready .home-side__inner{
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 160ms ease;
+}
+
+/* Small toast for "A PriceCheck+ Feature" */
+.pc-plus-toast{
+  position: fixed;
+  left: 50%;
+  top: calc(var(--pc-nav-h, 64px) + 12px);
+  transform: translateX(-50%);
+  z-index: 9999;
+
+  background: rgba(17,17,17,0.95);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.2;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+  opacity: 0;
+  pointer-events: none;
+
+  transition: opacity 200ms ease;
+}
+
+.pc-plus-toast.is-show{
+  opacity: 1;
 }
 

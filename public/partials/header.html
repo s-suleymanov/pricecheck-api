@@ -1,25 +1,56 @@
 <header class="nav">
-    <a class="logo-head" href="/" aria-label="Go to PriceCheck home">
-      <img src="/logo/logo.svg" alt="PriceCheck Logo" class="logo">
-      <div class="brand">
-        <span class="wordmark">PriceCheck</span>
-        <span class="edition">Beta</span>
-      </div>
-    </a>
+  <a class="logo-head" href="/" aria-label="Go to PriceCheck home">
+    <img src="/logo/logo.svg" alt="PriceCheck Logo" class="logo">
+    <div class="brand">
+      <span class="wordmark">PriceCheck</span>
+      <span class="edition">Beta</span>
+    </div>
+  </a>
 
-    <form class="nav-search" action="#" method="GET" role="search" aria-label="Search PriceCheck">
-      <input
-        class="nav-search__input"
-        type="search"
-        name="q"
-        placeholder="Search or paste URL, UPC, PCI, ASIN, SKU"
-        autocomplete="off"
-        spellcheck="false"
-      />
-    </form>
+  <div class="nav-searchwrap" role="search" aria-label="Search PriceCheck">
+  <form class="nav-search" action="#" method="GET">
+    <input
+      class="nav-search__input"
+      type="search"
+      name="q"
+      placeholder="Search or paste URL, UPC, PCI, ASIN, SKU"
+      autocomplete="off"
+      spellcheck="false"
+    />
+  </form>
 
-    <a class="btn btn--outline"
-       href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en">
-      Get Extension
-    </a>
+    <button
+      class="nav-ai"
+      type="button"
+      title="PriceAI"
+      data-pc-plus="1"
+      aria-label="AI"
+    >
+      <img class="nav-ai__icon" src="/logo/ai.svg" alt="PriceAI" loading="lazy" decoding="async">
+    </button> 
+  </div>
+
+  <a class="btn btn--outline"
+     href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en">
+    Get Extension
+  </a>
 </header>
+
+<div id="pcPlusToast" class="pc-plus-toast" hidden aria-live="polite"></div>
+
+<nav class="pc-tabs" id="pcBrowseTabs" hidden aria-label="Browse sections">
+  <div class="pc-tabs-inner">
+    <div class="pc-tabs-left">
+      <a class="pc-tab is-active" href="#" data-pc-tab="prices" aria-current="page">Prices</a>
+      <a class="pc-tab is-disabled" href="#" data-pc-tab="specs" aria-disabled="true">Specs</a>
+      <a class="pc-tab is-disabled" href="#" data-pc-tab="insights" aria-disabled="true">Insights</a>
+      <a class="pc-tab is-disabled" href="#" data-pc-tab="history" aria-disabled="true">History</a>
+      <a class="pc-tab is-disabled" href="#" data-pc-tab="intel" aria-disabled="true">Intel</a>
+      <a class="pc-tab is-disabled" href="#" data-pc-tab="refurb" aria-disabled="true">Refurb</a>
+    </div>
+
+    <div class="pc-tabs-right">
+      <span class="pc-tabs-count" id="pcTabsCount" aria-live="polite" hidden></span>
+    </div>
+  </div>
+</nav>
