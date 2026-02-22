@@ -32,7 +32,7 @@ body{
 /* ===== Desktop layout with right sidebar ===== */
 .layout{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 400px;
+  grid-template-columns: minmax(0, 1fr) 32%;
   gap: 20px;
   align-items: start;
 }
@@ -362,6 +362,40 @@ header.nav{
   min-height: 36px;      /* tighter */
 }
 
+@media (max-width: 860px){
+
+  .pc-tabs-left{
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    white-space: nowrap;
+    gap: 14px;
+    padding-bottom: 2px;
+    min-width: 0;
+    scrollbar-width: none;
+  }
+
+  .pc-tabs-left::-webkit-scrollbar{
+    width: 0;
+    height: 0;
+  }
+
+  .pc-tab{
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .pc-tabs-right{
+    flex: 0 0 auto;
+  }
+
+  .pc-tabs-inner{
+    min-width: 0;
+  }
+  
+}
+
 .pc-tab {
   position: relative;
   display: inline-flex;
@@ -575,6 +609,8 @@ body.has-pc-tabs.pc-tabs-stuck header.nav{
   min-width: 0;           /* critical for grid items */
 }
 
+.btn--outline { white-space: nowrap; }
+
 .card-variants .pillbtn{
   flex: 0 0 auto;          /* critical: prevents shrinking */
   white-space: nowrap;     /* keep it one line */
@@ -623,6 +659,7 @@ body.has-pc-tabs.pc-tabs-stuck header.nav{
 
 .offer-row{
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   padding-top: 20px;
@@ -672,22 +709,18 @@ body.has-pc-tabs.pc-tabs-stuck header.nav{
 
 /* Coupon line spans full width under the row */
 .offer-coupon{
-  grid-column: 1 / -1;
   margin-top: -4px;
   font-size: 13px;
+  flex: 0 0 100%;
 }
 
 /* Small screens: collapse to 2 columns */
 @media (max-width: 520px){
-  .offer-row{
-    grid-template-columns: 1fr auto;
-  }
-
   .offer-tag{
-    grid-column: 1 / -1;
     text-align: left;
     white-space: normal;
     overflow: visible;
+    flex: 0 0 100%;
     text-overflow: clip;
   }
 
@@ -718,6 +751,9 @@ body.has-pc-tabs.pc-tabs-stuck header.nav{
 @media (max-width: 520px){
   .empty-inline{ font-size: 20px; }
   .empty-inline .kbd{ display: none; }
+  .store-stack {
+    display: none;
+  }
 }
 
 /* card base */
@@ -851,7 +887,11 @@ body.has-pc-tabs.pc-tabs-stuck header.nav{
   .grid{
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    gap: 7px;
+  }
+
+  header.nav{
+    gap: 0;
   }
 
   .card{
@@ -881,10 +921,22 @@ body.has-pc-tabs.pc-tabs-stuck header.nav{
 
   .name{
     margin-top: 6px;
-    font-size: 20px;
+    font-size: 16px;
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
+  }
+  
+  .price-from {
+    font-size: 16px;
+  }
+
+  .price {
+    font-size: 20px;
+  }
+
+  .warn {
+    display: none;
   }
 
   .right{ display: none; }
@@ -898,8 +950,4 @@ body.has-pc-tabs.pc-tabs-stuck header.nav{
   }
 
   .pager{ margin-left: 0; width: 100%; justify-content: flex-end; }
-
-  @media (max-width: 520px){
-    .grid{ grid-template-columns: 1fr; }
-  }
 }
