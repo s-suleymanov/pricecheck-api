@@ -608,7 +608,6 @@
     restoreInputValue
   };
 
-  // Auto-wire homepage input. Header input is wired by partials.js after it injects the header.
   document.addEventListener("DOMContentLoaded", () => {
     const homeInputs = Array.from(document.querySelectorAll(".home-search__input"));
 
@@ -618,7 +617,6 @@
       attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
     }
 
-    // Homepage desktop autofocus (opt-in via data attribute)
     const path = (location.pathname || "/").toLowerCase();
     const isHome = path === "/" || path === "/index.html";
     const isDesktopViewport = () => {
