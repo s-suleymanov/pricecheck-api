@@ -261,7 +261,7 @@ body{
   margin:80px 0 0 0;
   background: #f5f5f7;
   color:var(--ink);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter, Roboto, Helvetica, Arial;
+  font-family: -apple-system, BlinkMacSystemFont, "Google Sans", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
   -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
 }
 
@@ -281,9 +281,9 @@ body{
   justify-content:center; 
   text-decoration:none;
   border-radius:999px; 
-  padding: 8px 26.88px 9px 26.88px; 
+  padding: 9px 26.88px 9px 26.88px; 
   font-size: 17px;
-  font-weight:600;
+  font-weight:500;
   border:1px solid #111; 
   color:#111; 
   background:#fff;
@@ -297,7 +297,7 @@ body{
 .hero__stack{max-width:980px; margin:0 auto}
 .display{
   font-size:clamp(56px, 5vw, 144px);
-  line-height:1.2; letter-spacing:-.02em; margin:0 0 20px; font-weight:600;
+  line-height:1.2; letter-spacing:-.02em; margin:0 0 20px; font-weight:500;
 }
 .accent{
   background:linear-gradient(90deg,var(--accent-a),var(--accent-b),var(--accent-c));
@@ -352,7 +352,7 @@ img.logo:hover {
 }
 
 .wordmark {
-  font-size: 20px; font-weight: 600; color: inherit; text-decoration: none;
+  font-size: 20px; font-weight: 500; color: inherit; text-decoration: none;
 }
 
 .brand{
@@ -362,7 +362,6 @@ img.logo:hover {
 .edition{
   margin-top:5px;
   margin-left:1px;
-  font-size:15px;
   line-height:1;
   color:var(--muted);
 }
@@ -1089,7 +1088,7 @@ em {
 .home-side__section{ padding: 6px; }
 .home-side__title{
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 500;
   margin: 6px 8px 10px;
 }
 
@@ -1124,7 +1123,7 @@ em {
 
 .home-side__item.is-active{
   background: rgba(0,0,0,0.06);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .home-side__item.is-disabled{
@@ -1170,10 +1169,8 @@ em {
   display: flex;
   gap: 10px;
   align-items: center;
-
   margin: 5px 0 10px;
   padding: 0;
-
   flex-wrap: wrap;
 }
 
@@ -1181,16 +1178,14 @@ em {
   display: inline-flex;
   align-items: center;
   height: 36px;
-
   padding: 0 14px;
   border-radius: 999px;
   border: 1px solid rgba(0,0,0,0.10);
   background: #fff;
-
   text-decoration: none;
   color: #111;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -1252,15 +1247,11 @@ em {
   .home-deal__title{
     font-size: 14px;
     line-height: 1.25;
-
-    /* hard cap to 2 lines */
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     overflow: hidden;
-
-    /* avoid the desktop fixed min-height forcing extra space */
     min-height: calc(1.25em * 2);
     margin-bottom: 8px;
   }
@@ -1305,7 +1296,7 @@ em {
 
 .home-deal__title{
   font-size:16px;
-  font-weight:550;
+  font-weight:450;
   line-height:1.2;
   -webkit-line-clamp:2;
   min-height: 38.3958px;
