@@ -30,7 +30,9 @@
   <meta name="twitter:title" content="PriceCheck Dashboard">
   <meta name="twitter:description" content="Compare prices across stores with variant-aware matching.">
   <meta name="twitter:image" content="https://www.pricechecktool.com/logo/default.webp">
-
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/dashboard/styles.css">
   <script src="/search.js" defer></script>
@@ -42,21 +44,31 @@
   <div id="site-header"></div>
 
   <main class="wrap">
-    <h1 id="pTitle">Loading...</h1>
+    <section class="card" style="display: none;">
+      <ul class="links-list">
+        <li>Note: PriceCheck is built and maintained by one person, so some prices may be missing or delayed as coverage expands. Thank you for your patience.</li>
+      </ul>
+    </section>
     <section class="grid-shell">
-      <div class="main-content">
-              <div class="pc-warn pc-warn--dropship" id="ps-warn" hidden>
-                <span class="pc-warn__icon" aria-hidden="true">
-                  <svg viewBox="0 -960 960 960" width="26" height="26">
-                    <path fill="currentColor" d="m40-120 440-760 440 760H40Zm138-80h604L480-720 178-200Zm302-40q17 0 28.5-11.5T520-280q0-17-11.5-28.5T480-320q-17 0-28.5 11.5T440-280q0 17 11.5 28.5T480-240Zm-40-120h80v-200h-80v200Zm40-100Z"></path>
-                  </svg>
-                </span>
-                <div class="pc-warn__body">
-                  <div class="pc-warn__title">Dropshipping Risk</div>
-                  <div class="pc-warn__text">Double-check seller and return policy.</div>
-                </div>
+      
+        <section class="card" id="productHeader" style="margin-top: 0;">
+          <div class="grid2 ph-grid">
+
+            <div>
+              <div class="pimg-wrap">
+                <img id="pImg" src="" alt="Product image" loading="lazy" decoding="async" style="display:none">
               </div>
-              <!-- Recall warning -->
+            </div>
+
+            <div>
+              <div id="pBrandRow" class="ph-brand-row" hidden>
+                <div id="pBrandLine" class="muted" style="font-size: 20px;"></div>
+                <button class="ph-follow" type="button">Follow</button>
+              </div>
+              <h1 id="pTitle" style="font-size: 30px; margin-bottom: 10px;">Loading...</h1>
+              <div class="muted mono" id="pIds"></div>
+
+                            <!-- Recall warning -->
               <div class="pc-warn pc-warn--recall" id="ps-recall" hidden>
                 <span class="pc-warn__icon" aria-hidden="true">
                   <svg viewBox="0 -960 960 960" width="26" height="26">
@@ -82,45 +94,65 @@
                 </div>
               </div>
 
-        <section class="card" id="productHeader">
-          <div class="grid2">
-            <div>
-              <div class="muted mono" id="pIds"></div>
-
-              <!-- Category -->
-              <div style="margin-top:10px" id="categoryWrap" hidden>
-                <label class="muted">Category</label>
-                <button id="categoryBtn" class="ph-btn" type="button"></button>
+              <div id="variant2Card" hidden>
+                <h3 style="margin-bottom: 9px; margin-top: 18px;">Variants</h3>
+                <div class="pill-row" id="variant2Pills"></div>
               </div>
 
-              <!-- Brand -->
-              <div style="margin-top:10px" id="brandWrap" hidden>
-                <label class="muted">Brand</label>
-                <button id="brandBtn" class="ph-btn" type="button"></button>
-              </div>
-
-              <!-- Family -->
-              <div style="margin-top:10px" id="familyWrap" hidden>
-                <label class="muted" for="familySel">Family</label>
-                <select class="variant-dropdown" id="familySel"></select>
-              </div>
-
-              <!-- Model -->
-              <div style="margin-top:10px">
-                <label class="muted" for="variant">Model</label>
-                <select class="variant-dropdown" id="variant"></select>
+              <div id="colorCard" hidden>
+                <h3 style="margin-bottom: 9px; margin-top: 18px;">Color</h3>
+                <div class="pill-row" id="colorPills"></div>
               </div>
             </div>
-            <div>
-              <div class="pimg-wrap">
-                <img id="pImg" src="" alt="Product image" loading="lazy" decoding="async" style="display:none">
-              </div>
+
+            <div class="ph-tools" aria-label="Product actions">
+              <button class="ph-tool" type="button" aria-label="Save item">
+                <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
+                  <path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"></path>
+                </svg>
+              </button>
+
+              <button class="ph-tool" type="button" aria-label="Add to list">
+                <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
+                  <path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h440q19 0 36 8.5t28 23.5l216 288-216 288q-11 15-28 23.5t-36 8.5H160Zm0-80h440l180-240-180-240H160v480Zm220-240Z"></path>
+                </svg>
+              </button>
+
+              <button class="ph-tool" type="button" aria-label="Share">
+                <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
+                  <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"></path>
+                </svg>
+              </button>
+
+              <button class="ph-tool" type="button" aria-label="Compare">
+                <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
+                  <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"></path>
+                </svg>
+              </button>
+
+              <button class="ph-tool" type="button" aria-label="More tools">
+                <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
+                  <path d="M183.5-183.5Q160-207 160-240t23.5-56.5Q207-320 240-320t56.5 23.5Q320-273 320-240t-23.5 56.5Q273-160 240-160t-56.5-23.5Zm240 0Q400-207 400-240t23.5-56.5Q447-320 480-320t56.5 23.5Q560-273 560-240t-23.5 56.5Q513-160 480-160t-56.5-23.5Zm240 0Q640-207 640-240t23.5-56.5Q687-320 720-320t56.5 23.5Q800-273 800-240t-23.5 56.5Q753-160 720-160t-56.5-23.5Zm-480-240Q160-447 160-480t23.5-56.5Q207-560 240-560t56.5 23.5Q320-513 320-480t-23.5 56.5Q273-400 240-400t-56.5-23.5Zm240 0Q400-447 400-480t23.5-56.5Q447-560 480-560t56.5 23.5Q560-513 560-480t-23.5 56.5Q513-400 480-400t-56.5-23.5Zm240 0Q640-447 640-480t23.5-56.5Q687-560 720-560t56.5 23.5Q800-513 800-480t-23.5 56.5Q753-400 720-400t-56.5-23.5Zm-480-240Q160-687 160-720t23.5-56.5Q207-800 240-800t56.5 23.5Q320-753 320-720t-23.5 56.5Q273-640 240-640t-56.5-23.5Zm240 0Q400-687 400-720t23.5-56.5Q447-800 480-800t56.5 23.5Q560-753 560-720t-23.5 56.5Q513-640 480-640t-56.5-23.5Zm240 0Q640-687 640-720t23.5-56.5Q687-800 720-800t56.5 23.5Q800-753 800-720t-23.5 56.5Q753-640 720-640t-56.5-23.5Z"></path>
+                </svg>
+              </button>
             </div>
           </div>
-        </section>
+      </section>
+      <div class="main-content">
+              <div class="pc-warn pc-warn--dropship" id="ps-warn" hidden>
+                <span class="pc-warn__icon" aria-hidden="true">
+                  <svg viewBox="0 -960 960 960" width="26" height="26">
+                    <path fill="currentColor" d="m40-120 440-760 440 760H40Zm138-80h604L480-720 178-200Zm302-40q17 0 28.5-11.5T520-280q0-17-11.5-28.5T480-320q-17 0-28.5 11.5T440-280q0 17 11.5 28.5T480-240Zm-40-120h80v-200h-80v200Zm40-100Z"></path>
+                  </svg>
+                </span>
+                <div class="pc-warn__body">
+                  <div class="pc-warn__title">Dropshipping Risk</div>
+                  <div class="pc-warn__text">Double-check seller and return policy.</div>
+                </div>
+              </div>
 
         <!-- KPIs -->
-        <section class="card">
+        <section class="card" style="margin-top: 0;">
           <div class="kpis">
             <div class="kpi"><div class="small">Lowest price</div><div class="big" id="kCurrent">NA</div><div class="small muted" id="kStore"></div></div>
             <div class="kpi"><div class="small">Typical low 90d</div><div class="big" id="kTypical">NA</div><div class="small muted" id="kTypicalNote"></div></div>
@@ -129,102 +161,9 @@
           </div>
         </section>
 
-        <!-- Cross store offers -->
-        <section class="card">
-          <div class="spaced" style="margin-bottom: 8px;">
-            <h2 style="margin:0">Cross Offers</h2>
-          </div>
-          <div id="offers"></div>
-          <p class="note" id="offersNote"></p>
-        </section>
-
-        <!-- Price history -->
-        <section class="card">
-          <div class="spaced">
-            <h2 style="margin:0">Price History</h2>
-            <div>
-              <button class="pill" data-range="7">7d</button>
-              <button class="pill" data-range="30">30d</button>
-              <button class="pill" data-range="90">90d</button>
-              <button class="pill" id="downloadCsv">Download CSV</button>
-            </div>
-          </div>
-          <svg id="chart" class="chart" viewBox="0 0 700 200" preserveAspectRatio="none" role="img" aria-label="Price history chart"></svg>
-          <div class="legend-row">
-          <div class="legend">
-              <span class="swatch"></span><span class="muted">Current price</span>
-              <span class="swatch alt" style="margin-left:10px"></span><span class="muted">Typical low</span>
-            </div>
-            <div class="muted" id="chartNote"></div>
-          </div>
-        </section>
-
-        <!-- Variant Specs Matrix -->
-        <section class="card">
-          <h2>Variant Matrix</h2>
-          <div id="specsMatrix">No specs available.</div>
-          <div class="note">Differences are highlighted to prevent fake variant deals.</div>
-        </section>
-
-        <!-- Deal Integrity Forensics -->
-        <section class="card">
-          <div class="spaced">
-            <h2 style="margin: 0;">Deal Integrity</h2>
-            <img
-              class="card-head__icon"
-              src="/logo/greencheckmark.svg"
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-
-          <details id="forensics">
-            <summary class="muted">Open details</summary>
-            <ul id="forensicsList" class="links-list" style="margin-top:16px"></ul>
-          </details>
-          <p class="note">We compare claimed strikes to observed history on the exact variant. Bad anchors or wrong variant gets flagged.</p>
-        </section>
-
-        <!-- Observation Log -->
-        <section class="card">
-          <div class="spaced">
-            <h2 style="margin:0">Observation Log</h2>
-            <button class="pill" id="downloadObs">Download CSV</button>
-          </div>
-          <table>
-            <thead><tr><th>Time</th><th>Store</th><th>Price</th><th>Note</th></tr></thead>
-            <tbody id="obsBody"></tbody>
-          </table>
-          <p class="note">We record per-store price observations with the exact capture time from our servers.</p>
-        </section>
-      </div>
-
-      <!-- SIDEBAR -->
-      <aside>
-        <div class="sticky">
-          <section class="card">
-            <h3>Store Coverage</h3>
-            <div class="bars" id="coverage"></div>
-            <p class="note">Higher percentages indicate this store is recommended more often based on our metrics.</p>
-          </section>
-
-          <!-- Variant (new catalog.variant dropdown placeholder) -->
-          <section class="card" id="variant2Card" hidden>
-            <h3 style="margin-bottom: 9px;">Variant</h3>
-            <div class="pill-row" id="variant2Pills"></div>
-          </section>
-
-          <!-- Color (moved from header into its own card) -->
-          <section class="card" id="colorCard" hidden>
-            <h3 style="margin-bottom: 9px;">Color</h3>
-            <div class="pill-row" id="colorPills"></div>
-          </section>
-
-          <section class="card" id="couponCard" hidden>
+        <section class="card" id="couponCard" hidden>
             <div class="coupon-head">
-              <h3 style="margin:0">Coupons</h3>
+              <h2 data-icon-path="M160-280v80h640v-80H160Zm0-440h88q-5-9-6.5-19t-1.5-21q0-50 35-85t85-35q30 0 55.5 15.5T460-826l20 26 20-26q18-24 44-39t56-15q50 0 85 35t35 85q0 11-1.5 21t-6.5 19h88q33 0 56.5 23.5T880-640v440q0 33-23.5 56.5T800-120H160q-33 0-56.5-23.5T80-200v-440q0-33 23.5-56.5T160-720Zm0 320h640v-240H596l84 114-64 46-136-184-136 184-64-46 82-114H160v240Zm228.5-331.5Q400-743 400-760t-11.5-28.5Q377-800 360-800t-28.5 11.5Q320-777 320-760t11.5 28.5Q343-720 360-720t28.5-11.5ZM600-720q17 0 28.5-11.5T640-760q0-17-11.5-28.5T600-800q-17 0-28.5 11.5T560-760q0 17 11.5 28.5T600-720Z">Coupons</h2>
               <span class="coupon-badge" id="cpBadge" hidden>Verified</span>
             </div>
 
@@ -252,35 +191,114 @@
             <p class="note" id="cpFootnote">
               After-coupon prices are shown only when we can verify them. Exclusions apply.
             </p>
-          </section>
+        </section>
 
-          <section class="card">
-            <h3 style="margin-bottom: 9px;">PriceMatch</h3>
-            <p class="note">If eligible, contact the higher priced retailer and use this script.</p>
-            <textarea id="pmScript" rows="6" style="width:100%; border:1px solid var(--line); border-radius:10px; padding:10px; font:inherit; background: var(--surface)"></textarea>
-            <div class="spaced" style="margin-top:16px; margin-bottom: 0;">
-              <button class="btn-das" id="copyPm">Copy script</button>
-              <span class="muted" id="pmNote"></span>
+        <section class="card" id="offersCard">
+          <h2 data-icon-path="M841-518v318q0 33-23.5 56.5T761-120H201q-33 0-56.5-23.5T121-200v-318q-23-21-35.5-54t-.5-72l42-136q8-26 28.5-43t47.5-17h556q27 0 47 16.5t29 43.5l42 136q12 39-.5 71T841-518Zm-272-42q27 0 41-18.5t11-41.5l-22-140h-78v148q0 21 14 36.5t34 15.5Zm-180 0q23 0 37.5-15.5T441-612v-148h-78l-22 140q-4 24 10.5 42t37.5 18Zm-178 0q18 0 31.5-13t16.5-33l22-154h-78l-40 134q-6 20 6.5 43t41.5 23Zm540 0q29 0 42-23t6-43l-42-134h-76l22 154q3 20 16.5 33t31.5 13ZM201-200h560v-282q-5 2-6.5 2H751q-27 0-47.5-9T663-518q-18 18-41 28t-49 10q-27 0-50.5-10T481-518q-17 18-39.5 28T393-480q-29 0-52.5-10T299-518q-21 21-41.5 29.5T211-480h-4.5q-2.5 0-5.5-2v282Zm560 0H201h560Z">Sellers</h2>
+          <div id="offers"></div>
+          <p class="note" id="offersNote"></p> <!-- Add Reviews -->
+        </section>
+
+        <section class="card" id="specsCard">
+          <h2 data-icon-path="M348.5-291.5Q360-303 360-320t-11.5-28.5Q337-360 320-360t-28.5 11.5Q280-337 280-320t11.5 28.5Q303-280 320-280t28.5-11.5Zm0-160Q360-463 360-480t-11.5-28.5Q337-520 320-520t-28.5 11.5Q280-497 280-480t11.5 28.5Q303-440 320-440t28.5-11.5Zm0-160Q360-623 360-640t-11.5-28.5Q337-680 320-680t-28.5 11.5Q280-657 280-640t11.5 28.5Q303-600 320-600t28.5-11.5ZM440-280h240v-80H440v80Zm0-160h240v-80H440v80Zm0-160h240v-80H440v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z">Specs</h2>
+          <div id="specsContent" class="sidebar-empty">No specs found.</div>
+        </section>
+
+        <section class="card" id="year" hidden>
+          <div class="spaced">
+            <h2 data-icon-path="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Zm280 240q-17 0-28.5-11.5T440-440q0-17 11.5-28.5T480-480q17 0 28.5 11.5T520-440q0 17-11.5 28.5T480-400Zm-188.5-11.5Q280-423 280-440t11.5-28.5Q303-480 320-480t28.5 11.5Q360-457 360-440t-11.5 28.5Q337-400 320-400t-28.5-11.5ZM640-400q-17 0-28.5-11.5T600-440q0-17 11.5-28.5T640-480q17 0 28.5 11.5T680-440q0 17-11.5 28.5T640-400ZM480-240q-17 0-28.5-11.5T440-280q0-17 11.5-28.5T480-320q17 0 28.5 11.5T520-280q0 17-11.5 28.5T480-240Zm-188.5-11.5Q280-263 280-280t11.5-28.5Q303-320 320-320t28.5 11.5Q360-297 360-280t-11.5 28.5Q337-240 320-240t-28.5-11.5ZM640-240q-17 0-28.5-11.5T600-280q0-17 11.5-28.5T640-320q17 0 28.5 11.5T680-280q0 17-11.5 28.5T640-240Z">Timeline</h2>
+          </div>
+
+          <div id="timelineContent"></div>
+        </section>
+
+                <!-- Price history -->
+        <section class="card">
+          <div class="spaced">
+            <h2 data-icon-path="M120-240q-33 0-56.5-23.5T40-320q0-33 23.5-56.5T120-400h10.5q4.5 0 9.5 2l182-182q-2-5-2-9.5V-600q0-33 23.5-56.5T400-680q33 0 56.5 23.5T480-600q0 2-2 20l102 102q5-2 9.5-2h21q4.5 0 9.5 2l142-142q-2-5-2-9.5V-640q0-33 23.5-56.5T840-720q33 0 56.5 23.5T920-640q0 33-23.5 56.5T840-560h-10.5q-4.5 0-9.5-2L678-420q2 5 2 9.5v10.5q0 33-23.5 56.5T600-320q-33 0-56.5-23.5T520-400v-10.5q0-4.5 2-9.5L420-522q-5 2-9.5 2H400q-2 0-20-2L198-340q2 5 2 9.5v10.5q0 33-23.5 56.5T120-240Z">History</h2>
+            <div id="historyToggle" class="dim-toggle" role="group" aria-label="History range controls">
+            <button type="button" class="dim-unit-btn" data-range="7">7d</button>
+            <button type="button" class="dim-unit-btn is-active" data-range="30">30d</button>
+            <button type="button" class="dim-unit-btn" data-range="90">90d</button>
+          </div>
+          </div>
+          <svg id="chart" class="chart" viewBox="0 0 700 200" preserveAspectRatio="none" role="img" aria-label="Price history chart"></svg>
+          <div class="legend-row">
+          <div class="legend">
+              <span class="swatch"></span><span class="muted">Current price</span>
+              <span class="swatch alt" style="margin-left:10px"></span><span class="muted">Typical low</span>
             </div>
-          </section>
+            <div class="muted" id="chartNote"></div>
+          </div>
+        </section>
 
-          <!-- Intelligence -->
-          <section class="card card--pm">
-            <h3>PriceCheck Intelligence</h3>
-            <p class="note">Quick actions that save time.</p>
-            <div class="grid2">
-              <button class="btn-das" id="actSummary">Summarize</button>
-              <button class="btn-das" id="actRefund">Post purchase refund</button>
-            </div>
-            <button class="btn-das" id="actFlag" style="padding:18px;margin-top:16px;width:100%">Flag a shady listing</button>
-            <p class="muted" id="actNote" style="margin-top:6px"></p>
-          </section>
+        <section class="card" id="dim" hidden>
+          <div class="spaced">
+            <h2 style="margin: 0;" data-icon-path="M160-240q-33 0-56.5-23.5T80-320v-320q0-33 23.5-56.5T160-720h640q33 0 56.5 23.5T880-640v320q0 33-23.5 56.5T800-240H160Zm0-80h640v-320H680v160h-80v-160h-80v160h-80v-160h-80v160h-80v-160H160v320Zm120-160h80-80Zm160 0h80-80Zm160 0h80-80Zm-120 0Z">Dimensions</h2>
+            <div class="dim-toggle" id="dimToggle" role="group" aria-label="Dimension units"></div>
+          </div>
+          <div id="dimContent"></div>
+        </section>
 
-          <section class="card">
-            <h3>Notes</h3>
-            <ul class="links-list">
-              <li>PriceCheck is built and maintained by one person, so some prices may be delayed or missing as coverage expands. Thanks for your patience, and if you want to help scrape products, reach out through <a href="/support">Support</a>.</li>
-            </ul>
+        <section class="card" id="bundle" hidden>
+          <div class="spaced">
+            <h2 style="margin: 0;" data-icon-path="M280-80q-33 0-56.5-23.5T200-160v-400q0-33 23.5-56.5T280-640h400q33 0 56.5 23.5T760-560v400q0 33-23.5 56.5T680-80H280Zm0-80h400v-400H280v400Zm160-40h80v-40h-80v40Zm0-80h80q0-19 9.5-34.5T550-345q12-17 21-36.5t9-40.5q0-41-29-69.5T480-520q-42 0-71 28.5T380-422q0 21 9.5 40t20.5 36q11 16 20.5 31.5T440-280ZM240-700q0-25 17.5-42.5T300-760h360q25 0 42.5 17.5T720-700H240Zm40-120q0-25 17.5-42.5T340-880h280q25 0 42.5 17.5T680-820H280Zm200 460Z">Bundle</h2>
+          </div>
+        </section>
+
+        <section class="card" id="lineup" style="padding-bottom: 40px;" hidden>
+          <h2 data-icon-path="M600-120v-120H440v-400h-80v120H80v-320h280v120h240v-120h280v320H600v-120h-80v320h80v-120h280v320H600ZM160-760v160-160Zm520 400v160-160Zm0-400v160-160Zm0 160h120v-160H680v160Zm0 400h120v-160H680v160ZM160-600h120v-160H160v160Z">Lineup</h2>
+
+          <div id="lineupContent">
+            <div class="sidebar-empty">No lineup found.</div>
+          </div>
+        </section>
+
+        <section class="card" id="mediaCard" hidden>
+          <h2 data-icon-path="M680-160v-640q33 0 56.5 23.5T760-720v480q0 33-23.5 56.5T680-160ZM160-80q-33 0-56.5-23.5T80-160v-640q0-33 23.5-56.5T160-880h360q33 0 56.5 23.5T600-800v640q0 33-23.5 56.5T520-80H160Zm680-160v-480q25 0 42.5 17.5T900-660v360q0 25-17.5 42.5T840-240Zm-680 80h360v-640H160v640Zm0-640v640-640Z">Media</h2>
+          <div id="mediaContent"></div>
+        </section>
+
+        <section class="card" id="files" hidden>
+          <div class="spaced">
+            <h2 data-icon-path="M160-160q-33 0-56.5-23.5T80-240v-400q0-33 23.5-56.5T160-720h240l80-80h320q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm73-280h207v-207L233-440Zm-73-40 160-160H160v160Zm0 120v120h640v-480H520v280q0 33-23.5 56.5T440-360H160Zm280-160Z">Files</h2>
+          </div>
+
+          <div id="filesContent">
+            <div class="sidebar-empty">No files available.</div>
+          </div>
+        </section>
+
+        <!-- Deal Integrity Forensics -->
+        <section class="card">
+          <div class="spaced">
+            <h2 style="margin: 0;" data-icon-path="M480-80q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q97-30 162-118.5T718-480H480v-315l-240 90v207q0 7 2 18h238v316Z">Security</h2>
+            <img
+              class="card-head__icon"
+              src="/logo/greencheckmark.svg"
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+
+          <div id="securityIds" class="muted mono" hidden style="margin:0 0 14px;"></div>
+
+          <details id="forensics">
+
+            <summary class="muted">Open details</summary>
+            <ul id="forensicsList" class="links-list" style="margin-top:16px"></ul>
+          </details>
+          <p class="note">We compare claimed strikes to observed history on the exact variant. Bad anchors or wrong variant gets flagged.</p>
+        </section>
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside>
+        <div class="sticky">
+          <section class="card sidebar-panel" id="panelSimilar">
+            <div class="sidebar-empty">No similar products found.</div>
           </section>
         </div>
       </aside>

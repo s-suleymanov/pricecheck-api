@@ -217,6 +217,255 @@ async function getFamiliesForBrand(client, brandRaw) {
   }));
 }
 
+async function getSimilarProducts(client, selectedMeta, limit = 12) {
+  const category = String(selectedMeta?.category || '').trim();
+  const brand = String(selectedMeta?.brand || '').trim();
+
+  if (!category || !brand) return [];
+
+  const r = await client.query(
+    `
+    WITH picked AS (
+      SELECT DISTINCT ON (
+        upper(btrim(c.model_number)),
+        COALESCE(NULLIF(lower(btrim(c.version)), ''), '')
+      )
+        btrim(c.model_number) AS model_number,
+        upper(btrim(c.model_number)) AS model_number_norm,
+        COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+        c.version,
+        c.model_name,
+        c.brand,
+        c.category,
+        c.image_url,
+        c.pci,
+        c.upc,
+        c.created_at,
+        c.id
+      FROM public.catalog c
+      WHERE c.model_number IS NOT NULL
+        AND btrim(c.model_number) <> ''
+        AND c.category IS NOT NULL
+        AND btrim(c.category) <> ''
+        AND lower(btrim(c.category)) = lower(btrim($1))
+        AND c.brand IS NOT NULL
+        AND btrim(c.brand) <> ''
+        AND lower(btrim(c.brand)) <> lower(btrim($2))
+      ORDER BY
+        upper(btrim(c.model_number)),
+        COALESCE(NULLIF(lower(btrim(c.version)), ''), ''),
+        c.created_at DESC NULLS LAST,
+        c.id DESC
+    ),
+    anchors AS (
+      SELECT
+        p.*,
+        CASE
+          WHEN p.pci IS NOT NULL AND btrim(p.pci) <> '' THEN ('pci:' || btrim(p.pci))
+          WHEN p.upc IS NOT NULL AND btrim(p.upc) <> '' THEN ('upc:' || btrim(p.upc))
+          ELSE NULL
+        END AS dashboard_key
+      FROM picked p
+    ),
+    cheapest AS (
+      SELECT
+        a.model_number_norm,
+        a.version_norm,
+        MIN(l.current_price_cents) FILTER (
+          WHERE l.current_price_cents IS NOT NULL
+            AND l.current_price_cents > 0
+        ) AS best_price_cents
+      FROM anchors a
+      LEFT JOIN public.catalog c2
+        ON upper(btrim(c2.model_number)) = a.model_number_norm
+       AND COALESCE(NULLIF(lower(btrim(c2.version)), ''), '') = a.version_norm
+      LEFT JOIN public.listings l
+        ON (
+          (
+            c2.pci IS NOT NULL
+            AND btrim(c2.pci) <> ''
+            AND l.pci IS NOT NULL
+            AND btrim(l.pci) <> ''
+            AND upper(btrim(l.pci)) = upper(btrim(c2.pci))
+          )
+          OR
+          (
+            c2.upc IS NOT NULL
+            AND btrim(c2.upc) <> ''
+            AND l.upc IS NOT NULL
+            AND btrim(l.upc) <> ''
+            AND public.norm_upc(l.upc) = public.norm_upc(c2.upc)
+          )
+        )
+       AND coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
+      GROUP BY a.model_number_norm, a.version_norm
+    )
+    SELECT
+      a.model_name,
+      a.brand,
+      a.category,
+      a.image_url,
+      a.dashboard_key,
+      ch.best_price_cents
+    FROM anchors a
+    LEFT JOIN cheapest ch
+      ON ch.model_number_norm = a.model_number_norm
+     AND ch.version_norm = a.version_norm
+    WHERE a.dashboard_key IS NOT NULL
+    ORDER BY
+      CASE WHEN ch.best_price_cents IS NULL THEN 1 ELSE 0 END,
+      ch.best_price_cents ASC NULLS LAST,
+      a.brand ASC NULLS LAST,
+      a.model_name ASC NULLS LAST,
+      a.model_number_norm,
+      a.version_norm
+    LIMIT $3
+    `,
+    [category, brand, limit]
+  );
+
+  return r.rows || [];
+}
+
+async function getLineupData(client, selectedMeta) {
+  const brand = String(selectedMeta?.brand || '').trim();
+  const category = String(selectedMeta?.category || '').trim();
+  const currentFamily = String(selectedMeta?.model_number || '').trim();
+  const currentVersion = String(selectedMeta?.version || '').trim();
+
+  if (!brand) return null;
+
+const familiesRes = await client.query(
+  `
+  WITH family_pick AS (
+    SELECT DISTINCT ON (
+      upper(btrim(c.model_number))
+    )
+      c.model_number,
+      c.category,
+      CASE
+        WHEN c.pci IS NOT NULL AND btrim(c.pci) <> '' THEN 'pci:' || btrim(c.pci)
+        WHEN c.upc IS NOT NULL AND btrim(c.upc) <> '' THEN 'upc:' || btrim(c.upc)
+        ELSE NULL
+      END AS key
+    FROM public.catalog c
+    WHERE c.brand IS NOT NULL
+      AND btrim(c.brand) <> ''
+      AND lower(btrim(c.brand)) = lower(btrim($1))
+      AND c.model_number IS NOT NULL
+      AND btrim(c.model_number) <> ''
+    ORDER BY
+      upper(btrim(c.model_number)),
+      CASE
+        WHEN c.pci IS NOT NULL AND btrim(c.pci) <> '' THEN 0
+        WHEN c.upc IS NOT NULL AND btrim(c.upc) <> '' THEN 1
+        ELSE 2
+      END,
+      c.created_at DESC NULLS LAST,
+      c.id DESC
+  ),
+  family_counts AS (
+    SELECT
+      upper(btrim(c.model_number)) AS family_norm,
+      COUNT(
+        DISTINCT COALESCE(NULLIF(lower(btrim(c.version)), ''), '__default__')
+      )::int AS product_count
+    FROM public.catalog c
+    WHERE c.brand IS NOT NULL
+      AND btrim(c.brand) <> ''
+      AND lower(btrim(c.brand)) = lower(btrim($1))
+      AND c.model_number IS NOT NULL
+      AND btrim(c.model_number) <> ''
+    GROUP BY upper(btrim(c.model_number))
+  )
+  SELECT
+    fp.model_number,
+    fp.category,
+    fp.key,
+    COALESCE(fc.product_count, 0)::int AS product_count
+  FROM family_pick fp
+  LEFT JOIN family_counts fc
+    ON fc.family_norm = upper(btrim(fp.model_number))
+  ORDER BY
+    CASE
+      WHEN $2 <> '' AND upper(btrim(fp.model_number)) = upper(btrim($2)) THEN 0
+      ELSE 1
+    END,
+    CASE
+      WHEN $3 <> ''
+       AND fp.category IS NOT NULL
+       AND btrim(fp.category) <> ''
+       AND lower(btrim(fp.category)) = lower(btrim($3)) THEN 0
+      ELSE 1
+    END,
+    lower(btrim(fp.model_number)) ASC
+  LIMIT 60
+  `,
+  [brand, currentFamily, category]
+);
+
+  let current_family = null;
+
+  if (currentFamily) {
+    const currentRes = await client.query(
+      `
+      SELECT DISTINCT ON (
+        COALESCE(NULLIF(lower(btrim(c.version)), ''), '__default__')
+      )
+        c.version,
+        c.model_name,
+        c.category,
+        c.image_url,
+        CASE
+          WHEN c.pci IS NOT NULL AND btrim(c.pci) <> '' THEN 'pci:' || btrim(c.pci)
+          WHEN c.upc IS NOT NULL AND btrim(c.upc) <> '' THEN 'upc:' || btrim(c.upc)
+          ELSE NULL
+        END AS key
+      FROM public.catalog c
+      WHERE c.brand IS NOT NULL
+        AND btrim(c.brand) <> ''
+        AND lower(btrim(c.brand)) = lower(btrim($1))
+        AND c.model_number IS NOT NULL
+        AND btrim(c.model_number) <> ''
+        AND upper(btrim(c.model_number)) = upper(btrim($2))
+      ORDER BY
+        COALESCE(NULLIF(lower(btrim(c.version)), ''), '__default__'),
+        CASE
+          WHEN c.pci IS NOT NULL AND btrim(c.pci) <> '' THEN 0
+          WHEN c.upc IS NOT NULL AND btrim(c.upc) <> '' THEN 1
+          ELSE 2
+        END,
+        c.created_at DESC NULLS LAST,
+        c.id DESC
+      `,
+      [brand, currentFamily]
+    );
+
+    current_family = {
+      model_number: currentFamily,
+      brand,
+      category: category || null,
+      selected_version: currentVersion || null,
+      products: (currentRes.rows || [])
+        .filter(r => r.key)
+        .map(r => ({
+          version: String(r.version || '').trim() || 'Default',
+          model_name: r.model_name || null,
+          category: r.category || null,
+          image_url: r.image_url || null,
+          key: r.key
+        }))
+    };
+  }
+
+  return {
+    brand,
+    category: category || null,
+    current_family,
+    families: familiesRes.rows || []
+  };
+}
+
 function parseKey(rawKey) {
   const { prefix, val } = normalizePrefix(rawKey);
   const v = String(val || '').trim();
@@ -370,8 +619,8 @@ async function resolveCatalogIdentity(client, seedKeys) {
     const r = await client.query(
       `
       select id, upc, pci, model_name, model_number, brand, category, image_url,
-             version, color, variant, created_at,
-             dropship_warning, recall_url, coverage_warning
+        version, color, variant, dimensions, specs, media, timeline, files, created_at,
+        dropship_warning, recall_url, coverage_warning
       from public.catalog
       where pci is not null and btrim(pci) <> ''
         and upper(btrim(pci)) = upper(btrim($1))
@@ -388,9 +637,9 @@ async function resolveCatalogIdentity(client, seedKeys) {
   if (upc) {
     const r = await client.query(
       `
-      select id, upc, pci, model_name, model_number, brand, category, image_url,
-             version, color, variant, created_at,
-             dropship_warning, recall_url, coverage_warning
+    select id, upc, pci, model_name, model_number, brand, category, image_url,
+        version, color, variant, dimensions, specs, media, timeline, files, created_at,
+        dropship_warning, recall_url, coverage_warning
       from public.catalog
       where norm_upc(upc) = norm_upc($1)
       order by created_at desc
@@ -436,14 +685,23 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
       color: row.color || null,
       brand: row.brand || null,
       category: row.category || null,
-      image_url: row.image_url || null
+      image_url: row.image_url || null,
+      dimensions: (row.dimensions && typeof row.dimensions === 'object' && !Array.isArray(row.dimensions)) ? row.dimensions : null,
+      specs: (row.specs && typeof row.specs === 'object' && !Array.isArray(row.specs)) ? row.specs : null,
+      timeline: Array.isArray(row.timeline) ? row.timeline : null,
+      media: Array.isArray(row.media) ? row.media : null,
+      files: (
+        row.files &&
+        typeof row.files === 'object' &&
+        (Array.isArray(row.files) || Array.isArray(row.files.items))
+      ) ? row.files : null
     }] : [];
   }
 
     const r = await client.query(
     `
     select id, upc, pci, model_name, model_number, brand, category, image_url,
-           version, color, variant, created_at
+      version, color, variant, dimensions, specs, media, timeline, files, created_at
     from public.catalog
     where model_number is not null and btrim(model_number) <> ''
       and upper(btrim(model_number)) = upper(btrim($1))
@@ -493,7 +751,16 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
         color: row.color || null,
         brand: row.brand || null,
         category: row.category || null,
-        image_url: row.image_url || null
+        image_url: row.image_url || null,
+        dimensions: (row.dimensions && typeof row.dimensions === 'object' && !Array.isArray(row.dimensions)) ? row.dimensions : null,
+        specs: (row.specs && typeof row.specs === 'object' && !Array.isArray(row.specs)) ? row.specs : null,
+        timeline: Array.isArray(row.timeline) ? row.timeline : null,
+        media: Array.isArray(row.media) ? row.media : null,
+        files: (
+          row.files &&
+          typeof row.files === 'object' &&
+          (Array.isArray(row.files) || Array.isArray(row.files.items))
+        ) ? row.files : null
       };
     })
     .filter(Boolean);
@@ -688,93 +955,6 @@ async function resolveSelectedVariant(client, rawKey) {
   if (isLikelyASIN(parsed.value)) return resolveSelectedVariant(client, `asin:${parsed.value.toUpperCase()}`);
 
   return { pci: null, upc: null };
-}
-
-async function getObservationLog(client, selectedKeys, seed) {
-  const pci = selectedKeys?.pci ? String(selectedKeys.pci).trim() : '';
-  const upc = selectedKeys?.upc ? String(selectedKeys.upc).trim() : '';
-
-  // If no PCI/UPC, still show the seed listing if present
-  if (!pci && !upc) {
-    const seedStore = seed?.seed_listing?.store || null;
-    const seedSku = seed?.seed_listing?.store_sku || null;
-    if (!seedStore || !seedSku) return [];
-
-    const rSeed = await client.query(
-      `
-      select
-        coalesce(current_price_observed_at, created_at) as t,
-        store,
-        store_sku,
-        current_price_cents as price_cents,
-        effective_price_cents as effective_price_cents,
-        coupon_text as coupon_text
-      from public.listings
-      where replace(lower(btrim(store)), ' ', '') = replace(lower(btrim($1)), ' ', '')
-        and norm_sku(store_sku) = norm_sku($2)
-        and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
-      order by coalesce(current_price_observed_at, created_at) desc
-      limit 1
-      `,
-      [seedStore, seedSku]
-    );
-
-    if (!rSeed.rowCount) return [];
-
-    const r = rSeed.rows[0];
-    const t = r.t ? new Date(r.t).toISOString() : null;
-
-    return [{
-      t,
-      observed_at: t,
-      store: normStoreKey(r.store),
-      store_sku: r.store_sku || null,
-      price_cents: r.price_cents ?? null,
-      effective_price_cents: r.effective_price_cents ?? null,
-      coupon_text: r.coupon_text || null,
-      note: 'pass'
-    }];
-  }
-
-  const rL = await client.query(
-    `
-    select
-      coalesce(current_price_observed_at, created_at) as t,
-      store,
-      store_sku,
-      current_price_cents as price_cents,
-      effective_price_cents as effective_price_cents,
-      coupon_text as coupon_text
-    from public.listings
-    where
-      (
-        ($1::text <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($1)))
-        or
-        ($2::text <> '' and norm_upc(upc) = norm_upc($2))
-      )
-      and (current_price_observed_at is not null or created_at is not null)
-      and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
-    order by coalesce(current_price_observed_at, created_at) desc
-    limit 250
-    `,
-    [pci, upc]
-  );
-
-  return rL.rows
-    .filter(r => r.t)
-    .map((r) => {
-      const t = r.t ? new Date(r.t).toISOString() : null;
-      return {
-        t,
-        observed_at: t,
-        store: normStoreKey(r.store),
-        store_sku: r.store_sku || null,
-        price_cents: r.price_cents ?? null,
-        effective_price_cents: r.effective_price_cents ?? null,
-        coupon_text: r.coupon_text || null,
-        note: 'pass'
-      };
-    });
 }
 
 async function getPriceHistoryDailyAndStats(client, selectedKeys, days) {
@@ -1010,9 +1190,6 @@ router.get('/api/compare/:key', async (req, res) => {
     // 5) offers for selected variant (PCI/UPC only, but always include seed listing)
     const offers = await getOffersForSelectedVariant(client, selectedKeys, seed);
 
-    // 6) observation log (PCI/UPC only, but seed fallback)
-    const observed = await getObservationLog(client, selectedKeys, seed);
-
     // 7) price history (only if PCI/UPC exists)
     const history = await getPriceHistoryDailyAndStats(client, selectedKeys, 90);
 
@@ -1020,10 +1197,12 @@ router.get('/api/compare/:key', async (req, res) => {
     const listingTitle = seed?.seed_listing?.title ? String(seed.seed_listing.title).trim() : '';
 
     const brand =
-      (meta?.brand && String(meta.brand).trim()) ||
-      '';
+    (meta?.brand && String(meta.brand).trim()) ||
+    '';
 
     const families = brand ? await getFamiliesForBrand(client, brand) : [];
+    const similar = meta ? await getSimilarProducts(client, meta, 12) : [];
+    const lineup = meta ? await getLineupData(client, meta) : null;
 
     return res.json({
       ok: true,
@@ -1033,6 +1212,7 @@ router.get('/api/compare/:key', async (req, res) => {
         upc: seed.upc || null,
         // keep ASIN only as an input echo for the UI, never used for matching
         asin: seed.asin_input || null,
+        timeline: Array.isArray(meta?.timeline) ? meta.timeline : null,
 
         // catalog meta (fallback to listing title for model_name if catalog missing)
         model_number: meta?.model_number || null,
@@ -1040,6 +1220,14 @@ router.get('/api/compare/:key', async (req, res) => {
         brand: meta?.brand || null,
         category: meta?.category || null,
         image_url: meta?.image_url || null,
+        dimensions: (meta?.dimensions && typeof meta.dimensions === 'object' && !Array.isArray(meta.dimensions)) ? meta.dimensions : null,
+        specs: (meta?.specs && typeof meta.specs === 'object' && !Array.isArray(meta.specs)) ? meta.specs : null,
+        media: Array.isArray(meta?.media) ? meta.media : null,
+        files: (
+          meta?.files &&
+          typeof meta.files === 'object' &&
+          (Array.isArray(meta.files) || Array.isArray(meta.files.items))
+        ) ? meta.files : null,
         dropship_warning: !!meta?.dropship_warning,
         recall_url: meta?.recall_url || null,
         coverage_warning: !!meta?.coverage_warning,
@@ -1051,13 +1239,14 @@ router.get('/api/compare/:key', async (req, res) => {
       },
       variants,
       families,
+      similar,
+      lineup,
       selected_variant: {
         key:
           (selectedKeys.pci ? `pci:${selectedKeys.pci}` : null) ||
           (selectedKeys.upc ? `upc:${selectedKeys.upc}` : null)
       },
       offers,
-      observed,
       history
     });
   } catch (e) {

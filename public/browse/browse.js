@@ -2503,8 +2503,6 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
         if (isMobileBrowseView()) return;
 
         if (state.detailOpen && normLower(state.detailDashKey) === normLower(dashKey)) {
-          e.preventDefault();
-          closeDetail();
           return;
         }
 

@@ -361,7 +361,6 @@ img.logo:hover {
 
 .edition{
   margin-top:5px;
-  margin-left:1px;
   line-height:1;
   color:var(--muted);
 }
@@ -1416,3 +1415,40 @@ em {
   opacity: 1;
 }
 
+.pc-timeline-item__top{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 12px;
+}
+
+.pc-timeline-item__title{
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.pc-timeline-item__aside{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.pc-timeline-item__date{
+  margin: 0;
+  line-height: 1.2;
+}
+
+.pc-timeline-item__link{
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.pc-timeline-item__link:hover{
+  text-decoration: underline;
+}
