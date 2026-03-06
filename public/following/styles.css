@@ -1,0 +1,150 @@
+.pc-following-page .home-center__inner{
+  width:100%;
+}
+
+.pc-following-main{
+  min-width:0;
+}
+
+.pc-following-list{
+  width:100%;
+  padding:24px 0 0;
+}
+
+.pc-following-empty{
+  background:#fff;
+  border:1px solid rgba(0,0,0,0.08);
+  border-radius:18px;
+  padding:18px;
+}
+
+.pc-following-empty__title{
+  font-size:18px;
+  font-weight:650;
+  color:#111827;
+}
+
+.pc-following-empty__sub{
+  margin-top:6px;
+  color:#6b7280;
+  line-height:1.6;
+}
+
+.pc-following-empty__btn{
+  display:inline-flex;
+  margin-top:12px;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid rgba(17,24,39,.16);
+  background:#fff;
+  color:#111;
+  text-decoration:none;
+  font-weight:650;
+}
+
+.pc-following-grid{
+  margin-top:0;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+}
+
+.pc-following-card{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  width:100%;
+  background:#fff;
+  border:1px solid rgba(0,0,0,0.08);
+  border-radius:18px;
+  text-decoration:none;
+  color:inherit;
+  padding:16px 18px;
+  min-height:92px;
+  overflow:hidden;
+}
+
+.pc-following-card:hover{
+  border-color:rgba(0,0,0,0.14);
+  background:#fcfcfc;
+}
+
+.pc-following-card__top{
+  display:none;
+}
+
+.pc-following-card__avatar{
+  position:static;
+  transform:none;
+  flex:0 0 62px;
+  width:62px;
+  height:62px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid rgba(0,0,0,0.10);
+  box-shadow:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.pc-following-card__avatarImg{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+
+.pc-following-card__avatarFallback{
+  font-size:28px;
+  font-weight:700;
+  color:#111827;
+}
+
+.pc-following-card__body{
+  padding:0;
+  text-align:left;
+  min-width:0;
+  flex:1;
+}
+
+.pc-following-card__name{
+  font-size:18px;
+  font-weight:700;
+  color:#111827;
+  line-height:1.2;
+}
+
+.pc-following-card__meta{
+  margin-top:4px;
+  font-size:14px;
+  color:#6b7280;
+  font-weight:600;
+}
+
+@media (max-width:560px){
+  .pc-following-list{
+    padding-top:16px;
+  }
+
+  .pc-following-card{
+    padding:14px;
+    gap:12px;
+    min-height:84px;
+  }
+
+  .pc-following-card__avatar{
+    flex:0 0 54px;
+    width:54px;
+    height:54px;
+  }
+
+  .pc-following-card__name{
+    font-size:16px;
+  }
+
+  .pc-following-card__meta{
+    font-size:13px;
+  }
+}

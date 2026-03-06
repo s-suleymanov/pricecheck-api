@@ -1,0 +1,61 @@
+.pc-deals-page .home-center__inner{
+  width: 100%;
+}
+
+.pc-deals-page .pc-deals-main{
+  min-width: 0;
+}
+
+/* If you still have any "hide sidebar until ready" rule, this guarantees Deals shows it */
+.pc-deals-page .home-side__inner{
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.pc-deals-page .pc-deals-head{
+  padding: 24px 0 8px;
+}
+
+.pc-deals-page .pc-deals-title{
+  margin: 0 0 8px;
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1.05;
+  font-weight: 600;
+  color: #111827;
+}
+
+.pc-deals-page .pc-deals-sub{
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.7;
+  color: #4b5563;
+}
+
+/* Reuse your home-deals grid, but keep it tight under the title */
+.pc-deals-page #pcDeals.home-deals{
+  margin: 0;
+  padding: 0;
+}
+
+.pc-deals-empty{
+  padding: 56px 24px 80px;
+}
+
+.pc-deals-empty__center{
+  width: 100%;
+  max-width: 760px;
+}
+
+.pc-deals-empty__title{
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.pc-deals-empty__msg{
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #4b5563;
+}

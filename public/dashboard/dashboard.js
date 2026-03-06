@@ -24,7 +24,11 @@
     selectedVariantKey:null,
     lastKey:null,
     dimUnit: 'imperial',
-    selectedFileIndex: -1
+    selectedFileIndex: -1,
+    followBrand: '',
+    followingBrand: false,
+    followStateKnown: false,
+    followBusy: false
   };
 
     // Store-name overrides loaded from /public/data/name_overrides.json
@@ -915,7 +919,12 @@ function wireCardIcons(){
 document.addEventListener("DOMContentLoaded", async () => {
   wireCardIcons();
   wireIdPillsCopy();
+  wireBrandFollowButton();
   await loadNameOverridesOnce();
+  wireHeaderToolButtons();
+  window.addEventListener('pc:auth_changed', () => {
+    loadBrandFollowState();
+  });
 
   const key = currentKeyFromUrl() || "";
   if (!key.trim()) {
@@ -1047,6 +1056,16 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
       renderForensics();
       renderLineup();
       renderSimilarProducts();
+      {
+        const _hKey   = canonicalKey || state.lastKey;
+        const _hTitle = bestTitle;
+        const _hImg   = bestImg;
+        const _hBrand = String(state.identity?.brand || "").trim();
+        if (_hKey && _hTitle) {
+          recordHistory(_hKey, _hTitle, _hImg, _hBrand);
+        }
+      }
+      wireProductActions(canonicalKey || state.lastKey, bestTitle, bestImg, String(state.identity?.brand || '').trim());
     }catch(err){
       console.error(err);
       showMessage('Network error. Check console.');
@@ -1068,6 +1087,11 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
     if (brandLine) brandLine.textContent = '';
     $('#offers').innerHTML = '';
     $('#offersNote').textContent = '';
+    state.followBrand = '';
+    state.followingBrand = false;
+    state.followStateKnown = false;
+    state.followBusy = false;
+    setFollowButtonUi();
     $('#kCurrent').textContent = 'NA';
     $('#kStore').textContent = '';
     $('#kTypical').textContent = 'NA';
@@ -1213,7 +1237,517 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
 
     if (brandRow) brandRow.hidden = !brand;
     if (brandLine) brandLine.textContent = brand || '';
+        const prevBrandKey = String(state.followBrand || '').trim().toLowerCase();
+    const nextBrand = String(brand || '').trim();
+    const nextBrandKey = nextBrand.toLowerCase();
+
+    state.followBrand = nextBrand;
+
+    if (nextBrandKey !== prevBrandKey) {
+      state.followingBrand = false;
+      state.followStateKnown = false;
+      state.followBusy = false;
+      setFollowButtonUi();
+      loadBrandFollowState();
+    } else {
+      setFollowButtonUi();
+    }
+  }
+
+  function getFollowButton() {
+  return document.querySelector('.ph-follow');
+}
+
+function setFollowButtonUi() {
+  const btn = getFollowButton();
+  if (!btn) return;
+
+  const hasBrand = !!String(state.followBrand || '').trim();
+
+  btn.hidden = !hasBrand;
+  btn.disabled = !hasBrand || !!state.followBusy;
+
+  let label = 'Follow';
+
+  if (state.followBusy) {
+    label = state.followingBrand ? 'Following...' : 'Saving...';
+  } else if (state.followingBrand) {
+    label = 'Following';
+  }
+
+  btn.textContent = label;
+  btn.setAttribute('aria-pressed', state.followingBrand ? 'true' : 'false');
+}
+
+async function loadBrandFollowState() {
+  const brand = String(state.followBrand || '').trim();
+
+  state.followStateKnown = false;
+  state.followingBrand = false;
+  setFollowButtonUi();
+
+  if (!brand) return;
+
+  try {
+    const res = await fetch(`/api/follows/brand?brand=${encodeURIComponent(brand)}`, {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/json'
       }
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data || data.ok !== true) {
+      state.followStateKnown = true;
+      state.followingBrand = false;
+      setFollowButtonUi();
+      return;
+    }
+
+    state.followStateKnown = true;
+    state.followingBrand = !!data.following;
+    setFollowButtonUi();
+  } catch (_err) {
+    state.followStateKnown = true;
+    state.followingBrand = false;
+    setFollowButtonUi();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH: replace the existing toggleBrandFollow() function in dashboard.js
+// with this version. The only change is the window.dispatchEvent call at the
+// end so partials.js / following.js can react immediately.
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function toggleBrandFollow() {
+  const brand = String(state.followBrand || '').trim();
+  if (!brand || state.followBusy) return;
+
+  state.followBusy = true;
+  setFollowButtonUi();
+
+  try {
+    const res = await fetch('/api/follows/brand/toggle', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ brand })
+    });
+
+    if (res.status === 401) {
+      state.followBusy = false;
+      setFollowButtonUi();
+      if (typeof window.pcOpenSignIn === 'function') window.pcOpenSignIn();
+      return;
+    }
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data || data.ok !== true) {
+      state.followBusy = false;
+      setFollowButtonUi();
+      return;
+    }
+
+    state.followingBrand   = !!data.following;
+    state.followStateKnown = true;
+
+    // ── NEW: notify sidebar and following page ──
+    window.dispatchEvent(new CustomEvent('pc:following_changed', {
+      detail: { brand, following: state.followingBrand }
+    }));
+
+    // Refresh sidebar immediately via partials
+    window.pcRefreshSidebarFollowing?.();
+
+  } catch (_err) {
+    // keep existing state on network error
+  } finally {
+    state.followBusy = false;
+    setFollowButtonUi();
+  }
+}
+
+
+function _dbClean(v) { return String(v || "").trim(); }
+
+function _dbEsc(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+let _bookmarkBusy = false;
+
+async function wireBookmarkButton(entityKey, title, imageUrl, brand) {
+  const btn = document.querySelector("[data-pc-bookmark='1']");
+  if (!btn) return;
+
+  const iconOn  = btn.querySelector("[data-bookmark-icon='on']");
+  const iconOff = btn.querySelector("[data-bookmark-icon='off']");
+
+  function setBookmarked(on) {
+    if (iconOn)  iconOn.style.display  = on ? "" : "none";
+    if (iconOff) iconOff.style.display = on ? "none" : "";
+    btn.setAttribute("aria-pressed", String(!!on));
+    btn.title = on ? "Remove bookmark" : "Save to bookmarks";
+  }
+
+  setBookmarked(false); // default until API returns
+
+  // Check current state
+  try {
+    const res  = await fetch(`/api/bookmarks/check?entity_key=${encodeURIComponent(entityKey)}`, {
+      credentials: "same-origin", headers: { Accept: "application/json" }
+    });
+    const data = await res.json().catch(() => null);
+    if (data?.ok) setBookmarked(!!data.bookmarked);
+  } catch (_e) {}
+
+  // Remove any old listener
+  if (btn._pcBookmarkBound) {
+    btn.removeEventListener("click", btn._pcBookmarkBound);
+  }
+
+  btn._pcBookmarkBound = async function handleBookmarkClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (_bookmarkBusy) return;
+
+    _bookmarkBusy = true;
+    btn.disabled = true;
+
+    try {
+      const res = await fetch("/api/bookmarks/toggle", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entity_key: entityKey,
+          title:      _dbClean(title).slice(0, 200),
+          image_url:  _dbClean(imageUrl).slice(0, 500) || null,
+          brand:      _dbClean(brand).slice(0, 100) || null
+        })
+      });
+      if (res.status === 401) {
+        window.pcOpenSignIn?.();
+        return;
+      }
+      const data = await res.json().catch(() => null);
+      if (data?.ok) setBookmarked(!!data.bookmarked);
+    } catch (_e) {}
+    finally {
+      _bookmarkBusy = false;
+      btn.disabled = false;
+    }
+  };
+
+  btn.addEventListener("click", btn._pcBookmarkBound);
+}
+
+
+let _labelPanelOpen   = false;
+let _labelPanelEl     = null;
+let _labelCurrentKey  = null;
+let _labelCurrentMeta = null;
+
+function _ensureLabelPanel() {
+  if (_labelPanelEl) return _labelPanelEl;
+
+  _labelPanelEl = document.createElement("div");
+  _labelPanelEl.id = "pcLabelPickerPanel";
+  _labelPanelEl.setAttribute("role", "dialog");
+  _labelPanelEl.setAttribute("aria-label", "Save to label");
+  _labelPanelEl.style.cssText = `
+    position:fixed; z-index:9000;
+    bottom:24px; right:24px;
+    width:300px; max-height:360px; overflow-y:auto;
+    background:#fff; border:1px solid rgba(0,0,0,.12);
+    border-radius:14px; box-shadow:0 12px 36px rgba(0,0,0,.15);
+    padding:0; display:none; flex-direction:column;
+  `;
+
+  document.body.appendChild(_labelPanelEl);
+
+  // Close on outside click
+  document.addEventListener("click", e => {
+    if (_labelPanelOpen &&
+        !_labelPanelEl.contains(e.target) &&
+        !e.target.closest("[data-pc-label-trigger='1']")) {
+      _closeLabelPanel();
+    }
+  }, true);
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && _labelPanelOpen) _closeLabelPanel();
+  });
+
+  return _labelPanelEl;
+}
+
+function _closeLabelPanel() {
+  if (_labelPanelEl) _labelPanelEl.style.display = "none";
+  _labelPanelOpen = false;
+}
+
+function _positionPanel(trigger) {
+  _labelPanelEl.style.display = "flex";
+}
+
+async function _loadLabelPanel(entityKey, title, imageUrl, brand) {
+  const panel = _ensureLabelPanel();
+  panel.innerHTML = `<div style="padding:14px;font-size:13px;color:#9ca3af;">Loading…</div>`;
+
+  try {
+    // Load labels + which ones already contain this product
+    const [labelsRes, checkRes] = await Promise.all([
+      fetch("/api/labels", { credentials: "same-origin", headers: { Accept: "application/json" } }),
+      fetch(`/api/labels/check?entity_key=${encodeURIComponent(entityKey)}`, {
+        credentials: "same-origin", headers: { Accept: "application/json" }
+      })
+    ]);
+
+    if (labelsRes.status === 401) {
+      _closeLabelPanel();
+      window.pcOpenSignIn?.();
+      return;
+    }
+
+    const labelsData = await labelsRes.json().catch(() => null);
+    const checkData  = await checkRes.json().catch(() => null);
+
+    if (!labelsData?.ok) {
+      panel.innerHTML = `<div style="padding:14px;font-size:13px;color:#9ca3af;">Could not load labels.</div>`;
+      return;
+    }
+
+    const labels  = labelsData.results || [];
+    const inLabels = new Set((checkData?.label_ids || []).map(Number));
+
+    _renderLabelPanel(panel, labels, inLabels, entityKey, title, imageUrl, brand);
+  } catch (_e) {
+    panel.innerHTML = `<div style="padding:14px;font-size:13px;color:#9ca3af;">Error loading labels.</div>`;
+  }
+}
+
+function _renderLabelPanel(panel, labels, inLabels, entityKey, title, imageUrl, brand) {
+  const headerHtml = `
+    <div style="display:flex;align-items:center;justify-content:space-between;
+                padding:12px 14px 10px;border-bottom:1px solid rgba(0,0,0,.07);flex-shrink:0;">
+      <span style="font-size:14px;font-weight:700;color:#111827;">Save to label</span>
+      <a href="/labels/" style="font-size:12px;color:#6366f1;text-decoration:none;font-weight:600;">Manage</a>
+    </div>
+  `;
+
+  const labelsHtml = labels.length === 0
+    ? `<div style="padding:14px;font-size:13px;color:#9ca3af;text-align:center;">
+         No labels yet.<br>Create one below.
+       </div>`
+    : labels.map(lb => {
+        const checked = inLabels.has(lb.id);
+        return `
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;
+                        transition:background .1s;" onmouseover="this.style.background='#f9fafb'"
+                 onmouseout="this.style.background=''">
+            <input type="checkbox"
+              data-label-toggle="${lb.id}"
+              ${checked ? "checked" : ""}
+              style="width:16px;height:16px;cursor:pointer;accent-color:#6366f1;flex-shrink:0;"
+            />
+            <span style="font-size:14px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">${_dbEsc(lb.name)}</span>
+            <span style="font-size:11px;color:#9ca3af;flex-shrink:0;">${lb.item_count || 0}</span>
+          </label>
+        `;
+      }).join("");
+
+  const footerHtml = `
+    <div style="padding:10px 14px;border-top:1px solid rgba(0,0,0,.07);flex-shrink:0;">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="_pcLabelNewInput" type="text" placeholder="New label name…" maxlength="80"
+          style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid rgba(0,0,0,.14);
+                 font:inherit;font-size:13px;outline:none;"
+        />
+        <button id="_pcLabelNewSubmit" type="button"
+          style="flex-shrink:0;padding:8px 12px;border-radius:8px;border:none;
+                 background:#111827;color:#fff;font:inherit;font-size:13px;
+                 font-weight:700;cursor:pointer;">
+          Add
+        </button>
+      </div>
+    </div>
+  `;
+
+  panel.innerHTML = headerHtml + `<div style="overflow-y:auto;flex:1;">${labelsHtml}</div>` + footerHtml;
+
+  // Wire checkboxes
+  panel.querySelectorAll("[data-label-toggle]").forEach(cb => {
+    cb.addEventListener("change", async () => {
+      const labelId = Number(cb.getAttribute("data-label-toggle"));
+      const adding  = cb.checked;
+      cb.disabled   = true;
+
+      try {
+        if (adding) {
+          await fetch(`/api/labels/${labelId}/items`, {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              entity_key: entityKey,
+              title:   _dbClean(title).slice(0, 200),
+              image_url: _dbClean(imageUrl).slice(0, 500) || null,
+              brand:   _dbClean(brand).slice(0, 100) || null
+            })
+          });
+          inLabels.add(labelId);
+        } else {
+          // Find item id to delete — fetch items for label, match entity_key
+          const r = await fetch(`/api/labels/${labelId}/items`, {
+            credentials: "same-origin", headers: { Accept: "application/json" }
+          });
+          const d = await r.json().catch(() => null);
+          const item = (d?.results || []).find(i => i.entity_key === entityKey);
+          if (item) {
+            await fetch(`/api/labels/${labelId}/items/${item.id}`, {
+              method: "DELETE", credentials: "same-origin"
+            });
+          }
+          inLabels.delete(labelId);
+        }
+      } catch (_e) {
+        cb.checked = !adding; // revert on error
+      } finally {
+        cb.disabled = false;
+      }
+    });
+  });
+
+  // Wire "Add" button (create new label then add product)
+  const newInput  = panel.querySelector("#_pcLabelNewInput");
+  const newSubmit = panel.querySelector("#_pcLabelNewSubmit");
+
+  async function createAndAdd() {
+    const name = _dbClean(newInput?.value || "").slice(0, 80);
+    if (!name || !newSubmit) return;
+
+    newSubmit.disabled = true;
+    newSubmit.textContent = "…";
+
+    try {
+      // Create label
+      const createRes  = await fetch("/api/labels", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+      });
+      const createData = await createRes.json().catch(() => null);
+      if (!createData?.ok) throw new Error(createData?.error || "Failed");
+
+      const newLabel = createData.label;
+
+      // Add product to it
+      await fetch(`/api/labels/${newLabel.id}/items`, {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entity_key: entityKey,
+          title:   _dbClean(title).slice(0, 200),
+          image_url: _dbClean(imageUrl).slice(0, 500) || null,
+          brand:   _dbClean(brand).slice(0, 100) || null
+        })
+      });
+
+      // Refresh panel
+      newLabel.item_count = 1;
+      labels.unshift(newLabel);
+      inLabels.add(newLabel.id);
+      _renderLabelPanel(panel, labels, inLabels, entityKey, title, imageUrl, brand);
+    } catch (err) {
+      alert(err.message || "Failed to create label.");
+    } finally {
+      if (newSubmit) { newSubmit.disabled = false; newSubmit.textContent = "Add"; }
+    }
+  }
+
+  if (newSubmit) newSubmit.addEventListener("click", createAndAdd);
+  if (newInput)  newInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); createAndAdd(); } });
+}
+
+async function wireLabelTrigger(entityKey, title, imageUrl, brand) {
+  const trigger = document.querySelector("[data-pc-label-trigger='1']");
+  if (!trigger) return;
+
+  _labelCurrentKey  = entityKey;
+  _labelCurrentMeta = { title, imageUrl, brand };
+
+  if (trigger._pcLabelBound) trigger.removeEventListener("click", trigger._pcLabelBound);
+
+  trigger._pcLabelBound = async function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (_labelPanelOpen) {
+      _closeLabelPanel();
+      return;
+    }
+
+    _ensureLabelPanel();
+    _positionPanel(trigger);
+    _labelPanelOpen = true;
+    await _loadLabelPanel(entityKey, title, imageUrl, brand);
+  };
+
+  trigger.addEventListener("click", trigger._pcLabelBound);
+}
+
+
+// ─── Master wiring function — call this after each product load ───────────────
+
+async function wireProductActions(entityKey, title, imageUrl, brand) {
+  if (!entityKey) return;
+  await Promise.all([
+    wireBookmarkButton(entityKey, title, imageUrl, brand),
+    wireLabelTrigger(entityKey, title, imageUrl, brand)
+  ]);
+}
+
+function wireBrandFollowButton() {
+  const btn = getFollowButton();
+  if (!btn || btn._pcFollowBound) return;
+
+  btn._pcFollowBound = true;
+
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    toggleBrandFollow();
+  });
+}
+
+function recordHistory(key, title, imageUrl, brand) {
+  // Only record for signed-in users and when we have a real key
+  if (!key || !title) return;
+
+  // Fire-and-forget — never block the UI
+  fetch("/api/history", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      entity_key: key,
+      title:      String(title || "").trim().slice(0, 200),
+      image_url:  String(imageUrl || "").trim().slice(0, 500) || null,
+      brand:      String(brand || "").trim().slice(0, 100)    || null
+    })
+  }).catch(() => {}); // silent fail — history is non-critical
+}
 
   function hydrateKpis(){
   const offers = Array.isArray(state.offers) ? state.offers : [];
@@ -2336,6 +2870,18 @@ function parseIdPillValue(raw){
   const s = String(raw || '').trim();
   const m = s.match(/^(PCI|UPC|ASIN)\s+(.+)$/i);
   return (m ? String(m[2] || '').trim() : s);
+}
+
+function wireHeaderToolButtons() {
+  const moreBtn = document.getElementById('phMoreTools');
+  if (!moreBtn || moreBtn._pcBound) return;
+
+  moreBtn._pcBound = true;
+
+  moreBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = '/apps/';
+  });
 }
 
 function wireIdPillsCopy(){
@@ -3548,6 +4094,15 @@ function renderDimensions(){
 }
 
   window.run = run;
+
+  function _dbClean(v) { return String(v || "").trim(); }
+
+  function _dbEsc(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
   window.addEventListener('popstate', () => {
     const raw = currentKeyFromUrl();

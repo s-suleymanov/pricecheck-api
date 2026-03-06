@@ -1,8 +1,8 @@
 {
   "results": [
-    { "label": "🔥 Price Drops Today", "q": "price drops" },
-    { "label": "📉 Under $100", "q": "under 100" },
-    { "label": "🎮 Gaming Setup", "q": "gaming" },
-    { "label": "🛴 Commuter Scooters", "q": "electric scooter" }
+    { "label": "Price Drops Today", "q": "price drops" },
+    { "label": "Under $100", "q": "under 100" },
+    { "label": "Gaming Setup", "q": "gaming" },
+    { "label": "Commuter Scooters", "q": "electric scooter" }
   ]
 }

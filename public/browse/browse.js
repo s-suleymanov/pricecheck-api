@@ -154,6 +154,9 @@
     detailError: "",
     detailData: null,
     detailSourceCardEl: null,
+    detailBookmarked: false,
+    detailBookmarkKnown: false,
+    detailBookmarkBusy: false,
   };
 
   // ----------------------------
@@ -1816,18 +1819,179 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   // Detail sidebar (expanded view)
   // ----------------------------
   const DETAIL_CLOSE_SVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#000000" aria-hidden="true" focusable="false">
+    <svg xmlns="http://www.w3.org/2000/svg" height="35px" viewBox="0 -960 960 960" width="35x" fill="#000000" aria-hidden="true" focusable="false">
       <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
     </svg>
   `;
 
   const DETAIL_EXPAND_SVG = `
   <svg xmlns="http://www.w3.org/2000/svg"
-       height="24px" viewBox="0 -960 960 960" width="24px"
+       height="27px" viewBox="0 -960 960 960" width="27px"
        fill="#000000" aria-hidden="true" focusable="false">
     <path d="M120-120v-320h80v184l504-504H520v-80h320v320h-80v-184L256-200h184v80H120Z"/>
   </svg>
 `;
+
+  const DETAIL_BOOKMARK_OFF_SVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+         height="31px" viewBox="0 -960 960 960" width="36px"
+         fill="#000000" aria-hidden="true" focusable="false" style="margin-bottom: 1px;">
+      <path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/>
+    </svg>
+  `;
+
+  const DETAIL_BOOKMARK_ON_SVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+         height="31px" viewBox="0 -960 960 960" width="36px"
+         fill="#000000" aria-hidden="true" focusable="false" style="margin-bottom: 1px;">
+      <path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/>
+    </svg>
+  `;
+
+  function cleanDetailBookmarkText(v) {
+    return String(v || "").trim();
+  }
+
+  function detailBookmarkMeta() {
+    return {
+      entity_key: cleanDetailBookmarkText(state.detailDashKey),
+      title: cleanDetailBookmarkText(state.detailTitle).slice(0, 200),
+      image_url: cleanDetailBookmarkText(state.detailImg).slice(0, 500) || null,
+      brand: cleanDetailBookmarkText(state.detailBrand).slice(0, 100) || null,
+    };
+  }
+
+  function detailBookmarkButtonHtml() {
+    return `
+      <button type="button"
+              class="detail-expand detail-bookmark"
+              data-detail-bookmark="1"
+              aria-label="Save to bookmarks"
+              aria-pressed="false"
+              title="Save to bookmarks"
+              style="display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;padding:0;cursor:pointer;">
+        <span data-detail-bookmark-icon="off">${DETAIL_BOOKMARK_OFF_SVG}</span>
+        <span data-detail-bookmark-icon="on" hidden>${DETAIL_BOOKMARK_ON_SVG}</span>
+      </button>
+    `;
+  }
+
+  function detailHeadActionsHtml(dashHref) {
+    return `
+      ${detailBookmarkButtonHtml()}
+      <a class="detail-expand"
+        href="${escapeHtml(dashHref)}"
+        title="Open dashboard"
+        aria-label="Open dashboard">
+        ${DETAIL_EXPAND_SVG}
+      </a>
+      <button type="button"
+              class="detail-close"
+              data-detail-close="1"
+              aria-label="Close">
+        ${DETAIL_CLOSE_SVG}
+      </button>
+    `;
+  }
+
+  function setDetailBookmarkUi() {
+    const btn = document.querySelector('#detailPanel [data-detail-bookmark="1"]');
+    if (!btn) return;
+
+    const iconOn = btn.querySelector('[data-detail-bookmark-icon="on"]');
+    const iconOff = btn.querySelector('[data-detail-bookmark-icon="off"]');
+
+    const on = !!state.detailBookmarked;
+    const busy = !!state.detailBookmarkBusy;
+    const hasKey = !!cleanDetailBookmarkText(state.detailDashKey);
+
+    if (iconOn) iconOn.hidden = !on;
+    if (iconOff) iconOff.hidden = on;
+
+    btn.disabled = !hasKey || busy;
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.setAttribute("aria-label", on ? "Remove bookmark" : "Save to bookmarks");
+    btn.title = busy
+      ? (on ? "Removing..." : "Saving...")
+      : (on ? "Remove bookmark" : "Save to bookmarks");
+  }
+
+  async function loadDetailBookmarkState() {
+    const entityKey = cleanDetailBookmarkText(state.detailDashKey);
+
+    state.detailBookmarkKnown = false;
+    state.detailBookmarked = false;
+    state.detailBookmarkBusy = false;
+    setDetailBookmarkUi();
+
+    if (!entityKey) return;
+
+    try {
+      const res = await fetch(`/api/bookmarks/check?entity_key=${encodeURIComponent(entityKey)}`, {
+        credentials: "same-origin",
+        headers: { Accept: "application/json" }
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (entityKey !== cleanDetailBookmarkText(state.detailDashKey)) return;
+
+      state.detailBookmarkKnown = true;
+      state.detailBookmarked = !!(data && data.ok && data.bookmarked);
+      setDetailBookmarkUi();
+    } catch (_e) {
+      if (entityKey !== cleanDetailBookmarkText(state.detailDashKey)) return;
+      state.detailBookmarkKnown = true;
+      state.detailBookmarked = false;
+      setDetailBookmarkUi();
+    }
+  }
+
+  async function toggleDetailBookmark() {
+    const meta = detailBookmarkMeta();
+    if (!meta.entity_key || state.detailBookmarkBusy) return;
+
+    state.detailBookmarkBusy = true;
+    setDetailBookmarkUi();
+
+    try {
+      const res = await fetch("/api/bookmarks/toggle", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(meta)
+      });
+
+      if (res.status === 401) {
+        state.detailBookmarkBusy = false;
+        setDetailBookmarkUi();
+        if (typeof window.pcOpenSignIn === "function") window.pcOpenSignIn();
+        return;
+      }
+
+      const data = await res.json().catch(() => null);
+
+      if (data && data.ok) {
+        state.detailBookmarked = !!data.bookmarked;
+        state.detailBookmarkKnown = true;
+
+        window.dispatchEvent(new CustomEvent("pc:bookmark_changed", {
+          detail: {
+            entity_key: meta.entity_key,
+            bookmarked: state.detailBookmarked
+          }
+        }));
+      }
+    } catch (_e) {
+      // keep current UI state on network failure
+    } finally {
+      state.detailBookmarkBusy = false;
+      setDetailBookmarkUi();
+    }
+  }
 
   const OFFER_EXTERNAL_SVG = `
     <svg xmlns="http://www.w3.org/2000/svg"
@@ -1850,7 +2014,14 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
     els.sidecol.prepend(panel);
 
-    panel.addEventListener("click", (e) => {
+        panel.addEventListener("click", (e) => {
+      const bookmarkBtn = e.target.closest("[data-detail-bookmark]");
+      if (bookmarkBtn) {
+        e.preventDefault();
+        toggleDetailBookmark();
+        return;
+      }
+
       const closeBtn = e.target.closest("[data-detail-close]");
       if (closeBtn) {
         e.preventDefault();
@@ -1951,19 +2122,8 @@ async function applyCardVariantSelection(cardEl, nextKey) {
             ${state.detailBrand ? `<div class="detail-head-brand muted">${escapeHtml(state.detailBrand)}</div>` : ""}
           </div>
 
-          <div class="detail-head-right" style="display:flex; align-items:center; gap:20px;">
-            <a class="detail-expand"
-              href="${escapeHtml(dashHref)}"
-              title="Open dashboard"
-              aria-label="Open dashboard">
-              ${DETAIL_EXPAND_SVG}
-            </a>
-            <button type="button"
-                    class="detail-close"
-                    data-detail-close="1"
-                    aria-label="Close">
-              ${DETAIL_CLOSE_SVG}
-            </button>
+            <div class="detail-head-right" style="display:flex; align-items:center; gap:20px;">
+            ${detailHeadActionsHtml(dashHref)}
           </div>
         </div>
 
@@ -1979,6 +2139,8 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
       <div class="detail-block muted">Loading offers…</div>
     `;
+
+    setDetailBookmarkUi();
   }
 
     function renderDetailError(msg) {
@@ -1999,18 +2161,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         </div>
 
         <div class="detail-head-right" style="display:flex; align-items:center; gap:20px;">
-          <a class="detail-expand"
-            href="${escapeHtml(dashHref)}"
-            title="Open dashboard"
-            aria-label="Open dashboard">
-            ${DETAIL_EXPAND_SVG}
-          </a>
-          <button type="button"
-            class="detail-close"
-            data-detail-close="1"
-            aria-label="Close">
-            ${DETAIL_CLOSE_SVG}
-          </button>
+          ${detailHeadActionsHtml(dashHref)}
         </div>
       </div>
 
@@ -2022,6 +2173,8 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         <div class="msg"><span>${escapeHtml(msg || "Failed to load product details.")}</span></div>
       </div>
     `;
+
+    setDetailBookmarkUi();
   }
 
   async function renderDetailData(data) {
@@ -2136,18 +2289,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         </div>
 
         <div class="detail-head-right" style="display:flex; align-items:center; gap:20px;">
-          <a class="detail-expand"
-            href="${escapeHtml(dashHref)}"
-            title="Open dashboard"
-            aria-label="Open dashboard">
-            ${DETAIL_EXPAND_SVG}
-          </a>
-          <button type="button"
-            class="detail-close"
-            data-detail-close="1"
-            aria-label="Close">
-            ${DETAIL_CLOSE_SVG}
-          </button>
+          ${detailHeadActionsHtml(dashHref)}
         </div>
       </div>
 
@@ -2168,6 +2310,8 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         ${offerRows}
       </div>
     `;
+
+    setDetailBookmarkUi();
   }
 
   function storeKeySimple(store) {
@@ -2370,6 +2514,9 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
     state.detailLoading = true;
     state.detailError = "";
     state.detailData = null;
+    state.detailBookmarked = false;
+    state.detailBookmarkKnown = false;
+    state.detailBookmarkBusy = false;
 
     if (!keepSelections) {
       state.detailSelectedVariantLabel = "";
@@ -2378,6 +2525,7 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
 
     hideFacetPanelsForDetail();
     renderDetailSkeleton();
+    loadDetailBookmarkState();
 
     try {
       const data = await compareCached(k);
@@ -2405,6 +2553,9 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
     state.detailError = "";
     state.detailData = null;
     state.detailSourceCardEl = null;
+    state.detailBookmarked = false;
+    state.detailBookmarkKnown = false;
+    state.detailBookmarkBusy = false;
 
     const panel = document.getElementById("detailPanel");
     if (panel) panel.remove();

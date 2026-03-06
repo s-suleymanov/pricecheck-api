@@ -1,0 +1,114 @@
+.pc-trending-page .home-side__inner{
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.pc-trending-page .home-center__inner{
+  width: 100%;
+}
+
+.pc-trending-page .pc-trending-layout{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--pc-side-w);
+  gap: 24px;
+  align-items: start;
+  width: 100%;
+  padding-top: 70px;
+  padding-left: 20px;
+  padding-right: 20px;
+  box-sizing: border-box;
+}
+
+.pc-trending-page .pc-trending-main{
+  min-width: 0;
+}
+
+.pc-trending-page .pc-trending-hero{
+  min-height: calc(150vh - 180px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 56px 24px 80px;
+}
+
+.pc-trending-page .pc-trending-hero__center{
+  width: 100%;
+  max-width: 860px;
+}
+
+.pc-trending-page .pc-trending-hero__eyebrow{
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.pc-trending-page .pc-trending-hero__title{
+  margin: 0 0 14px;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1.05;
+  font-weight: 600;
+  color: #111827;
+}
+
+.pc-trending-page .pc-trending-hero__feature{
+  margin: 0 0 12px;
+  font-size: 20px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #111827;
+}
+
+.pc-trending-page .pc-trending-hero__message{
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.7;
+  color: #4b5563;
+}
+
+@media (max-width: 1100px){
+  .pc-trending-page .pc-trending-layout{
+    grid-template-columns: 1fr;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .pc-trending-page .home-side{
+    position: static;
+    top: auto;
+    height: auto;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 640px){
+  .pc-trending-page .pc-trending-layout{
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .pc-trending-page .pc-trending-hero{
+    min-height: auto;
+    padding: 32px 8px 48px;
+  }
+
+  .pc-trending-page .pc-trending-hero__card{
+    border-radius: 18px;
+    padding: 22px;
+  }
+
+  .pc-trending-page .pc-trending-hero__title{
+    font-size: clamp(30px, 9vw, 42px);
+  }
+
+  .pc-trending-page .pc-trending-hero__feature{
+    font-size: 17px;
+  }
+
+  .pc-trending-page .pc-trending-hero__message{
+    font-size: 16px;
+  }
+}

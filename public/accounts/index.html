@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PriceCheck Account</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/accounts/styles.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="account-wrap">
+    <section id="pcAccountSignedOut" class="pc-card pc-empty" hidden>
+      <h2>Sign in required</h2>
+      <p>You need to sign in to view your account.</p>
+      <button id="pcAccountSignInBtn" class="btn btn--solid" type="button">Sign In</button>
+    </section>
+
+    <section id="pcAccountPanel" class="pc-card pc-hero" hidden>
+      <div class="pc-hero-left">
+        <div class="pc-avatar-shell">
+          <img id="pcAccountAvatarImg" class="pc-avatar-img" alt="Profile image" hidden>
+          <div id="pcAccountAvatarFallback" class="pc-avatar-fallback">P</div>
+        </div>
+
+        <div class="pc-hero-copy">
+          <p class="pc-eyebrow">Profile</p>
+          <h1 id="pcAccountName">Your Account</h1>
+          <p id="pcAccountEmail" class="pc-email"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="pcAccountStats" class="pc-stats" hidden>
+      <article class="pc-card pc-stat">
+        <span class="pc-stat-label">Following</span>
+        <strong id="pcFollowingCount" class="pc-stat-value">0</strong>
+      </article>
+
+      <article class="pc-card pc-stat">
+        <span class="pc-stat-label">Member Since</span>
+        <strong id="pcMemberSince" class="pc-stat-value">-</strong>
+      </article>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="/partials/partials.js"></script>
+  <script src="/accounts/account.js"></script>
+</body>
+</html>

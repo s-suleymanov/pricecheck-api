@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign Up | PriceCheck</title>
+  <meta name="description" content="Create your PriceCheck account.">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="pc-auth-page">
+
+  <main class="pc-auth-main">
+    <section class="pc-auth-wrap">
+      <div class="pc-auth-card">
+        <h1 class="pc-auth-title">Create your account</h1>
+        <p class="pc-auth-sub">
+          Save lists, track products, and keep your PriceCheck experience in one place.
+        </p>
+
+        <form id="pcSignUpForm" class="pc-auth-form" action="#" method="post" novalidate>
+          <label class="pc-auth-label" for="signupName">First name or nickname</label>
+          <input
+            id="signupName"
+            class="pc-auth-input"
+            type="text"
+            name="display_name"
+            placeholder="Sam"
+            autocomplete="nickname"
+            required
+          >
+
+          <label class="pc-auth-label" for="signupPhone">Phone number</label>
+          <input
+            id="signupPhone"
+            class="pc-auth-input"
+            type="tel"
+            name="phone"
+            placeholder="(555) 555-5555"
+            autocomplete="tel"
+            required
+          >
+
+          <label class="pc-auth-label" for="signupEmail">Email</label>
+          <input
+            id="signupEmail"
+            class="pc-auth-input"
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          >
+
+          <label class="pc-auth-label" for="signupPassword">Password</label>
+          <input
+            id="signupPassword"
+            class="pc-auth-input"
+            type="password"
+            name="password"
+            placeholder="Create a password"
+            autocomplete="new-password"
+            required
+          >
+
+          <label class="pc-auth-label" for="signupPasswordConfirm">Confirm password</label>
+          <input
+            id="signupPasswordConfirm"
+            class="pc-auth-input"
+            type="password"
+            name="password_confirm"
+            placeholder="Re-enter your password"
+            autocomplete="new-password"
+            required
+          >
+
+          <button class="pc-auth-submit" type="submit">Create Account</button>
+          <p id="pcSignUpStatus" class="pc-auth-footnote" hidden aria-live="polite"></p>
+        </form>
+
+        <div class="pc-auth-divider" aria-hidden="true">
+          <span></span>
+          <em>or</em>
+          <span></span>
+        </div>
+
+        <a class="pc-auth-secondary" href="/signin/">Already have an account? Sign in</a>
+
+        <p class="pc-auth-footnote">
+          By creating an account, you agree to use PriceCheck responsibly.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script defer src="/signup/signup.js"></script>
+</body>
+</html>

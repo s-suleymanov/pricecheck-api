@@ -56,12 +56,6 @@ body{
 
 @media (min-width: 861px){
 
-  /* DETAIL mode: page scrolls normally, sidebar has its own scroll */
-  body.has-detail{
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-
   /* Make the right column its own scroll container */
   body.has-detail .sidecol{
     position: sticky;
@@ -272,10 +266,6 @@ h1{
   overflow: visible;
 }
 
-.detail-expand {
-  margin-top: 1px;
-}
-
 .detail-head {
   display: flex;
   align-items: center;
@@ -284,11 +274,11 @@ h1{
 }
 
 .detail-close {
+  margin-bottom: 5px;
   border: none;
   padding: 0;
   border-radius: 10px;
   background-color: #fff;
-  width: 34px;
   height: 34px;
   line-height: 1;
   cursor: pointer;

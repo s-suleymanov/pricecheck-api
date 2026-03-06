@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PriceCheck Plans</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="icon" href="/logo/logo.svg" type="image/svg+xml" />
+  <style>
+    :root{
+      --ink:#0f172a;
+      --muted:#64748b;
+      --paper:#ffffff;
+      --surface:#f8fafc;
+      --line:#e2e8f0;
+      --accent-a:#14b8a6;
+      --accent-b:#6366f1;
+      --radius-card:16px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:#fafafa;
+      color:var(--ink);
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:48px 24px 80px;
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:clamp(36px,6vw,56px);
+      line-height:1.05;
+      font-weight:600;
+      letter-spacing:-.03em;
+    }
+
+    h2{
+      margin:0;
+      font-size:28px;
+      line-height:1.1;
+      font-weight:600;
+      letter-spacing:-.02em;
+    }
+
+    h3{
+      margin:0;
+      font-size:22px;
+      line-height:1.15;
+      font-weight:600;
+      letter-spacing:-.02em;
+    }
+
+    p{
+      margin:0;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:17px;
+      line-height:1.5;
+    }
+
+    .card{
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:var(--radius-card);
+      padding:22px;
+    }
+
+    .hero{
+      margin-bottom:18px;
+      padding:34px 22px;
+    }
+
+    .hero p{
+      margin-top:18px;
+    }
+
+    .free{
+      margin-bottom:18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+    }
+
+    .free-price{
+      text-align:right;
+      flex:0 0 auto;
+    }
+
+    .free-price strong{
+      display:block;
+      font-size:40px;
+      line-height:1;
+      font-weight:600;
+      letter-spacing:-.03em;
+    }
+
+    .free-price span{
+      display:block;
+      margin-top:4px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .plans{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px;
+      margin-bottom:18px;
+    }
+
+    .plan{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      min-height:100%;
+    }
+
+    .plan.selected{
+      border-color:rgba(99,102,241,.45);
+      box-shadow:0 0 0 3px rgba(99,102,241,.12);
+      background:linear-gradient(180deg,#ffffff 0%,#f8faff 100%);
+    }
+
+    .selected-tag{
+      position:absolute;
+      top:14px;
+      right:14px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(99,102,241,.10);
+      color:var(--accent-b);
+      font-size:12px;
+      font-weight:600;
+      line-height:1;
+    }
+
+    .plan-top{
+      padding-right:72px;
+    }
+
+    .plan-sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .price{
+      margin-top:14px;
+    }
+
+    .price strong{
+      font-size:42px;
+      line-height:1;
+      font-weight:600;
+      letter-spacing:-.03em;
+    }
+
+    .price span{
+      color:var(--muted);
+      font-size:14px;
+      margin-left:4px;
+    }
+
+    .checks{
+      list-style:none;
+      margin:0;
+      padding:0;
+      display:grid;
+      gap:10px;
+    }
+
+    .checks li{
+      position:relative;
+      padding-left:26px;
+      font-size:15px;
+      line-height:1.45;
+    }
+
+    .checks li::before{
+      content:"✓";
+      position:absolute;
+      left:0;
+      top:0;
+      color:var(--accent-a);
+      font-weight:700;
+    }
+
+    .btn{
+      margin-top:auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:46px;
+      width:100%;
+      padding:0 14px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      color:var(--ink);
+      text-decoration:none;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer;
+      transition:.15s ease;
+    }
+
+    .plan-note{
+        margin-top:8px;
+        color:var(--muted);
+        font-size:12px;
+        line-height:1.45;
+        text-align:center;
+    }
+
+    .btn:hover{
+      background:#111827;
+      color:#fff;
+      border-color:#111827;
+    }
+
+    .selected .btn{
+      background:#111827;
+      color:#fff;
+      border-color:#111827;
+    }
+
+    .selected .btn:hover{
+      background:#fff;
+      color:#111827;
+    }
+
+    .plans-note{
+  margin:-2px 0 18px;
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.45;
+}
+
+    .calendly{
+        min-height:760px;
+        border:1px dashed var(--line);
+        border-radius:14px;
+        background:var(--surface);
+        padding:0;
+        overflow:hidden;
+        display:block;
+    }
+
+    .calendly .calendly-inline-widget{
+        width:100% !important;
+        min-width:0 !important;
+        height:760px !important;
+    }
+
+    .unsure-copy{
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+      gap:12px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 980px){
+      .plans{
+        grid-template-columns:1fr;
+      }
+
+      .unsure{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width: 640px){
+      .wrap{
+        padding:24px 16px 48px;
+      }
+
+      .hero,
+      .card{
+        padding:18px;
+      }
+
+      .free{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+
+      .free-price{
+        text-align:left;
+      }
+
+      .plan-top{
+        padding-right:0;
+      }
+
+      .selected-tag{
+        position:static;
+        width:max-content;
+      }
+
+      .price strong,
+      .free-price strong{
+        font-size:34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+
+    <section class="card hero" style="border: none; background: none;">
+      <h1>Support PriceCheck</h1>
+      <p class="muted">Help cover servers, scrappers and database costs.</p>
+    </section>
+
+    <section class="plans">
+      <article class="card plan selected">
+        <div class="selected-tag">Current</div>
+        <div class="plan-top">
+          <h3>PriceCheck+</h3>
+          <p class="plan-sub">Best for most people.</p>
+          <div class="price">
+            <strong>$79</strong><span>/year</span>
+          </div>
+        </div>
+
+        <ul class="checks">
+          <li>Everything in free</li>
+          <li>Core premium tools.</li>
+          <li>Full product coverage</li>
+          <li>Access to PriceCheck Apps</li>
+          <li>PriceCheck Extension Pro and Algo 2</li>
+        </ul>
+
+        <a href="#" class="btn">Selected plan</a>
+      </article>
+
+      <article class="card plan">
+        <div class="plan-top">
+          <h3>PriceCheck+ Elite</h3>
+          <p class="plan-sub">For heavier use.</p>
+          <div class="price">
+            <strong>$179</strong><span>/year</span>
+          </div>
+        </div>
+
+        <ul class="checks">
+            <li>Everything in Plus</li>
+            <li>Buying guidances and alerts</li>
+            <li>Spending and inventory tracking</li>
+            <li>Comparison and bundle software package</li>
+            <li>Full access to advanced PriceCheck features including PriceAI</li>
+        </ul>
+
+        <a href="https://buy.stripe.com/7sYdRa5KT8X97M3cqn33W03" class="btn">Start now</a>
+     </article>
+
+      <article class="card plan">
+        <div class="plan-top">
+          <h3>PriceCheck+ Founder</h3>
+          <p class="plan-sub">For supporters.</p>
+          <div class="price">
+            <strong>$249</strong><span>/year</span>
+          </div>
+        </div>
+
+        <ul class="checks">
+          <li>Everything in Elite</li>
+          <li>Founder recognition</li>
+          <li>Full PriceCheck customization</li>
+          <li>Advanced charting and algorithms</li>
+          <li>Priority feedback and direct hotline to our team</li>
+        </ul>
+
+        <a href="https://buy.stripe.com/9B6eVea19flxd6n1LJ33W02" class="btn">Start now</a>
+      </article>
+    </section>
+
+    <p class="plans-note">No commitment. Cancel anytime.</p>
+
+    <section class="card unsure">
+      <div class="unsure-copy">
+        <h2>Still unsure?</h2>
+        <p class="muted">Book a quick call.</p>
+      </div>
+
+      <div class="calendly">
+        <!-- Calendly inline widget begin -->
+        <div class="calendly-inline-widget" data-url="https://calendly.com/pricecheckextension/30min"></div>
+        <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
+        <!-- Calendly inline widget end -->
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>

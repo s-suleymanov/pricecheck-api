@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PriceCheck Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/settings/styles.css">
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="settings-wrap">
+    <section class="pc-page-head">
+      <h1>Settings</h1>
+      <p class="pc-sub">
+        Update your nickname and profile image.
+      </p>
+    </section>
+
+    <section id="pcSettingsSignedOut" class="pc-card pc-empty" hidden>
+      <h2>Sign in required</h2>
+      <p>You need to sign in before you can change your settings.</p>
+      <button id="pcSettingsSignInBtn" class="btn btn--solid" type="button">Sign In</button>
+    </section>
+
+    <div class="pc-settings-grid">
+      <section class="pc-card">
+        <h2 class="pc-card-title">Profile image</h2>
+        <p class="pc-card-sub">Upload a profile image for your account.</p>
+
+        <form id="pcAvatarForm" class="pc-form" enctype="multipart/form-data" novalidate>
+          <div class="pc-avatar-row">
+            <div class="pc-avatar-shell">
+              <img id="pcAvatarImg" class="pc-avatar-img" alt="Profile image" hidden>
+              <div id="pcAvatarFallback" class="pc-avatar-fallback">P</div>
+            </div>
+
+            <div class="pc-avatar-copy">
+              <strong>Accepted types</strong>
+              <span>JPG, PNG, WEBP, or GIF. Max 3 MB.</span>
+            </div>
+          </div>
+
+          <input
+            id="pcAvatarInput"
+            class="pc-input pc-file"
+            type="file"
+            name="avatar"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+          >
+
+          <div class="pc-actions">
+            <button id="pcAvatarSubmit" class="btn btn--solid" type="submit">Upload Image</button>
+          </div>
+
+          <p id="pcAvatarStatus" class="pc-status" hidden></p>
+        </form>
+      </section>
+
+      <section class="pc-card">
+        <h2 class="pc-card-title">Profile details</h2>
+        <p class="pc-card-sub">This controls how your account appears on your account page.</p>
+
+        <form id="pcProfileForm" class="pc-form" novalidate>
+          <label class="pc-label" for="pcNickname">Nickname</label>
+          <input
+            id="pcNickname"
+            class="pc-input"
+            type="text"
+            maxlength="40"
+            placeholder="Enter your nickname"
+            autocomplete="nickname"
+          >
+
+          <p class="pc-help">Keep it short and clear.</p>
+
+          <div class="pc-actions">
+            <button id="pcProfileSubmit" class="btn btn--solid" type="submit">Save Nickname</button>
+          </div>
+
+          <p id="pcProfileStatus" class="pc-status" hidden></p>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="/partials/partials.js"></script>
+  <script src="/settings/settings.js"></script>
+</body>
+</html>

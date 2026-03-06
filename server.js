@@ -10,14 +10,17 @@ process.on("unhandledRejection", (e) => {
   process.exit(1);
 });
 
-// server.js
 const path = require("path");
 const express = require("express");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 // core middleware
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // feature routers
@@ -31,17 +34,25 @@ app.use(require("./routes/support"));
 app.use(require("./routes/seller"));
 app.use(require("./routes/search"));
 app.use(require("./routes/home"));
+app.use(require("./routes/auth"));
+app.use(require("./routes/follows"));
+app.use(require("./routes/account"));
+app.use(require("./routes/history"));
+app.use(require("./routes/bookmarks"));
+app.use(require("./routes/labels"));
+app.use(require("./routes/algorithm"))
 
 // health
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Catch-all 404 (MUST be last)
+// Catch-all 404
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "public", "404", "index.html"));
 });
 
 const port = process.env.PORT || 3000;
 console.log("BOOT: about to listen. PORT=", process.env.PORT);
+
 app.listen(port, "0.0.0.0", () => {
   console.log(`Listening on port ${port}`);
 });

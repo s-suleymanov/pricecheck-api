@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>PriceCheck Updates</title>
+  <meta name="description" content="Your PriceCheck updates feed." />
+  <link rel="canonical" href="https://pricechecktool.com/updates/" />
+
+  <link rel="icon" href="/logo/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/updates/styles.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+
+  <script src="/search.js" defer></script>
+  <script src="/partials/partials.js" defer></script>
+</head>
+
+<body class="pc-you-page" data-auth-page="1" style="margin:0;">
+  <div id="site-header"></div>
+
+  <main class="home-center" role="main">
+    <div class="home-center__inner">
+      <div class="pc-updates-layout">
+        <div id="pcAuthPageShell" class="pc-updates-main" hidden aria-hidden="true">
+          <aside class="pc-you-left" aria-label="Update controls">
+            <section class="home-side__section pc-manage-section">
+              <div class="home-side__title">Manage</div>
+
+              <button class="pc-side-action" type="button" disabled>Clear all updates</button>
+              <button class="pc-side-action" type="button" disabled>Turn on updates</button>
+              <a class="home-side__item home-side__item--thin" href="/settings/">Manage all updates</a>
+
+              <a class="home-side__item home-side__item--thin" href="#" aria-disabled="true" tabindex="-1">Announcements</a>
+              <a class="home-side__item home-side__item--thin" href="#" aria-disabled="true" tabindex="-1">Price alerts</a>
+              <a class="home-side__item home-side__item--thin" href="#" aria-disabled="true" tabindex="-1">Product releases</a>
+            </section>
+          </aside>
+
+          <section class="pc-you-content" aria-label="Updates">
+            <section class="pc-you-empty" aria-labelledby="pcUpdatesTitle">
+              <div class="pc-you-empty__center">
+                <h1 id="pcUpdatesTitle" class="pc-you-empty__title">Updates</h1>
+                <p class="pc-you-empty__message">This list has no updates.</p>
+              </div>
+            </section>
+          </section>
+        </div>
+
+        <aside class="home-side" aria-label="Home sidebar">
+  <div class="home-side__inner">
+
+    <nav class="home-side__section" aria-label="About">
+      <a class="home-side__item" href="/">
+        <span class="home-side__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" width="26" height="26"><path fill="currentColor" d="M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z"/></svg>
+        </span>
+        <span class="home-side__label">Home</span>
+      </a>
+    </nav>
+
+    <div class="home-side__sep" role="separator" aria-hidden="true"></div>
+
+    <nav class="home-side__section" aria-label="You">
+
+      <a class="home-side__item" href="/overview/">
+        <span class="home-side__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" width="26" height="26">
+            <path fill="currentColor" d="M440-280h80v-240h-80v240Zm68.5-331.5Q520-623 520-640t-11.5-28.5Q497-680 480-680t-28.5 11.5Q440-657 440-640t11.5 28.5Q463-600 480-600t28.5-11.5ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+          </svg>
+        </span>
+        <span class="home-side__label">About</span>
+      </a>
+
+      <a class="home-side__item" href="/explore/" data-auth-required="1">
+        <span class="home-side__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" width="26" height="26"><path fill="currentColor" d="m300-300 280-80 80-280-280 80-80 280Zm180-120q-25 0-42.5-17.5T420-480q0-25 17.5-42.5T480-540q25 0 42.5 17.5T540-480q0 25-17.5 42.5T480-420Zm0 340q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Zm0-320Z"/></svg>
+        </span>
+        <span class="home-side__label">Explore</span>
+      </a>
+
+      <a class="home-side__item is-active" href="/updates/" data-auth-required="1" aria-current="page">
+        <span class="home-side__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" width="26" height="26"><path fill="currentColor" d="m320-240 160-122 160 122-60-198 160-114H544l-64-208-64 208H220l160 114-60 198ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+        </span>
+        <span class="home-side__label">Updates</span>
+      </a>
+
+      <a class="home-side__item" href="/trending/" data-auth-required="1">
+        <span class="home-side__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" width="26" height="26"><path fill="currentColor" d="M480-80q-66 0-127.5-20.5T240-160l58-58q42 29 88 43.5t94 14.5q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480H80q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 155.5 31.5t127 86q54.5 54.5 86 127t31.5 155q0 82.5-31.5 155.5t-86 127.5q-54.5 54.5-127 86T480-80ZM159-243l163-163 120 100 198-198v104h80v-240H480v80h104L438-414 318-514 117-313q11 23 19.5 37.5T159-243Zm321-237Z"/></svg>
+        </span>
+        <span class="home-side__label">Trending</span>
+      </a>
+
+      <a class="home-side__item" href="/deals/" data-auth-required="1">
+                <span class="home-side__icon" aria-hidden="true">
+                  <svg viewBox="0 -960 960 960" width="26" height="26"><path fill="currentColor" d="M444-200h70v-50q50-9 86-39t36-89q0-42-24-77t-96-61q-60-20-83-35t-23-41q0-26 18.5-41t53.5-15q32 0 50 15.5t26 38.5l64-26q-11-35-40.5-61T516-710v-50h-70v50q-50 11-78 44t-28 74q0 47 27.5 76t86.5 50q63 23 87.5 41t24.5 47q0 33-23.5 48.5T486-314q-33 0-58.5-20.5T390-396l-66 26q14 48 43.5 77.5T444-252v52Zm36 120q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+                </span>
+                <span class="home-side__label">Deals</span>
+      </a>
+    </nav>
+
+    <section class="home-side__section" style="margin-top: 30px;" aria-label="Following">
+      <div class="home-side__subs-head">
+        <button
+          class="home-side__subs-toggle"
+          type="button"
+          aria-expanded="true"
+          aria-controls="homeSideSubsList"
+          id="homeSideSubsToggle"
+          aria-label="Toggle following list"
+        >
+          <span class="home-side__subs-chevron" aria-hidden="true">
+            <svg viewBox="0 -960 960 960" width="24" height="24">
+              <path fill="currentColor" d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
+            </svg>
+          </span>
+        </button>
+
+        <a class="home-side__subs-link" href="/following/" data-auth-required="1">
+          <span class="home-side__subs-icon" aria-hidden="true">
+            <svg viewBox="0 -960 960 960" width="22" height="22">
+              <path fill="currentColor" d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/>
+            </svg>
+          </span>
+
+          <span class="home-side__title home-side__subs-label">Following</span>
+        </a>
+      </div>
+
+      <ul class="home-side__subs-list" id="homeSideSubsList">
+        <li>
+          <a class="home-side__item home-side__item--sub" href="/following/" data-auth-required="1">
+            <span class="home-side__subs-avatar home-side__subs-avatar--sm" aria-hidden="true">
+              <svg viewBox="0 -960 960 960" width="20" height="20"><path fill="currentColor" d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 128.5-46.5T480-440q66 0 132.5 15.5T741-378q29 15 46.5 43.5T805-272v112H160Z"/></svg>
+            </span>
+            <span class="home-side__label">Add Brands</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <nav class="home-side__section" aria-label="Library">
+      <a class="home-side__item" href="/bookmarks/" data-auth-required="1">
+        <span class="home-side__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" width="26" height="26"><path fill="currentColor" d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/></svg>
+        </span>
+        <span class="home-side__label">Bookmarks</span>
+      </a>
+
+      <a class="home-side__item" href="/labels/" data-auth-required="1">
+        <span class="home-side__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" width="26" height="26"><path fill="currentColor" d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h440q19 0 36 8.5t28 23.5l216 288-216 288q-11 15-28 23.5t-36 8.5H160Zm0-80h440l180-240-180-240H160v480Zm220-240Z"/></svg>
+        </span>
+        <span class="home-side__label">Labels</span>
+      </a>
+
+      <a class="home-side__item" href="/history/" data-auth-required="1">
+        <span class="home-side__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" width="26" height="26"><path fill="currentColor" d="M480-120q-138 0-240.5-91.5T122-440h82q14 104 92.5 172T480-200q117 0 198.5-81.5T760-480q0-117-81.5-198.5T480-760q-69 0-129 30t-101 80h110v80H120v-240h80v98q51-64 124.5-101T480-840q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480q0 75-28.5 140.5t-77 114q-48.5 48.5-114 77T480-120Zm112-192L440-464v-216h80v184l128 128-56 56Z"/></svg>
+        </span>
+        <span class="home-side__label">History</span>
+      </a>
+
+      <a class="home-side__item" href="/privacy-policy/">
+        <span class="home-side__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" width="26" height="26"><path fill="currentColor" d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm296.5-143.5Q560-327 560-360t-23.5-56.5Q513-440 480-440t-56.5 23.5Q400-393 400-360t23.5 56.5Q447-280 480-280t56.5-23.5ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/></svg>
+        </span>
+        <span class="home-side__label">Privacy</span>
+      </a>
+    </nav>
+
+  </div>
+</aside>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

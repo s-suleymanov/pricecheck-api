@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign In | PriceCheck</title>
+  <meta name="description" content="Sign in to your PriceCheck account.">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="pc-auth-page">
+
+  <main class="pc-auth-main">
+    <section class="pc-auth-wrap">
+      <div class="pc-auth-card">
+        <h1 class="pc-auth-title">Sign in</h1>
+        <p class="pc-auth-sub">
+          Access your saved lists, tracked products, and account settings.
+        </p>
+
+        <form id="pcFullSignInForm" class="pc-auth-form" action="#" method="post" novalidate>
+          <label class="pc-auth-label" for="signinEmail">Email</label>
+          <input
+            id="signinEmail"
+            class="pc-auth-input"
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          >
+
+          <div class="pc-auth-row pc-auth-row--between">
+            <label class="pc-auth-label" for="signinPassword">Password</label>
+            <a class="pc-auth-link pc-auth-link--small" href="/support/">Forgot password?</a>
+          </div>
+
+          <input
+            id="signinPassword"
+            class="pc-auth-input"
+            type="password"
+            name="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+          >
+
+          <label class="pc-auth-check">
+            <input type="checkbox" name="remember_me">
+            <span>Keep me signed in on this device</span>
+          </label>
+
+          <button class="pc-auth-submit" type="submit">Sign in</button>
+          <p id="pcFullSignInStatus" class="pc-auth-footnote" hidden aria-live="polite"></p>
+        </form>
+
+        <div class="pc-auth-divider" aria-hidden="true">
+          <span></span>
+          <em>or</em>
+          <span></span>
+        </div>
+
+        <a class="pc-auth-secondary" href="/signup/">Create an account</a>
+
+        <p class="pc-auth-footnote">
+          Prefer the quick version? You can still use the header sign in card.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script defer src="/signin/signin.js"></script>
+</body>
+</html>
