@@ -40,7 +40,8 @@ app.use(require("./routes/account"));
 app.use(require("./routes/history"));
 app.use(require("./routes/bookmarks"));
 app.use(require("./routes/labels"));
-app.use(require("./routes/algorithm"))
+app.use(require("./routes/algorithm"));
+app.use("/api/reviews", require("./routes/reviews"));
 
 // health
 app.get("/health", (_req, res) => res.json({ ok: true }));

@@ -3,11 +3,27 @@
   const $  = (s, ctx=document)=>ctx.querySelector(s);
   const fmt = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'});
 
-  const OFFER_EXTERNAL_SVG = `
+    const OFFER_EXTERNAL_SVG = `
   <svg xmlns="http://www.w3.org/2000/svg"
         height="26" viewBox="0 -960 960 960" width="26"
         fill="#86868b" aria-hidden="true" focusable="false">
       <path d="m216-160-56-56 464-464H360v-80h400v400h-80v-264L216-160Z"/>
+    </svg>
+  `;
+
+  const REVIEW_EXTERNAL_SVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+        height="18" viewBox="0 -960 960 960" width="18"
+        fill="currentColor" aria-hidden="true" focusable="false">
+      <path d="m216-160-56-56 464-464H360v-80h400v400h-80v-264L216-160Z"/>
+    </svg>
+  `;
+
+  const REVIEW_STAR_SVG = `
+  <svg xmlns="http://www.w3.org/2000/svg"
+        height="18" viewBox="0 -960 960 960" width="18"
+        fill="currentColor" aria-hidden="true" focusable="false">
+      <path d="m233-120 93-304L80-600h304l96-320 96 320h304L634-424l93 304-247-188-247 188Z"></path>
     </svg>
   `;
 
@@ -691,6 +707,370 @@ function syncSelectorsFromSelectedKey(){
   state.selectedColor   = hit ? (colorOf(hit) || null) : null;
 }
 
+async function renderReviewsCard(productKey) {
+  const el = document.getElementById('pc-reviews-card');
+  if (!el) return;
+
+  function mount(inner) {
+    el.hidden = false;
+    el.innerHTML = inner;
+  }
+
+  const iconPath = 'm363-390 117-71 117 71-31-133 104-90-137-11-53-126-53 126-137 11 104 90-31 133ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z';
+
+  mount(`
+    <div class="spaced">
+      <h2 data-icon-path="${iconPath}">Reviews</h2>
+    </div>
+
+    <div class="pc-reviews-wrap pc-reviews-loading">
+      <div class="pc-reviews-skeleton"></div>
+      <div class="pc-reviews-skeleton pc-reviews-skeleton--short"></div>
+      <div class="pc-reviews-skeleton"></div>
+    </div>
+  `);
+  wireCardIcons();
+
+  let data;
+  try {
+    const res = await fetch(`/api/reviews/${encodeURIComponent(productKey)}`, {
+      headers: { Accept: 'application/json' }
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (_err) {
+    mount(`
+      <div class="spaced">
+        <h2 data-icon-path="${iconPath}">Reviews</h2>
+      </div>
+      <p class="note">Review data is not available for this product yet.</p>
+    `);
+    wireCardIcons();
+    return;
+  }
+
+  const aggregate = data && typeof data === 'object' ? (data.aggregate || {}) : {};
+  const customerSources = Array.isArray(data?.customer_sources)
+    ? data.customer_sources
+    : (Array.isArray(data?.sources) ? data.sources : []);
+  const expertReviews = Array.isArray(data?.expert_reviews) ? data.expert_reviews : [];
+  const distribution = (data && typeof data.distribution === 'object' && data.distribution)
+    ? data.distribution
+    : { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
+  const total = Number(aggregate.count || 0);
+  const overall = Number(aggregate.overall || 0);
+  const verifiedPct = aggregate.verified_pct == null ? null : Number(aggregate.verified_pct);
+
+  const hasCustomer = total > 0 && overall > 0;
+  const hasExpert = expertReviews.length > 0;
+
+  if (!hasCustomer && !hasExpert) {
+    mount(`
+      <div class="spaced">
+        <h2 data-icon-path="${iconPath}">Reviews</h2>
+      </div>
+      <p class="note">No reviews found yet.</p>
+    `);
+    wireCardIcons();
+    return;
+  }
+
+  const fmtCompact = (n) => {
+    const v = Number(n || 0);
+    if (v >= 1000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(v);
+  };
+
+  const pct = (n, base) => {
+    const num = Number(n || 0);
+    const den = Number(base || 0);
+    if (!den) return 0;
+    return Math.round((num / den) * 100);
+  };
+
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+  let customerHtml = '';
+
+  if (hasCustomer) {
+    const breakdownRows = [5, 4, 3, 2, 1].map((star) => {
+      const count = Number(distribution[star] || 0);
+      const width = pct(count, total);
+
+      return `
+        <div class="pc-rv-breakdown-row" aria-label="${star} stars: ${count} reviews">
+          <div class="pc-rv-breakdown-left">
+            <span class="pc-rv-breakdown-label">
+              <span class="pc-rv-breakdown-star-icon" aria-hidden="true">
+                ${REVIEW_STAR_SVG}
+              </span>
+              <span>${star} stars</span>
+            </span>
+          </div>
+
+          <div class="pc-rv-breakdown-bar">
+            <div class="pc-rv-breakdown-fill pc-rv-breakdown-fill--${star}" style="width:${clamp(width, 0, 100)}%"></div>
+          </div>
+
+          <div class="pc-rv-breakdown-right">
+            <span class="pc-rv-breakdown-count">${fmtCompact(count)}</span>
+            <span class="pc-rv-breakdown-pct">${width}%</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const sortedSources = customerSources
+      .slice()
+      .sort((a, b) => Number(b.count || 0) - Number(a.count || 0));
+
+    const sourceCards = sortedSources.map((s) => {
+      const sourceName = String(s.name || s.slug || 'Source').trim() || 'Source';
+      const sourceUrl = String(s.url || '').trim();
+      const sourceCount = Number(s.count || 0);
+      const sourceRating = Number(s.rating || 0);
+
+      return `
+        <article class="pc-rv-source-card">
+          <div class="pc-rv-source-card__top">
+            <div class="pc-rv-source-card__name">${escapeHtml(sourceName)}</div>
+            ${
+              sourceUrl
+                ? `
+                  <a
+                    class="pc-rv-source-card__link"
+                    href="${escapeHtml(sourceUrl)}"
+                    target="_blank"
+                    rel="noopener"
+                    aria-label="Open ${escapeHtml(sourceName)} reviews"
+                  >
+                    ${REVIEW_EXTERNAL_SVG}
+                  </a>
+                `
+                : ''
+            }
+          </div>
+
+          <div class="pc-rv-source-card__rating">${sourceRating.toFixed(1)} / 5</div>
+          <div class="pc-rv-source-card__count">${fmtCompact(sourceCount)} reviews</div>
+        </article>
+      `;
+    }).join('');
+
+    const confidence =
+      total < 50 ? 'low' :
+      total < 500 ? 'med' :
+      'high';
+
+    const confidenceLabel = {
+      low: 'Low Confidence',
+      med: 'Moderate Confidence',
+      high: 'High Confidence'
+    }[confidence];
+
+    const verifiedPill = verifiedPct != null
+      ? `<span class="pc-rv-pill">${verifiedPct}% verified</span>`
+      : '';
+
+    customerHtml = `
+      <section class="pc-review-section">
+        <div class="pc-rv-section-head">
+          <div class="pc-rv-section-title">Customer reviews</div>
+
+          <div class="pc-rv-header-right">
+            <span class="pc-rv-confidence pc-rv-confidence--${confidence}">${confidenceLabel}</span>
+            ${verifiedPill}
+          </div>
+        </div>
+
+        <div class="pc-rv-customer-layout">
+          <div class="pc-rv-summary-card">
+            <div class="pc-rv-summary-label">Average rating</div>
+            <div class="pc-rv-summary-score">${overall.toFixed(1)}</div>
+            <div class="pc-rv-summary-scale">out of 5</div>
+            <div class="pc-rv-summary-note">Based on ${fmtCompact(total)} customer reviews</div>
+          </div>
+
+          <div class="pc-rv-breakdown-card">
+            <div class="pc-rv-subhead">Rating breakdown</div>
+            <div class="pc-rv-breakdown-list">
+              ${breakdownRows}
+            </div>
+          </div>
+        </div>
+
+        ${
+          sortedSources.length
+            ? `
+              <div class="pc-rv-block">
+                <div class="pc-rv-subhead">By source</div>
+                <div class="pc-rv-source-grid">
+                  ${sourceCards}
+                </div>
+              </div>
+            `
+            : ''
+        }
+      </section>
+    `;
+  } else {
+    customerHtml = `
+      <section class="pc-review-section">
+        <div class="pc-rv-section-head">
+          <div class="pc-rv-section-title">Customer reviews</div>
+        </div>
+        <p class="note">No customer reviews found yet.</p>
+      </section>
+    `;
+  }
+
+  const formatReviewDate = (raw) => {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return '';
+    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(d);
+  };
+
+  let expertHtml = '';
+
+  if (hasExpert) {
+    const expertRows = expertReviews.map((r) => {
+      const source = String(r.name || r.slug || 'Source').trim() || 'Source';
+      const title = String(r.article_title || source).trim() || source;
+      const verdict = String(r.verdict || '').trim();
+      const url = String(r.url || '').trim();
+      const reviewedAt = formatReviewDate(r.reviewed_at);
+
+      const scoreOutOf5 = Number(r.score_out_of_5 || 0);
+      const score = r.score == null ? null : Number(r.score);
+      const scoreScale = r.score_scale == null ? 5 : Number(r.score_scale);
+
+      const normalizedLabel = scoreOutOf5 > 0 ? `${scoreOutOf5.toFixed(1)}/5` : '';
+      const rawLabel =
+        score != null && scoreScale > 0
+          ? (scoreScale === 5 ? '' : `${score}/${scoreScale}`)
+          : '';
+
+      const pros = Array.isArray(r.pros) ? r.pros.filter(Boolean).slice(0, 4) : [];
+      const cons = Array.isArray(r.cons) ? r.cons.filter(Boolean).slice(0, 4) : [];
+
+      return `
+        <article class="pc-rv-expert-card">
+          <div class="pc-rv-expert-top">
+            <div class="pc-rv-expert-main">
+              <div class="pc-rv-expert-source">${escapeHtml(source)}</div>
+
+              <div class="pc-rv-expert-title-row">
+                <div class="pc-rv-expert-title">${escapeHtml(title)}</div>
+                ${
+                  url
+                    ? `
+                      <a
+                        class="pc-rv-expert-title-link"
+                        href="${escapeHtml(url)}"
+                        target="_blank"
+                        rel="noopener"
+                        aria-label="Open ${escapeHtml(title)}"
+                      >
+                        ${REVIEW_EXTERNAL_SVG}
+                      </a>
+                    `
+                    : ''
+                }
+              </div>
+            </div>
+
+            ${
+              normalizedLabel
+                ? `
+                  <div class="pc-rv-expert-score">
+                    <div class="pc-rv-expert-score-main">★ ${escapeHtml(normalizedLabel)}</div>
+                    ${rawLabel ? `<div class="pc-rv-expert-score-sub">${escapeHtml(rawLabel)}</div>` : ''}
+                  </div>
+                `
+                : ''
+            }
+          </div>
+
+          ${
+            verdict
+              ? `<div class="pc-rv-expert-verdict">${escapeHtml(verdict)}</div>`
+              : ''
+          }
+
+          ${
+            pros.length
+              ? `
+                <div class="pc-rv-expert-meta">
+                  ${pros.map((p) => `<span class="pc-rv-expert-chip pc-rv-expert-chip--pro">Pro: ${escapeHtml(p)}</span>`).join('')}
+                </div>
+              `
+              : ''
+          }
+
+          ${
+            cons.length
+              ? `
+                <div class="pc-rv-expert-meta">
+                  ${cons.map((c) => `<span class="pc-rv-expert-chip pc-rv-expert-chip--con">Con: ${escapeHtml(c)}</span>`).join('')}
+                </div>
+              `
+              : ''
+          }
+
+          ${
+            reviewedAt
+              ? `
+                <div class="pc-rv-expert-footer">
+                  <div class="pc-rv-expert-date muted">Reviewed ${escapeHtml(reviewedAt)}</div>
+                </div>
+              `
+              : ''
+          }
+        </article>
+      `;
+    }).join('');
+
+    expertHtml = `
+      <section class="pc-review-section">
+        <div class="pc-rv-section-head">
+          <div class="pc-rv-section-title">Expert reviews</div>
+          <div class="pc-rv-section-note muted">Scores are normalized to a 5 point scale for easier comparison.</div>
+        </div>
+
+        <div class="pc-rv-expert-list">
+          ${expertRows}
+        </div>
+      </section>
+    `;
+  } else {
+    expertHtml = `
+      <section class="pc-review-section">
+        <div class="pc-rv-section-head">
+          <div class="pc-rv-section-title">Expert reviews</div>
+        </div>
+        <p class="note">No expert reviews found yet.</p>
+      </section>
+    `;
+  }
+
+  mount(`
+    <div class="spaced">
+      <h2 data-icon-path="${iconPath}">Reviews</h2>
+    </div>
+
+    <div class="pc-reviews-stack">
+      ${customerHtml}
+      ${expertHtml}
+    </div>
+  `);
+
+  wireCardIcons();
+}
+
 function renderImageChoiceGroup(hostEl, options, selectedValue, onPick, typeLabel){
   if (!hostEl) return;
 
@@ -1056,6 +1436,7 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
       renderForensics();
       renderLineup();
       renderSimilarProducts();
+      await renderReviewsCard(state.lastKey);
       {
         const _hKey   = canonicalKey || state.lastKey;
         const _hTitle = bestTitle;
@@ -2713,29 +3094,63 @@ function setMaybe(el, text, { asHtml = false } = {}) {
       const row = document.createElement('div');
       row.className = 'offer';
       const tag = (o.offer_tag || '').trim();
-
       const priceText = (o._price != null) ? `${fmt.format(o._price)}` : 'No price';
 
       row.innerHTML = `
-        <div>
-          <div class="offer-store">${titleCase(o.store || '')}</div>
-        </div>
-
-        <div class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size: 18px;">
-          ${tag ? escapeHtml(tag) : ''}
-        </div>
-
-        <div class="offer-right">
+        <div class="offer-left">
+          <div class="offer-store-row">
+            <span class="offer-store">${titleCase(o.store || '')}</span>
+            ${bestLink ? `<a class="offer-go-inline" href="${escapeHtml(bestLink)}" target="_blank" rel="noopener" aria-label="Go to ${escapeHtml(titleCase(o.store || 'store'))}">${OFFER_EXTERNAL_SVG}</a>` : ''}
+          </div>
           <div class="muted-price offer-price">${escapeHtml(priceText)}</div>
-          ${
-            bestLink
-              ? `<a class="btn btn-go offer-go" href="${bestLink}" target="_blank" rel="noopener" aria-label="Open offer">${OFFER_EXTERNAL_SVG}</a>`
-              : `<span class="btn btn-go offer-go is-disabled" aria-hidden="true">${OFFER_EXTERNAL_SVG}</span>`
-          }
+        </div>
+
+        <div class="offer-tag-col muted">${tag ? escapeHtml(tag) : ''}</div>
+
+        <button class="offer-expand-btn" type="button" aria-expanded="false" aria-label="Show seller details">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 6 15 12 9 18"/>
+          </svg>
+        </button>
+      `;
+
+      const details = document.createElement('div');
+      details.className = 'offer-details';
+      details.hidden = true;
+
+      const deliveryVal = o.delivery_estimate || (o.shipping_days != null ? `${o.shipping_days} day${o.shipping_days !== 1 ? 's' : ''}` : 'See site');
+      const shippingVal = (o.free_shipping || o.shipping_cost === 0) ? 'Free' : (o.shipping_cost != null ? fmt.format(o.shipping_cost / 100) : 'See site');
+      const returnsVal = o.return_policy || (o.return_days != null ? `${o.return_days}-day returns` : 'See site');
+
+      details.innerHTML = `
+        <div class="offer-details-grid">
+          <div class="offer-detail-cell">
+            <div class="offer-detail-label">Delivery</div>
+            <div class="offer-detail-value">${escapeHtml(deliveryVal)}</div>
+          </div>
+          <div class="offer-detail-cell">
+            <div class="offer-detail-label">Shipping</div>
+            <div class="offer-detail-value">${escapeHtml(shippingVal)}</div>
+          </div>
+          <div class="offer-detail-cell">
+            <div class="offer-detail-label">Returns</div>
+            <div class="offer-detail-value">${escapeHtml(returnsVal)}</div>
+          </div>
         </div>
       `;
 
-      wrap.appendChild(row);
+      row.querySelector('.offer-expand-btn').addEventListener('click', () => {
+        const open = details.hidden;
+        details.hidden = !open;
+        row.querySelector('.offer-expand-btn').setAttribute('aria-expanded', String(open));
+        row.querySelector('.offer-expand-btn').classList.toggle('is-open', open);
+      });
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'offer-wrapper';
+      wrapper.appendChild(row);
+      wrapper.appendChild(details);
+      wrap.appendChild(wrapper);
     });
 
     note.textContent = 'PriceCheck does not use affiliate or sponsored links.';
@@ -2781,13 +3196,13 @@ function setMaybe(el, text, { asHtml = false } = {}) {
                 loading="lazy"
                 decoding="async"
               >
-              <div class="pc-similar-price">${escapeHtml(price)}</div>
+              <div class="pc-similar-price">&#9733; UNR</div>
             </div>
 
             <div class="pc-similar-main">
               <div class="pc-similar-brand muted">${escapeHtml(brand)}</div>
               <div class="pc-similar-title">${escapeHtml(title)}</div>
-              <div class="pc-similar-category muted">${escapeHtml(category)}</div>
+              <div class="pc-similar-price-row muted">${escapeHtml(price)}</div>
             </div>
           </a>
         `;
