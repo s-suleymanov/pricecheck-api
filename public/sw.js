@@ -7,7 +7,7 @@ const CORE_ASSETS = [
   "/",
   "/offline.html",
   "/styles.css",
-  "/index.js",
+  "/algorithm.js",
   "/search.js",
   "/logo/logo.svg",
   "/logo/icon-192.png",

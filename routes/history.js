@@ -100,7 +100,7 @@ router.post("/api/history", async (req, res) => {
     const userId = await getSignedInUserId(req);
 
     if (!userId) {
-      return res.status(401).json({ ok: false, error: "Sign in required." });
+        return res.status(204).end();
     }
 
     // Upsert: insert or bump viewed_at if already exists.
