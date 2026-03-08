@@ -604,10 +604,6 @@ async function findSeedFromListings(client, parsed) {
   return { asin_input: null, upc: null, pci: null, seed_listing: null };
 }
 
-/**
- * Step 2: catalog identity via PCI -> UPC.
- * IMPORTANT: no catalog.asin usage anywhere.
- */
 async function resolveCatalogIdentity(client, seedKeys) {
   const pci = seedKeys?.pci ? String(seedKeys.pci).trim() : '';
   const upc = seedKeys?.upc ? String(seedKeys.upc).trim() : '';
@@ -619,7 +615,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
     const r = await client.query(
       `
       select id, upc, pci, model_name, model_number, brand, category, image_url,
-        version, color, variant, dimensions, specs, media, timeline, files, created_at,
+        version, color, variant, dimensions, specs, media, timeline, files, contents, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
       where pci is not null and btrim(pci) <> ''
@@ -637,8 +633,8 @@ async function resolveCatalogIdentity(client, seedKeys) {
   if (upc) {
     const r = await client.query(
       `
-    select id, upc, pci, model_name, model_number, brand, category, image_url,
-        version, color, variant, dimensions, specs, media, timeline, files, created_at,
+      select id, upc, pci, model_name, model_number, brand, category, image_url,
+        version, color, variant, dimensions, specs, media, timeline, files, contents, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
       where norm_upc(upc) = norm_upc($1)
@@ -654,24 +650,19 @@ async function resolveCatalogIdentity(client, seedKeys) {
   return null;
 }
 
-/**
- * Step 3: variants come from catalog by model_number.
- * Variant key priority: pci -> upc (NO asin keys).
- * Include catalog.variant (you have that column now).
- */
 async function getVariantsFromCatalog(client, catalogIdentity) {
   const modelNumber = catalogIdentity?.model_number ? String(catalogIdentity.model_number).trim() : '';
   if (!modelNumber) return [];
 
-    const brand = catalogIdentity?.brand ? String(catalogIdentity.brand).trim() : '';
+  const brand = catalogIdentity?.brand ? String(catalogIdentity.brand).trim() : '';
 
-  // If we don't have a brand, it's not safe to use model_number as a group key.
-  // Return just the identity row as a single-variant list (prevents cross-brand bleed).
+  // If we do not have a brand, do not trust model_number alone.
   if (!brand) {
     const row = catalogIdentity;
     const key =
       (row.pci && String(row.pci).trim() ? `pci:${String(row.pci).trim()}` : null) ||
       (row.upc && String(row.upc).trim() ? `upc:${String(row.upc).trim()}` : null);
+
     return key ? [{
       id: row.id,
       key,
@@ -694,14 +685,15 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
         row.files &&
         typeof row.files === 'object' &&
         (Array.isArray(row.files) || Array.isArray(row.files.items))
-      ) ? row.files : null
+      ) ? row.files : null,
+      contents: Array.isArray(row.contents) ? row.contents : null
     }] : [];
   }
 
-    const r = await client.query(
+  const r = await client.query(
     `
     select id, upc, pci, model_name, model_number, brand, category, image_url,
-      version, color, variant, dimensions, specs, media, timeline, files, created_at
+      version, color, variant, dimensions, specs, media, timeline, files, contents, created_at
     from public.catalog
     where model_number is not null and btrim(model_number) <> ''
       and upper(btrim(model_number)) = upper(btrim($1))
@@ -714,7 +706,6 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
       variant nulls last,
       (case when color is null or btrim(color) = '' then 1 else 0 end),
       color nulls last,
-      -- optional: keep ordering stable when mixing categories
       (case when category is null or btrim(category) = '' then 1 else 0 end),
       lower(btrim(category)) nulls last,
       id
@@ -760,7 +751,8 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
           row.files &&
           typeof row.files === 'object' &&
           (Array.isArray(row.files) || Array.isArray(row.files.items))
-        ) ? row.files : null
+        ) ? row.files : null,
+        contents: Array.isArray(row.contents) ? row.contents : null
       };
     })
     .filter(Boolean);
@@ -1228,6 +1220,7 @@ router.get('/api/compare/:key', async (req, res) => {
           typeof meta.files === 'object' &&
           (Array.isArray(meta.files) || Array.isArray(meta.files.items))
         ) ? meta.files : null,
+        contents: Array.isArray(meta?.contents) ? meta.contents : null,
         dropship_warning: !!meta?.dropship_warning,
         recall_url: meta?.recall_url || null,
         coverage_warning: !!meta?.coverage_warning,

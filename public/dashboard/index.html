@@ -63,12 +63,31 @@
             <div>
               <div id="pBrandRow" class="ph-brand-row" hidden>
                 <div id="pBrandLine" class="muted" style="font-size: 20px;"></div>
-                <button class="ph-follow" type="button">Follow</button>
+
+                <div class="ph-brand-actions">
+                  <button class="ph-follow" type="button">Follow</button>
+
+                  <span
+                    class="ph-safe-badge"
+                    role="img"
+                    aria-label="Secure"
+                    title="Secure"
+                  >
+                    <img
+                      class="card-head__icon ph-safe-icon"
+                      src="/logo/greencheckmark.svg"
+                      alt=""
+                      aria-hidden="true"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </span>
+                </div>
               </div>
               <h1 id="pTitle" style="font-size: 30px; margin-bottom: 10px;">Loading...</h1>
               <div class="muted mono" id="pIds"></div>
 
-                            <!-- Recall warning -->
+              <!-- Recall warning -->
               <div class="pc-warn pc-warn--recall" id="ps-recall" hidden>
                 <span class="pc-warn__icon" aria-hidden="true">
                   <svg viewBox="0 -960 960 960" width="26" height="26">
@@ -133,9 +152,41 @@
                 </svg>
               </button>
 
-              <button class="ph-tool" type="button" aria-label="Share">
-                <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
-                  <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"></path>
+              <button
+                class="ph-tool"
+                data-pc-favorite="1"
+                type="button"
+                aria-label="Add to Favorites"
+                aria-pressed="false"
+                title="Add to Favorites"
+              >
+                <!-- Filled heart — shown when product IS in Favorites -->
+                <svg
+                  data-fav-icon="on"
+                  style="display:none"
+                  viewBox="0 -960 960 960"
+                  width="22" height="22"
+                  focusable="false"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill="currentColor"
+                    d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"
+                  />
+                </svg>
+
+                <!-- Empty heart — shown when product is NOT in Favorites (default) -->
+                <svg
+                  data-fav-icon="off"
+                  viewBox="0 -960 960 960"
+                  width="22" height="22"
+                  focusable="false"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill="currentColor"
+                    d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"
+                  />
                 </svg>
               </button>
 
@@ -151,7 +202,20 @@
                 </svg>
               </button>
 
-              <button class="ph-tool" id="phMoreTools" type="button" aria-label="More tools">
+              <button
+                class="ph-tool"
+                id="phCodeBtn"
+                data-pc-code-trigger="1"
+                type="button"
+                aria-label="Codes"
+                title="View product codes"
+              >
+                <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
+                  <path d="M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-40-343 237-137-237-137-237 137 237 137ZM160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11L160-252Zm320-228Z"></path>
+                </svg>
+              </button>
+
+              <button class="ph-tool" id="phMoreToolsBtn" type="button" aria-label="More tools">
                 <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
                   <path d="M183.5-183.5Q160-207 160-240t23.5-56.5Q207-320 240-320t56.5 23.5Q320-273 320-240t-23.5 56.5Q273-160 240-160t-56.5-23.5Zm240 0Q400-207 400-240t23.5-56.5Q447-320 480-320t56.5 23.5Q560-273 560-240t-23.5 56.5Q513-160 480-160t-56.5-23.5Zm240 0Q640-207 640-240t23.5-56.5Q687-320 720-320t56.5 23.5Q800-273 800-240t-23.5 56.5Q753-160 720-160t-56.5-23.5Zm-480-240Q160-447 160-480t23.5-56.5Q207-560 240-560t56.5 23.5Q320-513 320-480t-23.5 56.5Q273-400 240-400t-56.5-23.5Zm240 0Q400-447 400-480t23.5-56.5Q447-560 480-560t56.5 23.5Q560-513 560-480t-23.5 56.5Q513-400 480-400t-56.5-23.5Zm240 0Q640-447 640-480t23.5-56.5Q687-560 720-560t56.5 23.5Q800-513 800-480t-23.5 56.5Q753-400 720-400t-56.5-23.5Zm-480-240Q160-687 160-720t23.5-56.5Q207-800 240-800t56.5 23.5Q320-753 320-720t-23.5 56.5Q273-640 240-640t-56.5-23.5Zm240 0Q400-687 400-720t23.5-56.5Q447-800 480-800t56.5 23.5Q560-753 560-720t-23.5 56.5Q513-640 480-640t-56.5-23.5Zm240 0Q640-687 640-720t23.5-56.5Q687-800 720-800t56.5 23.5Q800-753 800-720t-23.5 56.5Q753-640 720-640t-56.5-23.5Z"></path>
                 </svg>
@@ -227,6 +291,13 @@
           <div id="specsContent" class="sidebar-empty">No specs found.</div>
         </section>
 
+        <section class="card" id="contentsCard" hidden>
+          <div class="spaced">
+            <h2 data-icon-path="M200-640v440h560v-440H640v320l-160-80-160 80v-320H200Zm0 520q-33 0-56.5-23.5T120-200v-499q0-14 4.5-27t13.5-24l50-61q11-14 27.5-21.5T250-840h460q18 0 34.5 7.5T772-811l50 61q9 11 13.5 24t4.5 27v499q0 33-23.5 56.5T760-120H200Zm16-600h528l-34-40H250l-34 40Zm184 80v190l80-40 80 40v-190H400Zm-200 0h560-560Z">Contents</h2>
+          </div>
+          <div id="contentsContent" class="sidebar-empty">No contents found.</div>
+        </section>
+
         <section class="card" id="year" hidden>
           <div class="spaced">
             <h2 data-icon-path="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Zm280 240q-17 0-28.5-11.5T440-440q0-17 11.5-28.5T480-480q17 0 28.5 11.5T520-440q0 17-11.5 28.5T480-400Zm-188.5-11.5Q280-423 280-440t11.5-28.5Q303-480 320-480t28.5 11.5Q360-457 360-440t-11.5 28.5Q337-400 320-400t-28.5-11.5ZM640-400q-17 0-28.5-11.5T600-440q0-17 11.5-28.5T640-480q17 0 28.5 11.5T680-440q0 17-11.5 28.5T640-400ZM480-240q-17 0-28.5-11.5T440-280q0-17 11.5-28.5T480-320q17 0 28.5 11.5T520-280q0 17-11.5 28.5T480-240Zm-188.5-11.5Q280-263 280-280t11.5-28.5Q303-320 320-320t28.5 11.5Q360-297 360-280t-11.5 28.5Q337-240 320-240t-28.5-11.5ZM640-240q-17 0-28.5-11.5T600-280q0-17 11.5-28.5T640-320q17 0 28.5 11.5T680-280q0 17-11.5 28.5T640-240Z">Timeline</h2>
@@ -290,30 +361,6 @@
           <div id="filesContent">
             <div class="sidebar-empty">No files available.</div>
           </div>
-        </section>
-
-        <!-- Deal Integrity Forensics -->
-        <section class="card">
-          <div class="spaced">
-            <h2 style="margin: 0;" data-icon-path="M480-80q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q97-30 162-118.5T718-480H480v-315l-240 90v207q0 7 2 18h238v316Z">Security</h2>
-            <img
-              class="card-head__icon"
-              src="/logo/greencheckmark.svg"
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-
-          <div id="securityIds" class="muted mono" hidden style="margin:0 0 14px;"></div>
-
-          <details id="forensics">
-
-            <summary class="muted">Open details</summary>
-            <ul id="forensicsList" class="links-list" style="margin-top:16px"></ul>
-          </details>
-          <p class="note">We compare claimed strikes to observed history on the exact variant. Bad anchors or wrong variant gets flagged.</p>
         </section>
       </div>
 

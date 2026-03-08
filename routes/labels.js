@@ -99,6 +99,15 @@ router.post("/api/labels", async (req, res) => {
       return res.status(400).json({ ok: false, error: `You can have at most ${MAX_LABELS_PER_USER} labels.` });
     }
 
+    // Check for duplicate name (case-insensitive)
+    const dupCheck = await pool.query(
+    `SELECT id FROM public.user_labels WHERE user_id = $1 AND lower(name) = lower($2) LIMIT 1`,
+    [userId, name]
+    );
+    if (dupCheck.rows.length > 0) {
+    return res.status(409).json({ ok: false, error: 'A list with that name already exists.', code: 'DUPLICATE_NAME', label: dupCheck.rows[0] });
+    }
+
     const q = await pool.query(
       `INSERT INTO public.user_labels (user_id, name)
        VALUES ($1, $2)
@@ -126,6 +135,15 @@ router.patch("/api/labels/:id", async (req, res) => {
   try {
     const userId = await getSignedInUserId(req);
     if (!userId) return res.status(401).json({ ok: false, error: "Sign in required." });
+
+    // Check for duplicate name on rename (exclude self)
+    const dupCheck = await pool.query(
+    `SELECT id FROM public.user_labels WHERE user_id = $1 AND lower(name) = lower($2) AND id <> $3 LIMIT 1`,
+    [userId, name, labelId]
+    );
+    if (dupCheck.rows.length > 0) {
+    return res.status(400).json({ ok: false, error: 'A list with that name already exists.' });
+    }
 
     const q = await pool.query(
       `UPDATE public.user_labels SET name = $1, updated_at = now()

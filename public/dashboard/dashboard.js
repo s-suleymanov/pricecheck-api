@@ -495,10 +495,13 @@ const dimToggle = document.getElementById('dimToggle');
 const dimContent = document.getElementById('dimContent');
 const filesCard = document.getElementById('files');
 const filesContent = document.getElementById('filesContent');
+const contentsCard = document.getElementById('contentsCard');
+const contentsContent = document.getElementById('contentsContent');
 const mediaCard = document.getElementById('mediaCard');
 const lineupCard = document.getElementById('lineup');
 const lineupContent = document.getElementById('lineupContent');
-const securityIdsEl = document.getElementById('securityIds');
+let _codePanelEl = null;
+let _codePanelOpen = false;
 
 function normalizeSpaces(s){
   return String(s ?? '').replace(/\s+/g,' ').trim();
@@ -877,12 +880,7 @@ async function renderReviewsCard(productKey) {
     customerHtml = `
       <section class="pc-review-section">
         <div class="pc-rv-section-head">
-          <div class="pc-rv-section-title">Customer reviews</div>
-
-          <div class="pc-rv-header-right">
-            <span class="pc-rv-confidence pc-rv-confidence--${confidence}">${confidenceLabel}</span>
-            ${verifiedPill}
-          </div>
+          <div class="pc-rv-section-title">Customer Reviews</div>
         </div>
 
         <div class="pc-rv-customer-layout">
@@ -891,6 +889,12 @@ async function renderReviewsCard(productKey) {
             <div class="pc-rv-summary-score">${overall.toFixed(1)}</div>
             <div class="pc-rv-summary-scale">out of 5</div>
             <div class="pc-rv-summary-note">Based on ${fmtCompact(total)} customer reviews</div>
+
+          <div class="pc-rv-summary-meta">
+            <span class="pc-rv-confidence pc-rv-confidence--${confidence}">${confidenceLabel}</span>
+            ${verifiedPill}
+          </div>
+
           </div>
 
           <div class="pc-rv-breakdown-card">
@@ -919,7 +923,7 @@ async function renderReviewsCard(productKey) {
     customerHtml = `
       <section class="pc-review-section">
         <div class="pc-rv-section-head">
-          <div class="pc-rv-section-title">Customer reviews</div>
+          <div class="pc-rv-section-title">Customer Reviews</div>
         </div>
         <p class="note">No customer reviews found yet.</p>
       </section>
@@ -1037,20 +1041,21 @@ async function renderReviewsCard(productKey) {
     expertHtml = `
       <section class="pc-review-section">
         <div class="pc-rv-section-head">
-          <div class="pc-rv-section-title">Expert reviews</div>
-          <div class="pc-rv-section-note muted">Scores are normalized to a 5 point scale for easier comparison.</div>
+          <div class="pc-rv-section-title">Expert Reviews</div>
         </div>
 
         <div class="pc-rv-expert-list">
           ${expertRows}
         </div>
+
+        <p class="note">Scores are normalized to a 5 point scale for easier comparison.</p>
       </section>
     `;
   } else {
     expertHtml = `
       <section class="pc-review-section">
         <div class="pc-rv-section-head">
-          <div class="pc-rv-section-title">Expert reviews</div>
+          <div class="pc-rv-section-title">Expert Reviews</div>
         </div>
         <p class="note">No expert reviews found yet.</p>
       </section>
@@ -1118,6 +1123,173 @@ function pushVariantSelectionAndRun(){
   if (!state.selectedVariantKey) return;
   applyPrettyUrl(state.selectedVariantKey, $('#pTitle')?.textContent || 'Product', 'push');
   run(state.selectedVariantKey);
+}
+
+const FAVORITE_LABEL_NAME = 'Favorites';
+
+let _favBusy        = false;
+let _favIsFavorited = false;
+let _favLabelId     = null;   // cached label id once we know it
+
+async function wireFavoriteButton(entityKey, title, imageUrl, brand) {
+  const btn = document.querySelector("[data-pc-favorite='1']");
+  if (!btn) return;
+
+  const iconOn  = btn.querySelector("[data-fav-icon='on']");
+  const iconOff = btn.querySelector("[data-fav-icon='off']");
+
+  // ── visual helpers ──────────────────────────────────────────────────────────
+  function setFavorited(on) {
+    if (iconOn)  iconOn.style.display  = on ? '' : 'none';
+    if (iconOff) iconOff.style.display = on ? 'none' : '';
+    btn.setAttribute('aria-pressed', String(!!on));
+    btn.setAttribute('aria-label', on ? 'Remove from Favorites' : 'Add to Favorites');
+    btn.title = on ? 'Remove from Favorites' : 'Add to Favorites';
+  }
+
+  // reset to unloaded state while we fetch
+  _favIsFavorited = false;
+  _favLabelId     = null;
+  setFavorited(false);
+
+  // ── load current state ──────────────────────────────────────────────────────
+  try {
+    const [labelsRes, checkRes] = await Promise.all([
+      fetch('/api/labels', {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' }
+      }),
+      fetch(`/api/labels/check?entity_key=${encodeURIComponent(entityKey)}`, {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' }
+      })
+    ]);
+
+    // 401 = not signed in; silently skip — button stays neutral
+    if (labelsRes.status === 401) return;
+
+    const labelsData = await labelsRes.json().catch(() => null);
+    const checkData  = await checkRes.json().catch(() => null);
+
+    if (!labelsData?.ok) return;
+
+    const labels    = labelsData.results || [];
+    const inIds     = new Set((checkData?.label_ids || []).map(Number));
+    const favLabel  = labels.find(l => l.name === FAVORITE_LABEL_NAME);
+
+    if (favLabel) {
+      _favLabelId = favLabel.id;
+      if (inIds.has(favLabel.id)) {
+        _favIsFavorited = true;
+        setFavorited(true);
+      }
+    }
+  } catch (_e) {
+    // network error — leave button in neutral state
+  }
+
+  // ── wire click ─────────────────────────────────────────────────────────────
+  if (btn._pcFavBound) btn.removeEventListener('click', btn._pcFavBound);
+
+  btn._pcFavBound = async function handleFavClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (_favBusy) return;
+
+    _favBusy    = true;
+    btn.disabled = true;
+
+    try {
+      // ── REMOVE ─────────────────────────────────────────────────────────────
+      if (_favIsFavorited) {
+        if (_favLabelId) {
+          // fetch items to get the item's own id, then delete it
+          const r = await fetch(`/api/labels/${_favLabelId}/items`, {
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' }
+          });
+          const d    = await r.json().catch(() => null);
+          const item = (d?.results || []).find(i => i.entity_key === entityKey);
+
+          if (item) {
+            await fetch(`/api/labels/${_favLabelId}/items/${item.id}`, {
+              method: 'DELETE',
+              credentials: 'same-origin'
+            });
+          }
+        }
+
+        _favIsFavorited = false;
+        setFavorited(false);
+        return;
+      }
+
+      // ── ADD ────────────────────────────────────────────────────────────────
+
+      // 1. Ensure the Favorites label exists (create once if missing)
+      if (!_favLabelId) {
+        const createRes = await fetch('/api/labels', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: FAVORITE_LABEL_NAME })
+        });
+
+        if (createRes.status === 401) {
+          window.pcOpenSignIn?.();
+          return;
+        }
+
+        // If it already exists (race or the user has it but wasn't fetched),
+        // the server might 400. Re-fetch labels to find it.
+        if (!createRes.ok) {
+          const refetchRes  = await fetch('/api/labels', {
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' }
+          });
+          const refetchData = await refetchRes.json().catch(() => null);
+          const existing    = (refetchData?.results || []).find(l => l.name === FAVORITE_LABEL_NAME);
+          if (existing) _favLabelId = existing.id;
+        } else {
+          const createData = await createRes.json().catch(() => null);
+          if (createData?.ok) _favLabelId = createData.label.id;
+        }
+
+        if (!_favLabelId) return; // could not resolve label
+      }
+
+      // 2. Add the product to the Favorites label
+      const addRes = await fetch(`/api/labels/${_favLabelId}/items`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entity_key: entityKey,
+          title:      _dbClean(title).slice(0, 200),
+          image_url:  _dbClean(imageUrl).slice(0, 500) || null,
+          brand:      _dbClean(brand).slice(0, 100)    || null
+        })
+      });
+
+      if (addRes.status === 401) {
+        window.pcOpenSignIn?.();
+        return;
+      }
+
+      if (addRes.ok) {
+        _favIsFavorited = true;
+        setFavorited(true);
+      }
+
+    } catch (_e) {
+      // leave state unchanged on network error
+    } finally {
+      _favBusy    = false;
+      btn.disabled = false;
+    }
+  };
+
+  btn.addEventListener('click', btn._pcFavBound);
 }
 
 function renderVersionVariantColor(){
@@ -1302,6 +1474,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   wireBrandFollowButton();
   await loadNameOverridesOnce();
   wireHeaderToolButtons();
+  wireCodeButton();
+  renderCodeButtonState();
+
   window.addEventListener('pc:auth_changed', () => {
     loadBrandFollowState();
   });
@@ -1425,12 +1600,13 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
       hydrateHeader();
       hydrateKpis();
       drawChart();
-      renderOffers(true);
+      await renderOffers(true);
       renderCouponsCard();
       renderTimeline();
       renderVariants();
       renderDimensions();
       renderSidebarSpecs();
+      renderContents();
       renderMediaPanel();
       renderFilesCard();
       renderForensics();
@@ -1460,12 +1636,14 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
     $('#pIds').hidden = true;
     const brandRow = $('#pBrandRow');
     const brandLine = $('#pBrandLine');
-    if (securityIdsEl) {
-      securityIdsEl.hidden = true;
-      securityIdsEl.innerHTML = '';
-    }
+    state.identity = null;
+    state.selectedVariantKey = null;
+    _closeCodePanel();
+    renderCodeButtonState();
     if (brandRow) brandRow.hidden = true;
     if (brandLine) brandLine.textContent = '';
+    if (contentsCard) contentsCard.hidden = true;
+    if (contentsContent) contentsContent.innerHTML = '';
     $('#offers').innerHTML = '';
     $('#offersNote').textContent = '';
     state.followBrand = '';
@@ -1495,7 +1673,8 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
       timelineSummary.hidden = true;
       timelineSummary.textContent = '';
     }
-    $('#forensicsList').innerHTML = '';
+    const forensicsList = $('#forensicsList');
+    if (forensicsList) forensicsList.innerHTML = '';
     $('#chart').innerHTML = '';
     $('#chartNote').textContent = 'No history yet';
     if (variant2Card) variant2Card.hidden = true;
@@ -1587,13 +1766,10 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
       pIdsEl.hidden = selectedBits.length === 0;
     }
 
-    if (securityIdsEl) {
-      const securityBits = [];
-      if (selPci) securityBits.push(`<span class="id-pill is-copy" data-copy="PCI ${escapeHtml(selPci)}" role="button" tabindex="0">PCI ${escapeHtml(selPci)}</span>`);
-      if (selUpc) securityBits.push(`<span class="id-pill is-copy" data-copy="UPC ${escapeHtml(selUpc)}" role="button" tabindex="0">UPC ${escapeHtml(selUpc)}</span>`);
-      if (selAsin) securityBits.push(`<span class="id-pill is-copy" data-copy="ASIN ${escapeHtml(selAsin)}" role="button" tabindex="0">ASIN ${escapeHtml(selAsin)}</span>`);
-      securityIdsEl.innerHTML = securityBits.join('');
-      securityIdsEl.hidden = securityBits.length === 0;
+    renderCodeButtonState();
+
+    if (_codePanelOpen) {
+      _renderCodePanel();
     }
 
     const img = $('#pImg');
@@ -1924,7 +2100,7 @@ function _renderLabelPanel(panel, labels, inLabels, entityKey, title, imageUrl, 
   const headerHtml = `
     <div style="display:flex;align-items:center;justify-content:space-between;
                 padding:12px 14px 10px;border-bottom:1px solid rgba(0,0,0,.07);flex-shrink:0;">
-      <span style="font-size:14px;font-weight:700;color:#111827;">Save to label</span>
+      <span style="font-size:14px;font-weight:700;color:#111827;">Save to Label</span>
       <a href="/labels/" style="font-size:12px;color:#6366f1;text-decoration:none;font-weight:600;">Manage</a>
     </div>
   `;
@@ -2089,14 +2265,12 @@ async function wireLabelTrigger(entityKey, title, imageUrl, brand) {
   trigger.addEventListener("click", trigger._pcLabelBound);
 }
 
-
-// ─── Master wiring function — call this after each product load ───────────────
-
 async function wireProductActions(entityKey, title, imageUrl, brand) {
   if (!entityKey) return;
   await Promise.all([
     wireBookmarkButton(entityKey, title, imageUrl, brand),
-    wireLabelTrigger(entityKey, title, imageUrl, brand)
+    wireLabelTrigger(entityKey, title, imageUrl, brand),
+    wireFavoriteButton(entityKey, title, imageUrl, brand)
   ]);
 }
 
@@ -3065,44 +3239,239 @@ function setMaybe(el, text, { asHtml = false } = {}) {
     return bits.length ? `${txt} • ${bits.join(' • ')}` : txt;
   }
 
-  function renderOffers(sortByPrice){
-    const wrap = $('#offers'); wrap.innerHTML = '';
+    const SELLER_INFO_CACHE = new Map();
+
+  function sellerSlugFromStore(store){
+    const raw = String(store || '').trim().toLowerCase();
+    if (!raw) return '';
+
+    const map = {
+      'best buy': 'bestbuy',
+      'bestbuy': 'bestbuy',
+      'amazon': 'amazon',
+      'walmart': 'walmart',
+      'target': 'target',
+      'apple': 'apple'
+    };
+
+    if (map[raw]) return map[raw];
+
+    return raw.replace(/[^a-z0-9]+/g, '');
+  }
+
+  function sellerHrefFromStore(store){
+    const slug = sellerSlugFromStore(store);
+    if (!slug) return '';
+    return `/seller/${encodeURIComponent(slug)}/`; // if your real route is /sellers/, change /seller/ to /sellers/
+  }
+
+  async function getSellerInfo(store){
+    const slug = sellerSlugFromStore(store);
+    if (!slug) return { slug: '', found: false, seller: null };
+
+    if (SELLER_INFO_CACHE.has(slug)) {
+      return SELLER_INFO_CACHE.get(slug);
+    }
+
+    const pending = (async () => {
+      try {
+        const res = await fetch(`/api/seller?id=${encodeURIComponent(slug)}`, {
+          headers: { Accept: 'application/json' }
+        });
+
+        if (!res.ok) {
+          return { slug, found: false, seller: null };
+        }
+
+        const data = await res.json().catch(() => null);
+
+        if (!data || data.ok !== true || !data.found || !data.seller) {
+          return { slug, found: false, seller: null };
+        }
+
+        return { slug, found: true, seller: data.seller };
+      } catch {
+        return { slug, found: false, seller: null };
+      }
+    })();
+
+    SELLER_INFO_CACHE.set(slug, pending);
+    return pending;
+  }
+
+  function sellerLogoHtml(seller, fallbackName){
+    const logo = String(seller?.logo || '').trim();
+    const name = String(seller?.name || fallbackName || '').trim();
+    if (!logo) return '';
+
+    return `
+      <img
+        class="offer-logo"
+        src="${escapeHtml(logo)}"
+        alt="${escapeHtml(name)}"
+        loading="lazy"
+        decoding="async"
+      >
+    `;
+  }
+
+  function deliveryTextForOffer(offer, seller){
+    if (norm(offer?.delivery_estimate)) return norm(offer.delivery_estimate);
+
+    if (offer?.shipping_days != null) {
+      const n = Number(offer.shipping_days);
+      if (Number.isFinite(n) && n > 0) {
+        return `${n} day${n === 1 ? '' : 's'}`;
+      }
+    }
+
+    if (norm(seller?.policies?.delivery)) return norm(seller.policies.delivery);
+
+    return '';
+  }
+
+  function shippingTextForOffer(offer, seller){
+    if (offer?.free_shipping === true || offer?.shipping_cost === 0) return 'Free';
+
+    if (typeof offer?.shipping_cost === 'number' && offer.shipping_cost > 0) {
+      return fmt.format(offer.shipping_cost / 100);
+    }
+
+    if (norm(seller?.policies?.free_shipping_threshold)) {
+      return `${norm(seller.policies.free_shipping_threshold)}`;
+    }
+
+    if (norm(seller?.policies?.shipping)) return norm(seller.policies.shipping);
+
+    return '';
+  }
+
+  function returnsTextForOffer(offer, seller){
+    if (norm(offer?.return_policy)) return norm(offer.return_policy);
+
+    if (offer?.return_days != null) {
+      const n = Number(offer.return_days);
+      if (Number.isFinite(n) && n > 0) {
+        return `${n}-day returns`;
+      }
+    }
+
+    if (norm(seller?.policies?.return_period)) {
+      return `${norm(seller.policies.return_period)} returns`;
+    }
+
+    return '';
+  }
+
+  function sellerFallbackHtml(sellerHref, hasSeller){
+    if (hasSeller && sellerHref) {
+      return `<a class="offer-detail-link" href="${escapeHtml(sellerHref)}">See site</a>`;
+    }
+    return 'Coming soon';
+  }
+
+  function sellerValueOrFallback(value, sellerHref, hasSeller){
+    const text = String(value || '').trim();
+    if (text) return escapeHtml(text);
+    return sellerFallbackHtml(sellerHref, hasSeller);
+  }
+
+    async function renderOffers(sortByPrice){
+    const wrap = $('#offers');
+    wrap.innerHTML = '';
+
     const note = $('#offersNote');
 
-    if(!state.offers.length){
+    if (!state.offers.length) {
       note.textContent = '';
       return;
     }
 
-    let arr = state.offers.map(o=>{
+    let arr = state.offers.map(o => {
       const cents = bestComparableCents(o);
-      const price = (typeof cents === 'number') ? cents/100 : null;
+      const price = (typeof cents === 'number') ? cents / 100 : null;
       return { ...o, _price: price, _price_cents: cents };
     });
 
-    if(sortByPrice){
-      arr = arr.sort((a,b)=>{
-        if(a._price == null && b._price == null) return 0;
-        if(a._price == null) return 1;
-        if(b._price == null) return -1;
+    if (sortByPrice) {
+      arr = arr.sort((a, b) => {
+        if (a._price == null && b._price == null) return 0;
+        if (a._price == null) return 1;
+        if (b._price == null) return -1;
         return a._price - b._price;
       });
     }
 
-    arr.forEach(o=>{
+    const sellerRows = await Promise.all(
+      arr.map(async (o) => {
+        const sellerInfo = await getSellerInfo(o.store);
+
+        return {
+          offer: o,
+          seller: sellerInfo?.seller || null,
+          hasSeller: sellerInfo?.found === true,
+          sellerHref: sellerHrefFromStore(o.store)
+        };
+      })
+    );
+
+    sellerRows.forEach(({ offer: o, seller, hasSeller, sellerHref }) => {
       const bestLink = o.url || canonicalLink(o.store, o) || '';
-      const row = document.createElement('div');
-      row.className = 'offer';
+      const storeDisplay = titleCase(seller?.name || o.store || '');
       const tag = (o.offer_tag || '').trim();
       const priceText = (o._price != null) ? `${fmt.format(o._price)}` : 'No price';
 
+      const logoHtml = sellerLogoHtml(seller, storeDisplay);
+
+      const logoSlotHtml = logoHtml
+      ? (
+          hasSeller && sellerHref
+            ? `<a class="offer-logo-link" href="${escapeHtml(sellerHref)}" aria-label="Open ${escapeHtml(storeDisplay)} seller page">${logoHtml}</a>`
+            : `<span class="offer-logo-link is-static" aria-hidden="true">${logoHtml}</span>`
+        )
+      : `<span class="offer-logo-spacer" aria-hidden="true"></span>`;
+
+      const deliveryHtml = sellerValueOrFallback(
+        deliveryTextForOffer(o, seller),
+        sellerHref,
+        hasSeller
+      );
+
+      const shippingHtml = sellerValueOrFallback(
+        shippingTextForOffer(o, seller),
+        sellerHref,
+        hasSeller
+      );
+
+      const returnsHtml = sellerValueOrFallback(
+        returnsTextForOffer(o, seller),
+        sellerHref,
+        hasSeller
+      );
+
+      const seeMoreHtml = (hasSeller && sellerHref)
+        ? `<a class="offer-see-more__link" href="${escapeHtml(sellerHref)}">See more</a>`
+        : `<span class="offer-see-more__coming">Coming soon</span>`;
+
+      const row = document.createElement('div');
+      row.className = 'offer';
+
       row.innerHTML = `
         <div class="offer-left">
-          <div class="offer-store-row">
-            <span class="offer-store">${titleCase(o.store || '')}</span>
-            ${bestLink ? `<a class="offer-go-inline" href="${escapeHtml(bestLink)}" target="_blank" rel="noopener" aria-label="Go to ${escapeHtml(titleCase(o.store || 'store'))}">${OFFER_EXTERNAL_SVG}</a>` : ''}
+          ${logoSlotHtml}
+
+          <div class="offer-left-main">
+            <div class="offer-store-row">
+              <span class="offer-store">${escapeHtml(storeDisplay)}</span>
+              ${
+                bestLink
+                  ? `<a class="offer-go-inline" href="${escapeHtml(bestLink)}" target="_blank" rel="noopener" aria-label="Go to ${escapeHtml(storeDisplay)}">${OFFER_EXTERNAL_SVG}</a>`
+                  : ''
+              }
+            </div>
+
+            <div class="muted-price offer-price">${escapeHtml(priceText)}</div>
           </div>
-          <div class="muted-price offer-price">${escapeHtml(priceText)}</div>
         </div>
 
         <div class="offer-tag-col muted">${tag ? escapeHtml(tag) : ''}</div>
@@ -3118,24 +3487,26 @@ function setMaybe(el, text, { asHtml = false } = {}) {
       details.className = 'offer-details';
       details.hidden = true;
 
-      const deliveryVal = o.delivery_estimate || (o.shipping_days != null ? `${o.shipping_days} day${o.shipping_days !== 1 ? 's' : ''}` : 'See site');
-      const shippingVal = (o.free_shipping || o.shipping_cost === 0) ? 'Free' : (o.shipping_cost != null ? fmt.format(o.shipping_cost / 100) : 'See site');
-      const returnsVal = o.return_policy || (o.return_days != null ? `${o.return_days}-day returns` : 'See site');
-
       details.innerHTML = `
         <div class="offer-details-grid">
           <div class="offer-detail-cell">
             <div class="offer-detail-label">Delivery</div>
-            <div class="offer-detail-value">${escapeHtml(deliveryVal)}</div>
+            <div class="offer-detail-value">${deliveryHtml}</div>
           </div>
+
           <div class="offer-detail-cell">
             <div class="offer-detail-label">Shipping</div>
-            <div class="offer-detail-value">${escapeHtml(shippingVal)}</div>
+            <div class="offer-detail-value">${shippingHtml}</div>
           </div>
+
           <div class="offer-detail-cell">
             <div class="offer-detail-label">Returns</div>
-            <div class="offer-detail-value">${escapeHtml(returnsVal)}</div>
+            <div class="offer-detail-value">${returnsHtml}</div>
           </div>
+        </div>
+
+        <div class="offer-see-more">
+          ${seeMoreHtml}
         </div>
       `;
 
@@ -3196,7 +3567,7 @@ function setMaybe(el, text, { asHtml = false } = {}) {
                 loading="lazy"
                 decoding="async"
               >
-              <div class="pc-similar-price">&#9733; UNR</div>
+              <div class="pc-similar-price">&#9733;</div>
             </div>
 
             <div class="pc-similar-main">
@@ -3223,10 +3594,20 @@ function setMaybe(el, text, { asHtml = false } = {}) {
   }
 
   function renderForensics(){
-    const ul = $('#forensicsList'); ul.innerHTML = '';
-    ['Strike is consistent with recent range for this variant','Variant IDs match','Anchor price looks reasonable']
-      .forEach(t=>{ const li=document.createElement('li'); li.textContent=t; ul.appendChild(li); });
-  }
+  const ul = $('#forensicsList');
+  if (!ul) return;
+
+  ul.innerHTML = '';
+  [
+    'Strike is consistent with recent range for this variant',
+    'Variant IDs match',
+    'Anchor price looks reasonable'
+  ].forEach(t => {
+    const li = document.createElement('li');
+    li.textContent = t;
+    ul.appendChild(li);
+  });
+}
 
   // ---------- Intelligence actions ----------
 function intelligenceContext() {
@@ -3287,8 +3668,140 @@ function parseIdPillValue(raw){
   return (m ? String(m[2] || '').trim() : s);
 }
 
+function codeItemsFromState() {
+  const id = state.identity || {};
+
+  const pci = String(id.selected_pci || '').trim();
+  const upc = cleanUpc(id.selected_upc || '');
+  const asin = up(id.asin || '');
+
+  const out = [];
+  if (pci) out.push({ kind: 'PCI', value: pci });
+  if (upc) out.push({ kind: 'UPC', value: upc });
+  if (asin) out.push({ kind: 'ASIN', value: asin });
+
+  return out;
+}
+
+function renderCodeButtonState() {
+  const btn = document.getElementById('phCodeBtn');
+  if (!btn) return;
+
+  const hasCodes = codeItemsFromState().length > 0;
+
+  btn.disabled = !hasCodes;
+  btn.setAttribute('aria-disabled', hasCodes ? 'false' : 'true');
+  btn.title = hasCodes ? 'View product codes' : 'No product codes available';
+}
+
+function _ensureCodePanel() {
+  if (_codePanelEl) return _codePanelEl;
+
+  _codePanelEl = document.createElement('div');
+  _codePanelEl.id = 'pcCodePanel';
+  _codePanelEl.className = 'pc-code-panel';
+  _codePanelEl.hidden = true;
+  document.body.appendChild(_codePanelEl);
+
+  document.addEventListener('click', (e) => {
+    if (
+      _codePanelOpen &&
+      !_codePanelEl.contains(e.target) &&
+      !e.target.closest("[data-pc-code-trigger='1']")
+    ) {
+      _closeCodePanel();
+    }
+  }, true);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && _codePanelOpen) _closeCodePanel();
+  });
+
+  return _codePanelEl;
+}
+
+function _closeCodePanel() {
+  if (!_codePanelEl) return;
+  _codePanelEl.hidden = true;
+  _codePanelOpen = false;
+}
+
+function _renderCodePanel() {
+  const panel = _ensureCodePanel();
+  const items = codeItemsFromState();
+
+  if (!items.length) {
+    panel.innerHTML = `
+      <div class="pc-code-panel__head">Codes</div>
+      <div class="pc-code-panel__empty">No product codes available.</div>
+    `;
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="pc-code-panel__head">Codes</div>
+    <div class="pc-code-panel__list">
+      ${items.map(item => `
+        <button
+          type="button"
+          class="pc-code-pill"
+          data-code-copy="${escapeHtml(item.value)}"
+        >
+          <span class="pc-code-pill__kind">${escapeHtml(item.kind)}</span>
+          <span class="pc-code-pill__value">${escapeHtml(item.value)}</span>
+        </button>
+      `).join('')}
+    </div>
+    <div class="pc-code-panel__hint">Click a code to copy it.</div>
+  `;
+
+  panel.querySelectorAll('[data-code-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const value = String(btn.getAttribute('data-code-copy') || '').trim();
+      if (!value) return;
+
+      const ok = await copyText(value);
+      if (!ok) return;
+
+      const valueEl = btn.querySelector('.pc-code-pill__value');
+      if (!valueEl) return;
+
+      const original = valueEl.textContent;
+      valueEl.textContent = 'Copied';
+
+      clearTimeout(btn._pcCodeCopyT);
+      btn._pcCodeCopyT = setTimeout(() => {
+        valueEl.textContent = original;
+      }, 900);
+    });
+  });
+}
+
+function wireCodeButton() {
+  const btn = document.getElementById('phCodeBtn');
+  if (!btn || btn._pcBound) return;
+
+  btn._pcBound = true;
+
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (btn.disabled) return;
+
+    if (_codePanelOpen) {
+      _closeCodePanel();
+      return;
+    }
+
+    _renderCodePanel();
+    _codePanelEl.hidden = false;
+    _codePanelOpen = true;
+  });
+}
+
 function wireHeaderToolButtons() {
-  const moreBtn = document.getElementById('phMoreTools');
+  const moreBtn = document.getElementById('phMoreToolsBtn');
   if (!moreBtn || moreBtn._pcBound) return;
 
   moreBtn._pcBound = true;
@@ -3476,6 +3989,111 @@ if (actSummary) actSummary.addEventListener('click', async () => {
 
     return rows;
   }
+
+  function normalizeContentsInput(raw){
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === 'object' && Array.isArray(raw.items)) return raw.items;
+  return [];
+}
+
+function contentsSource(){
+  const cur = getCurrentVariant() || null;
+
+  if (Array.isArray(cur?.contents)) return cur.contents;
+  if (cur?.contents && typeof cur.contents === 'object' && Array.isArray(cur.contents.items)) {
+    return cur.contents.items;
+  }
+
+  if (Array.isArray(state.identity?.contents)) return state.identity.contents;
+  if (state.identity?.contents && typeof state.identity.contents === 'object' && Array.isArray(state.identity.contents.items)) {
+    return state.identity.contents.items;
+  }
+
+  return [];
+}
+
+function parseContentsItem(input, index){
+  if (typeof input === 'string') {
+    const label = String(input).trim();
+    if (!label) return null;
+
+    return {
+      label,
+      qty: null,
+      note: ''
+    };
+  }
+
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return null;
+  }
+
+  const label = String(
+    input.label ||
+    input.name ||
+    input.title ||
+    input.item ||
+    ''
+  ).trim();
+
+  if (!label) return null;
+
+  const rawQty = input.qty ?? input.quantity ?? input.count ?? null;
+  const qtyNum = Number(rawQty);
+  const qty = Number.isInteger(qtyNum) && qtyNum > 0 ? qtyNum : null;
+
+  const note = String(
+    input.note ||
+    input.description ||
+    ''
+  ).trim();
+
+  return {
+    label,
+    qty,
+    note
+  };
+}
+
+function renderContents(){
+  if (!contentsCard || !contentsContent) return;
+
+  const items = normalizeContentsInput(contentsSource())
+    .map((item, index) => parseContentsItem(item, index))
+    .filter(Boolean);
+
+  if (!items.length) {
+    contentsCard.hidden = true;
+    contentsContent.innerHTML = '';
+    return;
+  }
+
+  contentsCard.hidden = false;
+
+  const totalPieces = items.reduce((sum, item) => {
+    return sum + (item.qty != null ? item.qty : 1);
+  }, 0);
+
+  const summaryText =
+    totalPieces === items.length
+      ? `${items.length} item${items.length === 1 ? '' : 's'} in the box`
+      : `${items.length} line items, ${totalPieces} total pieces`;
+
+  contentsContent.innerHTML = `
+    <div class="pc-contents-grid">
+      ${items.map((item) => `
+        <article class="pc-content-item">
+          <div class="pc-content-item__top">
+            <div class="pc-content-item__label">${escapeHtml(item.label)}</div>
+            ${item.qty != null ? `<div class="pc-content-item__qty">x${escapeHtml(String(item.qty))}</div>` : ''}
+          </div>
+
+          ${item.note ? `<div class="pc-content-item__note">${escapeHtml(item.note)}</div>` : ''}
+        </article>
+      `).join('')}
+    </div>
+  `;
+}
 
   function renderSidebarSpecs(){
   const host = document.getElementById('specsContent');
@@ -3897,19 +4515,18 @@ function renderFilesCard(){
           ${item.summary ? `<div class="pc-file-item__summary">${escapeHtml(item.summary)}</div>` : ''}
         </button>
       `;
-
         }).join('')}
       </div>
 
-      <div class="pc-file-viewer${active ? '' : ' pc-file-viewer--closed'}" role="tabpanel">
-        ${
-          active
-            ? renderFilePreview(active)
-            : `
-              <div class="sidebar-empty">Select a file to open the viewer.</div>
-            `
-        }
-      </div>
+      ${
+        active
+          ? `
+            <div class="pc-file-viewer" role="tabpanel">
+              ${renderFilePreview(active)}
+            </div>
+          `
+          : ''
+      }
     </div>
   `;
 
@@ -4175,6 +4792,65 @@ function dimObj(raw){
   return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : null;
 }
 
+const DIMENSION_FIELD_KEYS = new Set([
+  'length_in', 'len_in',
+  'width_in', 'wid_in',
+  'height_in', 'thickness_in',
+  'depth_in',
+  'weight_lb',
+  'screen_in',
+  'length_cm', 'len_cm',
+  'width_cm', 'wid_cm',
+  'height_cm', 'thickness_cm',
+  'depth_cm',
+  'weight_kg',
+  'screen_cm'
+]);
+
+function hasDimensionFields(raw){
+  const obj = dimObj(raw);
+  if (!obj) return false;
+
+  return Object.keys(obj).some((key) => DIMENSION_FIELD_KEYS.has(String(key || '').trim()));
+}
+
+function collectDimensionSections(raw){
+  const src = dimObj(raw);
+  if (!src) return [];
+
+  const out = [];
+  const seen = new Set();
+
+  function pushSection(label, value){
+    const dims = normalizeDimensions(value);
+    if (!dims) return;
+
+    const cleanLabel = String(label || '').trim() || 'Dimensions';
+    const sig = cleanLabel.toLowerCase();
+    if (seen.has(sig)) return;
+    seen.add(sig);
+
+    out.push({
+      label: cleanLabel,
+      dims
+    });
+  }
+
+  // Support the old flat structure
+  if (hasDimensionFields(src)) {
+    pushSection('Dimensions', src);
+  }
+
+  // Support nested custom groups like Folded / Open / Closed / Unfolded
+  for (const [key, value] of Object.entries(src)) {
+    if (!dimObj(value)) continue;
+    if (!hasDimensionFields(value)) continue;
+    pushSection(key, value);
+  }
+
+  return out;
+}
+
 function firstNum(obj, keys){
   const src = dimObj(obj);
   if (!src) return null;
@@ -4217,16 +4893,16 @@ function normalizeDimensions(raw){
   return { lengthIn, widthIn, heightIn, depthIn, weightLb, screenIn };
 }
 
-function selectedDimensions(){
+function selectedDimensionSections(){
   const cur = getCurrentVariant();
 
-  const fromVariant = normalizeDimensions(cur?.dimensions);
-  if (fromVariant) return fromVariant;
+  const fromVariant = collectDimensionSections(cur?.dimensions);
+  if (fromVariant.length) return fromVariant;
 
-  const fromIdentity = normalizeDimensions(state.identity?.dimensions);
-  if (fromIdentity) return fromIdentity;
+  const fromIdentity = collectDimensionSections(state.identity?.dimensions);
+  if (fromIdentity.length) return fromIdentity;
 
-  return null;
+  return [];
 }
 
 function formatLengthUnit(inches, unit){
@@ -4265,6 +4941,9 @@ function renderDimensionVisual(d, unit){
   const rawY = Math.max(Number(yIn) || 0.01, 0.01);
   const rawZ = Math.max(Number(zIn != null ? zIn : Math.min(rawX, rawY) * 0.14) || 0.01, 0.01);
 
+  const svgW = 520;
+  const svgH = 260;
+
   const maxFrontW = 250;
   const maxFrontH = 132;
   const maxDepth = 54;
@@ -4276,7 +4955,7 @@ function renderDimensionVisual(d, unit){
   let frontH = rawY * baseScale;
   let depth = Math.max(minDepth, Math.min(maxDepth, rawZ * baseScale));
 
-  const maxTotalW = 320;
+  const maxTotalW = 340;
   const neededW = frontW + depth;
 
   if (neededW > maxTotalW) {
@@ -4311,7 +4990,7 @@ function renderDimensionVisual(d, unit){
   const zGuideY2 = zGuideY1 + dy;
 
   return `
-    <svg class="dim-visual" viewBox="0 0 420 260" role="img" aria-label="Proportional dimensions diagram">
+    <svg class="dim-visual" viewBox="0 0 ${svgW} ${svgH}" role="img" aria-label="Proportional dimensions diagram">
       <title>Proportional dimensions diagram</title>
 
       <polygon
@@ -4358,45 +5037,45 @@ function renderDimensionVisual(d, unit){
       >${escapeHtml(yLabel)}</text>
 
       ${
-          zIn != null
-            ? `
-              <line
-                x1="${zGuideX1}"
-                y1="${zGuideY1}"
-                x2="${zGuideX2}"
-                y2="${zGuideY2}"
-                stroke="#64748b"
-                stroke-width="2"
-              ></line>
+        zIn != null
+          ? `
+            <line
+              x1="${zGuideX1}"
+              y1="${zGuideY1}"
+              x2="${zGuideX2}"
+              y2="${zGuideY2}"
+              stroke="#64748b"
+              stroke-width="2"
+            ></line>
 
-              <line
-                x1="${zGuideX1 - 6}"
-                y1="${zGuideY1}"
-                x2="${zGuideX1 + 6}"
-                y2="${zGuideY1}"
-                stroke="#64748b"
-                stroke-width="2"
-              ></line>
+            <line
+              x1="${zGuideX1 - 6}"
+              y1="${zGuideY1}"
+              x2="${zGuideX1 + 6}"
+              y2="${zGuideY1}"
+              stroke="#64748b"
+              stroke-width="2"
+            ></line>
 
-              <line
-                x1="${zGuideX2 - 6}"
-                y1="${zGuideY2}"
-                x2="${zGuideX2 + 6}"
-                y2="${zGuideY2}"
-                stroke="#64748b"
-                stroke-width="2"
-              ></line>
+            <line
+              x1="${zGuideX2 - 6}"
+              y1="${zGuideY2}"
+              x2="${zGuideX2 + 6}"
+              y2="${zGuideY2}"
+              stroke="#64748b"
+              stroke-width="2"
+            ></line>
 
-              <text
-                x="${zGuideX2 + 14}"
-                y="${zGuideY2 + 8}"
-                font-size="14"
-                font-weight="700"
-                fill="#475569"
-              >${escapeHtml(zLabel)}</text>
-            `
-            : ''
-        }
+            <text
+              x="${zGuideX2 + 14}"
+              y="${zGuideY2 + 8}"
+              font-size="14"
+              font-weight="700"
+              fill="#475569"
+            >${escapeHtml(zLabel)}</text>
+          `
+          : ''
+      }
     </svg>
   `;
 }
@@ -4410,19 +5089,10 @@ function renderDimStat(label, value){
   `;
 }
 
-function renderDimensions(){
-  if (!dimCard || !dimContent) return;
+function renderDimensionSection(section, unit, showHeading){
+  const d = section?.dims;
+  if (!d) return '';
 
-  const d = selectedDimensions();
-
-  if (!d) {
-    dimCard.hidden = true;
-    if (dimToggle) dimToggle.innerHTML = '';
-    dimContent.innerHTML = '';
-    return;
-  }
-
-  const unit = state.dimUnit === 'metric' ? 'metric' : 'imperial';
   const { xIn, yIn, zIn } = getDimensionAxes(d);
 
   const axisValues = [xIn, yIn, zIn].filter(v => v != null);
@@ -4432,18 +5102,8 @@ function renderDimensions(){
   const visual = renderDimensionVisual(d, unit);
   const stats = [];
 
-  // If we already have the XYZ diagram, do not repeat the same overall size below it.
   if (!(visual && zIn != null) && axisText.length >= 2) {
     stats.push(renderDimStat('Size', `${axisText.join(' x ')} ${axisUnit}`));
-  }
-
-  if (xIn != null && yIn != null) {
-    stats.push(
-      renderDimStat(
-        'Footprint',
-        `${formatLengthUnit(xIn, unit)} x ${formatLengthUnit(yIn, unit)}`
-      )
-    );
   }
 
   if (d.weightLb != null) {
@@ -4462,12 +5122,56 @@ function renderDimensions(){
     stats.push(renderDimStat('Depth', formatLengthUnit(d.depthIn, unit)));
   }
 
-  if (!stats.length) {
+  if (!visual && !stats.length) return '';
+
+  return `
+    <section class="dim-section">
+      ${
+        showHeading
+          ? `<h3 class="dim-section__title">${escapeHtml(section.label || 'Dimensions')}</h3>`
+          : ''
+      }
+
+      <div class="dim-layout">
+        ${
+          visual
+            ? `
+              <div class="dim-visual-card">
+                <div class="dim-visual-stage">
+                  ${visual}
+                </div>
+              </div>
+            `
+            : ''
+        }
+
+        ${
+          stats.length
+            ? `
+              <div class="dim-grid">
+                ${stats.join('')}
+              </div>
+            `
+            : ''
+        }
+      </div>
+    </section>
+  `;
+}
+
+function renderDimensions(){
+  if (!dimCard || !dimContent) return;
+
+  const sections = selectedDimensionSections();
+
+  if (!sections.length) {
     dimCard.hidden = true;
     if (dimToggle) dimToggle.innerHTML = '';
     dimContent.innerHTML = '';
     return;
   }
+
+  const unit = state.dimUnit === 'metric' ? 'metric' : 'imperial';
 
   dimCard.hidden = false;
 
@@ -4487,23 +5191,13 @@ function renderDimensions(){
     });
   }
 
-  dimContent.innerHTML = `
-    <div class="dim-layout">
-      ${
-        visual
-          ? `
-            <div class="dim-visual-card">
-              <div class="dim-visual-stage">
-                ${visual}
-              </div>
-            </div>
-          `
-          : ''
-      }
+  const showSectionHeadings =
+    sections.length > 1 ||
+    (sections.length === 1 && String(sections[0]?.label || '').trim().toLowerCase() !== 'dimensions');
 
-      <div class="dim-grid">
-        ${stats.join('')}
-      </div>
+  dimContent.innerHTML = `
+    <div class="dim-sections">
+      ${sections.map(section => renderDimensionSection(section, unit, showSectionHeadings)).join('')}
     </div>
   `;
 }

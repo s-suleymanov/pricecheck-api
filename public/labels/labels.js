@@ -101,15 +101,15 @@
 
   function labelCardHtml(lb) {
     const n    = lb.item_count || 0;
-    const sub  = n === 0 ? "No products" : n === 1 ? "1 product" : `${n} products`;
+    const sub  = n === 0 ? "0 products" : n === 1 ? "1 product" : `${n} products`;
     const img  = clean(lb.cover_image);
     const when = relativeDate(lb.updated_at);
 
     const thumb = img
       ? `<img class="pc-label-card__cover-img" src="${esc(img)}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">`
       : `<div class="pc-label-card__cover-ph">
-           <svg viewBox="0 -960 960 960" width="32" height="32" aria-hidden="true">
-             <path fill="currentColor" opacity=".35" d="M200-200v-560 560Zm0 80q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h168q13-36 43.5-58t68.5-22q38 0 68.5 22t43.5 58H760q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm80-80h280v-80H280v80Zm0-160h400v-80H280v80Zm0-160h400v-80H280v80Zm200-190q13 0 21.5-8.5T510-820q0-13-8.5-21.5T480-850q-13 0-21.5 8.5T450-820q0 13 8.5 21.5T480-790Z"/>
+           <svg viewBox="0 -960 960 960" width="42" height="42" aria-hidden="true">
+             <path fill="currentColor" opacity=".35" d="m757-317-57-57 80-106-180-240H354l-80-80h326q19 0 36 8.5t28 23.5l216 288-123 163Zm-597 77h448L160-688v448ZM820-28 661-187q-10 13-24 20t-31 7H160q-33 0-56.5-23.5T80-240v-480q0-11 2.5-20.5T90-758l-62-62 56-56L876-84l-56 56ZM567-547Zm-183 83Z"/>
            </svg>
          </div>`;
 
