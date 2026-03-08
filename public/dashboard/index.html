@@ -43,6 +43,8 @@
 
   <div id="site-header"></div>
 
+  <nav id="dashboardToc" class="dashboard-toc" aria-label="Dashboard sections" hidden></nav>
+
   <main class="wrap">
     <section class="card" style="display: none;">
       <ul class="links-list">
@@ -51,7 +53,7 @@
     </section>
     <section class="grid-shell">
       
-        <section class="card" id="productHeader" style="margin-top: 0;">
+        <section class="card" id="productHeader" style="margin-top: 24px;">
           <div class="grid2 ph-grid">
 
             <div>
@@ -86,6 +88,96 @@
               </div>
               <h1 id="pTitle" style="font-size: 30px; margin-bottom: 10px;">Loading...</h1>
               <div class="muted mono" id="pIds"></div>
+
+              <div class="ph-tools" aria-label="Product actions">
+                <button
+                  class="ph-tool"
+                  data-pc-bookmark="1"
+                  type="button"
+                  aria-label="Bookmark this product"
+                  title="Save to bookmarks"
+                >
+                  <svg data-bookmark-icon="on" style="display:none" viewBox="0 -960 960 960" width="22" height="22">
+                    <path fill="currentColor" d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/>
+                  </svg>
+                  <svg data-bookmark-icon="off" viewBox="0 -960 960 960" width="22" height="22">
+                    <path fill="currentColor" d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/>
+                  </svg>
+                </button>
+
+                <button
+                  class="ph-tool"
+                  data-pc-label-trigger="1"
+                  type="button"
+                  aria-label="Save to label"
+                  title="Save to label"
+                >
+                  <svg viewBox="0 -960 960 960" width="22" height="22">
+                    <path fill="currentColor" d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h440q19 0 36 8.5t28 23.5l216 288-216 288q-11 15-28 23.5t-36 8.5H160Zm0-80h440l180-240-180-240H160v480Zm220-240Z"/>
+                  </svg>
+                </button>
+
+                <button
+                  class="ph-tool"
+                  data-pc-favorite="1"
+                  type="button"
+                  aria-label="Add to Favorites"
+                  aria-pressed="false"
+                  title="Add to Favorites"
+                >
+                  <svg
+                    data-fav-icon="on"
+                    style="display:none"
+                    viewBox="0 -960 960 960"
+                    width="22" height="22"
+                    focusable="false"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"
+                    />
+                  </svg>
+
+                  <svg
+                    data-fav-icon="off"
+                    viewBox="0 -960 960 960"
+                    width="22" height="22"
+                    focusable="false"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  class="ph-tool"
+                  type="button"
+                  aria-label="Compare"
+                  data-pc-plus="1"
+                  data-pc-plus-toast-only="1"
+                >
+                  <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
+                    <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"></path>
+                  </svg>
+                </button>
+
+                <button
+                  class="ph-tool"
+                  id="phCodeBtn"
+                  data-pc-code-trigger="1"
+                  type="button"
+                  aria-label="Codes"
+                  title="View product codes"
+                >
+                  <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
+                    <path d="M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-40-343 237-137-237-137-237 137 237 137ZM160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11L160-252Zm320-228Z"></path>
+                  </svg>
+                </button>
+              </div>
 
               <!-- Recall warning -->
               <div class="pc-warn pc-warn--recall" id="ps-recall" hidden>
@@ -122,104 +214,6 @@
                 <h3 style="margin-bottom: 9px; margin-top: 18px;">Color</h3>
                 <div class="pill-row" id="colorPills"></div>
               </div>
-            </div>
-
-            <div class="ph-tools" aria-label="Product actions">
-              <button
-                class="ph-tool"
-                data-pc-bookmark="1"
-                type="button"
-                aria-label="Bookmark this product"
-                title="Save to bookmarks"
-              >
-                <svg data-bookmark-icon="on" style="display:none" viewBox="0 -960 960 960" width="22" height="22">
-                  <path fill="currentColor" d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/>
-                </svg>
-                <svg data-bookmark-icon="off" viewBox="0 -960 960 960" width="22" height="22">
-                  <path fill="currentColor" d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/>
-                </svg>
-              </button>
-
-              <button
-                class="ph-tool"
-                data-pc-label-trigger="1"
-                type="button"
-                aria-label="Save to label"
-                title="Save to label"
-              >
-                <svg viewBox="0 -960 960 960" width="22" height="22">
-                  <path fill="currentColor" d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h440q19 0 36 8.5t28 23.5l216 288-216 288q-11 15-28 23.5t-36 8.5H160Zm0-80h440l180-240-180-240H160v480Zm220-240Z"/>
-                </svg>
-              </button>
-
-              <button
-                class="ph-tool"
-                data-pc-favorite="1"
-                type="button"
-                aria-label="Add to Favorites"
-                aria-pressed="false"
-                title="Add to Favorites"
-              >
-                <!-- Filled heart — shown when product IS in Favorites -->
-                <svg
-                  data-fav-icon="on"
-                  style="display:none"
-                  viewBox="0 -960 960 960"
-                  width="22" height="22"
-                  focusable="false"
-                  aria-hidden="true"
-                >
-                  <path
-                    fill="currentColor"
-                    d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"
-                  />
-                </svg>
-
-                <!-- Empty heart — shown when product is NOT in Favorites (default) -->
-                <svg
-                  data-fav-icon="off"
-                  viewBox="0 -960 960 960"
-                  width="22" height="22"
-                  focusable="false"
-                  aria-hidden="true"
-                >
-                  <path
-                    fill="currentColor"
-                    d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"
-                  />
-                </svg>
-              </button>
-
-              <button
-                class="ph-tool"
-                type="button"
-                aria-label="Compare"
-                data-pc-plus="1"
-                data-pc-plus-toast-only="1"
-              >
-                <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
-                  <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"></path>
-                </svg>
-              </button>
-
-              <button
-                class="ph-tool"
-                id="phCodeBtn"
-                data-pc-code-trigger="1"
-                type="button"
-                aria-label="Codes"
-                title="View product codes"
-              >
-                <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
-                  <path d="M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-40-343 237-137-237-137-237 137 237 137ZM160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11L160-252Zm320-228Z"></path>
-                </svg>
-              </button>
-
-              <button class="ph-tool" id="phMoreToolsBtn" type="button" aria-label="More tools">
-                <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
-                  <path d="M183.5-183.5Q160-207 160-240t23.5-56.5Q207-320 240-320t56.5 23.5Q320-273 320-240t-23.5 56.5Q273-160 240-160t-56.5-23.5Zm240 0Q400-207 400-240t23.5-56.5Q447-320 480-320t56.5 23.5Q560-273 560-240t-23.5 56.5Q513-160 480-160t-56.5-23.5Zm240 0Q640-207 640-240t23.5-56.5Q687-320 720-320t56.5 23.5Q800-273 800-240t-23.5 56.5Q753-160 720-160t-56.5-23.5Zm-480-240Q160-447 160-480t23.5-56.5Q207-560 240-560t56.5 23.5Q320-513 320-480t-23.5 56.5Q273-400 240-400t-56.5-23.5Zm240 0Q400-447 400-480t23.5-56.5Q447-560 480-560t56.5 23.5Q560-513 560-480t-23.5 56.5Q513-400 480-400t-56.5-23.5Zm240 0Q640-447 640-480t23.5-56.5Q687-560 720-560t56.5 23.5Q800-513 800-480t-23.5 56.5Q753-400 720-400t-56.5-23.5Zm-480-240Q160-687 160-720t23.5-56.5Q207-800 240-800t56.5 23.5Q320-753 320-720t-23.5 56.5Q273-640 240-640t-56.5-23.5Zm240 0Q400-687 400-720t23.5-56.5Q447-800 480-800t56.5 23.5Q560-753 560-720t-23.5 56.5Q513-640 480-640t-56.5-23.5Zm240 0Q640-687 640-720t23.5-56.5Q687-800 720-800t56.5 23.5Q800-753 800-720t-23.5 56.5Q753-640 720-640t-56.5-23.5Z"></path>
-                </svg>
-              </button>
             </div>
           </div>
       </section>
@@ -307,7 +301,7 @@
         </section>
 
                 <!-- Price history -->
-        <section class="card">
+        <section class="card" id="historyCard">
           <div class="spaced">
             <h2 data-icon-path="M120-240q-33 0-56.5-23.5T40-320q0-33 23.5-56.5T120-400h10.5q4.5 0 9.5 2l182-182q-2-5-2-9.5V-600q0-33 23.5-56.5T400-680q33 0 56.5 23.5T480-600q0 2-2 20l102 102q5-2 9.5-2h21q4.5 0 9.5 2l142-142q-2-5-2-9.5V-640q0-33 23.5-56.5T840-720q33 0 56.5 23.5T920-640q0 33-23.5 56.5T840-560h-10.5q-4.5 0-9.5-2L678-420q2 5 2 9.5v10.5q0 33-23.5 56.5T600-320q-33 0-56.5-23.5T520-400v-10.5q0-4.5 2-9.5L420-522q-5 2-9.5 2H400q-2 0-20-2L198-340q2 5 2 9.5v10.5q0 33-23.5 56.5T120-240Z">History</h2>
             <div id="historyToggle" class="dim-toggle" role="group" aria-label="History range controls">
@@ -334,9 +328,10 @@
           <div id="dimContent"></div>
         </section>
 
-        <section class="card" id="bundle" hidden>
+        <section class="card" id="bundle">
           <div class="spaced">
-            <h2 style="margin: 0;" data-icon-path="M280-80q-33 0-56.5-23.5T200-160v-400q0-33 23.5-56.5T280-640h400q33 0 56.5 23.5T760-560v400q0 33-23.5 56.5T680-80H280Zm0-80h400v-400H280v400Zm160-40h80v-40h-80v40Zm0-80h80q0-19 9.5-34.5T550-345q12-17 21-36.5t9-40.5q0-41-29-69.5T480-520q-42 0-71 28.5T380-422q0 21 9.5 40t20.5 36q11 16 20.5 31.5T440-280ZM240-700q0-25 17.5-42.5T300-760h360q25 0 42.5 17.5T720-700H240Zm40-120q0-25 17.5-42.5T340-880h280q25 0 42.5 17.5T680-820H280Zm200 460Z">Bundle</h2>
+            <h2 style="margin: 0;" data-icon-path="M480-400 40-640l440-240 440 240-440 240Zm0 160L63-467l84-46 333 182 333-182 84 46-417 227Zm0 160L63-307l84-46 333 182 333-182 84 46L480-80Zm0-411 273-149-273-149-273 149 273 149Zm0-149Z">Bundles</h2>
+            <p>Coming Soon</p>
           </div>
         </section>
 
@@ -349,13 +344,13 @@
         </section>
 
         <section class="card" id="mediaCard" hidden>
-          <h2 data-icon-path="M680-160v-640q33 0 56.5 23.5T760-720v480q0 33-23.5 56.5T680-160ZM160-80q-33 0-56.5-23.5T80-160v-640q0-33 23.5-56.5T160-880h360q33 0 56.5 23.5T600-800v640q0 33-23.5 56.5T520-80H160Zm680-160v-480q25 0 42.5 17.5T900-660v360q0 25-17.5 42.5T840-240Zm-680 80h360v-640H160v640Zm0-640v640-640Z">Media</h2>
+          <h2 data-icon-path="m460-380 280-180-280-180v360ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z">Media</h2>
           <div id="mediaContent"></div>
         </section>
 
         <section class="card" id="files" hidden>
           <div class="spaced">
-            <h2 data-icon-path="M160-160q-33 0-56.5-23.5T80-240v-400q0-33 23.5-56.5T160-720h240l80-80h320q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm73-280h207v-207L233-440Zm-73-40 160-160H160v160Zm0 120v120h640v-480H520v280q0 33-23.5 56.5T440-360H160Zm280-160Z">Files</h2>
+            <h2 data-icon-path="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z">Files</h2>
           </div>
 
           <div id="filesContent">

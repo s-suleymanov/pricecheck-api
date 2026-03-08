@@ -38,14 +38,352 @@
     selectedTimelineIndex: -1,
     rangeDays: 30,
     selectedVariantKey:null,
+    selectedVersion: null,
+    selectedVariant2: null,
+    selectedColor: null,
     lastKey:null,
     dimUnit: 'imperial',
     selectedFileIndex: -1,
+    selectedLineupFamily: null,
     followBrand: '',
     followingBrand: false,
     followStateKnown: false,
     followBusy: false
   };
+
+  let _runToken = 0;
+
+  const tocEl = document.getElementById('dashboardToc');
+  let _tocResizeObserver = null;
+  let _tocMutationObserver = null;
+  let _tocRefreshRaf = 0;
+  let _tocScrollItems = [];
+  let _tocScrollRaf = 0;
+  let _tocScrollHandler = null;
+
+  const PRODUCT_HEADER_TOC_ICON_PATH = 'M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z';
+
+  function getDashboardHeaderOffset() {
+    const host = document.getElementById('site-header');
+    if (!host) return 88;
+
+    const rect = host.getBoundingClientRect();
+    const height = Math.max(host.offsetHeight || 0, rect.height || 0);
+
+    return Math.max(72, Math.round(height));
+  }
+
+  function setDashboardOffsetVars() {
+    const top = getDashboardHeaderOffset() + 12;
+    document.documentElement.style.setProperty('--pc-dashboard-header-offset', `${top}px`);
+  }
+
+  function isActuallyVisible(el) {
+    if (!el || el.hidden) return false;
+
+    const cs = window.getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+
+    return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+  }
+
+  function createTocIconMarkup(pathData) {
+    const d = String(pathData || '').trim();
+    if (!d) return '';
+
+    return `
+      <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+        <path d="${escapeHtml(d)}"></path>
+      </svg>
+    `;
+  }
+
+  function getDashboardTocCards() {
+  const main = document.querySelector('.main-content');
+  const productHeader = document.getElementById('productHeader');
+
+  const cards = [];
+
+  if (productHeader) {
+    cards.push(productHeader);
+  }
+
+  if (main) {
+    cards.push(...Array.from(main.children));
+  }
+
+  return cards
+    .filter((el) => {
+      return el &&
+        el.tagName === 'SECTION' &&
+        el.classList.contains('card') &&
+        !!el.id;
+    })
+    .map((card) => {
+      if (!isActuallyVisible(card)) return null;
+
+      if (card.id === 'productHeader') {
+        return {
+          id: 'productHeader',
+          label: 'Overview',
+          pathData: PRODUCT_HEADER_TOC_ICON_PATH,
+          card
+        };
+      }
+
+      const h2 = card.querySelector('h2[data-icon-path]');
+      if (!h2) return null;
+
+      const pathData = String(h2.getAttribute('data-icon-path') || '').trim();
+      const label = normalizeSpaces(h2.textContent || card.id);
+
+      if (!pathData || !label) return null;
+
+      return {
+        id: card.id,
+        label,
+        pathData,
+        card
+      };
+    })
+    .filter(Boolean);
+}
+
+  function setDashboardTocActive(targetId) {
+    if (!tocEl) return;
+
+    tocEl.querySelectorAll('.dashboard-toc__btn').forEach((btn) => {
+      const isActive = String(btn.getAttribute('data-target') || '') === String(targetId || '');
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-current', isActive ? 'true' : 'false');
+    });
+  }
+
+  function getDashboardTocActiveId(items) {
+  if (!Array.isArray(items) || !items.length) return '';
+
+  const cutoff = getDashboardHeaderOffset() + 28;
+  let fallbackId = items[0].id;
+
+  for (const item of items) {
+    if (!item || !item.card) continue;
+
+    const rect = item.card.getBoundingClientRect();
+
+    if (rect.top <= cutoff) {
+      fallbackId = item.id;
+    }
+
+    if (rect.top <= cutoff && rect.bottom > cutoff) {
+      return item.id;
+    }
+  }
+
+  return fallbackId;
+}
+
+function scheduleDashboardTocActiveSync() {
+  if (_tocScrollRaf) return;
+
+  _tocScrollRaf = requestAnimationFrame(() => {
+    _tocScrollRaf = 0;
+
+    if (!tocEl || !_tocScrollItems.length) return;
+
+    const activeId = getDashboardTocActiveId(_tocScrollItems);
+    if (activeId) {
+      setDashboardTocActive(activeId);
+    }
+  });
+}
+
+  function scrollToDashboardCard(card) {
+    if (!card) return;
+
+    const offset = getDashboardHeaderOffset() + 18;
+    const y = Math.max(
+      0,
+      Math.round(window.scrollY + card.getBoundingClientRect().top - offset)
+    );
+
+    window.scrollTo({
+      top: y,
+      behavior: 'smooth'
+    });
+  }
+
+  function observeDashboardToc(items) {
+
+  _tocScrollItems = Array.isArray(items) ? items.slice() : [];
+
+  if (!_tocScrollItems.length) {
+    if (_tocScrollRaf) {
+      cancelAnimationFrame(_tocScrollRaf);
+      _tocScrollRaf = 0;
+    }
+
+    if (_tocScrollHandler) {
+      window.removeEventListener('scroll', _tocScrollHandler);
+      _tocScrollHandler = null;
+    }
+
+    return;
+  }
+
+  if (!_tocScrollHandler) {
+    _tocScrollHandler = () => {
+      scheduleDashboardTocActiveSync();
+    };
+
+    window.addEventListener('scroll', _tocScrollHandler, { passive: true });
+  }
+
+  scheduleDashboardTocActiveSync();
+}
+
+function buildDashboardToc() {
+  if (!tocEl) return;
+
+  setDashboardOffsetVars();
+
+  const items = getDashboardTocCards();
+
+  if (!items.length) {
+  tocEl.hidden = true;
+  tocEl.innerHTML = '';
+
+  _tocScrollItems = [];
+
+  if (_tocScrollRaf) {
+    cancelAnimationFrame(_tocScrollRaf);
+    _tocScrollRaf = 0;
+  }
+
+  if (_tocScrollHandler) {
+    window.removeEventListener('scroll', _tocScrollHandler);
+    _tocScrollHandler = null;
+  }
+
+  return;
+}
+
+  tocEl.hidden = false;
+
+  tocEl.innerHTML = `
+  <div class="dashboard-toc__inner">
+    <div class="dashboard-toc__main">
+      ${items.map((item) => `
+        <button
+          type="button"
+          class="dashboard-toc__btn"
+          data-target="${escapeHtml(item.id)}"
+          aria-label="Jump to ${escapeHtml(item.label)}"
+          title="${escapeHtml(item.label)}"
+        >
+          ${createTocIconMarkup(item.pathData)}
+        </button>
+      `).join('')}
+    </div>
+
+    <button
+      type="button"
+      class="dashboard-toc__btn dashboard-toc__btn--bottom"
+      id="dashboardTocMoreBtn"
+      aria-label="More tools"
+      title="More tools"
+    >
+      <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+        <path d="M183.5-183.5Q160-207 160-240t23.5-56.5Q207-320 240-320t56.5 23.5Q320-273 320-240t-23.5 56.5Q273-160 240-160t-56.5-23.5Zm240 0Q400-207 400-240t23.5-56.5Q447-320 480-320t56.5 23.5Q560-273 560-240t-23.5 56.5Q513-160 480-160t-56.5-23.5Zm240 0Q640-207 640-240t23.5-56.5Q687-320 720-320t56.5 23.5Q800-273 800-240t-23.5 56.5Q753-160 720-160t-56.5-23.5Zm-480-240Q160-447 160-480t23.5-56.5Q207-560 240-560t56.5 23.5Q320-513 320-480t-23.5 56.5Q273-400 240-400t-56.5-23.5Zm240 0Q400-447 400-480t23.5-56.5Q447-560 480-560t56.5 23.5Q560-513 560-480t-23.5 56.5Q513-400 480-400t-56.5-23.5Zm240 0Q640-447 640-480t23.5-56.5Q687-560 720-560t56.5 23.5Q800-513 800-480t-23.5 56.5Q753-400 720-400t-56.5-23.5Zm-480-240Q160-687 160-720t23.5-56.5Q207-800 240-800t56.5 23.5Q320-753 320-720t-23.5 56.5Q273-640 240-640t-56.5-23.5Zm240 0Q400-687 400-720t23.5-56.5Q447-800 480-800t56.5 23.5Q560-753 560-720t-23.5 56.5Q513-640 480-640t-56.5-23.5Zm240 0Q640-687 640-720t23.5-56.5Q687-800 720-800t56.5 23.5Q800-753 800-720t-23.5 56.5Q753-640 720-640t-56.5-23.5Z"></path>
+      </svg>
+    </button>
+  </div>
+`;
+
+  tocEl.querySelectorAll('.dashboard-toc__btn[data-target]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = String(btn.getAttribute('data-target') || '').trim();
+      const target = id ? document.getElementById(id) : null;
+      if (!target) return;
+
+      setDashboardTocActive(id);
+      scrollToDashboardCard(target);
+    });
+  });
+
+  const moreBtn = document.getElementById('dashboardTocMoreBtn');
+  if (moreBtn) {
+    moreBtn.addEventListener('click', () => {
+      window.location.href = '/apps/';
+    });
+  }
+
+  setDashboardTocActive(getDashboardTocActiveId(items));
+  observeDashboardToc(items);
+}
+
+  function scheduleDashboardTocRefresh() {
+    if (!tocEl) return;
+
+    if (_tocRefreshRaf) {
+      cancelAnimationFrame(_tocRefreshRaf);
+    }
+
+    _tocRefreshRaf = requestAnimationFrame(() => {
+      _tocRefreshRaf = 0;
+      buildDashboardToc();
+    });
+  }
+
+  function initDashboardTocObservers() {
+    const host = document.getElementById('site-header');
+    if (!host) return;
+
+    if (!_tocResizeObserver && 'ResizeObserver' in window) {
+      _tocResizeObserver = new ResizeObserver(() => {
+        scheduleDashboardTocRefresh();
+      });
+      _tocResizeObserver.observe(host);
+    }
+
+    if (!_tocMutationObserver) {
+      _tocMutationObserver = new MutationObserver(() => {
+        scheduleDashboardTocRefresh();
+      });
+      _tocMutationObserver.observe(host, {
+        childList: true,
+        subtree: true
+      });
+    }
+
+    window.addEventListener('resize', scheduleDashboardTocRefresh, { passive: true });
+    window.addEventListener('load', scheduleDashboardTocRefresh);
+  }
+
+  function nextRunToken() {
+    _runToken += 1;
+    return _runToken;
+  }
+
+  function isStaleRun(token) {
+    return token !== _runToken;
+  }
+
+  function safeHttpHref(raw, { sameOrigin = false } = {}) {
+    const s = String(raw || '').trim();
+    if (!s) return '';
+
+    try {
+      const u = new URL(s, location.origin);
+      const proto = String(u.protocol || '').toLowerCase();
+
+      if (proto !== 'http:' && proto !== 'https:') return '';
+      if (sameOrigin && u.origin !== location.origin) return '';
+
+      return u.href;
+    } catch {
+      return '';
+    }
+  }
 
     // Store-name overrides loaded from /public/data/name_overrides.json
   const STORE_NAME_OVERRIDES = Object.create(null);
@@ -414,7 +752,7 @@
     const wm = t.match(/walmart\.com\/.+\/(\d{6,12})/i);
     if (wm) return normalizeKey(`wal:${wm[1]}`);
 
-    if (/^\d{6,8}$/.test(t)) return normalizeKey(`bby:${t}`);
+    if (/^\d{6,7}$/.test(t)) return normalizeKey(`bby:${t}`);
     if (/^\d{8}$/.test(t)) return normalizeKey(`tcin:${t}`);
     if (/^\d{12,14}$/.test(t)) return normalizeKey(`upc:${t}`);
     if (/^[A-Z0-9]{10}$/i.test(t)) return normalizeKey(`asin:${t}`);
@@ -484,6 +822,35 @@ function getCurrentVariant(){
   if (!k) return null;
   const hit = (state.variants || []).find(v => String(v?.key || '') === k);
   return hit || null;
+}
+
+let versionCard = null;
+let versionPills = null;
+
+function ensureVersionCard(){
+  if (versionCard && versionPills) return { versionCard, versionPills };
+
+  const anchor = document.getElementById('variant2Card');
+  if (!anchor || !anchor.parentElement) {
+    return { versionCard: null, versionPills: null };
+  }
+
+  versionCard = document.getElementById('versionCard');
+  versionPills = document.getElementById('versionPills');
+
+  if (!versionCard) {
+    versionCard = document.createElement('div');
+    versionCard.id = 'versionCard';
+    versionCard.hidden = true;
+    versionCard.innerHTML = `
+      <h3 style="margin-bottom: 9px; margin-top: 18px;">Model</h3>
+      <div class="pill-row" id="versionPills"></div>
+    `;
+    anchor.parentElement.insertBefore(versionCard, anchor);
+    versionPills = versionCard.querySelector('#versionPills');
+  }
+
+  return { versionCard, versionPills };
 }
 
 const variant2Card = $('#variant2Card');
@@ -591,6 +958,28 @@ function imageOf(v){
   return raw || '/logo/default.webp';
 }
 
+function versionChoicesForVariants(list){
+  const seen = new Set();
+  const out = [];
+
+  for (const v of list){
+    const label = normalizeSpaces(versionOf(v) || 'Default');
+    if (!label) continue;
+
+    const key = label.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    out.push({
+      label,
+      image: imageOf(v)
+    });
+  }
+
+  out.sort((a, b) => smartOptionCompare(a.label, b.label));
+  return out;
+}
+
 function variantChoicesForVersion(list, version){
   const wantV = normLower(version || 'Default');
   const seen = new Set();
@@ -662,10 +1051,6 @@ function uniqList(arr){
   return out;
 }
 
-function versionsFromVariants(list){
-  return uniqList(list.map(versionOf));
-}
-
 function chooseKeyForVersionVariantColor(list, version, variant, color){
   const wantV = normLower(version || 'Default');
   const wantVar = normLower(variant || '');
@@ -710,11 +1095,12 @@ function syncSelectorsFromSelectedKey(){
   state.selectedColor   = hit ? (colorOf(hit) || null) : null;
 }
 
-async function renderReviewsCard(productKey) {
+async function renderReviewsCard(productKey, runToken) {
   const el = document.getElementById('pc-reviews-card');
   if (!el) return;
 
   function mount(inner) {
+    if (runToken != null && isStaleRun(runToken)) return;
     el.hidden = false;
     el.innerHTML = inner;
   }
@@ -740,9 +1126,15 @@ async function renderReviewsCard(productKey) {
       headers: { Accept: 'application/json' }
     });
 
+    if (runToken != null && isStaleRun(runToken)) return;
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
     data = await res.json();
+
+    if (runToken != null && isStaleRun(runToken)) return;
   } catch (_err) {
+    if (runToken != null && isStaleRun(runToken)) return;
+
     mount(`
       <div class="spaced">
         <h2 data-icon-path="${iconPath}">Reviews</h2>
@@ -763,8 +1155,13 @@ async function renderReviewsCard(productKey) {
     : { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
 
   const total = Number(aggregate.count || 0);
-  const overall = Number(aggregate.overall || 0);
-  const verifiedPct = aggregate.verified_pct == null ? null : Number(aggregate.verified_pct);
+  const overallNum = Number(aggregate.overall);
+  const overall = Number.isFinite(overallNum) ? overallNum : 0;
+
+  const verifiedPctNum = Number(aggregate.verified_pct);
+  const verifiedPct = Number.isFinite(verifiedPctNum)
+    ? Math.max(0, Math.min(100, Math.round(verifiedPctNum)))
+    : null;
 
   const hasCustomer = total > 0 && overall > 0;
   const hasExpert = expertReviews.length > 0;
@@ -831,9 +1228,13 @@ async function renderReviewsCard(productKey) {
 
     const sourceCards = sortedSources.map((s) => {
       const sourceName = String(s.name || s.slug || 'Source').trim() || 'Source';
-      const sourceUrl = String(s.url || '').trim();
+      const sourceUrl = safeHttpHref(s.url || '');
       const sourceCount = Number(s.count || 0);
-      const sourceRating = Number(s.rating || 0);
+      const sourceRatingNum = Number(s.rating || 0);
+      const sourceRatingText =
+        Number.isFinite(sourceRatingNum) && sourceRatingNum > 0
+          ? `${sourceRatingNum.toFixed(1)} / 5`
+          : 'No rating';
 
       return `
         <article class="pc-rv-source-card">
@@ -856,7 +1257,7 @@ async function renderReviewsCard(productKey) {
             }
           </div>
 
-          <div class="pc-rv-source-card__rating">${sourceRating.toFixed(1)} / 5</div>
+          <div class="pc-rv-source-card__rating">${escapeHtml(sourceRatingText)}</div>
           <div class="pc-rv-source-card__count">${fmtCompact(sourceCount)} reviews</div>
         </article>
       `;
@@ -874,7 +1275,7 @@ async function renderReviewsCard(productKey) {
     }[confidence];
 
     const verifiedPill = verifiedPct != null
-      ? `<span class="pc-rv-pill">${verifiedPct}% verified</span>`
+      ? `<span class="pc-rv-pill">${verifiedPct}% Verified</span>`
       : '';
 
     customerHtml = `
@@ -890,11 +1291,10 @@ async function renderReviewsCard(productKey) {
             <div class="pc-rv-summary-scale">out of 5</div>
             <div class="pc-rv-summary-note">Based on ${fmtCompact(total)} customer reviews</div>
 
-          <div class="pc-rv-summary-meta">
-            <span class="pc-rv-confidence pc-rv-confidence--${confidence}">${confidenceLabel}</span>
-            ${verifiedPill}
-          </div>
-
+            <div class="pc-rv-summary-meta">
+              <span class="pc-rv-confidence pc-rv-confidence--${confidence}">${confidenceLabel}</span>
+              ${verifiedPill}
+            </div>
           </div>
 
           <div class="pc-rv-breakdown-card">
@@ -909,7 +1309,6 @@ async function renderReviewsCard(productKey) {
           sortedSources.length
             ? `
               <div class="pc-rv-block">
-                <div class="pc-rv-subhead">By source</div>
                 <div class="pc-rv-source-grid">
                   ${sourceCards}
                 </div>
@@ -945,17 +1344,25 @@ async function renderReviewsCard(productKey) {
       const source = String(r.name || r.slug || 'Source').trim() || 'Source';
       const title = String(r.article_title || source).trim() || source;
       const verdict = String(r.verdict || '').trim();
-      const url = String(r.url || '').trim();
+      const url = safeHttpHref(r.url || '');
       const reviewedAt = formatReviewDate(r.reviewed_at);
 
-      const scoreOutOf5 = Number(r.score_out_of_5 || 0);
-      const score = r.score == null ? null : Number(r.score);
-      const scoreScale = r.score_scale == null ? 5 : Number(r.score_scale);
+      const scoreOutOf5Num = Number(r.score_out_of_5 || 0);
+      const scoreOutOf5 =
+        Number.isFinite(scoreOutOf5Num) && scoreOutOf5Num > 0
+          ? scoreOutOf5Num
+          : null;
 
-      const normalizedLabel = scoreOutOf5 > 0 ? `${scoreOutOf5.toFixed(1)}/5` : '';
+      const scoreNum = Number(r.score);
+      const scoreScaleNum = Number(r.score_scale);
+
+      const normalizedLabel = scoreOutOf5 != null ? `${scoreOutOf5.toFixed(1)}/5` : '';
       const rawLabel =
-        score != null && scoreScale > 0
-          ? (scoreScale === 5 ? '' : `${score}/${scoreScale}`)
+        Number.isFinite(scoreNum) &&
+        Number.isFinite(scoreScaleNum) &&
+        scoreScaleNum > 0 &&
+        scoreScaleNum !== 5
+          ? `${scoreNum}/${scoreScaleNum}`
           : '';
 
       const pros = Array.isArray(r.pros) ? r.pros.filter(Boolean).slice(0, 4) : [];
@@ -1061,6 +1468,8 @@ async function renderReviewsCard(productKey) {
       </section>
     `;
   }
+
+  if (runToken != null && isStaleRun(runToken)) return;
 
   mount(`
     <div class="spaced">
@@ -1294,47 +1703,42 @@ async function wireFavoriteButton(entityKey, title, imageUrl, brand) {
 
 function renderVersionVariantColor(){
   const list = Array.isArray(state.variants) ? state.variants : [];
+  const ensured = ensureVersionCard();
+  const versionCardEl = ensured.versionCard;
+  const versionPillsEl = ensured.versionPills;
 
-  // ----------------
-  // Model (version)
-  // ----------------
-  const versions = versionsFromVariants(list);
-  const currentVersion = String(state.selectedVersion || '').trim();
-
-  if (!versions.some(v => normLower(v) === normLower(currentVersion))) {
-    state.selectedVersion = versions[0] || 'Default';
+  if (variant2Card) {
+    const h3 = variant2Card.querySelector('h3');
+    if (h3) h3.textContent = 'Variant';
   }
 
   // ----------------
-  // Variant cards with image
+  // Model / version
   // ----------------
-  const variantChoices = variantChoicesForVersion(list, state.selectedVersion);
+  const versionChoices = versionChoicesForVariants(list);
+  const currentVersion = String(state.selectedVersion || '').trim();
 
-  if (variant2Card && variant2Pills){
-  if (variantChoices.length >= 2) {
-    let desiredVar = state.selectedVariant2;
-    if (desiredVar && !variantChoices.some(x => normLower(x.label) === normLower(desiredVar))) {
-      desiredVar = null;
-    }
-    if (!desiredVar) desiredVar = variantChoices[0].label;
+  if (!versionChoices.some(v => normLower(v.label) === normLower(currentVersion))) {
+    state.selectedVersion = versionChoices[0]?.label || 'Default';
+  }
 
-    state.selectedVariant2 = desiredVar;
+  if (versionCardEl && versionPillsEl) {
+    if (versionChoices.length >= 2) {
+      const visibleVersionChoices = versionChoices.filter(
+        x => normLower(x.label) !== normLower(state.selectedVersion)
+      );
 
-    const visibleVariantChoices = variantChoices.filter(
-      x => normLower(x.label) !== normLower(state.selectedVariant2)
-    );
-
-    if (visibleVariantChoices.length) {
-      variant2Card.hidden = false;
+      versionCardEl.hidden = false;
 
       renderImageChoiceGroup(
-        variant2Pills,
-        visibleVariantChoices,
+        versionPillsEl,
+        visibleVersionChoices.length ? visibleVersionChoices : versionChoices,
         null,
         (picked) => {
-          if (normLower(picked) === normLower(state.selectedVariant2)) return;
+          if (normLower(picked) === normLower(state.selectedVersion)) return;
 
-          state.selectedVariant2 = picked;
+          state.selectedVersion = picked;
+          state.selectedVariant2 = null;
           state.selectedColor = null;
 
           renderVersionVariantColor();
@@ -1349,23 +1753,76 @@ function renderVersionVariantColor(){
           if (resolvedKey) state.selectedVariantKey = resolvedKey;
           pushVariantSelectionAndRun();
         },
-        'Variant'
+        'Model'
       );
+    } else {
+      versionCardEl.hidden = true;
+      versionPillsEl.innerHTML = '';
+    }
+  }
+
+  // ----------------
+  // Variant
+  // ----------------
+  const variantChoices = variantChoicesForVersion(list, state.selectedVersion);
+
+  if (variant2Card && variant2Pills){
+    if (variantChoices.length >= 2) {
+      let desiredVar = state.selectedVariant2;
+
+      if (desiredVar && !variantChoices.some(x => normLower(x.label) === normLower(desiredVar))) {
+        desiredVar = null;
+      }
+      if (!desiredVar) desiredVar = variantChoices[0].label;
+
+      state.selectedVariant2 = desiredVar;
+
+      const visibleVariantChoices = variantChoices.filter(
+        x => normLower(x.label) !== normLower(state.selectedVariant2)
+      );
+
+      if (visibleVariantChoices.length) {
+        variant2Card.hidden = false;
+
+        renderImageChoiceGroup(
+          variant2Pills,
+          visibleVariantChoices,
+          null,
+          (picked) => {
+            if (normLower(picked) === normLower(state.selectedVariant2)) return;
+
+            state.selectedVariant2 = picked;
+            state.selectedColor = null;
+
+            renderVersionVariantColor();
+
+            const resolvedKey = chooseKeyForVersionVariantColor(
+              list,
+              state.selectedVersion,
+              state.selectedVariant2,
+              state.selectedColor
+            );
+
+            if (resolvedKey) state.selectedVariantKey = resolvedKey;
+            pushVariantSelectionAndRun();
+          },
+          'Variant'
+        );
+      } else {
+        variant2Card.hidden = true;
+        variant2Pills.innerHTML = '';
+      }
     } else {
       variant2Card.hidden = true;
       variant2Pills.innerHTML = '';
+      state.selectedVariant2 = variantChoices[0]?.label || null;
     }
   } else {
-    variant2Card.hidden = true;
-    variant2Pills.innerHTML = '';
-    state.selectedVariant2 = variantChoices[0]?.label || null;
+    state.selectedVariant2 = state.selectedVariant2 || (variantChoices[0]?.label || null);
   }
-} else {
-  state.selectedVariant2 = state.selectedVariant2 || (variantChoices[0]?.label || null);
-}
 
   // ----------------
-  // Color cards with image
+  // Color
   // ----------------
   const colorChoices = colorChoicesForVersionVariant(
     list,
@@ -1374,59 +1831,59 @@ function renderVersionVariantColor(){
   );
 
   if (colorCard && colorPills){
-  if (colorChoices.length >= 2) {
-    let desiredC = state.selectedColor;
-    if (desiredC && !colorChoices.some(x => normLower(x.label) === normLower(desiredC))) {
-      desiredC = null;
-    }
-    if (!desiredC) desiredC = colorChoices[0].label;
+    if (colorChoices.length >= 2) {
+      let desiredC = state.selectedColor;
 
-    state.selectedColor = desiredC;
+      if (desiredC && !colorChoices.some(x => normLower(x.label) === normLower(desiredC))) {
+        desiredC = null;
+      }
+      if (!desiredC) desiredC = colorChoices[0].label;
 
-    const visibleColorChoices = colorChoices.filter(
-      x => normLower(x.label) !== normLower(state.selectedColor)
-    );
+      state.selectedColor = desiredC;
 
-    if (visibleColorChoices.length) {
-      colorCard.hidden = false;
-
-      renderImageChoiceGroup(
-        colorPills,
-        visibleColorChoices,
-        null,
-        (picked) => {
-          if (normLower(picked) === normLower(state.selectedColor)) return;
-
-          state.selectedColor = picked;
-
-          renderVersionVariantColor();
-
-          const resolvedKey = chooseKeyForVersionVariantColor(
-            list,
-            state.selectedVersion,
-            state.selectedVariant2,
-            state.selectedColor
-          );
-
-          if (resolvedKey) state.selectedVariantKey = resolvedKey;
-          pushVariantSelectionAndRun();
-        },
-        'Color'
+      const visibleColorChoices = colorChoices.filter(
+        x => normLower(x.label) !== normLower(state.selectedColor)
       );
+
+      if (visibleColorChoices.length) {
+        colorCard.hidden = false;
+
+        renderImageChoiceGroup(
+          colorPills,
+          visibleColorChoices,
+          null,
+          (picked) => {
+            if (normLower(picked) === normLower(state.selectedColor)) return;
+
+            state.selectedColor = picked;
+
+            renderVersionVariantColor();
+
+            const resolvedKey = chooseKeyForVersionVariantColor(
+              list,
+              state.selectedVersion,
+              state.selectedVariant2,
+              state.selectedColor
+            );
+
+            if (resolvedKey) state.selectedVariantKey = resolvedKey;
+            pushVariantSelectionAndRun();
+          },
+          'Color'
+        );
+      } else {
+        colorCard.hidden = true;
+        colorPills.innerHTML = '';
+      }
     } else {
       colorCard.hidden = true;
       colorPills.innerHTML = '';
+      state.selectedColor = colorChoices[0]?.label || null;
     }
   } else {
-    colorCard.hidden = true;
-    if (colorPills) colorPills.innerHTML = '';
-    state.selectedColor = colorChoices[0]?.label || null;
+    state.selectedColor = state.selectedColor || (colorChoices[0]?.label || null);
   }
-} else {
-  state.selectedColor = state.selectedColor || (colorChoices[0]?.label || null);
-}
 
-  // Resolve to a variant.key
   const resolvedKey = chooseKeyForVersionVariantColor(
     list,
     state.selectedVersion,
@@ -1434,7 +1891,7 @@ function renderVersionVariantColor(){
     state.selectedColor
   );
 
-  if (resolvedKey){
+  if (resolvedKey) {
     state.selectedVariantKey = resolvedKey;
   }
 }
@@ -1470,12 +1927,12 @@ function wireCardIcons(){
 
 document.addEventListener("DOMContentLoaded", async () => {
   wireCardIcons();
-  wireIdPillsCopy();
   wireBrandFollowButton();
   await loadNameOverridesOnce();
-  wireHeaderToolButtons();
   wireCodeButton();
   renderCodeButtonState();
+  initDashboardTocObservers();
+  scheduleDashboardTocRefresh();
 
   window.addEventListener('pc:auth_changed', () => {
     loadBrandFollowState();
@@ -1504,71 +1961,87 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
   });
 });
 
-  // ---------- Main loader ----------
-  async function run(raw){
-    const key = normalizeKey(raw);
+async function run(raw){
+  const runToken = nextRunToken();
+  const key = normalizeKey(raw);
 
-    if (!key) {
-      showMessage("Enter an ASIN, UPC, PCI, Best Buy SKU, Walmart itemId, or Target TCIN.");
-      return;
-    }
+  if (!key) {
+    showMessage("Enter an ASIN, UPC, PCI, Best Buy SKU, Walmart itemId, or Target TCIN.");
+    return;
+  }
 
   state.lastKey = key;
 
-    try{
-      const res = await fetch(`/api/compare/${encodeURIComponent(key)}`, { headers: { 'Accept': 'application/json' }});
-      if(res.status === 404){
-        showMessage(`No match for "${raw}". Try prefixes like asin:..., upc:..., pci:..., bby:..., wal:..., tcin:...`);
-        return;
-      }
-      if(!res.ok){ showMessage('Server error. Try again.'); return; }
+  try{
+    const res = await fetch(`/api/compare/${encodeURIComponent(key)}`, {
+      headers: { 'Accept': 'application/json' }
+    });
 
-      const data = await res.json();
+    if (isStaleRun(runToken)) return;
 
-      state.identity = data.identity || null;
-      state.variants = Array.isArray(data.variants) ? data.variants : [];
-      state.offers   = Array.isArray(data.offers)   ? data.offers   : [];
-      state.history = (data.history && Array.isArray(data.history.daily)) ? data.history.daily : [];
-      state.historyStats = (data.history && data.history.stats) ? data.history.stats : null;
-      state.similar = Array.isArray(data.similar) ? data.similar : [];
-      state.lineup = (data.lineup && typeof data.lineup === 'object') ? data.lineup : null;
-      state.selectedLineupFamily = String(data?.lineup?.current_family?.model_number || '').trim() || null;
-      state.selectedFileIndex = -1;
-      state.selectedTimelineIndex = -1; 
+    if (res.status === 404){
+      showMessage(`No match for "${raw}". Try prefixes like asin:..., upc:..., pci:..., bby:..., wal:..., tcin:...`);
+      return;
+    }
 
-      state.selectedVariantKey = chooseSelectedVariantKeyFromKey(state.lastKey, data);
-      syncSelectorsFromSelectedKey();
+    if (!res.ok){
+      showMessage('Server error. Try again.');
+      return;
+    }
 
-      const id = data.identity || {};
-      const cur = (() => {
-        const k = chooseSelectedVariantKeyFromKey(state.lastKey, data);
-        if (!k) return null;
-        return (Array.isArray(data.variants) ? data.variants : []).find(v => String(v?.key || '') === k) || null;
-      })();
+    const data = await res.json();
 
-      const bestTitle =
-        (id.model_name && String(id.model_name).trim()) ||
-        (cur?.model_name && String(cur.model_name).trim()) ||
-        (id.model_number && String(id.model_number).trim()) ||
-        'Product';
+    if (isStaleRun(runToken)) return;
 
-      const bestImg =
-        (cur?.image_url && String(cur.image_url).trim()) ||
-        (id.image_url && String(id.image_url).trim()) ||
-        '';
+    state.identity = data.identity || null;
+    state.variants = Array.isArray(data.variants) ? data.variants : [];
+    state.offers = Array.isArray(data.offers) ? data.offers : [];
+    state.history = (data.history && Array.isArray(data.history.daily)) ? data.history.daily : [];
+    state.historyStats = (data.history && data.history.stats) ? data.history.stats : null;
+    state.similar = Array.isArray(data.similar) ? data.similar : [];
+    state.lineup = (data.lineup && typeof data.lineup === 'object') ? data.lineup : null;
+    state.selectedLineupFamily = String(data?.lineup?.current_family?.model_number || '').trim() || null;
+    state.selectedFileIndex = -1;
+    state.selectedTimelineIndex = -1;
 
-      const offers = (state.offers || [])
+    state.selectedVariantKey = chooseSelectedVariantKeyFromKey(state.lastKey, data);
+    syncSelectorsFromSelectedKey();
+
+    if (isStaleRun(runToken)) return;
+
+    const id = data.identity || {};
+    const cur = (() => {
+      const k = chooseSelectedVariantKeyFromKey(state.lastKey, data);
+      if (!k) return null;
+      return (Array.isArray(data.variants) ? data.variants : []).find(v => String(v?.key || '') === k) || null;
+    })();
+
+    const bestTitle =
+      (id.model_name && String(id.model_name).trim()) ||
+      (cur?.model_name && String(cur.model_name).trim()) ||
+      (id.model_number && String(id.model_number).trim()) ||
+      'Product';
+
+    const bestImg =
+      (cur?.image_url && String(cur.image_url).trim()) ||
+      (id.image_url && String(id.image_url).trim()) ||
+      '';
+
+    const offers = (state.offers || [])
       .filter(o => typeof o.price_cents === 'number' && o.price_cents > 0)
       .slice(0, 10)
-      .map(o => ({
-        "@type": "Offer",
-        "priceCurrency": "USD",
-        "price": (o.price_cents / 100).toFixed(2),
-        "url": (o.url || canonicalLink(o.store, o) || undefined),
-        "seller": { "@type": "Organization", "name": titleCase(o.store || "Retailer") },
-        "availability": "https://schema.org/InStock"
-      }))
-      .filter(o => o.url); // require a url for cleanliness
+      .map(o => {
+        const offerUrl = safeHttpHref(o.url || canonicalLink(o.store, o) || '');
+        return {
+          "@type": "Offer",
+          "priceCurrency": "USD",
+          "price": (o.price_cents / 100).toFixed(2),
+          "url": offerUrl || undefined,
+          "seller": { "@type": "Organization", "name": titleCase(o.store || "Retailer") },
+          "availability": "https://schema.org/InStock"
+        };
+      })
+      .filter(o => o.url);
 
     setJsonLd({
       "@context": "https://schema.org",
@@ -1580,124 +2053,199 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
       "offers": offers.length ? offers : undefined
     });
 
-      const canonicalKey = canonicalKeyFromData(data, state.lastKey);
+    const canonicalKey = canonicalKeyFromData(data, state.lastKey);
 
-      // always show the canonical PCI URL when possible
-      if (canonicalKey) {
-        state.lastKey = canonicalKey;
-        applyPrettyUrl(canonicalKey, bestTitle, 'replace');
-        applySeoFromData(bestTitle, bestImg, canonicalKey);
-      }
-
-      // robots: only index the pretty PCI canonical page
-      const kind = (String(canonicalKey || '').split(':')[0] || '').toLowerCase();
-      if (kind === 'pci' && isOnCanonicalKey(canonicalKey) && isPrettyDashboardPath()) {
-        setRobots('index,follow');
-      } else {
-        setRobots('noindex,follow');
-      }
-
-      hydrateHeader();
-      hydrateKpis();
-      drawChart();
-      await renderOffers(true);
-      renderCouponsCard();
-      renderTimeline();
-      renderVariants();
-      renderDimensions();
-      renderSidebarSpecs();
-      renderContents();
-      renderMediaPanel();
-      renderFilesCard();
-      renderForensics();
-      renderLineup();
-      renderSimilarProducts();
-      await renderReviewsCard(state.lastKey);
-      {
-        const _hKey   = canonicalKey || state.lastKey;
-        const _hTitle = bestTitle;
-        const _hImg   = bestImg;
-        const _hBrand = String(state.identity?.brand || "").trim();
-        if (_hKey && _hTitle) {
-          recordHistory(_hKey, _hTitle, _hImg, _hBrand);
-        }
-      }
-      wireProductActions(canonicalKey || state.lastKey, bestTitle, bestImg, String(state.identity?.brand || '').trim());
-    }catch(err){
-      console.error(err);
-      showMessage('Network error. Check console.');
+    if (canonicalKey) {
+      state.lastKey = canonicalKey;
+      applyPrettyUrl(canonicalKey, bestTitle, 'replace');
+      applySeoFromData(bestTitle, bestImg, canonicalKey);
     }
+
+    const kind = (String(canonicalKey || '').split(':')[0] || '').toLowerCase();
+    if (kind === 'pci' && isOnCanonicalKey(canonicalKey) && isPrettyDashboardPath()) {
+      setRobots('index,follow');
+    } else {
+      setRobots('noindex,follow');
+    }
+
+    if (isStaleRun(runToken)) return;
+
+    hydrateHeader();
+    hydrateKpis();
+    drawChart();
+    renderCouponsCard();
+    renderTimeline();
+    renderVariants();
+    renderDimensions();
+    renderSidebarSpecs();
+    renderContents();
+    renderMediaPanel();
+    renderFilesCard();
+    renderLineup();
+    renderSimilarProducts();
+
+    if (isStaleRun(runToken)) return;
+    await renderOffers(true, runToken);
+
+    if (isStaleRun(runToken)) return;
+    await renderReviewsCard(state.lastKey, runToken);
+
+    if (isStaleRun(runToken)) return;
+
+    {
+      const _hKey = canonicalKey || state.lastKey;
+      const _hTitle = bestTitle;
+      const _hImg = bestImg;
+      const _hBrand = String(state.identity?.brand || "").trim();
+
+      if (_hKey && _hTitle) {
+        recordHistory(_hKey, _hTitle, _hImg, _hBrand);
+      }
+    }
+
+    await wireProductActions(
+      canonicalKey || state.lastKey,
+      bestTitle,
+      bestImg,
+      String(state.identity?.brand || '').trim()
+    );
+
+    scheduleDashboardTocRefresh();
+
+  } catch(err){
+    if (isStaleRun(runToken)) return;
+    console.error(err);
+    showMessage('Network error. Check console.');
+  }
+}
+
+ function showMessage(msg){
+  $('#pTitle').textContent = msg;
+
+  const img = $('#pImg');
+  if (img) {
+    img.removeAttribute('src');
+    img.style.display = 'none';
+    img.onerror = null;
   }
 
-  // ---------- UI ----------
-  function showMessage(msg){
-    $('#pTitle').textContent = msg;
-    $('#pIds').textContent = '';
-    $('#pIds').hidden = true;
-    const brandRow = $('#pBrandRow');
-    const brandLine = $('#pBrandLine');
-    state.identity = null;
-    state.selectedVariantKey = null;
-    _closeCodePanel();
-    renderCodeButtonState();
-    if (brandRow) brandRow.hidden = true;
-    if (brandLine) brandLine.textContent = '';
-    if (contentsCard) contentsCard.hidden = true;
-    if (contentsContent) contentsContent.innerHTML = '';
-    $('#offers').innerHTML = '';
-    $('#offersNote').textContent = '';
-    state.followBrand = '';
-    state.followingBrand = false;
-    state.followStateKnown = false;
-    state.followBusy = false;
-    setFollowButtonUi();
-    $('#kCurrent').textContent = 'NA';
-    $('#kStore').textContent = '';
-    $('#kTypical').textContent = 'NA';
-    $('#kLow30').textContent = 'NA';
-    $('#kLow30Date').textContent = '';
-    $('#kIntegrity').textContent = 'NA';
-    const specsContent = document.getElementById('specsContent');
-    if (specsContent) specsContent.innerHTML = '<div class="sidebar-empty">Coming Soon</div>';
-    if (mediaCard) mediaCard.hidden = true;
-    const mediaContent = document.getElementById('mediaContent');
-    if (mediaContent) {
-      mediaContent.innerHTML = '';
-    }
-    const timelineCard = document.getElementById('year');
-    const timelineContent = document.getElementById('timelineContent');
-    const timelineSummary = document.getElementById('timelineSummary');
-    if (timelineCard) timelineCard.hidden = true;
-    if (timelineContent) timelineContent.innerHTML = '';
-    if (timelineSummary) {
-      timelineSummary.hidden = true;
-      timelineSummary.textContent = '';
-    }
-    const forensicsList = $('#forensicsList');
-    if (forensicsList) forensicsList.innerHTML = '';
-    $('#chart').innerHTML = '';
-    $('#chartNote').textContent = 'No history yet';
-    if (variant2Card) variant2Card.hidden = true;
-    if (variant2Pills) variant2Pills.innerHTML = '';
-    if (colorCard) colorCard.hidden = true;
-    if (colorPills) colorPills.innerHTML = '';
+  $('#pIds').textContent = '';
+  $('#pIds').hidden = true;
 
-    state.similar = [];
-    const similarPanel = document.getElementById('panelSimilar');
-    if (similarPanel) {
-      similarPanel.innerHTML = '<div class="sidebar-empty">No similar products found.</div>';
-    }
-    if (dimCard) dimCard.hidden = true;
-    if (dimToggle) dimToggle.innerHTML = '';
-    if (dimContent) dimContent.innerHTML = '';
-    if (filesCard) filesCard.hidden = true;
-    if (filesContent) filesContent.innerHTML = '';
-    if (lineupCard) lineupCard.hidden = true;
-    if (lineupContent) lineupContent.innerHTML = '';
-    state.selectedFileIndex = -1;
-    state.selectedTimelineIndex = -1;
+  const brandRow = $('#pBrandRow');
+  const brandLine = $('#pBrandLine');
+
+  state.identity = null;
+  state.variants = [];
+  state.offers = [];
+  state.history = [];
+  state.historyStats = null;
+  state.similar = [];
+  state.lineup = null;
+  state.selectedVariantKey = null;
+  state.selectedVersion = null;
+  state.selectedVariant2 = null;
+  state.selectedColor = null;
+  state.selectedFileIndex = -1;
+  state.selectedTimelineIndex = -1;
+  state.selectedLineupFamily = null;
+
+  _closeCodePanel();
+  renderCodeButtonState();
+
+  if (brandRow) brandRow.hidden = true;
+  if (brandLine) brandLine.textContent = '';
+
+  const recallWrap = document.getElementById('ps-recall');
+  const recallLink = document.getElementById('ps-recall-link');
+  if (recallWrap) recallWrap.hidden = true;
+  if (recallLink) recallLink.removeAttribute('href');
+
+  const warnEl = document.getElementById('ps-warn');
+  if (warnEl) warnEl.hidden = true;
+
+  const limitedEl = document.getElementById('ps-limited');
+  if (limitedEl) limitedEl.hidden = true;
+
+  if (versionCard) versionCard.hidden = true;
+  if (versionPills) versionPills.innerHTML = '';
+
+  if (contentsCard) contentsCard.hidden = true;
+  if (contentsContent) contentsContent.innerHTML = '';
+
+  if (variant2Card) variant2Card.hidden = true;
+  if (variant2Pills) variant2Pills.innerHTML = '';
+
+  if (colorCard) colorCard.hidden = true;
+  if (colorPills) colorPills.innerHTML = '';
+
+  const couponCard = document.getElementById('couponCard');
+  if (couponCard) couponCard.hidden = true;
+
+  const reviewsCard = document.getElementById('pc-reviews-card');
+  if (reviewsCard) {
+    reviewsCard.hidden = true;
+    reviewsCard.innerHTML = '';
   }
 
+  $('#offers').innerHTML = '';
+  $('#offersNote').textContent = '';
+
+  state.followBrand = '';
+  state.followingBrand = false;
+  state.followStateKnown = false;
+  state.followBusy = false;
+  setFollowButtonUi();
+
+  $('#kCurrent').textContent = 'NA';
+  $('#kStore').textContent = '';
+  $('#kTypical').textContent = 'NA';
+  $('#kTypicalNote').textContent = '';
+  $('#kLow30').textContent = 'NA';
+  $('#kLow30Date').textContent = '';
+  $('#kIntegrity').textContent = 'NA';
+
+  const specsContent = document.getElementById('specsContent');
+  if (specsContent) specsContent.innerHTML = '<div class="sidebar-empty">No specs found yet.</div>';
+
+  if (mediaCard) mediaCard.hidden = true;
+  const mediaContent = document.getElementById('mediaContent');
+  if (mediaContent) mediaContent.innerHTML = '';
+
+  const timelineCard = document.getElementById('year');
+  const timelineContent = document.getElementById('timelineContent');
+  const timelineSummary = document.getElementById('timelineSummary');
+  if (timelineCard) timelineCard.hidden = true;
+  if (timelineContent) timelineContent.innerHTML = '';
+  if (timelineSummary) {
+    timelineSummary.hidden = true;
+    timelineSummary.textContent = '';
+  }
+
+  const forensicsList = $('#forensicsList');
+  if (forensicsList) forensicsList.innerHTML = '';
+
+  $('#chart').innerHTML = '';
+  $('#chartNote').textContent = 'No history yet';
+
+  state.similar = [];
+  const similarPanel = document.getElementById('panelSimilar');
+  if (similarPanel) {
+    similarPanel.innerHTML = '<div class="sidebar-empty">No similar products found.</div>';
+  }
+
+  if (dimCard) dimCard.hidden = true;
+  if (dimToggle) dimToggle.innerHTML = '';
+  if (dimContent) dimContent.innerHTML = '';
+
+  if (filesCard) filesCard.hidden = true;
+  if (filesContent) filesContent.innerHTML = '';
+
+  if (lineupCard) lineupCard.hidden = true;
+  if (lineupContent) lineupContent.innerHTML = '';
+
+  scheduleDashboardTocRefresh();
+}
 
   function escapeHtml(s){
     return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -1719,7 +2267,7 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
       const recallWrap = document.querySelector('#ps-recall');
       const recallLink = document.querySelector('#ps-recall-link');
 
-      const url = (id.recall_url || '').trim();
+      const url = safeHttpHref(id.recall_url || '');
 
       if (recallWrap) recallWrap.hidden = !url;
 
@@ -1730,7 +2278,6 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
           recallLink.removeAttribute('href');
         }
       }
-
     }
 
     const cur = getCurrentVariant() || null;
@@ -1746,10 +2293,6 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
       'Product';
 
     $('#pTitle').textContent = title;
-
-        const selPci = id.selected_pci ? String(id.selected_pci).trim() : '';
-    const selUpc = id.selected_upc ? cleanUpc(id.selected_upc) : '';
-    const selAsin = id.asin ? up(id.asin) : '';
 
     const pIdsEl = $('#pIds');
     const selColor = normalizeSpaces(colorOf(cur));
@@ -2014,8 +2557,6 @@ async function wireBookmarkButton(entityKey, title, imageUrl, brand) {
 
 let _labelPanelOpen   = false;
 let _labelPanelEl     = null;
-let _labelCurrentKey  = null;
-let _labelCurrentMeta = null;
 
 function _ensureLabelPanel() {
   if (_labelPanelEl) return _labelPanelEl;
@@ -2241,9 +2782,6 @@ function _renderLabelPanel(panel, labels, inLabels, entityKey, title, imageUrl, 
 async function wireLabelTrigger(entityKey, title, imageUrl, brand) {
   const trigger = document.querySelector("[data-pc-label-trigger='1']");
   if (!trigger) return;
-
-  _labelCurrentKey  = entityKey;
-  _labelCurrentMeta = { title, imageUrl, brand };
 
   if (trigger._pcLabelBound) trigger.removeEventListener("click", trigger._pcLabelBound);
 
@@ -2574,7 +3112,7 @@ function recordHistory(key, title, imageUrl, brand) {
   });
 
   // Also hide tooltip if you leave the SVG entirely
-  svg.addEventListener('pointerleave', hideTip);
+  svg.onpointerleave = hideTip;
 
   if (typicalY != null) {
     const p2 = document.createElementNS(ns, 'path');
@@ -2709,7 +3247,7 @@ function setMaybe(el, text, { asHtml = false } = {}) {
   else el.textContent = t;
 }
 
-  function renderCouponsCard(){
+function renderCouponsCard(){
   const card = document.getElementById('couponCard');
   if (!card) return;
 
@@ -2722,14 +3260,13 @@ function setMaybe(el, text, { asHtml = false } = {}) {
 
   card.hidden = false;
 
-  // Pick primary for the top summary
   const best = pickBestCoupon(list) || list[0];
 
   const store = titleCase(best.store || 'Retailer');
-  const link  = best.url || canonicalLink(best.store, best) || '#';
+  const link = safeHttpHref(best.url || canonicalLink(best.store, best) || '');
 
   const priceCents = best._price;
-  const effCents   = best._eff;
+  const effCents = best._eff;
 
   const showEff =
     (effCents != null && priceCents != null && effCents > 0 && effCents <= priceCents);
@@ -2752,6 +3289,7 @@ function setMaybe(el, text, { asHtml = false } = {}) {
 
   const confEl = document.getElementById('cpConfidence');
   const ruleEl = document.getElementById('cpRule');
+  const badgeEl = document.getElementById('cpBadge');
 
   const confidence =
     (showEff && best._savings != null) ? 'Verified price' :
@@ -2764,12 +3302,17 @@ function setMaybe(el, text, { asHtml = false } = {}) {
   if (String(best.coupon_code || '').trim()) ruleBits.push(`Code ${String(best.coupon_code).trim()}`);
   setMaybe(ruleEl, ruleBits.join(' • '));
 
-  const linkEl = document.getElementById('cpLink');
-  if (linkEl) linkEl.href = link;
+  if (badgeEl) {
+    badgeEl.hidden = !(showEff && best._savings != null);
+  }
 
-  // ----------------------------
-  // Build "more" list (deduped)
-  // ----------------------------
+  const linkEl = document.getElementById('cpLink');
+  if (linkEl) {
+    linkEl.href = link || '#';
+    linkEl.style.pointerEvents = link ? '' : 'none';
+    linkEl.setAttribute('aria-disabled', link ? 'false' : 'true');
+  }
+
   const seen = new Set();
 
   const more = (list || [])
@@ -2803,12 +3346,11 @@ function setMaybe(el, text, { asHtml = false } = {}) {
     });
 
   const moreOuter = document.getElementById('cpMoreWrap');
-  const moreWrap  = document.getElementById('cpMore');
+  const moreWrap = document.getElementById('cpMore');
   const moreLabel = document.getElementById('cpMoreLabel');
 
   if (!moreOuter || !moreWrap || !moreLabel) return;
 
-  // If there are no additional options, hide the section
   if (!more.length){
     moreOuter.hidden = true;
     moreLabel.hidden = true;
@@ -2820,7 +3362,6 @@ function setMaybe(el, text, { asHtml = false } = {}) {
   moreLabel.hidden = false;
   moreLabel.textContent = `All coupon options (${1 + more.length})`;
 
-  // Render best first, then the rest
   const all = [best, ...more];
 
   moreWrap.innerHTML = all.map(o => {
@@ -2838,7 +3379,7 @@ function setMaybe(el, text, { asHtml = false } = {}) {
       : '';
 
     const t = (o._couponText || String(o.coupon_text || '').trim() || '').trim();
-    const u = o.url || canonicalLink(o.store, o) || '';
+    const u = safeHttpHref(o.url || canonicalLink(o.store, o) || '');
     const badge = (o === best) ? `<span class="id-pill" style="margin-left:8px;">Best</span>` : '';
 
     return `
@@ -2929,7 +3470,7 @@ function setMaybe(el, text, { asHtml = false } = {}) {
     let href = '';
 
     if (rawUrl) {
-      href = rawUrl;
+      href = safeHttpHref(rawUrl);
     } else if (rawKey) {
       const normalizedKey = normalizeKey(rawKey);
       if (normalizedKey) href = prettyDashboardUrl(normalizedKey, title).pathname;
@@ -3184,15 +3725,16 @@ function setMaybe(el, text, { asHtml = false } = {}) {
     );
 
     if (!items.length) {
-      card.hidden = true;
-      host.innerHTML = '';
+    card.hidden = true;
+    host.innerHTML = '';
 
-      if (summary) {
-        summary.hidden = true;
-        summary.textContent = '';
-      }
-      return;
+    if (summary) {
+      summary.hidden = true;
+      summary.textContent = '';
     }
+
+    return;
+  }
 
     const slots = timelineThreeSlots(items);
 
@@ -3376,54 +3918,58 @@ function setMaybe(el, text, { asHtml = false } = {}) {
     return sellerFallbackHtml(sellerHref, hasSeller);
   }
 
-    async function renderOffers(sortByPrice){
-    const wrap = $('#offers');
-    wrap.innerHTML = '';
+  async function renderOffers(sortByPrice, runToken){
+  if (runToken != null && isStaleRun(runToken)) return;
 
-    const note = $('#offersNote');
+  const wrap = $('#offers');
+  const note = $('#offersNote');
 
-    if (!state.offers.length) {
-      note.textContent = '';
-      return;
-    }
+  wrap.innerHTML = '';
 
-    let arr = state.offers.map(o => {
-      const cents = bestComparableCents(o);
-      const price = (typeof cents === 'number') ? cents / 100 : null;
-      return { ...o, _price: price, _price_cents: cents };
+  if (!state.offers.length) {
+    note.textContent = '';
+    return;
+  }
+
+  let arr = state.offers.map(o => {
+    const cents = bestComparableCents(o);
+    const price = (typeof cents === 'number') ? cents / 100 : null;
+    return { ...o, _price: price, _price_cents: cents };
+  });
+
+  if (sortByPrice) {
+    arr = arr.sort((a, b) => {
+      if (a._price == null && b._price == null) return 0;
+      if (a._price == null) return 1;
+      if (b._price == null) return -1;
+      return a._price - b._price;
     });
+  }
 
-    if (sortByPrice) {
-      arr = arr.sort((a, b) => {
-        if (a._price == null && b._price == null) return 0;
-        if (a._price == null) return 1;
-        if (b._price == null) return -1;
-        return a._price - b._price;
-      });
-    }
+  const sellerRows = await Promise.all(
+    arr.map(async (o) => {
+      const sellerInfo = await getSellerInfo(o.store);
 
-    const sellerRows = await Promise.all(
-      arr.map(async (o) => {
-        const sellerInfo = await getSellerInfo(o.store);
+      return {
+        offer: o,
+        seller: sellerInfo?.seller || null,
+        hasSeller: sellerInfo?.found === true,
+        sellerHref: sellerHrefFromStore(o.store)
+      };
+    })
+  );
 
-        return {
-          offer: o,
-          seller: sellerInfo?.seller || null,
-          hasSeller: sellerInfo?.found === true,
-          sellerHref: sellerHrefFromStore(o.store)
-        };
-      })
-    );
+  if (runToken != null && isStaleRun(runToken)) return;
 
-    sellerRows.forEach(({ offer: o, seller, hasSeller, sellerHref }) => {
-      const bestLink = o.url || canonicalLink(o.store, o) || '';
-      const storeDisplay = titleCase(seller?.name || o.store || '');
-      const tag = (o.offer_tag || '').trim();
-      const priceText = (o._price != null) ? `${fmt.format(o._price)}` : 'No price';
+  sellerRows.forEach(({ offer: o, seller, hasSeller, sellerHref }) => {
+    const bestLink = safeHttpHref(o.url || canonicalLink(o.store, o) || '');
+    const storeDisplay = titleCase(seller?.name || o.store || '');
+    const tag = (o.offer_tag || '').trim();
+    const priceText = (o._price != null) ? `${fmt.format(o._price)}` : 'No price';
 
-      const logoHtml = sellerLogoHtml(seller, storeDisplay);
+    const logoHtml = sellerLogoHtml(seller, storeDisplay);
 
-      const logoSlotHtml = logoHtml
+    const logoSlotHtml = logoHtml
       ? (
           hasSeller && sellerHref
             ? `<a class="offer-logo-link" href="${escapeHtml(sellerHref)}" aria-label="Open ${escapeHtml(storeDisplay)} seller page">${logoHtml}</a>`
@@ -3431,101 +3977,101 @@ function setMaybe(el, text, { asHtml = false } = {}) {
         )
       : `<span class="offer-logo-spacer" aria-hidden="true"></span>`;
 
-      const deliveryHtml = sellerValueOrFallback(
-        deliveryTextForOffer(o, seller),
-        sellerHref,
-        hasSeller
-      );
+    const deliveryHtml = sellerValueOrFallback(
+      deliveryTextForOffer(o, seller),
+      sellerHref,
+      hasSeller
+    );
 
-      const shippingHtml = sellerValueOrFallback(
-        shippingTextForOffer(o, seller),
-        sellerHref,
-        hasSeller
-      );
+    const shippingHtml = sellerValueOrFallback(
+      shippingTextForOffer(o, seller),
+      sellerHref,
+      hasSeller
+    );
 
-      const returnsHtml = sellerValueOrFallback(
-        returnsTextForOffer(o, seller),
-        sellerHref,
-        hasSeller
-      );
+    const returnsHtml = sellerValueOrFallback(
+      returnsTextForOffer(o, seller),
+      sellerHref,
+      hasSeller
+    );
 
-      const seeMoreHtml = (hasSeller && sellerHref)
-        ? `<a class="offer-see-more__link" href="${escapeHtml(sellerHref)}">See more</a>`
-        : `<span class="offer-see-more__coming">Coming soon</span>`;
+    const seeMoreHtml = (hasSeller && sellerHref)
+      ? `<a class="offer-see-more__link" href="${escapeHtml(sellerHref)}">See more</a>`
+      : `<span class="offer-see-more__coming">Coming soon</span>`;
 
-      const row = document.createElement('div');
-      row.className = 'offer';
+    const row = document.createElement('div');
+    row.className = 'offer';
 
-      row.innerHTML = `
-        <div class="offer-left">
-          ${logoSlotHtml}
+    row.innerHTML = `
+      <div class="offer-left">
+        ${logoSlotHtml}
 
-          <div class="offer-left-main">
-            <div class="offer-store-row">
-              <span class="offer-store">${escapeHtml(storeDisplay)}</span>
-              ${
-                bestLink
-                  ? `<a class="offer-go-inline" href="${escapeHtml(bestLink)}" target="_blank" rel="noopener" aria-label="Go to ${escapeHtml(storeDisplay)}">${OFFER_EXTERNAL_SVG}</a>`
-                  : ''
-              }
-            </div>
-
-            <div class="muted-price offer-price">${escapeHtml(priceText)}</div>
+        <div class="offer-left-main">
+          <div class="offer-store-row">
+            <span class="offer-store">${escapeHtml(storeDisplay)}</span>
+            ${
+              bestLink
+                ? `<a class="offer-go-inline" href="${escapeHtml(bestLink)}" target="_blank" rel="noopener" aria-label="Go to ${escapeHtml(storeDisplay)}">${OFFER_EXTERNAL_SVG}</a>`
+                : ''
+            }
           </div>
+
+          <div class="muted-price offer-price">${escapeHtml(priceText)}</div>
+        </div>
+      </div>
+
+      <div class="offer-tag-col muted">${tag ? escapeHtml(tag) : ''}</div>
+
+      <button class="offer-expand-btn" type="button" aria-expanded="false" aria-label="Show seller details">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 6 15 12 9 18"/>
+        </svg>
+      </button>
+    `;
+
+    const details = document.createElement('div');
+    details.className = 'offer-details';
+    details.hidden = true;
+
+    details.innerHTML = `
+      <div class="offer-details-grid">
+        <div class="offer-detail-cell">
+          <div class="offer-detail-label">Delivery</div>
+          <div class="offer-detail-value">${deliveryHtml}</div>
         </div>
 
-        <div class="offer-tag-col muted">${tag ? escapeHtml(tag) : ''}</div>
-
-        <button class="offer-expand-btn" type="button" aria-expanded="false" aria-label="Show seller details">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="9 6 15 12 9 18"/>
-          </svg>
-        </button>
-      `;
-
-      const details = document.createElement('div');
-      details.className = 'offer-details';
-      details.hidden = true;
-
-      details.innerHTML = `
-        <div class="offer-details-grid">
-          <div class="offer-detail-cell">
-            <div class="offer-detail-label">Delivery</div>
-            <div class="offer-detail-value">${deliveryHtml}</div>
-          </div>
-
-          <div class="offer-detail-cell">
-            <div class="offer-detail-label">Shipping</div>
-            <div class="offer-detail-value">${shippingHtml}</div>
-          </div>
-
-          <div class="offer-detail-cell">
-            <div class="offer-detail-label">Returns</div>
-            <div class="offer-detail-value">${returnsHtml}</div>
-          </div>
+        <div class="offer-detail-cell">
+          <div class="offer-detail-label">Shipping</div>
+          <div class="offer-detail-value">${shippingHtml}</div>
         </div>
 
-        <div class="offer-see-more">
-          ${seeMoreHtml}
+        <div class="offer-detail-cell">
+          <div class="offer-detail-label">Returns</div>
+          <div class="offer-detail-value">${returnsHtml}</div>
         </div>
-      `;
+      </div>
 
-      row.querySelector('.offer-expand-btn').addEventListener('click', () => {
-        const open = details.hidden;
-        details.hidden = !open;
-        row.querySelector('.offer-expand-btn').setAttribute('aria-expanded', String(open));
-        row.querySelector('.offer-expand-btn').classList.toggle('is-open', open);
-      });
+      <div class="offer-see-more">
+        ${seeMoreHtml}
+      </div>
+    `;
 
-      const wrapper = document.createElement('div');
-      wrapper.className = 'offer-wrapper';
-      wrapper.appendChild(row);
-      wrapper.appendChild(details);
-      wrap.appendChild(wrapper);
+    row.querySelector('.offer-expand-btn').addEventListener('click', () => {
+      const open = details.hidden;
+      details.hidden = !open;
+      row.querySelector('.offer-expand-btn').setAttribute('aria-expanded', String(open));
+      row.querySelector('.offer-expand-btn').classList.toggle('is-open', open);
     });
 
-    note.textContent = 'PriceCheck does not use affiliate or sponsored links.';
-  }
+    const wrapper = document.createElement('div');
+    wrapper.className = 'offer-wrapper';
+    wrapper.appendChild(row);
+    wrapper.appendChild(details);
+    wrap.appendChild(wrapper);
+  });
+
+  note.textContent = 'PriceCheck does not use affiliate or sponsored links.';
+}
 
  function renderSimilarProducts(){
   const panel = document.getElementById('panelSimilar');
@@ -3593,46 +4139,6 @@ function setMaybe(el, text, { asHtml = false } = {}) {
     renderVersionVariantColor();
   }
 
-  function renderForensics(){
-  const ul = $('#forensicsList');
-  if (!ul) return;
-
-  ul.innerHTML = '';
-  [
-    'Strike is consistent with recent range for this variant',
-    'Variant IDs match',
-    'Anchor price looks reasonable'
-  ].forEach(t => {
-    const li = document.createElement('li');
-    li.textContent = t;
-    ul.appendChild(li);
-  });
-}
-
-  // ---------- Intelligence actions ----------
-function intelligenceContext() {
-  const id = state.identity || {};
-  const v  = getCurrentVariant() || {};
-  const offers = (state.offers || []).slice();
-
-  const title =
-    (v.model_name && String(v.model_name).trim()) ||
-    (id.model_name && String(id.model_name).trim()) ||
-    $('#pTitle')?.textContent ||
-    'this item';
-
-  // cheapest offer
-  const priced = offers.filter(o => typeof o.price_cents === 'number' && o.price_cents > 0);
-  priced.sort((a,b)=>a.price_cents-b.price_cents);
-  const cheapest = priced[0] || null;
-
-  // most expensive offer
-  priced.sort((a,b)=>b.price_cents-a.price_cents);
-  const highest = priced[0] || null;
-
-  return { id, v, title, offers, cheapest, highest };
-}
-
 async function copyText(text){
   const t = String(text || '').trim();
   if (!t) return false;
@@ -3659,13 +4165,6 @@ async function copyText(text){
   } catch {}
 
   return false;
-}
-
-function parseIdPillValue(raw){
-  // "PCI NZQ8GS34" -> "NZQ8GS34", "UPC 0123..." -> digits, "ASIN B0..." -> asin
-  const s = String(raw || '').trim();
-  const m = s.match(/^(PCI|UPC|ASIN)\s+(.+)$/i);
-  return (m ? String(m[2] || '').trim() : s);
 }
 
 function codeItemsFromState() {
@@ -3800,153 +4299,7 @@ function wireCodeButton() {
   });
 }
 
-function wireHeaderToolButtons() {
-  const moreBtn = document.getElementById('phMoreToolsBtn');
-  if (!moreBtn || moreBtn._pcBound) return;
-
-  moreBtn._pcBound = true;
-
-  moreBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.location.href = '/apps/';
-  });
-}
-
-function wireIdPillsCopy(){
-  const hosts = [
-    document.getElementById('pIds'),
-    document.getElementById('securityIds')
-  ].filter(Boolean);
-
-  if (!hosts.length) return;
-
-  async function handle(el){
-    if (!el) return;
-
-    const raw = el.getAttribute('data-copy') || el.textContent || '';
-    const val = parseIdPillValue(raw);
-    const ok = await copyText(val);
-
-    if (!ok) return;
-
-    const original = el.textContent;
-    el.textContent = 'Copied';
-    clearTimeout(el._pcCopyT);
-    el._pcCopyT = setTimeout(() => {
-      el.textContent = original;
-    }, 900);
-  }
-
-  hosts.forEach(host => {
-    if (host._pcCopyBound) return;
-    host._pcCopyBound = true;
-
-    host.addEventListener('click', (e) => {
-      const el = e.target && e.target.closest ? e.target.closest('.id-pill.is-copy') : null;
-      if (!el) return;
-      handle(el);
-    });
-
-    host.addEventListener('keydown', (e) => {
-      const el = e.target && e.target.closest ? e.target.closest('.id-pill.is-copy') : null;
-      if (!el) return;
-
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        handle(el);
-      }
-    });
-  });
-}
-
-async function copyAndNote(text, note) {
-  try { await navigator.clipboard.writeText(text); } catch {}
-  const el = document.getElementById('actNote');
-  if (el) {
-    el.textContent = note || 'Copied.';
-    setTimeout(()=>{ el.textContent = ''; }, 1800);
-  }
-}
-
-function money(cents){
-  if (typeof cents !== 'number') return 'NA';
-  return fmt.format(cents/100);
-}
-
-function bestLinkForOffer(o){
-  if(!o) return '';
-  return o.url || canonicalLink(o.store, o) || '';
-}
-
-const actSummary = document.getElementById('actSummary');
-const actRefund  = document.getElementById('actRefund');
-const actFlag    = document.getElementById('actFlag');
-
-if (actSummary) actSummary.addEventListener('click', async () => {
-  const { title, offers, cheapest, highest } = intelligenceContext();
-
-  const lines = [];
-  lines.push(`PriceCheck summary for: ${title}`);
-  lines.push('');
-  if (!offers.length) {
-    lines.push('No offers found yet.');
-  } else {
-    if (cheapest) {
-      lines.push(`Cheapest: ${titleCase(cheapest.store)} at ${money(cheapest.price_cents)}${bestLinkForOffer(cheapest) ? ` (${bestLinkForOffer(cheapest)})` : ''}`);
-    }
-    if (highest && cheapest && highest.price_cents !== cheapest.price_cents) {
-      lines.push(`Highest: ${titleCase(highest.store)} at ${money(highest.price_cents)}${bestLinkForOffer(highest) ? ` (${bestLinkForOffer(highest)})` : ''}`);
-      const diff = highest.price_cents - cheapest.price_cents;
-      lines.push(`Spread: ${money(diff)}`);
-    }
-    lines.push('');
-    lines.push('Offers:');
-    offers.forEach(o => {
-      const link = bestLinkForOffer(o);
-      lines.push(`- ${titleCase(o.store)}: ${typeof o.price_cents === 'number' ? money(o.price_cents) : 'No price'}${link ? ` (${link})` : ''}`);
-    });
-  }
-
-  await copyAndNote(lines.join('\n'), 'Summary copied.');
-  });
-
-  if (actRefund) actRefund.addEventListener('click', async () => {
-    const { title, cheapest } = intelligenceContext();
-    const link = bestLinkForOffer(cheapest);
-
-    const text =
-  `Hi, I bought ${title} recently.
-
-  I found it listed for a lower price right now${link ? ` (${link})` : ''}.
-  Could you please match the current price or refund the difference?
-
-  Thank you.`;
-
-    await copyAndNote(text, 'Refund script copied.');
-  });
-
-  if (actFlag) actFlag.addEventListener('click', async () => {
-    const { title, offers } = intelligenceContext();
-
-    const suspicious = offers
-      .filter(o => typeof o.price_cents === 'number' && o.price_cents > 0)
-      .sort((a,b)=>a.price_cents-b.price_cents)[0];
-
-    const link = bestLinkForOffer(suspicious);
-
-    const text =
-  `I want to flag this listing as potentially misleading.
-
-  Item: ${title}
-  Store: ${suspicious ? titleCase(suspicious.store) : 'Unknown'}
-  Listing link: ${link || 'N/A'}
-
-  Reason: price and listing details seem inconsistent with other reputable offers. Please review.`;
-
-    await copyAndNote(text, 'Flag text copied.');
-  });
-
-    function specValueToText(v){
+  function specValueToText(v){
     if (v == null) return '';
     if (typeof v === 'boolean') return v ? 'Yes' : 'No';
     if (typeof v === 'number') return String(v);
@@ -4070,15 +4423,6 @@ function renderContents(){
 
   contentsCard.hidden = false;
 
-  const totalPieces = items.reduce((sum, item) => {
-    return sum + (item.qty != null ? item.qty : 1);
-  }, 0);
-
-  const summaryText =
-    totalPieces === items.length
-      ? `${items.length} item${items.length === 1 ? '' : 's'} in the box`
-      : `${items.length} line items, ${totalPieces} total pieces`;
-
   contentsContent.innerHTML = `
     <div class="pc-contents-grid">
       ${items.map((item) => `
@@ -4116,7 +4460,7 @@ function renderContents(){
     .filter(([label, value]) => String(label || '').trim() && String(value || '').trim());
 
   if (!rows.length) {
-    host.innerHTML = '<div class="sidebar-empty">Coming Soon</div>';
+    host.innerHTML = '<div class="sidebar-empty">No specs found yet.</div>';
     return;
   }
 
@@ -4165,8 +4509,13 @@ function renderContents(){
 function safeUrl(raw){
   const s = String(raw || '').trim();
   if (!s) return null;
+
   try {
-    return new URL(s);
+    const u = new URL(s, location.origin);
+    const proto = String(u.protocol || '').toLowerCase();
+
+    if (proto !== 'http:' && proto !== 'https:') return null;
+    return u;
   } catch {
     return null;
   }
@@ -5203,15 +5552,6 @@ function renderDimensions(){
 }
 
   window.run = run;
-
-  function _dbClean(v) { return String(v || "").trim(); }
-
-  function _dbEsc(s) {
-    return String(s ?? "")
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
 
   window.addEventListener('popstate', () => {
     const raw = currentKeyFromUrl();
