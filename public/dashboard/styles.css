@@ -12,7 +12,6 @@
   --radius-card:16px;
 }
 
-body{overflow-x:hidden;margin:64px 0 0 0;}
 .wrap{max-width:1480px;margin:0 auto;padding:0px 24px 90px}
 
 /* Layout */
@@ -837,7 +836,6 @@ details[open]{background:#fff}
   width:30px;
   height:30px;
   border-radius:999px;
-  border:1px solid #d8f3df;
   cursor:default;
   flex-shrink:0;
 }
@@ -3069,6 +3067,15 @@ button.pc-lineup-model{
 }
 
 @media (min-width: 1280px) {
+
+  .dashboard-page .wrap{
+    box-sizing:border-box;
+    width:calc(100% - 56px);
+    max-width:1480px;
+    margin-left:56px;
+    margin-right:auto;
+  }
+
   .dashboard-page .dashboard-toc {
     position: fixed;
     left: 0;

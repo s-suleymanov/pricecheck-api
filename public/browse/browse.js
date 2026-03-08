@@ -59,6 +59,163 @@
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
   }
 
+  function isBrowseRailSignedIn() {
+    try {
+      const raw = localStorage.getItem("pc_auth_user");
+      if (!raw) return false;
+
+      const user = JSON.parse(raw);
+      return !!String(user?.email || "").trim();
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  const BROWSE_RAIL_FIXED_TABS = [
+    { key: "prices",   label: "Prices",   pathData: "M841-518v318q0 33-23.5 56.5T761-120H201q-33 0-56.5-23.5T121-200v-318q-23-21-35.5-54t-.5-72l42-136q8-26 28.5-43t47.5-17h556q27 0 47 16.5t29 43.5l42 136q12 39-.5 71T841-518Zm-272-42q27 0 41-18.5t11-41.5l-22-140h-78v148q0 21 14 36.5t34 15.5Zm-180 0q23 0 37.5-15.5T441-612v-148h-78l-22 140q-4 24 10.5 42t37.5 18Zm-178 0q18 0 31.5-13t16.5-33l22-154h-78l-40 134q-6 20 6.5 43t41.5 23Zm540 0q29 0 42-23t6-43l-42-134h-76l22 154q3 20 16.5 33t31.5 13ZM201-200h560v-282q-5 2-6.5 2H751q-27 0-47.5-9T663-518q-18 18-41 28t-49 10q-27 0-50.5-10T481-518q-17 18-39.5 28T393-480q-29 0-52.5-10T299-518q-21 21-41.5 29.5T211-480h-4.5q-2.5 0-5.5-2v282Zm560 0H201h560Z",   active: true  },
+    { key: "specs",    label: "Specs",    pathData: "M348.5-291.5Q360-303 360-320t-11.5-28.5Q337-360 320-360t-28.5 11.5Q280-337 280-320t11.5 28.5Q303-280 320-280t28.5-11.5Zm0-160Q360-463 360-480t-11.5-28.5Q337-520 320-520t-28.5 11.5Q280-497 280-480t11.5 28.5Q303-440 320-440t28.5-11.5Zm0-160Q360-623 360-640t-11.5-28.5Q337-680 320-680t-28.5 11.5Q280-657 280-640t11.5 28.5Q303-600 320-600t28.5-11.5ZM440-280h240v-80H440v80Zm0-160h240v-80H440v80Zm0-160h240v-80H440v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z",    active: false },
+    { key: "history",  label: "History",  pathData: "M120-240q-33 0-56.5-23.5T40-320q0-33 23.5-56.5T120-400h10.5q4.5 0 9.5 2l182-182q-2-5-2-9.5V-600q0-33 23.5-56.5T400-680q33 0 56.5 23.5T480-600q0 2-2 20l102 102q5-2 9.5-2h21q4.5 0 9.5 2l142-142q-2-5-2-9.5V-640q0-33 23.5-56.5T840-720q33 0 56.5 23.5T920-640q0 33-23.5 56.5T840-560h-10.5q-4.5 0-9.5-2L678-420q2 5 2 9.5v10.5q0 33-23.5 56.5T600-320q-33 0-56.5-23.5T520-400v-10.5q0-4.5 2-9.5L420-522q-5 2-9.5 2H400q-2 0-20-2L198-340q2 5 2 9.5v10.5q0 33-23.5 56.5T120-240Z",  active: false },
+    { key: "intel",    label: "Intel",    pathData: "M324-111.5Q251-143 197-197t-85.5-127Q80-397 80-480t31.5-156Q143-709 197-763t127-85.5Q397-880 480-880t156 31.5Q709-817 763-763t85.5 127Q880-563 880-480t-31.5 156Q817-251 763-197t-127 85.5Q563-80 480-80t-156-31.5ZM480-160q56 0 105.5-17.5T676-227l-57-57q-29 21-64.5 32.5T480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 39-12 75t-33 65l57 57q32-41 50-91t18-106q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-160q22 0 42.5-5.5T561-342l-61-61q-5 2-10 2.5t-10 .5q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 6-.5 11.5T557-458l60 60q11-18 17-38.5t6-43.5q0-66-47-113t-113-47q-66 0-113 47t-47 113q0 66 47 113t113 47Z",    active: false },
+    { key: "media",    label: "Media",    pathData: "m460-380 280-180-280-180v360ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z",    active: false }
+  ];
+
+  const BROWSE_RAIL_ARROW_SVG = `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <polyline points="9 6 15 12 9 18"></polyline>
+    </svg>
+  `;
+
+  function createBrowseRailIconMarkup(pathData) {
+    const d = String(pathData || "").trim();
+    if (!d) return '<span class="browse-rail__placeholder"></span>';
+
+    return `
+      <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+        <path d="${escapeHtml(d)}"></path>
+      </svg>
+    `;
+  }
+
+  function browseRailResultCount() {
+    const n = Number(state.total || 0);
+    if (!Number.isFinite(n) || n <= 0) return "0";
+    return String(Math.min(n, 999));
+  }
+
+  function stepBrowsePage(delta) {
+    if (state.loading) return;
+
+    const pages = Number.isFinite(state.pages) ? state.pages : 1;
+    const nextPage = Math.max(1, Math.min(pages, state.page + delta));
+
+    if (nextPage === state.page) return;
+
+    state.page = nextPage;
+    state.animateNextRender = false;
+    startPageTransitionUI();
+
+    writeUrl({ replace: false });
+    load();
+  }
+
+  function renderBrowseRail() {
+    const rail = document.getElementById("browseRail");
+    if (!rail) return;
+
+    const pages = Number.isFinite(state.pages) ? state.pages : 1;
+    const showPrev = state.page > 1;
+    const showNext = state.page < pages;
+
+    rail.hidden = false;
+rail.innerHTML = `
+  <div class="browse-rail__inner">
+    <div class="browse-rail__main">
+      <div class="browse-rail__tabs">
+        ${BROWSE_RAIL_FIXED_TABS.map((tab) => `
+          <button
+            type="button"
+            class="browse-rail__btn${tab.active ? " is-active" : ""}"
+            data-browse-rail-tab="${escapeHtml(tab.key)}"
+            aria-label="${escapeHtml(tab.label)}"
+            title="${escapeHtml(tab.label)}"
+            ${tab.active ? 'aria-current="page"' : ""}
+          >
+            ${createBrowseRailIconMarkup(tab.pathData)}
+          </button>
+        `).join("")}
+      </div>
+    </div>
+
+    <div class="browse-rail__pager">
+      ${showPrev ? `
+        <button
+          type="button"
+          class="browse-rail__btn browse-rail__arrow browse-rail__arrow--prev"
+          id="browseRailPrevBtn"
+          aria-label="Previous page"
+          title="Previous page"
+          ${state.loading ? "disabled" : ""}
+        >
+          ${BROWSE_RAIL_ARROW_SVG}
+        </button>
+      ` : ""}
+
+      <div
+        class="browse-rail__count"
+        id="browseRailCount"
+        aria-label="${escapeHtml(`${state.total || 0} results`)}"
+        title="${escapeHtml(`${state.total || 0} results`)}"
+      >
+        ${escapeHtml(browseRailResultCount())}
+      </div>
+
+      ${showNext ? `
+        <button
+          type="button"
+          class="browse-rail__btn browse-rail__arrow"
+          id="browseRailNextBtn"
+          aria-label="Next page"
+          title="Next page"
+          ${state.loading ? "disabled" : ""}
+        >
+          ${BROWSE_RAIL_ARROW_SVG}
+        </button>
+      ` : ""}
+    </div>
+  </div>
+`;
+
+    rail.querySelector("#browseRailPrevBtn")?.addEventListener("click", () => {
+      stepBrowsePage(-1);
+    });
+
+    rail.querySelector("#browseRailNextBtn")?.addEventListener("click", () => {
+      stepBrowsePage(1);
+    });
+
+    rail.querySelectorAll("[data-browse-rail-tab]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const key = String(btn.getAttribute("data-browse-rail-tab") || "").trim().toLowerCase();
+
+        // Prices is the current browse page, so do nothing
+        if (key === "prices") return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Show quick sign in for gated tabs when signed out
+        if (!isBrowseRailSignedIn()) {
+          if (typeof window.pcOpenSignIn === "function") {
+            window.pcOpenSignIn();
+          }
+          return;
+        }
+
+        // Signed in but not built yet: do nothing for now
+      });
+    });
+  }
+
   // ----------------------------
   // DOM refs (cached once)
   // ----------------------------
@@ -386,13 +543,15 @@
   // ----------------------------
   // Pager
   // ----------------------------
-  function setPager() {
+   function setPager() {
     const pages = Number.isFinite(state.pages) ? state.pages : 1;
     const shouldShow = pages > 1;
 
     if (els.pager) els.pager.style.display = shouldShow ? "flex" : "none";
     if (els.prev) els.prev.disabled = !shouldShow || state.loading || state.page <= 1;
     if (els.next) els.next.disabled = !shouldShow || state.loading || state.page >= pages;
+
+    renderBrowseRail();
   }
 
   function setLoading(on) {
@@ -472,7 +631,6 @@
   function cardProduct(r) {
     const dashKey = String(r.dashboard_key || "").trim();
     const displayName = r.model_name || r.title || r.model_number || "Untitled";
-    const href = dashKey ? dashPathFromKeyAndTitle(dashKey, displayName) : "/dashboard/";
 
     const img = r.image_url
       ? `<img class="img" src="${escapeHtml(r.image_url)}" alt="">`
@@ -483,6 +641,35 @@
     const brand = (r.brand || "").trim();
     const brandLine = brand ? brand : "";
 
+    const inner = `
+      <div class="thumb">${img}</div>
+      <div class="body">
+        <div class="subtitle">${escapeHtml(brandLine)}</div>
+        <div class="name">${escapeHtml(displayName)}</div>
+        <div class="card-variants" data-card-variants="1"></div>
+        <div class="price-row">
+          <div class="price">${fmtPrice(r.best_price_cents)}</div>
+          <div class="store-stack" data-store-stack="1"></div>
+          ${warn}
+        </div>
+      </div>
+    `;
+
+    // No valid dashboard key: render a non-clickable card instead of a dead /dashboard/ link
+    if (!dashKey) {
+      return `
+        <div class="card item is-disabled"
+          aria-disabled="true"
+          data-title="${escapeHtml(displayName)}"
+          data-brand="${escapeHtml(brandLine)}"
+          data-img="${escapeHtml(String(r.image_url || ""))}">
+          ${inner}
+        </div>
+      `;
+    }
+
+    const href = dashPathFromKeyAndTitle(dashKey, displayName);
+
     return `
       <a class="card item"
         href="${escapeHtml(href)}"
@@ -490,17 +677,7 @@
         data-title="${escapeHtml(displayName)}"
         data-brand="${escapeHtml(brandLine)}"
         data-img="${escapeHtml(String(r.image_url || ""))}">
-        <div class="thumb">${img}</div>
-        <div class="body">
-          <div class="subtitle">${escapeHtml(brandLine)}</div>
-          <div class="name">${escapeHtml(displayName)}</div>
-          <div class="card-variants" data-card-variants="1"></div>
-          <div class="price-row">
-            <div class="price">${fmtPrice(r.best_price_cents)}</div>
-            <div class="store-stack" data-store-stack="1"></div>
-            ${warn}
-          </div>
-        </div>
+        ${inner}
       </a>
     `;
   }
@@ -986,9 +1163,13 @@ function renderCardVariantPills(cardEl, variants, selectedKey) {
   const { options } = variantOptionsForSelectedKey(variants, selectedKey, contextTitle);
 
   if (!options.length) {
+    host.removeAttribute("data-card-options");
     host.innerHTML = "";
     return;
   }
+
+  // Store the full option set so resize can rebuild before fitting
+  host.setAttribute("data-card-options", JSON.stringify(options));
 
   const selectedKeyNorm = normLower(selectedKey);
 
@@ -1012,6 +1193,42 @@ function renderCardVariantPills(cardEl, variants, selectedKey) {
       fitCardVariantRow(host, options.length);
     });
   });
+}
+
+function rerenderStoredCardVariantPills(cardEl) {
+  const host = cardEl ? cardEl.querySelector('[data-card-variants="1"]') : null;
+  if (!host) return;
+
+  const raw = host.getAttribute("data-card-options");
+  if (!raw) return;
+
+  let options = [];
+  try {
+    options = JSON.parse(raw);
+  } catch (_e) {
+    return;
+  }
+
+  if (!Array.isArray(options) || !options.length) return;
+
+  const selectedKeyNorm = normLower(cardEl.getAttribute("data-dash-key") || "");
+
+  host.innerHTML = options
+    .map((opt) => {
+      const active = normLower(opt.key) === selectedKeyNorm;
+
+      return `
+        <button type="button"
+          class="pillbtn ${active ? "is-active" : ""}"
+          data-card-variant-key="${escapeHtml(opt.key)}"
+          title="${escapeHtml(opt.label)}">
+          ${escapeHtml(opt.label)}
+        </button>
+      `;
+    })
+    .join("");
+
+  fitCardVariantRow(host, options.length);
 }
 
 function bumpCardReq(cardEl) {
@@ -1677,14 +1894,39 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
     try {
       if (!state.q && !state.brand && !state.category) {
+        if (state.detailOpen) await closeDetail();
+
+        state.hasSeller = false;
+        state.sellerSlug = "";
+        state.sellerKey = "";
+        state.sellerLogoUrl = "";
+
+        state.sideCats = [];
+        state.sideFams = [];
+        state.sideFacetKey = "";
+        state.sideBrands = [];
+        state.sideBrandsFacetKey = "";
+
+        state.familyPanelKey = "";
+        state.familyVariants = [];
+        state.familyColors = [];
+
         setLoading(false);
         setMeta("Search for a brand, category, or product name.");
+
         if (els.grid) els.grid.innerHTML = "";
+
+        showInlineEmpty(false);
         showEmpty(false);
+
+        await renderCategoryPanel();
+        await renderBrandPanel();
         setPager();
+
         try {
           window.dispatchEvent(new CustomEvent("pc:browse_results", { detail: { show: false, total: 0 } }));
         } catch (_e) {}
+
         return;
       }
 
@@ -1819,14 +2061,14 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   // Detail sidebar (expanded view)
   // ----------------------------
   const DETAIL_CLOSE_SVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" height="35px" viewBox="0 -960 960 960" width="35x" fill="#000000" aria-hidden="true" focusable="false">
+    <svg xmlns="http://www.w3.org/2000/svg" height="31px" viewBox="0 -960 960 960" width="32px" fill="#000000" aria-hidden="true" focusable="false">
       <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
     </svg>
   `;
 
   const DETAIL_EXPAND_SVG = `
   <svg xmlns="http://www.w3.org/2000/svg"
-       height="27px" viewBox="0 -960 960 960" width="27px"
+       height="24px" viewBox="0 -960 960 960" width="24px"
        fill="#000000" aria-hidden="true" focusable="false">
     <path d="M120-120v-320h80v184l504-504H520v-80h320v320h-80v-184L256-200h184v80H120Z"/>
   </svg>
@@ -1834,16 +2076,16 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
   const DETAIL_BOOKMARK_OFF_SVG = `
     <svg xmlns="http://www.w3.org/2000/svg"
-         height="31px" viewBox="0 -960 960 960" width="36px"
-         fill="#000000" aria-hidden="true" focusable="false" style="margin-bottom: 1px;">
+         height="28px" viewBox="0 -960 960 960" width="36px"
+         fill="#000000" aria-hidden="true" focusable="false" style="margin-bottom: 2px;">
       <path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/>
     </svg>
   `;
 
   const DETAIL_BOOKMARK_ON_SVG = `
     <svg xmlns="http://www.w3.org/2000/svg"
-         height="31px" viewBox="0 -960 960 960" width="36px"
-         fill="#000000" aria-hidden="true" focusable="false" style="margin-bottom: 1px;">
+         height="28px" viewBox="0 -960 960 960" width="36px"
+         fill="#000000" aria-hidden="true" focusable="false" style="margin-bottom: 2px;">
       <path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/>
     </svg>
   `;
@@ -2574,27 +2816,13 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
   function wire() {
     if (els.prev) {
       els.prev.addEventListener("click", () => {
-        if (state.loading || state.page <= 1) return;
-
-        state.page -= 1;
-        state.animateNextRender = false;
-        startPageTransitionUI();
-
-        writeUrl({ replace: false });
-        load();
+        stepBrowsePage(-1);
       });
     }
 
     if (els.next) {
       els.next.addEventListener("click", () => {
-        if (state.loading || state.page >= state.pages) return;
-
-        state.page += 1;
-        state.animateNextRender = false;
-        startPageTransitionUI();
-
-        writeUrl({ replace: false });
-        load();
+        stepBrowsePage(1);
       });
     }
 
@@ -2827,23 +3055,16 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
       }
     });
 
-        // Refit variant rows on resize so "+N" stays correct
+    // Refit variant rows on resize so "+N" stays correct
     let _fitT = null;
     window.addEventListener("resize", () => {
       clearTimeout(_fitT);
       _fitT = setTimeout(() => {
         if (!els.grid) return;
-        const hosts = Array.from(els.grid.querySelectorAll('[data-card-variants="1"]'));
-        for (const h of hosts) {
-          const card = h.closest('a.card.item[data-dash-key]');
-          if (!card) continue;
 
-          // Only refit cards that actually have variant buttons rendered
-          if (!h.querySelector('button[data-card-variant-key]')) continue;
-
-          // We do not know totalOptionsCount here, but fitCardVariantRow only needs it
-          // if you stop rendering all options. We still render all, so 0 is fine.
-          fitCardVariantRow(h, 0);
+        const cards = Array.from(els.grid.querySelectorAll('a.card.item[data-dash-key]'));
+        for (const card of cards) {
+          rerenderStoredCardVariantPills(card);
         }
       }, 120);
     });
@@ -2856,21 +3077,49 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
 
   // Optional SPA entry point for your header search
   window.pcBrowse = {
-    search(raw) {
-      state.q = norm(raw);
-      state.page = 1;
-      writeUrl({ replace: false });
-      load();
-    },
-  };
+  async search(raw) {
+    state.q = norm(raw);
+    state.page = 1;
+
+    state.brand = "";
+    state.category = "";
+    state.family = "";
+    state.familyNorm = "";
+    state.variant = "";
+    state.variantNorm = "";
+    state.color = "";
+    state.colorNorm = "";
+
+    state.sideCats = [];
+    state.sideFams = [];
+    state.sideFacetKey = "";
+    state.sideBrands = [];
+    state.sideBrandsFacetKey = "";
+
+    state.familyPanelKey = "";
+    state.familyVariants = [];
+    state.familyColors = [];
+
+    state.sellerSlug = "";
+    state.hasSeller = false;
+    state.sellerKey = "";
+    state.sellerLogoUrl = "";
+
+    if (state.detailOpen) await closeDetail();
+
+    writeUrl({ replace: false });
+    load();
+  },
+};
 
   // ----------------------------
   // Boot
   // ----------------------------
-  document.addEventListener("DOMContentLoaded", async () => {
+    document.addEventListener("DOMContentLoaded", async () => {
     cacheEls();
     readUrl();
     wire();
+    renderBrowseRail();
 
     await loadNameOverridesOnce();
 
