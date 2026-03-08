@@ -3072,7 +3072,6 @@ button.pc-lineup-model{
     box-sizing:border-box;
     width:calc(100% - 56px);
     max-width:1480px;
-    margin-left:56px;
     margin-right:auto;
   }
 
