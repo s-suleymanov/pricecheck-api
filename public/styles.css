@@ -1106,7 +1106,7 @@ em {
 .home-side{
   position: sticky;
   top: calc(var(--pc-nav-h, 80px) - 5px);
-  height: calc(100vh - (var(--pc-nav-h, 80px) + 14px));
+  height: calc(100vh - (var(--pc-nav-h, 80px) + 7px));
   min-height: 240px;
 }
 
