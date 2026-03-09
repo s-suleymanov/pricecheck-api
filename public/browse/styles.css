@@ -364,7 +364,7 @@ h1{
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:10px;
+    gap:14px;
     flex:0 0 auto;
     width:100%;
   }
@@ -783,7 +783,7 @@ h1{
   display: grid;
   grid-template-columns: 180px 1fr auto;
   align-items: center;
-  gap: 22px;
+  gap: 40px;
   padding: 8px 28px 8px 22px;
   overflow: hidden;
   text-decoration: none;
@@ -795,8 +795,8 @@ h1{
 }
 
 .thumb{
-  width: 180px;
-  height: 180px;
+  width: 200px;
+  height: 200px;
   border-radius: 12px;
   overflow: hidden;
 }

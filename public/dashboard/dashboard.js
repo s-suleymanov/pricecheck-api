@@ -3995,10 +3995,6 @@ function renderCouponsCard(){
       hasSeller
     );
 
-    const seeMoreHtml = (hasSeller && sellerHref)
-      ? `<a class="offer-see-more__link" href="${escapeHtml(sellerHref)}">See more</a>`
-      : `<span class="offer-see-more__coming">Coming soon</span>`;
-
     const row = document.createElement('div');
     row.className = 'offer';
 
@@ -4049,10 +4045,6 @@ function renderCouponsCard(){
           <div class="offer-detail-label">Returns</div>
           <div class="offer-detail-value">${returnsHtml}</div>
         </div>
-      </div>
-
-      <div class="offer-see-more">
-        ${seeMoreHtml}
       </div>
     `;
 

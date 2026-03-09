@@ -1105,7 +1105,7 @@ em {
 /* Sticky right sidebar that scrolls independently */
 .home-side{
   position: sticky;
-  top: calc(var(--pc-nav-h, 80px) - 3px);
+  top: calc(var(--pc-nav-h, 80px) - 5px);
   height: calc(100vh - (var(--pc-nav-h, 80px) + 14px));
   min-height: 240px;
 }

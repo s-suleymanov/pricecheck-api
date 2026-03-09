@@ -195,6 +195,7 @@ aside .note{
 }
 
 .pc-similar-price {
+  display: none;
   position: absolute;
   right: 9px;
   bottom: 9px;

@@ -180,6 +180,67 @@
     return Array.from({length:n},()=>c).join("");
   }
 
+let _bootLoading = false;
+let _skelResizeTimer = null;
+let _skelRO = null;
+
+function getGridColumnCount() {
+const grid = feedEl._g;
+if (!grid) return 1;
+
+const vw = window.innerWidth || document.documentElement.clientWidth || 0;
+const gridWidth = Math.max(0, Math.floor(grid.clientWidth));
+
+// Match your CSS breakpoints exactly
+if (vw <= 360) return 1;
+if (vw <= 560) return 2;
+
+// Match your CSS gap rules
+const gap = vw >= 980 ? 10 : 12;
+
+// Match your desktop grid rule:
+// grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))
+const minCardWidth = 240;
+
+return Math.max(1, Math.floor((gridWidth + gap) / (minCardWidth + gap)));
+}
+
+function getSkeletonCount() {
+const cols = getGridColumnCount();
+
+// You can change this if you want fewer or more placeholder rows
+const rows = cols >= 5 ? 2 : cols >= 3 ? 3 : 4;
+
+return cols * rows;
+}
+
+function renderSkeletonGrid() {
+if (!feedEl._g) return;
+feedEl._g.innerHTML = skelHtml(getSkeletonCount());
+}
+
+function watchSkeletonGrid() {
+if (_skelRO || !feedEl._g || !("ResizeObserver" in window)) return;
+
+_skelRO = new ResizeObserver(() => {
+    if (!_bootLoading) return;
+    clearTimeout(_skelResizeTimer);
+    _skelResizeTimer = setTimeout(() => {
+    renderSkeletonGrid();
+    }, 80);
+});
+
+_skelRO.observe(feedEl._g);
+}
+
+window.addEventListener("resize", () => {
+if (!_bootLoading || !feedEl._g) return;
+clearTimeout(_skelResizeTimer);
+_skelResizeTimer = setTimeout(() => {
+    renderSkeletonGrid();
+}, 80);
+}, { passive: true });
+
   // ── Feed state ────────────────────────────────────────────────────────────
   let _sig   = { brands:[], categories:[], keywords:[], seenKeys:[] };
   let _rows  = [];
@@ -189,13 +250,25 @@
   let _busy  = false;
   const PAGE = 24;
 
-  // ── DOM scaffold ─────────────────────────────────────────────────────────
-  function scaffold(skel=false) {
-    if (feedEl._rdy) return;
-    feedEl._rdy = true; feedEl.hidden = false;
-    feedEl.innerHTML = `<div class="home-deals__grid" id="pcG">${skel?skelHtml(12):""}</div><div class="home-deals__more" id="pcM" hidden>Loading more…</div><div class="home-deals__sentinel" id="pcS" aria-hidden="true"></div>`;
-    feedEl._g = $("pcG"); feedEl._m = $("pcM"); feedEl._s = $("pcS");
-  }
+  
+    function scaffold(skel=false) {
+        if (!feedEl._rdy) {
+            feedEl._rdy = true;
+            feedEl.hidden = false;
+            feedEl.innerHTML = `
+            <div class="home-deals__grid" id="pcG"></div>
+            <div class="home-deals__more" id="pcM" hidden>Loading more…</div>
+            <div class="home-deals__sentinel" id="pcS" aria-hidden="true"></div>
+            `;
+            feedEl._g = $("pcG");
+            feedEl._m = $("pcM");
+            feedEl._s = $("pcS");
+            watchSkeletonGrid();
+        }
+
+        if (skel) renderSkeletonGrid();
+    }
+
   function paint(rows) {
     if (!rows?.length) return;
     scaffold();
@@ -235,26 +308,29 @@
     return r.json();
   }
 
-  // ── Page loads ────────────────────────────────────────────────────────────
-  async function loadFirst(sig) {
+    async function loadFirst(sig) {
+    _bootLoading = true;
     scaffold(true);
+
     try {
-      const j    = await apiFeed(sig, 0, PAGE);
-      const rows = Array.isArray(j?.results) ? j.results : [];
-      _rows = rows; _off = rows.length;
-      // Never mark done on first page — server padding guarantees more exists
-      _done = false;
-      feedEl._g.innerHTML = "";
-      paint(rows);
-      return rows.length;
+        const j    = await apiFeed(sig, 0, PAGE);
+        const rows = Array.isArray(j?.results) ? j.results : [];
+        _rows = rows;
+        _off = rows.length;
+        _done = false;
+
+        feedEl._g.innerHTML = "";
+        paint(rows);
+        return rows.length;
     } catch(e) {
-      console.error("[PC] first page:", e);
-      feedEl._g.innerHTML = "";
-      return 0;
+        console.error("[PC] first page:", e);
+        feedEl._g.innerHTML = "";
+        return 0;
     } finally {
-      document.body.classList.add("pc-home-ready");
+        _bootLoading = false;
+        document.body.classList.add("pc-home-ready");
     }
-  }
+    }
 
   async function loadMore() {
     if (_busy) return;
