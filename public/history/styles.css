@@ -102,7 +102,10 @@
 }
 
 .pc-history-group {
-  margin-top: 28px;
+  background: white;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .pc-history-group__label {
@@ -135,10 +138,6 @@
 
 .pc-history-item:last-child {
   border-bottom: none;
-}
-
-.pc-history-item:hover {
-  background: rgba(0, 0, 0, 0.025);
 }
 
 /* Thumbnail */
@@ -208,7 +207,7 @@
 /* Remove button */
 .pc-history-item__remove {
   flex-shrink: 0;
-  margin-right: 5%;
+  margin-right: 3%;
   width: 32px;
   height: 32px;
   border-radius: 50%;
