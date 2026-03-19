@@ -48,7 +48,17 @@
     followBrand: '',
     followingBrand: false,
     followStateKnown: false,
-    followBusy: false
+    followBusy: false,
+    mediaGroups: { images: [], videos: [], shorts: [] },
+    activeMediaGroup: 'images',
+    activeMediaIndex: 0,
+    mediaBound: false,
+    community: {
+      tips: [],
+      questions: [],
+      reviews: [],
+      counts: { tips: 0, questions: 0, reviews: 0 }
+    },
   };
 
   let _runToken = 0;
@@ -62,6 +72,7 @@
   let _tocScrollHandler = null;
 
   const PRODUCT_HEADER_TOC_ICON_PATH = 'M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z';
+  const QA_REPLY_ICON_PATH = 'M760-200v-160q0-50-35-85t-85-35H273l144 144-57 56-240-240 240-240 57 56-144 144h367q83 0 141.5 58.5T840-360v160h-80Z';
 
   function getDashboardHeaderOffset() {
     const host = document.getElementById('site-header');
@@ -99,17 +110,29 @@
   }
 
   function getDashboardTocCards() {
-  const main = document.querySelector('.main-content');
+  const wrap = document.querySelector('main.wrap');
   const productHeader = document.getElementById('productHeader');
 
   const cards = [];
+  const seen = new Set();
 
-  if (productHeader) {
-    cards.push(productHeader);
+  function pushCard(el) {
+    if (!el) return;
+    if (seen.has(el)) return;
+    seen.add(el);
+    cards.push(el);
   }
 
-  if (main) {
-    cards.push(...Array.from(main.children));
+  if (productHeader) {
+    pushCard(productHeader);
+  }
+
+  if (wrap) {
+    wrap.querySelectorAll('section.card[id]').forEach((el) => {
+      if (el.id === 'productHeader') return;
+      if (el.closest('aside')) return;
+      pushCard(el);
+    });
   }
 
   return cards
@@ -249,55 +272,69 @@ function buildDashboardToc() {
   const items = getDashboardTocCards();
 
   if (!items.length) {
-  tocEl.hidden = true;
-  tocEl.innerHTML = '';
+    tocEl.hidden = true;
+    tocEl.innerHTML = '';
 
-  _tocScrollItems = [];
+    _tocScrollItems = [];
 
-  if (_tocScrollRaf) {
-    cancelAnimationFrame(_tocScrollRaf);
-    _tocScrollRaf = 0;
+    if (_tocScrollRaf) {
+      cancelAnimationFrame(_tocScrollRaf);
+      _tocScrollRaf = 0;
+    }
+
+    if (_tocScrollHandler) {
+      window.removeEventListener('scroll', _tocScrollHandler);
+      _tocScrollHandler = null;
+    }
+
+    return;
   }
-
-  if (_tocScrollHandler) {
-    window.removeEventListener('scroll', _tocScrollHandler);
-    _tocScrollHandler = null;
-  }
-
-  return;
-}
 
   tocEl.hidden = false;
 
   tocEl.innerHTML = `
-  <div class="dashboard-toc__inner">
-    <div class="dashboard-toc__main">
-      ${items.map((item) => `
+    <div class="dashboard-toc__inner">
+      <div class="dashboard-toc__main">
+        ${items.map((item) => `
+          <button
+            type="button"
+            class="dashboard-toc__btn"
+            data-target="${escapeHtml(item.id)}"
+            aria-label="Jump to ${escapeHtml(item.label)}"
+            title="${escapeHtml(item.label)}"
+          >
+            ${createTocIconMarkup(item.pathData)}
+          </button>
+        `).join('')}
+      </div>
+
+      <div class="dashboard-toc__bottom">
         <button
           type="button"
-          class="dashboard-toc__btn"
-          data-target="${escapeHtml(item.id)}"
-          aria-label="Jump to ${escapeHtml(item.label)}"
-          title="${escapeHtml(item.label)}"
+          class="dashboard-toc__btn dashboard-toc__btn--plus"
+          id="dashboardTocCommunityBtn"
+          aria-label="Contribute"
+          title="Contribute"
         >
-          ${createTocIconMarkup(item.pathData)}
+          <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+            <path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z"></path>
+          </svg>
         </button>
-      `).join('')}
-    </div>
 
-    <button
-      type="button"
-      class="dashboard-toc__btn dashboard-toc__btn--bottom"
-      id="dashboardTocMoreBtn"
-      aria-label="More tools"
-      title="More tools"
-    >
-      <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-        <path d="M183.5-183.5Q160-207 160-240t23.5-56.5Q207-320 240-320t56.5 23.5Q320-273 320-240t-23.5 56.5Q273-160 240-160t-56.5-23.5Zm240 0Q400-207 400-240t23.5-56.5Q447-320 480-320t56.5 23.5Q560-273 560-240t-23.5 56.5Q513-160 480-160t-56.5-23.5Zm240 0Q640-207 640-240t23.5-56.5Q687-320 720-320t56.5 23.5Q800-273 800-240t-23.5 56.5Q753-160 720-160t-56.5-23.5Zm-480-240Q160-447 160-480t23.5-56.5Q207-560 240-560t56.5 23.5Q320-513 320-480t-23.5 56.5Q273-400 240-400t-56.5-23.5Zm240 0Q400-447 400-480t23.5-56.5Q447-560 480-560t56.5 23.5Q560-513 560-480t-23.5 56.5Q513-400 480-400t-56.5-23.5Zm240 0Q640-447 640-480t23.5-56.5Q687-560 720-560t56.5 23.5Q800-513 800-480t-23.5 56.5Q753-400 720-400t-56.5-23.5Zm-480-240Q160-687 160-720t23.5-56.5Q207-800 240-800t56.5 23.5Q320-753 320-720t-23.5 56.5Q273-640 240-640t-56.5-23.5Zm240 0Q400-687 400-720t23.5-56.5Q447-800 480-800t56.5 23.5Q560-753 560-720t-23.5 56.5Q513-640 480-640t-56.5-23.5Zm240 0Q640-687 640-720t23.5-56.5Q687-800 720-800t56.5 23.5Q800-753 800-720t-23.5 56.5Q753-640 720-640t-56.5-23.5Z"></path>
-      </svg>
-    </button>
-  </div>
-`;
+        <button
+          type="button"
+          class="dashboard-toc__btn dashboard-toc__btn--bottom"
+          id="dashboardTocMoreBtn"
+          aria-label="More tools"
+          title="More tools"
+        >
+          <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+            <path d="M183.5-183.5Q160-207 160-240t23.5-56.5Q207-320 240-320t56.5 23.5Q320-273 320-240t-23.5 56.5Q273-160 240-160t-56.5-23.5Zm240 0Q400-207 400-240t23.5-56.5Q447-320 480-320t56.5 23.5Q560-273 560-240t-23.5 56.5Q513-160 480-160t-56.5-23.5Zm240 0Q640-207 640-240t23.5-56.5Q687-320 720-320t56.5 23.5Q800-273 800-240t-23.5 56.5Q753-160 720-160t-56.5-23.5Zm-480-240Q160-447 160-480t23.5-56.5Q207-560 240-560t56.5 23.5Q320-513 320-480t-23.5 56.5Q273-400 240-400t-56.5-23.5Zm240 0Q400-447 400-480t23.5-56.5Q447-560 480-560t56.5 23.5Q560-513 560-480t-23.5 56.5Q513-400 480-400t-56.5-23.5Zm240 0Q640-447 640-480t23.5-56.5Q687-560 720-560t56.5 23.5Q800-513 800-480t-23.5 56.5Q753-400 720-400t-56.5-23.5Zm-480-240Q160-687 160-720t23.5-56.5Q207-800 240-800t56.5 23.5Q320-753 320-720t-23.5 56.5Q273-640 240-640t-56.5-23.5Zm240 0Q400-687 400-720t23.5-56.5Q447-800 480-800t56.5 23.5Q560-753 560-720t-23.5 56.5Q513-640 480-640t-56.5-23.5Zm240 0Q640-687 640-720t23.5-56.5Q687-800 720-800t56.5 23.5Q800-753 800-720t-23.5 56.5Q753-640 720-640t-56.5-23.5Z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `;
 
   tocEl.querySelectorAll('.dashboard-toc__btn[data-target]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -309,6 +346,13 @@ function buildDashboardToc() {
       scrollToDashboardCard(target);
     });
   });
+
+  const communityBtn = document.getElementById('dashboardTocCommunityBtn');
+  if (communityBtn) {
+    communityBtn.addEventListener('click', async () => {
+      await openCommunityComposerFromTrigger();
+    });
+  }
 
   const moreBtn = document.getElementById('dashboardTocMoreBtn');
   if (moreBtn) {
@@ -828,31 +872,12 @@ let versionCard = null;
 let versionPills = null;
 
 function ensureVersionCard(){
-  if (versionCard && versionPills) return { versionCard, versionPills };
-
-  const anchor = document.getElementById('variant2Card');
-  if (!anchor || !anchor.parentElement) {
-    return { versionCard: null, versionPills: null };
-  }
-
-  versionCard = document.getElementById('versionCard');
-  versionPills = document.getElementById('versionPills');
-
-  if (!versionCard) {
-    versionCard = document.createElement('div');
-    versionCard.id = 'versionCard';
-    versionCard.hidden = true;
-    versionCard.innerHTML = `
-      <h3 style="margin-bottom: 9px; margin-top: 18px;">Model</h3>
-      <div class="pill-row" id="versionPills"></div>
-    `;
-    anchor.parentElement.insertBefore(versionCard, anchor);
-    versionPills = versionCard.querySelector('#versionPills');
-  }
-
-  return { versionCard, versionPills };
+  versionCard = null;
+  versionPills = null;
+  return { versionCard: null, versionPills: null };
 }
 
+const variantColorSection = document.getElementById('variantColorSection');
 const variant2Card = $('#variant2Card');
 const variant2Pills = $('#variant2Pills');
 const colorCard = $('#colorCard');
@@ -864,8 +889,11 @@ const filesCard = document.getElementById('files');
 const filesContent = document.getElementById('filesContent');
 const contentsCard = document.getElementById('contentsCard');
 const contentsContent = document.getElementById('contentsContent');
-const mediaCard = document.getElementById('mediaCard');
+const aboutCard = document.getElementById('aboutCard');
+const aboutParagraphs = document.getElementById('aboutParagraphs');
+const aboutPoints = document.getElementById('aboutPoints');
 const lineupCard = document.getElementById('lineup');
+
 const lineupContent = document.getElementById('lineupContent');
 let _codePanelEl = null;
 let _codePanelOpen = false;
@@ -899,6 +927,15 @@ function parseSizeToken(raw){
   // If you later want: mm, hz, w, mah, etc, add patterns here.
 
   return null;
+}
+
+function syncVariantColorSectionVisibility(){
+  if (!variantColorSection) return;
+
+  const showVariant = !!(variant2Card && !variant2Card.hidden);
+  const showColor = !!(colorCard && !colorCard.hidden);
+
+  variantColorSection.hidden = !(showVariant || showColor);
 }
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
@@ -1095,6 +1132,979 @@ function syncSelectorsFromSelectedKey(){
   state.selectedColor   = hit ? (colorOf(hit) || null) : null;
 }
 
+function setTopbarRatingSummary(overall, count){
+  const wrap = document.getElementById('phRatingSummary');
+  const scoreEl = document.getElementById('phRatingScore');
+  const countEl = document.getElementById('phRatingCount');
+
+  if (!wrap || !scoreEl || !countEl) return;
+
+  const scoreNum = Number(overall);
+  const countNum = Number(count);
+
+  if (!Number.isFinite(scoreNum) || scoreNum <= 0 || !Number.isFinite(countNum) || countNum <= 0) {
+    wrap.hidden = true;
+    scoreEl.textContent = '';
+    countEl.textContent = '';
+    return;
+  }
+
+  wrap.hidden = false;
+  scoreEl.textContent = `★ ${scoreNum.toFixed(1)}`;
+  countEl.textContent = `(${new Intl.NumberFormat('en-US').format(countNum)})`;
+}
+
+function clearTopbarRatingSummary(){
+  setTopbarRatingSummary(null, null);
+}
+
+function communityAvatarHtml(name, imageUrl){
+  const img = String(imageUrl || '').trim();
+  const safeName = String(name || 'User').trim() || 'User';
+
+  if (img) {
+    return `<img class="pc-tip-card__avatar" src="${escapeHtml(img)}" alt="${escapeHtml(safeName)}" loading="lazy" decoding="async">`;
+  }
+
+  return `<div class="pc-tip-card__avatar"></div>`;
+}
+
+function communityRelativeTime(raw){
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return '';
+
+  const diffMs = Date.now() - d.getTime();
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffDays <= 0) return 'Today';
+  if (diffDays === 1) return '1 day ago';
+  if (diffDays < 30) return `${diffDays} days ago`;
+
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths === 1) return '1 month ago';
+  if (diffMonths < 12) return `${diffMonths} months ago`;
+
+  const diffYears = Math.floor(diffMonths / 12);
+  if (diffYears === 1) return '1 year ago';
+  return `${diffYears} years ago`;
+}
+
+function communityVisitedLabel(raw){
+  if (!raw) return '';
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return '';
+
+  return `Visited ${new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    year: 'numeric'
+  }).format(d)}`;
+}
+
+function communityStars(n){
+  const rating = Math.max(1, Math.min(5, Number(n || 0)));
+  if (!Number.isFinite(rating) || rating < 1) return '';
+  return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+}
+
+function answerCountLabel(n){
+  const count = Math.max(0, Number(n || 0));
+  return count === 1 ? '1 Answer' : `${count} Answers`;
+}
+
+function replyIconSvg(){
+  return `
+    <svg viewBox="0 -960 960 960" width="20" height="20" aria-hidden="true" focusable="false">
+      <path fill="currentColor" d="${QA_REPLY_ICON_PATH}"></path>
+    </svg>
+  `;
+}
+
+let _communityQaModalEl = null;
+let _communityQaModalOpen = false;
+
+function ensureCommunityQaModal(){
+  if (_communityQaModalEl) return _communityQaModalEl;
+
+  const el = document.createElement('div');
+  el.id = 'pcCommunityQaModal';
+  el.hidden = true;
+  el.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:9600;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:rgba(15,23,42,.48);
+  `;
+
+  el.innerHTML = `
+    <div style="
+      width:min(760px, 100%);
+      max-height:min(88vh, 820px);
+      overflow:auto;
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:20px;
+      box-shadow:0 24px 70px rgba(15,23,42,.18);
+    ">
+      <div id="pcCommunityQaModalInner"></div>
+    </div>
+  `;
+
+  el.addEventListener('click', (e) => {
+    if (e.target === el) closeCommunityQaModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && _communityQaModalOpen) {
+      closeCommunityQaModal();
+    }
+  });
+
+  document.body.appendChild(el);
+  _communityQaModalEl = el;
+  return el;
+}
+
+function closeCommunityQaModal(){
+  if (!_communityQaModalEl) return;
+  _communityQaModalEl.hidden = true;
+  _communityQaModalOpen = false;
+}
+
+async function getCommunityViewerSignedIn(){
+  try {
+    const res = await fetch('/api/auth/me', {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    });
+
+    const data = await res.json().catch(() => null);
+    return !!data?.user?.id;
+  } catch {
+    return false;
+  }
+}
+
+async function submitQuestionReply(questionId, body){
+  const res = await fetch(`/api/community/question/${encodeURIComponent(questionId)}/answers`, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify({ body })
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (res.status === 401) {
+    if (typeof window.pcOpenSignIn === 'function') {
+      window.pcOpenSignIn();
+      return { ok: false, auth: true };
+    }
+    throw new Error('Please sign in first.');
+  }
+
+  if (!res.ok || !data?.ok) {
+    throw new Error(data?.error || 'Could not save reply.');
+  }
+
+  return { ok: true, data };
+}
+
+async function openQuestionAnswersModal(questionId){
+  const host = ensureCommunityQaModal();
+  const inner = document.getElementById('pcCommunityQaModalInner');
+  if (!inner) return;
+
+  _communityQaModalOpen = true;
+  host.hidden = false;
+
+  inner.innerHTML = `
+    <div style="padding:22px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#0f172a;">Answers</div>
+        <div style="font-size:14px;color:#64748b;margin-top:4px;">Loading replies...</div>
+      </div>
+      <button type="button" id="pcCommunityQaModalClose" style="border:none;background:transparent;font-size:30px;line-height:1;cursor:pointer;color:#64748b;">×</button>
+    </div>
+  `;
+
+  const closeBtn0 = document.getElementById('pcCommunityQaModalClose');
+  if (closeBtn0) closeBtn0.addEventListener('click', closeCommunityQaModal);
+
+  try {
+    const [answersRes, signedIn] = await Promise.all([
+      fetch(`/api/community/question/${encodeURIComponent(questionId)}/answers`, {
+        headers: { Accept: 'application/json' }
+      }),
+      getCommunityViewerSignedIn()
+    ]);
+
+    const data = await answersRes.json().catch(() => null);
+
+    if (!answersRes.ok || !data?.ok) {
+      throw new Error(data?.error || 'Could not load answers.');
+    }
+
+    const question = data.question || {};
+    const answers = Array.isArray(data.answers) ? data.answers : [];
+
+    inner.innerHTML = `
+      <div style="padding:22px;border-bottom:1px solid #e5e7eb;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="min-width:0;">
+          <div style="font-size:22px;font-weight:700;color:#0f172a;">${escapeHtml(question.title || 'Question')}</div>
+          ${question.body ? `<div style="font-size:17px;color:#475569;margin-top:8px;line-height:1.55;">${escapeHtml(question.body)}</div>` : ''}
+          <div style="font-size:14px;color:#64748b;margin-top:10px;">Asked by ${escapeHtml(question.author_name || 'User')}</div>
+        </div>
+        <button type="button" id="pcCommunityQaModalClose" style="border:none;background:transparent;font-size:30px;line-height:1;cursor:pointer;color:#64748b;">×</button>
+      </div>
+
+      <div style="padding:20px;display:grid;gap:14px;">
+        ${
+          signedIn
+            ? `
+              <form id="pcQaModalReplyForm" style="display:grid;gap:10px;">
+                <textarea
+                  id="pcQaModalReplyBody"
+                  rows="3"
+                  maxlength="1000"
+                  placeholder="Write a reply..."
+                  style="width:100%;padding:12px 14px;border:1px solid #dbe2ea;border-radius:12px;font:inherit;resize:vertical;"
+                  required
+                ></textarea>
+
+                <div id="pcQaModalReplyError" hidden style="font-size:14px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 14px;"></div>
+
+                <div style="display:flex;justify-content:flex-end;">
+                  <button type="submit" id="pcQaModalReplySubmit" style="padding:10px 16px;border:none;border-radius:12px;background:#111827;color:#fff;font:inherit;font-weight:700;cursor:pointer;">
+                    Reply
+                  </button>
+                </div>
+              </form>
+            `
+            : ''
+        }
+
+        <div style="display:grid;gap:12px;">
+          ${
+            answers.length
+              ? answers.map((a) => `
+                  <article style="border:1px solid #e5e7eb;border-radius:16px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                      ${communityAvatarHtml(a.author_name, a.profile_image_url)}
+                      <div>
+                        <div style="font-size:16px;font-weight:700;color:#0f172a;">${escapeHtml(a.author_name || 'User')}</div>
+                        <div style="font-size:14px;color:#64748b;">${escapeHtml(communityRelativeTime(a.created_at) || '')}</div>
+                      </div>
+                    </div>
+                    <div style="font-size:16px;line-height:1.6;color:#334155;">${escapeHtml(a.body || '')}</div>
+                  </article>
+                `).join('')
+              : '<div class="sidebar-empty">No answers yet.</div>'
+          }
+        </div>
+      </div>
+    `;
+
+    const closeBtn = document.getElementById('pcCommunityQaModalClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeCommunityQaModal);
+
+    const replyForm = document.getElementById('pcQaModalReplyForm');
+    if (replyForm) {
+      replyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const bodyEl = document.getElementById('pcQaModalReplyBody');
+        const errorEl = document.getElementById('pcQaModalReplyError');
+        const submitBtn = document.getElementById('pcQaModalReplySubmit');
+
+        const body = String(bodyEl?.value || '').trim();
+
+        if (errorEl) {
+          errorEl.hidden = true;
+          errorEl.textContent = '';
+        }
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Posting...';
+        }
+
+        try {
+          await submitQuestionReply(questionId, body);
+          await Promise.all([
+            openQuestionAnswersModal(questionId),
+            renderCommunityCard(state.lastKey, null)
+          ]);
+        } catch (err) {
+          if (errorEl) {
+            errorEl.hidden = false;
+            errorEl.textContent = String(err?.message || 'Could not save reply.');
+          }
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Reply';
+          }
+        }
+      });
+    }
+  } catch (err) {
+    inner.innerHTML = `
+      <div style="padding:22px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="font-size:20px;font-weight:700;color:#0f172a;">Answers</div>
+        <button type="button" id="pcCommunityQaModalClose" style="border:none;background:transparent;font-size:30px;line-height:1;cursor:pointer;color:#64748b;">×</button>
+      </div>
+      <div style="padding:20px;">
+        <div class="sidebar-empty">${escapeHtml(String(err?.message || 'Could not load answers.'))}</div>
+      </div>
+    `;
+
+    const closeBtn = document.getElementById('pcCommunityQaModalClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeCommunityQaModal);
+  }
+}
+
+let _communityComposerEl = null;
+let _communityComposerOpen = false;
+let _communityComposerMode = '';
+
+function ensureCommunityComposer(){
+  if (_communityComposerEl) return _communityComposerEl;
+
+  const el = document.createElement('div');
+  el.id = 'pcCommunityComposer';
+  el.hidden = true;
+  el.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:9500;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:rgba(15,23,42,.42);
+  `;
+
+  el.innerHTML = `
+    <div style="
+      width:min(560px, 100%);
+      max-height:min(88vh, 760px);
+      overflow:auto;
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:20px;
+      box-shadow:0 24px 70px rgba(15,23,42,.18);
+    ">
+      <div id="pcCommunityComposerInner"></div>
+    </div>
+  `;
+
+  el.addEventListener('click', (e) => {
+    if (e.target === el) closeCommunityComposer();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && _communityComposerOpen) {
+      closeCommunityComposer();
+    }
+  });
+
+  document.body.appendChild(el);
+  _communityComposerEl = el;
+  return el;
+}
+
+function closeCommunityComposer(){
+  if (!_communityComposerEl) return;
+  _communityComposerEl.hidden = true;
+  _communityComposerOpen = false;
+  _communityComposerMode = '';
+}
+
+function openCommunityComposer(){
+  const host = ensureCommunityComposer();
+  const inner = document.getElementById('pcCommunityComposerInner');
+  if (!inner) return;
+
+  _communityComposerOpen = true;
+  host.hidden = false;
+  _communityComposerMode = '';
+
+  inner.innerHTML = `
+    <div style="padding:22px 22px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-size:22px;font-weight:600;color:#0f172a;">Contribute</div>
+        <div style="font-size:16px;color:#64748b;margin-top:4px;">Choose what you want to share for this product.</div>
+      </div>
+      <button type="button" id="pcCommunityComposerClose" style="border:none;background:transparent;font-size:34px;line-height:1;cursor:pointer;color:#64748b;">×</button>
+    </div>
+
+    <div style="padding:20px;display:grid;gap:12px;">
+      <button type="button" class="pc-community-choice-btn" data-community-choice="review" style="text-align:left;padding:16px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;cursor:pointer;">
+        <div style="font-size:18px;font-weight:600;color:#0f172a;">Post Review</div>
+        <div style="font-size:16px;color:#64748b;margin-top:4px;">Share your experience and give a rating.</div>
+      </button>
+
+      <button type="button" class="pc-community-choice-btn" data-community-choice="question" style="text-align:left;padding:16px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;cursor:pointer;">
+        <div style="font-size:18px;font-weight:600;color:#0f172a;">Ask Question</div>
+        <div style="font-size:16px;color:#64748b;margin-top:4px;">Ask something about this product.</div>
+      </button>
+
+      <button type="button" class="pc-community-choice-btn" data-community-choice="tip" style="text-align:left;padding:16px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;cursor:pointer;">
+        <div style="font-size:18px;font-weight:600;color:#0f172a;">Give Insider Tip</div>
+        <div style="font-size:16px;color:#64748b;margin-top:4px;">Share a short buying or usage tip.</div>
+      </button>
+    </div>
+  `;
+
+  const closeBtn = document.getElementById('pcCommunityComposerClose');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeCommunityComposer);
+  }
+
+  inner.querySelectorAll('[data-community-choice]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const type = String(btn.getAttribute('data-community-choice') || '').trim();
+      if (!type) return;
+      renderCommunityComposerForm(type);
+    });
+  });
+}
+
+function renderCommunityComposerForm(type){
+  const inner = document.getElementById('pcCommunityComposerInner');
+  if (!inner) return;
+
+  _communityComposerMode = type;
+
+  const isTip = type === 'tip';
+  const isQuestion = type === 'question';
+  const isReview = type === 'review';
+
+  inner.innerHTML = `
+    <form id="pcCommunityComposerForm">
+      <div style="padding:22px 22px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div>
+          <div style="font-size:20px;font-weight:700;color:#0f172a;">
+            ${isTip ? 'Post Insider Tip' : isQuestion ? 'Ask Question' : 'Post Review'}
+          </div>
+          <div style="font-size:14px;color:#64748b;margin-top:6px;line-height:1.55;">
+            ${isReview
+              ? 'Posts may be reviewed before they appear. Make sure your review is accurate, specific, and based on your real experience.'
+              : isQuestion
+                ? 'Posts may be reviewed before they appear. Double check product details and ask one clear, specific question.'
+                : 'Posts may be reviewed before they appear. Keep your tip accurate, practical, and based on real use.'}
+          </div>
+        </div>
+        <button type="button" id="pcCommunityComposerClose" style="border:none;background:transparent;font-size:34px;line-height:1;cursor:pointer;color:#64748b;">×</button>
+      </div>
+
+      <div style="padding:20px;display:grid;gap:14px;">
+        ${
+          isQuestion
+            ? `
+              <label style="display:grid;gap:6px;">
+                <span style="font-size:14px;font-weight:600;color:#0f172a;">Title</span>
+                <input
+                  id="pcCommunityFieldTitle"
+                  type="text"
+                  maxlength="160"
+                  placeholder="Example: Does this include the charger?"
+                  style="width:100%;padding:12px 14px;border:1px solid #dbe2ea;border-radius:12px;font:inherit;"
+                  required
+                >
+              </label>
+            `
+            : ''
+        }
+
+        ${
+          isReview
+            ? `
+              <label style="display:grid;gap:6px;">
+                <span style="font-size:14px;font-weight:600;color:#0f172a;">Rating</span>
+                <select
+                  id="pcCommunityFieldRating"
+                  style="width:100%;padding:12px 14px;border:1px solid #dbe2ea;border-radius:12px;font:inherit;"
+                  required
+                >
+                  <option value="5">5 stars</option>
+                  <option value="4">4 stars</option>
+                  <option value="3">3 stars</option>
+                  <option value="2">2 stars</option>
+                  <option value="1">1 star</option>
+                </select>
+              </label>
+            `
+            : ''
+        }
+
+        ${
+          isTip
+            ? `
+              <label style="display:grid;gap:6px;">
+                <span style="font-size:14px;font-weight:600;color:#0f172a;">Visited date</span>
+                <input
+                  id="pcCommunityFieldVisitedAt"
+                  type="date"
+                  style="width:100%;padding:12px 14px;border:1px solid #dbe2ea;border-radius:12px;font:inherit;"
+                >
+              </label>
+            `
+            : ''
+        }
+
+        <label style="display:grid;gap:6px;">
+          <span style="font-size:14px;font-weight:600;color:#0f172a;">
+            ${isQuestion ? 'Details' : isReview ? 'Review' : 'Tip'}
+          </span>
+          <textarea
+            id="pcCommunityFieldBody"
+            rows="${isQuestion ? 6 : 5}"
+            maxlength="${isReview ? 1200 : isQuestion ? 1000 : 600}"
+            placeholder="${
+              isTip
+                ? 'Example: The black version usually gets discounted more often.'
+                : isQuestion
+                  ? 'Add any extra detail that helps people answer.'
+                  : 'What was good, bad, or surprising?'
+            }"
+            style="width:100%;padding:12px 14px;border:1px solid #dbe2ea;border-radius:12px;font:inherit;resize:vertical;"
+            required
+          ></textarea>
+        </label>
+
+        <div id="pcCommunityComposerError" hidden style="font-size:14px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 14px;"></div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:6px;">
+          <button type="button" id="pcCommunityComposerBack" style="padding:11px 16px;border:1px solid #dbe2ea;border-radius:12px;background:#fff;font:inherit;cursor:pointer;">Back</button>
+          <button type="submit" id="pcCommunityComposerSubmit" style="padding:11px 16px;border:none;border-radius:12px;background:#111827;color:#fff;font:inherit;font-weight:700;cursor:pointer;">
+            Post
+          </button>
+        </div>
+      </div>
+    </form>
+  `;
+
+  const closeBtn = document.getElementById('pcCommunityComposerClose');
+  const backBtn = document.getElementById('pcCommunityComposerBack');
+  const form = document.getElementById('pcCommunityComposerForm');
+
+  if (closeBtn) closeBtn.addEventListener('click', closeCommunityComposer);
+  if (backBtn) backBtn.addEventListener('click', openCommunityComposer);
+  if (form) form.addEventListener('submit', submitCommunityComposerForm);
+}
+
+async function submitCommunityComposerForm(e){
+  e.preventDefault();
+
+  const submitBtn = document.getElementById('pcCommunityComposerSubmit');
+  const errorEl = document.getElementById('pcCommunityComposerError');
+  const type = String(_communityComposerMode || '').trim();
+
+  if (!type || !state.lastKey) return;
+
+  const titleEl = document.getElementById('pcCommunityFieldTitle');
+  const bodyEl = document.getElementById('pcCommunityFieldBody');
+  const ratingEl = document.getElementById('pcCommunityFieldRating');
+  const visitedAtEl = document.getElementById('pcCommunityFieldVisitedAt');
+
+  const payload = {
+    post_type: type,
+    title: titleEl ? String(titleEl.value || '').trim() : '',
+    body: bodyEl ? String(bodyEl.value || '').trim() : '',
+    rating: ratingEl ? Number(ratingEl.value || 0) : null,
+    visited_at: visitedAtEl ? String(visitedAtEl.value || '').trim() : ''
+  };
+
+  if (errorEl) {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Posting...';
+  }
+
+  try {
+    const res = await fetch(`/api/community/${encodeURIComponent(state.lastKey)}/post`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (res.status === 401) {
+      closeCommunityComposer();
+      if (typeof window.pcOpenSignIn === 'function') {
+        window.pcOpenSignIn();
+        return;
+      }
+      throw new Error('Please sign in first.');
+    }
+
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || 'Could not save post.');
+    }
+
+    closeCommunityComposer();
+    await renderCommunityCard(state.lastKey, null);
+  } catch (err) {
+    if (errorEl) {
+      errorEl.hidden = false;
+      errorEl.textContent = String(err?.message || 'Could not save post.');
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Post';
+    }
+  }
+}
+
+async function openCommunityComposerFromTrigger(){
+  try {
+    const res = await fetch('/api/auth/me', {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    });
+
+    const data = await res.json().catch(() => null);
+    const signedIn = !!data?.user?.id;
+
+    if (!signedIn) {
+      if (typeof window.pcOpenSignIn === 'function') {
+        window.pcOpenSignIn();
+        return;
+      }
+
+      alert('Please sign in first.');
+      return;
+    }
+
+    openCommunityComposer();
+  } catch {
+    if (typeof window.pcOpenSignIn === 'function') {
+      window.pcOpenSignIn();
+      return;
+    }
+
+    alert('Please sign in first.');
+  }
+}
+
+function wireCommunityAddButton(){
+  const btn = document.getElementById('pcCommunityAddBtn');
+  if (!btn || btn._pcCommunityBound) return;
+
+  btn._pcCommunityBound = true;
+
+  btn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await openCommunityComposerFromTrigger();
+  });
+}
+
+function wireQuestionReplyUi(signedIn){
+  document.querySelectorAll('[data-question-answer-link]').forEach((el) => {
+    if (el._pcBound) return;
+    el._pcBound = true;
+
+    el.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const questionId = String(el.getAttribute('data-question-answer-link') || '').trim();
+      if (!questionId) return;
+      await openQuestionAnswersModal(questionId);
+    });
+  });
+
+  document.querySelectorAll('[data-question-reply-toggle]').forEach((btn) => {
+    if (btn._pcBound) return;
+    btn._pcBound = true;
+
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      if (!signedIn) {
+        if (typeof window.pcOpenSignIn === 'function') {
+          window.pcOpenSignIn();
+        }
+        return;
+      }
+
+      const questionId = String(btn.getAttribute('data-question-reply-toggle') || '').trim();
+      if (!questionId) return;
+
+      const box = document.querySelector(`[data-question-reply-box="${CSS.escape(questionId)}"]`);
+      if (!box) return;
+
+      const willOpen = box.hidden;
+      box.hidden = !willOpen;
+
+      if (willOpen) {
+        const ta = box.querySelector('textarea');
+        if (ta) ta.focus();
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-question-reply-form]').forEach((form) => {
+    if (form._pcBound) return;
+    form._pcBound = true;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const questionId = String(form.getAttribute('data-question-reply-form') || '').trim();
+      if (!questionId) return;
+
+      const bodyEl = form.querySelector('textarea');
+      const errorEl = form.querySelector('[data-question-reply-error]');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const body = String(bodyEl?.value || '').trim();
+
+      if (errorEl) {
+        errorEl.hidden = true;
+        errorEl.textContent = '';
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Posting...';
+      }
+
+      try {
+        await submitQuestionReply(questionId, body);
+        await renderCommunityCard(state.lastKey, null);
+        await openQuestionAnswersModal(questionId);
+      } catch (err) {
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent = String(err?.message || 'Could not save reply.');
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Reply';
+        }
+      }
+    });
+  });
+}
+
+async function renderCommunityCard(productKey, runToken){
+  const card = document.getElementById('communityCard');
+  const tipsCountEl = document.getElementById('pcCommunityTipsCount');
+  const questionsCountEl = document.getElementById('pcCommunityQuestionsCount');
+  const reviewsCountEl = document.getElementById('pcCommunityReviewsCount');
+  const tipsListEl = document.getElementById('pcCommunityTipsList');
+  const questionsListEl = document.getElementById('pcCommunityQuestionsList');
+  const reviewListEl = document.getElementById('pcCommunityReviewList');
+
+  if (!card || !tipsCountEl || !questionsCountEl || !reviewsCountEl || !tipsListEl || !questionsListEl || !reviewListEl) {
+    return;
+  }
+
+  wireCommunityAddButton();
+
+  tipsCountEl.textContent = '(0)';
+  questionsCountEl.textContent = '(0)';
+  reviewsCountEl.textContent = '(0)';
+
+  tipsListEl.innerHTML = '<div class="sidebar-empty">Loading...</div>';
+  questionsListEl.innerHTML = '<div class="sidebar-empty">Loading...</div>';
+  reviewListEl.innerHTML = '<div class="sidebar-empty">Loading...</div>';
+
+  card.hidden = false;
+
+  let signedIn = false;
+  let data;
+
+  try {
+    const [communityRes, authRes] = await Promise.all([
+      fetch(`/api/community/${encodeURIComponent(productKey)}`, {
+        headers: { Accept: 'application/json' }
+      }),
+      fetch('/api/auth/me', {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' }
+      }).catch(() => null)
+    ]);
+
+    if (runToken != null && isStaleRun(runToken)) return;
+    if (!communityRes.ok) throw new Error(`HTTP ${communityRes.status}`);
+
+    data = await communityRes.json();
+
+    if (authRes) {
+      const authData = await authRes.json().catch(() => null);
+      signedIn = !!authData?.user?.id;
+    }
+
+    if (runToken != null && isStaleRun(runToken)) return;
+  } catch (_err) {
+    if (runToken != null && isStaleRun(runToken)) return;
+
+    tipsListEl.innerHTML = '<div class="sidebar-empty">Could not load community tips.</div>';
+    questionsListEl.innerHTML = '<div class="sidebar-empty">Could not load questions.</div>';
+    reviewListEl.innerHTML = '<div class="sidebar-empty">Could not load reviews.</div>';
+    return;
+  }
+
+  const tips = Array.isArray(data?.tips) ? data.tips : [];
+  const questions = Array.isArray(data?.questions) ? data.questions : [];
+  const reviews = Array.isArray(data?.reviews) ? data.reviews : [];
+  const counts = data?.counts || {};
+
+  state.community = {
+    tips,
+    questions,
+    reviews,
+    counts: {
+      tips: Number(counts.tips || 0),
+      questions: Number(counts.questions || 0),
+      reviews: Number(counts.reviews || 0)
+    }
+  };
+
+  const totalCount =
+    state.community.counts.tips +
+    state.community.counts.questions +
+    state.community.counts.reviews;
+
+  if (totalCount <= 0) {
+    card.hidden = true;
+    return;
+  }
+
+  tipsCountEl.textContent = `(${state.community.counts.tips})`;
+  questionsCountEl.textContent = `(${state.community.counts.questions})`;
+  reviewsCountEl.textContent = `(${state.community.counts.reviews})`;
+
+  tipsListEl.innerHTML = tips.length
+    ? tips.map((tip) => `
+        <article class="pc-tip-card">
+          <div class="pc-tip-card__body">${escapeHtml(tip.body || '')}</div>
+
+          <div class="pc-tip-card__foot">
+            ${communityAvatarHtml(tip.author_name, tip.profile_image_url)}
+            <div class="pc-tip-card__meta">
+              <div class="pc-tip-card__name">${escapeHtml(tip.author_name || 'User')}</div>
+              <div class="pc-tip-card__sub">${escapeHtml(communityVisitedLabel(tip.visited_at) || communityRelativeTime(tip.created_at) || '')}</div>
+            </div>
+          </div>
+        </article>
+      `).join('')
+    : '<div class="sidebar-empty">No tips yet.</div>';
+
+      questionsListEl.innerHTML = questions.length
+    ? questions.map((q) => {
+        const answerCount = Number(q.answer_count || 0);
+        const replyBoxId = `q-reply-${q.id}`;
+
+        return `
+          <article class="pc-qa-item">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+              <div style="min-width:0;flex:1;">
+                <div class="pc-qa-item__question" style="font-weight:700;color:#0f172a;">${escapeHtml(q.title || '')}</div>
+                ${q.body ? `<div class="pc-community-review-card__body" style="margin-top:8px;">${escapeHtml(q.body)}</div>` : ''}
+              </div>
+
+              ${
+                signedIn
+                  ? `
+                    <button
+                      type="button"
+                      data-question-reply-toggle="${escapeHtml(String(q.id))}"
+                      aria-label="Reply to this question"
+                      title="Reply"
+                      style="flex:0 0 auto;width:40px;height:40px;border:none;background:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#0f172a;"
+                    >
+                      ${replyIconSvg()}
+                    </button>
+                  `
+                  : ''
+              }
+            </div>
+
+            <div class="pc-qa-item__meta" style="display:flex;align-items:center;gap:12px;margin-top:12px;font-size:13px;color:#64748b;">
+              <span style="font-size:14px;">${escapeHtml(communityRelativeTime(q.created_at) || '')}</span>
+              <a
+                href="#"
+                data-question-answer-link="${escapeHtml(String(q.id))}"
+                style="color:#4f46e5;text-decoration:none;font-weight:600;font-size:14px;"
+              >
+                ${escapeHtml(answerCountLabel(answerCount))}
+              </a>
+            </div>
+
+            ${
+              signedIn
+                ? `
+                  <div
+                    data-question-reply-box="${escapeHtml(String(q.id))}"
+                    hidden
+                    style="margin-top:14px;padding-top:14px;border-top:1px solid #e5e7eb;"
+                  >
+                    <form data-question-reply-form="${escapeHtml(String(q.id))}" style="display:grid;gap:10px;">
+                      <textarea
+                        rows="3"
+                        maxlength="1000"
+                        placeholder="Write a reply..."
+                        style="width:100%;padding:12px 14px;border:1px solid #dbe2ea;border-radius:12px;font:inherit;resize:vertical;"
+                        required
+                      ></textarea>
+
+                      <div data-question-reply-error hidden style="font-size:14px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 14px;"></div>
+
+                      <div style="display:flex;justify-content:flex-end;">
+                        <button
+                          type="submit"
+                          style="padding:10px 16px;border:none;border-radius:12px;background:#111827;color:#fff;font:inherit;font-weight:700;cursor:pointer;"
+                        >
+                          Reply
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                `
+                : ''
+            }
+          </article>
+        `;
+      }).join('')
+    : '<div class="sidebar-empty">No questions yet.</div>';
+
+  reviewListEl.innerHTML = reviews.length
+    ? reviews.map((review) => `
+        <article class="pc-community-review-card">
+          <div class="pc-community-review-card__top">
+            <div class="pc-community-review-card__name">${escapeHtml(review.author_name || 'User')}</div>
+            <div class="pc-community-review-card__rating">${escapeHtml(communityStars(review.rating))}</div>
+          </div>
+
+          <div class="pc-community-review-card__body">${escapeHtml(review.body || '')}</div>
+
+          <div class="pc-community-review-card__meta">${escapeHtml(communityRelativeTime(review.created_at) || '')}</div>
+        </article>
+      `).join('')
+    : '<div class="sidebar-empty">No reviews yet.</div>';
+
+    wireQuestionReplyUi(signedIn);
+}
+
 async function renderReviewsCard(productKey, runToken) {
   const el = document.getElementById('pc-reviews-card');
   if (!el) return;
@@ -1105,7 +2115,7 @@ async function renderReviewsCard(productKey, runToken) {
     el.innerHTML = inner;
   }
 
-  const iconPath = 'm363-390 117-71 117 71-31-133 104-90-137-11-53-126-53 126-137 11 104 90-31 133ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z';
+  const iconPath = 'M240-400h320v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM480-80 373-240H160q-33 0-56.5-23.5T80-320v-480q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H587L480-80Zm0-144 64-96h256v-480H160v480h256l64 96Zm0-336Z';
 
   mount(`
     <div class="spaced">
@@ -1157,6 +2167,7 @@ async function renderReviewsCard(productKey, runToken) {
   const total = Number(aggregate.count || 0);
   const overallNum = Number(aggregate.overall);
   const overall = Number.isFinite(overallNum) ? overallNum : 0;
+  setTopbarRatingSummary(overall, total);
 
   const verifiedPctNum = Number(aggregate.verified_pct);
   const verifiedPct = Number.isFinite(verifiedPctNum)
@@ -1454,8 +2465,6 @@ async function renderReviewsCard(productKey, runToken) {
         <div class="pc-rv-expert-list">
           ${expertRows}
         </div>
-
-        <p class="note">Scores are normalized to a 5 point scale for easier comparison.</p>
       </section>
     `;
   } else {
@@ -1495,11 +2504,13 @@ function renderImageChoiceGroup(hostEl, options, selectedValue, onPick, typeLabe
     if (!label) continue;
 
     const image = String(opt?.image || '').trim() || '/logo/default.webp';
+    const isActive = normLower(label) === normLower(selectedValue);
 
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'media-choice' + (normLower(label) === normLower(selectedValue) ? ' is-active' : '');
+    b.className = 'media-choice' + (isActive ? ' is-active' : '');
     b.setAttribute('aria-label', `${typeLabel} ${label}`);
+    b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
 
     b.innerHTML = `
       <span class="media-choice__thumb">
@@ -1703,68 +2714,18 @@ async function wireFavoriteButton(entityKey, title, imageUrl, brand) {
 
 function renderVersionVariantColor(){
   const list = Array.isArray(state.variants) ? state.variants : [];
-  const ensured = ensureVersionCard();
-  const versionCardEl = ensured.versionCard;
-  const versionPillsEl = ensured.versionPills;
 
   if (variant2Card) {
     const h3 = variant2Card.querySelector('h3');
     if (h3) h3.textContent = 'Variant';
   }
 
-  // ----------------
-  // Model / version
-  // ----------------
-  const versionChoices = versionChoicesForVariants(list);
-  const currentVersion = String(state.selectedVersion || '').trim();
-
-  if (!versionChoices.some(v => normLower(v.label) === normLower(currentVersion))) {
-    state.selectedVersion = versionChoices[0]?.label || 'Default';
-  }
-
-  if (versionCardEl && versionPillsEl) {
-    if (versionChoices.length >= 2) {
-      const visibleVersionChoices = versionChoices.filter(
-        x => normLower(x.label) !== normLower(state.selectedVersion)
-      );
-
-      versionCardEl.hidden = false;
-
-      renderImageChoiceGroup(
-        versionPillsEl,
-        visibleVersionChoices.length ? visibleVersionChoices : versionChoices,
-        null,
-        (picked) => {
-          if (normLower(picked) === normLower(state.selectedVersion)) return;
-
-          state.selectedVersion = picked;
-          state.selectedVariant2 = null;
-          state.selectedColor = null;
-
-          renderVersionVariantColor();
-
-          const resolvedKey = chooseKeyForVersionVariantColor(
-            list,
-            state.selectedVersion,
-            state.selectedVariant2,
-            state.selectedColor
-          );
-
-          if (resolvedKey) state.selectedVariantKey = resolvedKey;
-          pushVariantSelectionAndRun();
-        },
-        'Model'
-      );
-    } else {
-      versionCardEl.hidden = true;
-      versionPillsEl.innerHTML = '';
-    }
-  }
+  const currentVersion = String(state.selectedVersion || '').trim() || 'Default';
 
   // ----------------
   // Variant
   // ----------------
-  const variantChoices = variantChoicesForVersion(list, state.selectedVersion);
+  const variantChoices = variantChoicesForVersion(list, currentVersion);
 
   if (variant2Card && variant2Pills){
     if (variantChoices.length >= 2) {
@@ -1776,42 +2737,30 @@ function renderVersionVariantColor(){
       if (!desiredVar) desiredVar = variantChoices[0].label;
 
       state.selectedVariant2 = desiredVar;
+      variant2Card.hidden = false;
 
-      const visibleVariantChoices = variantChoices.filter(
-        x => normLower(x.label) !== normLower(state.selectedVariant2)
+      renderImageChoiceGroup(
+        variant2Pills,
+        variantChoices,
+        state.selectedVariant2,
+        (picked) => {
+          if (normLower(picked) === normLower(state.selectedVariant2)) return;
+
+          state.selectedVariant2 = picked;
+          state.selectedColor = null;
+
+          const resolvedKey = chooseKeyForVersionVariantColor(
+            list,
+            currentVersion,
+            state.selectedVariant2,
+            state.selectedColor
+          );
+
+          if (resolvedKey) state.selectedVariantKey = resolvedKey;
+          pushVariantSelectionAndRun();
+        },
+        'Variant'
       );
-
-      if (visibleVariantChoices.length) {
-        variant2Card.hidden = false;
-
-        renderImageChoiceGroup(
-          variant2Pills,
-          visibleVariantChoices,
-          null,
-          (picked) => {
-            if (normLower(picked) === normLower(state.selectedVariant2)) return;
-
-            state.selectedVariant2 = picked;
-            state.selectedColor = null;
-
-            renderVersionVariantColor();
-
-            const resolvedKey = chooseKeyForVersionVariantColor(
-              list,
-              state.selectedVersion,
-              state.selectedVariant2,
-              state.selectedColor
-            );
-
-            if (resolvedKey) state.selectedVariantKey = resolvedKey;
-            pushVariantSelectionAndRun();
-          },
-          'Variant'
-        );
-      } else {
-        variant2Card.hidden = true;
-        variant2Pills.innerHTML = '';
-      }
     } else {
       variant2Card.hidden = true;
       variant2Pills.innerHTML = '';
@@ -1826,7 +2775,7 @@ function renderVersionVariantColor(){
   // ----------------
   const colorChoices = colorChoicesForVersionVariant(
     list,
-    state.selectedVersion,
+    currentVersion,
     state.selectedVariant2
   );
 
@@ -1840,41 +2789,29 @@ function renderVersionVariantColor(){
       if (!desiredC) desiredC = colorChoices[0].label;
 
       state.selectedColor = desiredC;
+      colorCard.hidden = false;
 
-      const visibleColorChoices = colorChoices.filter(
-        x => normLower(x.label) !== normLower(state.selectedColor)
+      renderImageChoiceGroup(
+        colorPills,
+        colorChoices,
+        state.selectedColor,
+        (picked) => {
+          if (normLower(picked) === normLower(state.selectedColor)) return;
+
+          state.selectedColor = picked;
+
+          const resolvedKey = chooseKeyForVersionVariantColor(
+            list,
+            currentVersion,
+            state.selectedVariant2,
+            state.selectedColor
+          );
+
+          if (resolvedKey) state.selectedVariantKey = resolvedKey;
+          pushVariantSelectionAndRun();
+        },
+        'Color'
       );
-
-      if (visibleColorChoices.length) {
-        colorCard.hidden = false;
-
-        renderImageChoiceGroup(
-          colorPills,
-          visibleColorChoices,
-          null,
-          (picked) => {
-            if (normLower(picked) === normLower(state.selectedColor)) return;
-
-            state.selectedColor = picked;
-
-            renderVersionVariantColor();
-
-            const resolvedKey = chooseKeyForVersionVariantColor(
-              list,
-              state.selectedVersion,
-              state.selectedVariant2,
-              state.selectedColor
-            );
-
-            if (resolvedKey) state.selectedVariantKey = resolvedKey;
-            pushVariantSelectionAndRun();
-          },
-          'Color'
-        );
-      } else {
-        colorCard.hidden = true;
-        colorPills.innerHTML = '';
-      }
     } else {
       colorCard.hidden = true;
       colorPills.innerHTML = '';
@@ -1886,7 +2823,7 @@ function renderVersionVariantColor(){
 
   const resolvedKey = chooseKeyForVersionVariantColor(
     list,
-    state.selectedVersion,
+    currentVersion,
     state.selectedVariant2,
     state.selectedColor
   );
@@ -1894,6 +2831,8 @@ function renderVersionVariantColor(){
   if (resolvedKey) {
     state.selectedVariantKey = resolvedKey;
   }
+
+  syncVariantColorSectionVisibility();
 }
 
 function wireCardIcons(){
@@ -1933,6 +2872,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderCodeButtonState();
   initDashboardTocObservers();
   scheduleDashboardTocRefresh();
+  initSimilarSidebarObserver();
 
   window.addEventListener('pc:auth_changed', () => {
     loadBrandFollowState();
@@ -2074,12 +3014,13 @@ async function run(raw){
     hydrateKpis();
     drawChart();
     renderCouponsCard();
+    renderAboutCard();
     renderTimeline();
     renderVariants();
     renderDimensions();
     renderSidebarSpecs();
     renderContents();
-    renderMediaPanel();
+    renderHeroMediaCarousel();
     renderFilesCard();
     renderLineup();
     renderSimilarProducts();
@@ -2089,6 +3030,10 @@ async function run(raw){
 
     if (isStaleRun(runToken)) return;
     await renderReviewsCard(state.lastKey, runToken);
+
+    if (isStaleRun(runToken)) return;
+
+    await renderCommunityCard(state.lastKey, runToken);
 
     if (isStaleRun(runToken)) return;
 
@@ -2111,6 +3056,7 @@ async function run(raw){
     );
 
     scheduleDashboardTocRefresh();
+    scheduleSimilarProductsRefresh();
 
   } catch(err){
     if (isStaleRun(runToken)) return;
@@ -2129,11 +3075,15 @@ async function run(raw){
     img.onerror = null;
   }
 
-  $('#pIds').textContent = '';
-  $('#pIds').hidden = true;
+  const pIdsEl = $('#pIds');
+  if (pIdsEl) {
+    pIdsEl.textContent = '';
+    pIdsEl.hidden = true;
+  }
 
   const brandRow = $('#pBrandRow');
   const brandLine = $('#pBrandLine');
+  clearTopbarRatingSummary();
 
   state.identity = null;
   state.variants = [];
@@ -2152,6 +3102,10 @@ async function run(raw){
 
   _closeCodePanel();
   renderCodeButtonState();
+
+  if (aboutCard) aboutCard.hidden = true;
+  if (aboutParagraphs) aboutParagraphs.innerHTML = '';
+  if (aboutPoints) aboutPoints.innerHTML = '';
 
   if (brandRow) brandRow.hidden = true;
   if (brandLine) brandLine.textContent = '';
@@ -2179,6 +3133,8 @@ async function run(raw){
   if (colorCard) colorCard.hidden = true;
   if (colorPills) colorPills.innerHTML = '';
 
+  syncVariantColorSectionVisibility();
+
   const couponCard = document.getElementById('couponCard');
   if (couponCard) couponCard.hidden = true;
 
@@ -2205,12 +3161,35 @@ async function run(raw){
   $('#kLow30Date').textContent = '';
   $('#kIntegrity').textContent = 'NA';
 
+  const specsCard = document.getElementById('specsCard');
   const specsContent = document.getElementById('specsContent');
-  if (specsContent) specsContent.innerHTML = '<div class="sidebar-empty">No specs found yet.</div>';
+  if (specsCard) specsCard.hidden = true;
+  if (specsContent) specsContent.innerHTML = '';
 
+  const mediaCard = document.getElementById('mediaCard');
   if (mediaCard) mediaCard.hidden = true;
   const mediaContent = document.getElementById('mediaContent');
   if (mediaContent) mediaContent.innerHTML = '';
+
+  state.mediaGroups = { images: [], videos: [], shorts: [] };
+  state.activeMediaGroup = 'images';
+  state.activeMediaIndex = 0;
+
+  const mediaInner = document.getElementById('phMediaInner');
+  const mediaCounter = document.getElementById('phMediaCounter');
+  const mediaStage = document.getElementById('phMediaStage');
+
+  if (mediaInner) {
+    mediaInner.innerHTML = `
+      <div class="ph-media-stage__placeholder">
+        <div class="ph-media-stage__title">No media yet</div>
+        <div class="ph-media-stage__sub">Media for this product has not been added yet.</div>
+      </div>
+    `;
+  }
+
+  if (mediaCounter) mediaCounter.textContent = '0 / 0';
+  if (mediaStage) mediaStage.classList.remove('is-vertical');
 
   const timelineCard = document.getElementById('year');
   const timelineContent = document.getElementById('timelineContent');
@@ -2243,6 +3222,29 @@ async function run(raw){
 
   if (lineupCard) lineupCard.hidden = true;
   if (lineupContent) lineupContent.innerHTML = '';
+
+    state.community = {
+    tips: [],
+    questions: [],
+    reviews: [],
+    counts: { tips: 0, questions: 0, reviews: 0 }
+  };
+
+  const communityCard = document.getElementById('communityCard');
+  const communityTips = document.getElementById('pcCommunityTipsList');
+  const communityQuestions = document.getElementById('pcCommunityQuestionsList');
+  const communityReviews = document.getElementById('pcCommunityReviewList');
+  const communityTipsCount = document.getElementById('pcCommunityTipsCount');
+  const communityQuestionsCount = document.getElementById('pcCommunityQuestionsCount');
+  const communityReviewsCount = document.getElementById('pcCommunityReviewsCount');
+
+  if (communityCard) communityCard.hidden = true;
+  if (communityTips) communityTips.innerHTML = '';
+  if (communityQuestions) communityQuestions.innerHTML = '';
+  if (communityReviews) communityReviews.innerHTML = '';
+  if (communityTipsCount) communityTipsCount.textContent = '(0)';
+  if (communityQuestionsCount) communityQuestionsCount.textContent = '(0)';
+  if (communityReviewsCount) communityReviewsCount.textContent = '(0)';
 
   scheduleDashboardTocRefresh();
 }
@@ -2295,18 +3297,9 @@ async function run(raw){
     $('#pTitle').textContent = title;
 
     const pIdsEl = $('#pIds');
-    const selColor = normalizeSpaces(colorOf(cur));
-    const selVariant = normalizeSpaces(variantOf(cur));
-
-    const selectedBits = [];
-    if (selColor) selectedBits.push(selColor);
-    if (selVariant) selectedBits.push(selVariant);
-
     if (pIdsEl) {
-      pIdsEl.innerHTML = selectedBits
-        .map(v => `<span class="id-pill">${escapeHtml(v)}</span>`)
-        .join('');
-      pIdsEl.hidden = selectedBits.length === 0;
+      pIdsEl.innerHTML = '';
+      pIdsEl.hidden = true;
     }
 
     renderCodeButtonState();
@@ -4065,7 +5058,115 @@ function renderCouponsCard(){
   note.textContent = 'PriceCheck does not use affiliate or sponsored links.';
 }
 
- function renderSimilarProducts(){
+let _similarResizeObserver = null;
+let _similarRefreshRaf = 0;
+
+function scheduleSimilarProductsRefresh() {
+  if (_similarRefreshRaf) cancelAnimationFrame(_similarRefreshRaf);
+
+  _similarRefreshRaf = requestAnimationFrame(() => {
+    _similarRefreshRaf = 0;
+    renderSimilarProducts();
+  });
+}
+
+function initSimilarSidebarObserver() {
+  const main = document.querySelector('.main-content');
+  if (!main || !('ResizeObserver' in window)) return;
+
+  if (_similarResizeObserver) {
+    _similarResizeObserver.disconnect();
+  }
+
+  _similarResizeObserver = new ResizeObserver(() => {
+    scheduleSimilarProductsRefresh();
+  });
+
+  _similarResizeObserver.observe(main);
+
+  window.addEventListener('resize', scheduleSimilarProductsRefresh, { passive: true });
+}
+
+function getSidebarAvailableHeight() {
+  const main = document.querySelector('.main-content');
+  const panel = document.getElementById('panelSimilar');
+
+  if (!main || !panel) return 0;
+
+  const mainRect = main.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+
+  const available = Math.floor(mainRect.bottom - panelRect.top);
+  return Math.max(0, available);
+}
+
+function similarProductCardHtml(p) {
+  const key = String(p?.dashboard_key || '').trim();
+  const title = String(p?.model_name || 'Product').trim() || 'Product';
+  const href = key ? prettyDashboardUrl(key, title).pathname : '/dashboard/';
+  const brand = titleCase(p?.brand || '');
+  const price = (typeof p?.best_price_cents === 'number' && p.best_price_cents > 0)
+    ? fmt.format(p.best_price_cents / 100)
+    : 'NA';
+  const img = String(p?.image_url || '').trim() || '/logo/default.webp';
+
+  return `
+    <a class="pc-similar-item" href="${escapeHtml(href)}">
+      <div class="pc-similar-thumb-wrap">
+        <img
+          class="pc-similar-thumb"
+          src="${escapeHtml(img)}"
+          alt=""
+          loading="lazy"
+          decoding="async"
+        >
+        <div class="pc-similar-price">&#9733;</div>
+      </div>
+
+      <div class="pc-similar-main">
+        <div class="pc-similar-brand muted">${escapeHtml(brand)}</div>
+        <div class="pc-similar-title">${escapeHtml(title)}</div>
+        <div class="pc-similar-price-row muted">${escapeHtml(price)}</div>
+      </div>
+    </a>
+  `;
+}
+
+function fitSimilarProductsToSidebar(items) {
+  const panel = document.getElementById('panelSimilar');
+  if (!panel) return;
+
+  const availableHeight = getSidebarAvailableHeight();
+
+  if (!availableHeight) {
+    panel.innerHTML = `<div class="sidebar-empty">No similar products found.</div>`;
+    return;
+  }
+
+  panel.innerHTML = `<div class="pc-similar-list"></div>`;
+  const list = panel.querySelector('.pc-similar-list');
+  if (!list) return;
+
+  let rendered = 0;
+
+  for (const item of items) {
+    list.insertAdjacentHTML('beforeend', similarProductCardHtml(item));
+
+    if (panel.scrollHeight > availableHeight) {
+      const last = list.lastElementChild;
+      if (last) last.remove();
+      break;
+    }
+
+    rendered += 1;
+  }
+
+  if (!rendered && items.length) {
+    list.innerHTML = similarProductCardHtml(items[0]);
+  }
+}
+
+function renderSimilarProducts(){
   const panel = document.getElementById('panelSimilar');
   const fallback = document.getElementById('similarContent');
   const host = panel || fallback;
@@ -4082,47 +5183,14 @@ function renderCouponsCard(){
     return;
   }
 
-  const html = `
-    <div class="pc-similar-list">
-      ${items.map((p) => {
-        const key = String(p?.dashboard_key || '').trim();
-        const title = String(p?.model_name || 'Product').trim() || 'Product';
-        const href = key ? prettyDashboardUrl(key, title).pathname : '/dashboard/';
-        const brand = titleCase(p?.brand || '');
-        const category = titleCase(p?.category || '');
-        const price = (typeof p?.best_price_cents === 'number' && p.best_price_cents > 0)
-          ? fmt.format(p.best_price_cents / 100)
-          : 'NA';
-        const img = String(p?.image_url || '').trim() || '/logo/default.webp';
-
-        return `
-          <a class="pc-similar-item" href="${escapeHtml(href)}">
-            <div class="pc-similar-thumb-wrap">
-              <img
-                class="pc-similar-thumb"
-                src="${escapeHtml(img)}"
-                alt=""
-                loading="lazy"
-                decoding="async"
-              >
-              <div class="pc-similar-price">&#9733;</div>
-            </div>
-
-            <div class="pc-similar-main">
-              <div class="pc-similar-brand muted">${escapeHtml(brand)}</div>
-              <div class="pc-similar-title">${escapeHtml(title)}</div>
-              <div class="pc-similar-price-row muted">${escapeHtml(price)}</div>
-            </div>
-          </a>
-        `;
-      }).join('')}
-    </div>
-  `;
-
   if (panel) {
-    panel.innerHTML = html;
+    fitSimilarProductsToSidebar(items);
   } else {
-    host.innerHTML = html;
+    host.innerHTML = `
+      <div class="pc-similar-list">
+        ${items.map(similarProductCardHtml).join('')}
+      </div>
+    `;
   }
 }
 
@@ -4431,9 +5499,64 @@ function renderContents(){
   `;
 }
 
-  function renderSidebarSpecs(){
+function normalizeAboutInput(raw){
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+
+  const paragraphs = Array.isArray(raw.paragraphs)
+    ? raw.paragraphs.map(v => String(v || '').trim()).filter(Boolean)
+    : [];
+
+  const bullets = Array.isArray(raw.bullets)
+    ? raw.bullets.map(v => String(v || '').trim()).filter(Boolean)
+    : [];
+
+  if (!paragraphs.length && !bullets.length) return null;
+
+  return { paragraphs, bullets };
+}
+
+function aboutSource(){
+  const cur = getCurrentVariant() || null;
+
+  const fromVariant = normalizeAboutInput(cur?.about);
+  if (fromVariant) return fromVariant;
+
+  const fromIdentity = normalizeAboutInput(state.identity?.about);
+  if (fromIdentity) return fromIdentity;
+
+  return null;
+}
+
+function renderAboutCard(){
+  if (!aboutCard || !aboutParagraphs || !aboutPoints) return;
+
+  const about = aboutSource();
+
+  if (!about) {
+    aboutCard.hidden = true;
+    aboutParagraphs.innerHTML = '';
+    aboutPoints.innerHTML = '';
+    return;
+  }
+
+  aboutCard.hidden = false;
+
+  aboutParagraphs.innerHTML = about.paragraphs.map((text) => `
+    <p>${escapeHtml(text)}</p>
+  `).join('');
+
+  aboutPoints.innerHTML = about.bullets.map((text) => `
+    <div class="about-point">
+      <span class="about-point__dot" aria-hidden="true"></span>
+      <div class="about-point__text">${escapeHtml(text)}</div>
+    </div>
+  `).join('');
+}
+
+function renderSidebarSpecs(){
+  const card = document.getElementById('specsCard');
   const host = document.getElementById('specsContent');
-  if (!host) return;
+  if (!card || !host) return;
 
   const cur = getCurrentVariant() || null;
 
@@ -4452,11 +5575,13 @@ function renderContents(){
     .filter(([label, value]) => String(label || '').trim() && String(value || '').trim());
 
   if (!rows.length) {
-    host.innerHTML = '<div class="sidebar-empty">No specs found yet.</div>';
+    card.hidden = true;
+    host.innerHTML = '';
     return;
   }
 
-  // Put the most useful buying specs first
+  card.hidden = false;
+
   const priority = [
     'motor',
     'range',
@@ -4492,7 +5617,7 @@ function renderContents(){
   `;
 }
 
-  function normalizeMediaInput(raw){
+function normalizeMediaInput(raw){
   if (Array.isArray(raw)) return raw;
   if (raw && typeof raw === 'object' && Array.isArray(raw.items)) return raw.items;
   return [];
@@ -4534,33 +5659,10 @@ function parseMediaItem(input){
   let embedUrl = null;
   let frameClass = 'pc-media-frame pc-media-frame--wide';
 
-  // YouTube
-  if (host === 'youtu.be' || host.endsWith('youtube.com')) {
-    provider = 'YouTube';
-    kind = 'Video';
-    frameClass = 'pc-media-frame pc-media-frame--wide';
-
-    let videoId = '';
-
-    if (host === 'youtu.be') {
-      videoId = path.split('/').filter(Boolean)[0] || '';
-    } else if (path === '/watch') {
-      videoId = url.searchParams.get('v') || '';
-    } else {
-      const parts = path.split('/').filter(Boolean);
-      if (parts[0] === 'shorts' && parts[1]) videoId = parts[1];
-      else if (parts[0] === 'embed' && parts[1]) videoId = parts[1];
-    }
-
-    if (videoId) {
-      embedUrl = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
-    }
-  }
-
-  // TikTok
-  else if (host.endsWith('tiktok.com')) {
+  // TikTok only
+  if (host.endsWith('tiktok.com')) {
     provider = 'TikTok';
-    kind = 'Post';
+    kind = 'Short form content';
     frameClass = 'pc-media-frame pc-media-frame--vertical';
 
     const m = path.match(/\/video\/(\d+)/i);
@@ -4569,102 +5671,398 @@ function parseMediaItem(input){
     }
   }
 
-  // Instagram
+  // Instagram only
   else if (host.endsWith('instagram.com')) {
     const m = path.match(/^\/(reel|p)\/([^/?#]+)/i);
     if (m) {
       provider = 'Instagram';
-      kind = m[1].toLowerCase() === 'reel' ? 'Reel' : 'Post';
+      kind = 'Short form content';
       frameClass = 'pc-media-frame pc-media-frame--vertical';
       embedUrl = `https://www.instagram.com/${m[1]}/${m[2]}/embed`;
     }
   }
 
-  const customTitle = String(obj.title || '').trim();
-  const title =
-    customTitle ||
-    (
-      provider === 'YouTube' ? 'Video' :
-      (provider === 'TikTok' || provider === 'Instagram') ? 'Post' :
-      'Media'
-    );
+  // Ignore YouTube and everything else
+  else {
+    return null;
+  }
 
   return {
     url: rawUrl,
     provider,
     kind,
-    title,
+    title: '',
     embedUrl,
     frameClass
   };
 }
 
-function renderMediaPanel(){
-  const card = mediaCard;
-  const panel = document.getElementById('mediaContent');
-  if (!card || !panel) return;
-
+function mediaSource(){
   const cur = getCurrentVariant() || null;
 
-  let rawMedia = null;
+  if (Array.isArray(cur?.media)) return cur.media;
+  if (cur?.media && typeof cur.media === 'object' && Array.isArray(cur.media.items)) return cur.media.items;
 
-  if (Array.isArray(cur?.media)) rawMedia = cur.media;
-  else if (Array.isArray(state.identity?.media)) rawMedia = state.identity.media;
-  else if (cur?.media && typeof cur.media === 'object' && Array.isArray(cur.media.items)) rawMedia = cur.media;
-  else if (state.identity?.media && typeof state.identity.media === 'object' && Array.isArray(state.identity.media.items)) rawMedia = state.identity.media;
+  if (Array.isArray(state.identity?.media)) return state.identity.media;
+  if (state.identity?.media && typeof state.identity.media === 'object' && Array.isArray(state.identity.media.items)) return state.identity.media.items;
 
-  const items = normalizeMediaInput(rawMedia)
-    .map((item) => parseMediaItem(item))
-    .filter(Boolean);
+  return [];
+}
 
-  if (!items.length) {
-    card.hidden = true;
-    panel.innerHTML = '';
-    return;
+function detectImageUrl(raw){
+  const url = safeUrl(raw);
+  if (!url) return null;
+
+  const pathname = String(url.pathname || '').toLowerCase();
+  if (/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(pathname)) return url.href;
+
+  return null;
+}
+
+function detectDirectVideoUrl(raw){
+  const url = safeUrl(raw);
+  if (!url) return null;
+
+  const pathname = String(url.pathname || '').toLowerCase();
+  if (/\.(mp4|webm|ogg|mov)$/i.test(pathname)) return url.href;
+
+  return null;
+}
+
+function parseHeroMediaItem(input){
+  const obj = (typeof input === 'string')
+    ? { url: input }
+    : (input && typeof input === 'object' ? input : null);
+
+  if (!obj) return null;
+
+  const rawUrl = String(obj.url || obj.src || '').trim();
+  if (!rawUrl) return null;
+
+  const explicitType = String(obj.type || obj.kind || '').trim().toLowerCase();
+  const title = String(obj.title || '').trim();
+
+  const url = safeUrl(rawUrl);
+  if (!url) return null;
+
+  const host = url.hostname.toLowerCase().replace(/^www\./, '');
+  const path = url.pathname || '';
+
+  // explicit image always wins
+  if (explicitType === 'image') {
+    return {
+      group: 'images',
+      title,
+      imageUrl: rawUrl
+    };
   }
 
-  card.hidden = false;
+  // explicit short always wins
+  if (explicitType === 'short') {
+    if (host.endsWith('tiktok.com')) {
+      const m = path.match(/\/video\/(\d+)/i);
+      if (m && m[1]) {
+        return {
+          group: 'shorts',
+          title,
+          embedUrl: `https://www.tiktok.com/player/v1/${m[1]}`,
+          frameClass: 'ph-media-embed ph-media-embed--vertical'
+        };
+      }
+    }
 
-  const videos = items.filter(item => item.kind === 'Video');
-  const posts = items.filter(item => item.kind !== 'Video');
+    if (host.endsWith('instagram.com')) {
+      const m = path.match(/^\/(reel|p)\/([^/?#]+)/i);
+      if (m) {
+        return {
+          group: 'shorts',
+          title,
+          embedUrl: `https://www.instagram.com/${m[1]}/${m[2]}/embed`,
+          frameClass: 'ph-media-embed ph-media-embed--vertical'
+        };
+      }
+    }
+  }
 
-  function renderCard(item){
+  // explicit video supports youtube embeds
+  if (explicitType === 'video') {
+    if (host.endsWith('youtube.com')) {
+      const videoId = url.searchParams.get('v');
+      if (videoId) {
+        return {
+          group: 'videos',
+          title,
+          embedUrl: `https://www.youtube.com/embed/${videoId}`,
+          frameClass: 'ph-media-embed'
+        };
+      }
+    }
+
+    if (host === 'youtu.be') {
+      const videoId = path.replace(/^\/+/, '').split('/')[0];
+      if (videoId) {
+        return {
+          group: 'videos',
+          title,
+          embedUrl: `https://www.youtube.com/embed/${videoId}`,
+          frameClass: 'ph-media-embed'
+        };
+      }
+    }
+
+    const directVideoUrl = detectDirectVideoUrl(rawUrl);
+    if (directVideoUrl) {
+      return {
+        group: 'videos',
+        title,
+        videoUrl: directVideoUrl
+      };
+    }
+
+    return null;
+  }
+
+  // auto-detect normal image files
+  const imageUrl = detectImageUrl(rawUrl);
+  if (imageUrl) {
+    return {
+      group: 'images',
+      title,
+      imageUrl
+    };
+  }
+
+  // auto-detect direct video files
+  const directVideoUrl = detectDirectVideoUrl(rawUrl);
+  if (directVideoUrl) {
+    return {
+      group: 'videos',
+      title,
+      videoUrl: directVideoUrl
+    };
+  }
+
+  // auto-detect TikTok
+  if (host.endsWith('tiktok.com')) {
+    const m = path.match(/\/video\/(\d+)/i);
+    if (m && m[1]) {
+      return {
+        group: 'shorts',
+        title,
+        embedUrl: `https://www.tiktok.com/player/v1/${m[1]}`,
+        frameClass: 'ph-media-embed ph-media-embed--vertical'
+      };
+    }
+  }
+
+  // auto-detect Instagram
+  if (host.endsWith('instagram.com')) {
+    const m = path.match(/^\/(reel|p)\/([^/?#]+)/i);
+    if (m) {
+      return {
+        group: 'shorts',
+        title,
+        embedUrl: `https://www.instagram.com/${m[1]}/${m[2]}/embed`,
+        frameClass: 'ph-media-embed ph-media-embed--vertical'
+      };
+    }
+  }
+
+  // auto-detect YouTube
+  if (host.endsWith('youtube.com')) {
+    const videoId = url.searchParams.get('v');
+    if (videoId) {
+      return {
+        group: 'videos',
+        title,
+        embedUrl: `https://www.youtube.com/embed/${videoId}`,
+        frameClass: 'ph-media-embed'
+      };
+    }
+  }
+
+  if (host === 'youtu.be') {
+    const videoId = path.replace(/^\/+/, '').split('/')[0];
+    if (videoId) {
+      return {
+        group: 'videos',
+        title,
+        embedUrl: `https://www.youtube.com/embed/${videoId}`,
+        frameClass: 'ph-media-embed'
+      };
+    }
+  }
+
+  return null;
+}
+
+function getActiveHeroMediaList(){
+  const group = String(state.activeMediaGroup || 'images');
+  const groups = state.mediaGroups || {};
+  return Array.isArray(groups[group]) ? groups[group] : [];
+}
+
+function clampHeroMediaIndex(){
+  const list = getActiveHeroMediaList();
+  if (!list.length) {
+    state.activeMediaIndex = 0;
+    return;
+  }
+  if (state.activeMediaIndex < 0) state.activeMediaIndex = 0;
+  if (state.activeMediaIndex >= list.length) state.activeMediaIndex = list.length - 1;
+}
+
+function heroMediaMarkup(item){
+  if (!item) {
     return `
-      <article class="pc-media-card${item.frameClass.includes('vertical') ? ' pc-media-card--post' : ' pc-media-card--video'}">
-        <div class="pc-media-card__head">
-          <div class="pc-media-card__title">${escapeHtml(item.title)}</div>
-        </div>
-
-        ${
-          item.embedUrl
-            ? `
-              <div class="${escapeHtml(item.frameClass)}">
-                <iframe
-                  src="${escapeHtml(item.embedUrl)}"
-                  title="${escapeHtml(item.title)}"
-                  loading="lazy"
-                  referrerpolicy="strict-origin-when-cross-origin"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowfullscreen
-                ></iframe>
-              </div>
-            `
-            : `
-              <div class="pc-media-fallback">
-                <div class="pc-media-fallback__text">Embed preview is not available for this link.</div>
-              </div>
-            `
-        }
-      </article>
+      <div class="ph-media-stage__placeholder">
+        <div class="ph-media-stage__title">No media yet</div>
+        <div class="ph-media-stage__sub">Media for this product has not been added yet.</div>
+      </div>
     `;
   }
 
-  panel.innerHTML = `
-    <div class="pc-media-stack">
-      ${videos.length ? `<div class="pc-media-grid pc-media-grid--videos">${videos.map(renderCard).join('')}</div>` : ''}
-      ${posts.length ? `<div class="pc-media-grid pc-media-grid--posts">${posts.map(renderCard).join('')}</div>` : ''}
+  if (item.group === 'images' && item.imageUrl) {
+    return `
+      <div class="ph-media-asset ph-media-asset--image">
+        <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.title || 'Product media')}" loading="lazy" decoding="async">
+      </div>
+    `;
+  }
+
+  if (item.group === 'videos' && item.videoUrl) {
+    return `
+      <div class="ph-media-asset ph-media-asset--video">
+        <video controls playsinline preload="metadata" src="${escapeHtml(item.videoUrl)}"></video>
+      </div>
+    `;
+  }
+
+  if (item.embedUrl) {
+    return `
+      <div class="${escapeHtml(item.frameClass || 'ph-media-embed')}">
+        <iframe
+          src="${escapeHtml(item.embedUrl)}"
+          title="${escapeHtml(item.title || item.group || 'Media')}"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        ></iframe>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="ph-media-stage__placeholder">
+      <div class="ph-media-stage__title">Unsupported media</div>
+      <div class="ph-media-stage__sub">This media item could not be displayed.</div>
     </div>
   `;
+}
+
+function updateHeroMediaTabs(){
+  document.querySelectorAll('.ph-media-tab[data-media-group]').forEach((btn) => {
+    const group = String(btn.getAttribute('data-media-group') || '');
+    const count = Array.isArray(state.mediaGroups?.[group]) ? state.mediaGroups[group].length : 0;
+    const active = group === state.activeMediaGroup;
+
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    btn.hidden = count === 0;
+  });
+}
+
+function renderHeroMediaStage(){
+  const inner = document.getElementById('phMediaInner');
+  const counter = document.getElementById('phMediaCounter');
+  const prev = document.getElementById('phMediaPrev');
+  const next = document.getElementById('phMediaNext');
+  const stage = document.getElementById('phMediaStage');
+
+  if (!inner || !counter || !prev || !next || !stage) return;
+
+  const list = getActiveHeroMediaList();
+  clampHeroMediaIndex();
+
+  const item = list[state.activeMediaIndex] || null;
+  inner.innerHTML = heroMediaMarkup(item);
+
+  counter.textContent = list.length ? `${state.activeMediaIndex + 1} / ${list.length}` : '0 / 0';
+  prev.disabled = list.length <= 1;
+  next.disabled = list.length <= 1;
+
+  stage.classList.toggle('is-empty', !list.length);
+  stage.classList.toggle('is-vertical', !!item && item.group === 'shorts');
+}
+
+function bindHeroMediaEventsOnce(){
+  if (state.mediaBound) return;
+  state.mediaBound = true;
+
+  const prev = document.getElementById('phMediaPrev');
+  const next = document.getElementById('phMediaNext');
+
+  if (prev) {
+    prev.addEventListener('click', () => {
+      const list = getActiveHeroMediaList();
+      if (list.length <= 1) return;
+      state.activeMediaIndex = (state.activeMediaIndex - 1 + list.length) % list.length;
+      renderHeroMediaStage();
+    });
+  }
+
+  if (next) {
+    next.addEventListener('click', () => {
+      const list = getActiveHeroMediaList();
+      if (list.length <= 1) return;
+      state.activeMediaIndex = (state.activeMediaIndex + 1) % list.length;
+      renderHeroMediaStage();
+    });
+  }
+
+  document.querySelectorAll('.ph-media-tab[data-media-group]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const group = String(btn.getAttribute('data-media-group') || '');
+      const list = Array.isArray(state.mediaGroups?.[group]) ? state.mediaGroups[group] : [];
+      if (!list.length) return;
+
+      state.activeMediaGroup = group;
+      state.activeMediaIndex = 0;
+      updateHeroMediaTabs();
+      renderHeroMediaStage();
+    });
+  });
+}
+
+function renderHeroMediaCarousel(){
+  const card = document.getElementById('mediaCard');
+  if (card) {
+    card.hidden = true;
+    const panel = document.getElementById('mediaContent');
+    if (panel) panel.innerHTML = '';
+  }
+
+  const items = normalizeMediaInput(mediaSource())
+    .map(parseHeroMediaItem)
+    .filter(Boolean);
+
+  state.mediaGroups = {
+    images: items.filter(x => x.group === 'images'),
+    videos: items.filter(x => x.group === 'videos'),
+    shorts: items.filter(x => x.group === 'shorts')
+  };
+
+  if (state.mediaGroups.images.length) state.activeMediaGroup = 'images';
+  else if (state.mediaGroups.videos.length) state.activeMediaGroup = 'videos';
+  else if (state.mediaGroups.shorts.length) state.activeMediaGroup = 'shorts';
+  else state.activeMediaGroup = 'images';
+
+  state.activeMediaIndex = 0;
+
+  bindHeroMediaEventsOnce();
+  updateHeroMediaTabs();
+  renderHeroMediaStage();
 }
 
 function normalizeFilesInput(raw){
@@ -4677,10 +6075,10 @@ function filesSource(){
   const cur = getCurrentVariant() || null;
 
   if (Array.isArray(cur?.files)) return cur.files;
-  if (cur?.files && typeof cur.files === 'object' && Array.isArray(cur.files.items)) return cur.files;
+  if (cur?.files && typeof cur.files === 'object' && Array.isArray(cur.files.items)) return cur.files.items;
 
   if (Array.isArray(state.identity?.files)) return state.identity.files;
-  if (state.identity?.files && typeof state.identity.files === 'object' && Array.isArray(state.identity.files.items)) return state.identity.files;
+  if (state.identity?.files && typeof state.identity.files === 'object' && Array.isArray(state.identity.files.items)) return state.identity.files.items;
 
   return [];
 }

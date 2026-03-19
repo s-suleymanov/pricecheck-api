@@ -2,6 +2,7 @@
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
+const crypto = require('crypto');
 const { Pool } = require('pg');
 
 const router = express.Router();
@@ -491,6 +492,18 @@ function normSkuLocal(v) {
   return s || null;
 }
 
+function normSkuLocal(v) {
+  const s = String(v || '').trim().toUpperCase().replace(/[^0-9A-Z]/g, '');
+  return s || null;
+}
+
+function hashSessionToken(token) {
+  return crypto
+    .createHash('sha256')
+    .update(String(token || ''), 'utf8')
+    .digest('hex');
+}
+
 function uniqOfferKey(store, storeSku) {
   const st = normStoreKey(store);
   const sku = normSkuLocal(storeSku);
@@ -615,7 +628,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
     const r = await client.query(
       `
       select id, upc, pci, model_name, model_number, brand, category, image_url,
-        version, color, variant, dimensions, specs, media, timeline, files, contents, created_at,
+        version, color, variant, dimensions, specs, media, timeline, files, contents, about, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
       where pci is not null and btrim(pci) <> ''
@@ -634,7 +647,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
     const r = await client.query(
       `
       select id, upc, pci, model_name, model_number, brand, category, image_url,
-        version, color, variant, dimensions, specs, media, timeline, files, contents, created_at,
+        version, color, variant, dimensions, specs, media, timeline, files, contents, about, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
       where norm_upc(upc) = norm_upc($1)
@@ -686,14 +699,15 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
         typeof row.files === 'object' &&
         (Array.isArray(row.files) || Array.isArray(row.files.items))
       ) ? row.files : null,
-      contents: Array.isArray(row.contents) ? row.contents : null
+      contents: Array.isArray(row.contents) ? row.contents : null,
+      about: (row.about && typeof row.about === 'object' && !Array.isArray(row.about)) ? row.about : null
     }] : [];
   }
 
   const r = await client.query(
     `
     select id, upc, pci, model_name, model_number, brand, category, image_url,
-      version, color, variant, dimensions, specs, media, timeline, files, contents, created_at
+      version, color, variant, dimensions, specs, media, timeline, files, contents, about, created_at
     from public.catalog
     where model_number is not null and btrim(model_number) <> ''
       and upper(btrim(model_number)) = upper(btrim($1))
@@ -752,7 +766,8 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
           typeof row.files === 'object' &&
           (Array.isArray(row.files) || Array.isArray(row.files.items))
         ) ? row.files : null,
-        contents: Array.isArray(row.contents) ? row.contents : null
+        contents: Array.isArray(row.contents) ? row.contents : null,
+        about: (row.about && typeof row.about === 'object' && !Array.isArray(row.about)) ? row.about : null
       };
     })
     .filter(Boolean);
@@ -1070,6 +1085,193 @@ async function getSeoForRawKey(client, rawKey) {
   return { title, image_url: image_url || null, canonicalKey };
 }
 
+function communityDisplayName(row) {
+  return String(
+    row?.nickname ||
+    row?.display_name ||
+    'User'
+  ).trim() || 'User';
+}
+
+function safeInt(val) {
+  const n = Number(val);
+  return Number.isFinite(n) ? n : 0;
+}
+
+const SESSION_COOKIE_NAME = 'pc_session';
+
+function cleanText(v) {
+  return String(v || '').trim();
+}
+
+function collapseSpaces(v) {
+  return cleanText(v).replace(/\s+/g, ' ');
+}
+
+function normalizeSpamText(v) {
+  return collapseSpaces(v).toLowerCase();
+}
+
+function toPositiveInt(v) {
+  const n = Number(v);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+async function getSignedInUserId(req) {
+  const attachedUserId =
+    toPositiveInt(req.user?.id) ||
+    toPositiveInt(req.authUser?.id);
+
+  if (attachedUserId) return attachedUserId;
+
+  const rawToken = cleanText(req.cookies?.[SESSION_COOKIE_NAME]);
+  if (!rawToken) return null;
+
+  const tokenHash = hashSessionToken(rawToken);
+
+  const q = await pool.query(
+    `
+    SELECT
+      u.id,
+      s.id AS session_id
+    FROM public.user_sessions s
+    JOIN public.users u
+      ON u.id = s.user_id
+    WHERE s.session_token_hash = $1
+      AND s.revoked_at IS NULL
+      AND s.expires_at > now()
+      AND u.is_active = true
+    LIMIT 1
+    `,
+    [tokenHash]
+  );
+
+  const row = q.rows[0];
+  if (!row) return null;
+
+  await pool.query(
+    `
+    UPDATE public.user_sessions
+    SET last_seen_at = now()
+    WHERE id = $1
+    `,
+    [row.session_id]
+  ).catch(() => {});
+
+  return toPositiveInt(row.id);
+}
+
+function validateCommunityAnswerPayload(input) {
+  const body = collapseSpaces(input?.body || '');
+
+  if (!body || body.length < 2) {
+    return { ok: false, error: 'Reply is too short.' };
+  }
+
+  if (body.length > 1000) {
+    return { ok: false, error: 'Reply is too long.' };
+  }
+
+  return {
+    ok: true,
+    value: { body }
+  };
+}
+
+function validateCommunityPayload(input) {
+  const postType = cleanText(input?.post_type).toLowerCase();
+  const title = collapseSpaces(input?.title || '');
+  const body = collapseSpaces(input?.body || '');
+  const ratingRaw = input?.rating;
+  const visitedAtRaw = cleanText(input?.visited_at || '');
+
+  if (!['tip', 'question', 'review'].includes(postType)) {
+    return { ok: false, error: 'Invalid post type.' };
+  }
+
+  if (postType === 'tip') {
+    if (!body || body.length < 8) {
+      return { ok: false, error: 'Tip is too short.' };
+    }
+    if (body.length > 600) {
+      return { ok: false, error: 'Tip is too long.' };
+    }
+
+    let visitedAt = null;
+    if (visitedAtRaw) {
+      const d = new Date(visitedAtRaw);
+      if (Number.isNaN(d.getTime())) {
+        return { ok: false, error: 'Visited date is invalid.' };
+      }
+      visitedAt = visitedAtRaw.slice(0, 10);
+    }
+
+    return {
+      ok: true,
+      value: {
+        post_type: 'tip',
+        title: null,
+        body,
+        rating: null,
+        visited_at: visitedAt
+      }
+    };
+  }
+
+  if (postType === 'question') {
+    if (!title || title.length < 6) {
+      return { ok: false, error: 'Question title is too short.' };
+    }
+    if (title.length > 160) {
+      return { ok: false, error: 'Question title is too long.' };
+    }
+    if (!body || body.length < 8) {
+      return { ok: false, error: 'Question details are too short.' };
+    }
+    if (body.length > 1000) {
+      return { ok: false, error: 'Question details are too long.' };
+    }
+
+    return {
+      ok: true,
+      value: {
+        post_type: 'question',
+        title,
+        body,
+        rating: null,
+        visited_at: null
+      }
+    };
+  }
+
+  if (postType === 'review') {
+    const rating = Number(ratingRaw);
+
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return { ok: false, error: 'Review rating must be 1 to 5.' };
+    }
+    if (!body || body.length < 12) {
+      return { ok: false, error: 'Review is too short.' };
+    }
+    if (body.length > 1200) {
+      return { ok: false, error: 'Review is too long.' };
+    }
+
+    return {
+      ok: true,
+      value: {
+        post_type: 'review',
+        title: null,
+        body,
+        rating,
+        visited_at: null
+      }
+    };
+  }
+
+  return { ok: false, error: 'Invalid post.' };
+}
+
 // -------------------------
 // routes
 // -------------------------
@@ -1221,6 +1423,7 @@ router.get('/api/compare/:key', async (req, res) => {
           (Array.isArray(meta.files) || Array.isArray(meta.files.items))
         ) ? meta.files : null,
         contents: Array.isArray(meta?.contents) ? meta.contents : null,
+        about: (meta?.about && typeof meta.about === 'object' && !Array.isArray(meta.about)) ? meta.about : null,
         dropship_warning: !!meta?.dropship_warning,
         recall_url: meta?.recall_url || null,
         coverage_warning: !!meta?.coverage_warning,
@@ -1245,6 +1448,584 @@ router.get('/api/compare/:key', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, error: 'server_error' });
+  } finally {
+    client.release();
+  }
+});
+
+router.get('/api/community/:key', async (req, res) => {
+  const rawKey = req.params.key;
+  const client = await pool.connect();
+
+  try {
+    const parsed = parseKey(rawKey);
+    const seed = await findSeedFromListings(client, parsed);
+
+    const selectedBase = await resolveSelectedVariant(client, rawKey);
+    const selectedCatalog = await resolveCatalogIdentity(client, selectedBase);
+
+    const selectedKeys = {
+      pci: (selectedCatalog?.pci || selectedBase.pci || seed.pci || null),
+      upc: (selectedCatalog?.upc || selectedBase.upc || seed.upc || null)
+    };
+
+    const pci = String(selectedKeys.pci || '').trim();
+    const upc = String(selectedKeys.upc || '').trim();
+
+    if (!pci && !upc) {
+      return res.json({
+        ok: true,
+        identity: {
+          selected_pci: null,
+          selected_upc: null
+        },
+        counts: {
+          tips: 0,
+          questions: 0,
+          reviews: 0
+        },
+        tips: [],
+        questions: [],
+        reviews: []
+      });
+    }
+
+    const countsRes = await client.query(
+      `
+      SELECT
+        post_type,
+        COUNT(*)::int AS n
+      FROM public.community_posts
+      WHERE is_public = true
+        AND (
+          ($1 <> '' AND product_pci IS NOT NULL AND btrim(product_pci) <> '' AND upper(btrim(product_pci)) = upper(btrim($1)))
+          OR
+          ($2 <> '' AND product_upc IS NOT NULL AND btrim(product_upc) <> '' AND norm_upc(product_upc) = norm_upc($2))
+        )
+      GROUP BY post_type
+      `,
+      [pci, upc]
+    );
+
+    const counts = {
+      tips: 0,
+      questions: 0,
+      reviews: 0
+    };
+
+    for (const row of countsRes.rows || []) {
+      const type = String(row.post_type || '').trim();
+      const n = safeInt(row.n);
+      if (type === 'tip') counts.tips = n;
+      if (type === 'question') counts.questions = n;
+      if (type === 'review') counts.reviews = n;
+    }
+
+    const tipsRes = await client.query(
+      `
+      SELECT
+        p.id,
+        p.body,
+        p.visited_at,
+        p.created_at,
+        u.display_name,
+        u.nickname,
+        u.profile_image_url
+      FROM public.community_posts p
+      LEFT JOIN public.users u
+        ON u.id = p.user_id
+      WHERE p.is_public = true
+        AND p.post_type = 'tip'
+        AND (
+          ($1 <> '' AND p.product_pci IS NOT NULL AND btrim(p.product_pci) <> '' AND upper(btrim(p.product_pci)) = upper(btrim($1)))
+          OR
+          ($2 <> '' AND p.product_upc IS NOT NULL AND btrim(p.product_upc) <> '' AND norm_upc(p.product_upc) = norm_upc($2))
+        )
+      ORDER BY coalesce(p.visited_at::timestamp, p.created_at) DESC, p.created_at DESC
+      LIMIT 12
+      `,
+      [pci, upc]
+    );
+
+    const questionsRes = await client.query(
+  `
+  SELECT
+    p.id,
+    p.title,
+    p.body,
+    p.created_at,
+    u.display_name,
+    u.nickname,
+    u.profile_image_url,
+    COUNT(a.id)::int AS answer_count
+  FROM public.community_posts p
+  LEFT JOIN public.users u
+    ON u.id = p.user_id
+  LEFT JOIN public.community_answers a
+    ON a.question_id = p.id
+   AND a.is_public = true
+  WHERE p.is_public = true
+    AND p.post_type = 'question'
+    AND (
+      ($1 <> '' AND p.product_pci IS NOT NULL AND btrim(p.product_pci) <> '' AND upper(btrim(p.product_pci)) = upper(btrim($1)))
+      OR
+      ($2 <> '' AND p.product_upc IS NOT NULL AND btrim(p.product_upc) <> '' AND norm_upc(p.product_upc) = norm_upc($2))
+    )
+  GROUP BY
+    p.id,
+    p.title,
+    p.body,
+    p.created_at,
+    u.display_name,
+    u.nickname,
+    u.profile_image_url
+  ORDER BY
+    COUNT(a.id) DESC,
+    p.created_at DESC
+  LIMIT 20
+  `,
+  [pci, upc]
+);
+
+    const reviewsRes = await client.query(
+      `
+      SELECT
+        p.id,
+        p.body,
+        p.rating,
+        p.created_at,
+        u.display_name,
+        u.nickname,
+        u.profile_image_url
+      FROM public.community_posts p
+      LEFT JOIN public.users u
+        ON u.id = p.user_id
+      WHERE p.is_public = true
+        AND p.post_type = 'review'
+        AND (
+          ($1 <> '' AND p.product_pci IS NOT NULL AND btrim(p.product_pci) <> '' AND upper(btrim(p.product_pci)) = upper(btrim($1)))
+          OR
+          ($2 <> '' AND p.product_upc IS NOT NULL AND btrim(p.product_upc) <> '' AND norm_upc(p.product_upc) = norm_upc($2))
+        )
+      ORDER BY p.created_at DESC
+      LIMIT 12
+      `,
+      [pci, upc]
+    );
+
+    return res.json({
+      ok: true,
+      identity: {
+        selected_pci: selectedKeys.pci || null,
+        selected_upc: selectedKeys.upc || null
+      },
+      counts,
+      tips: (tipsRes.rows || []).map((row) => ({
+        id: row.id,
+        body: row.body || '',
+        visited_at: row.visited_at || null,
+        created_at: row.created_at || null,
+        author_name: communityDisplayName(row),
+        profile_image_url: row.profile_image_url || null
+      })),
+      questions: (questionsRes.rows || []).map((row) => ({
+        id: row.id,
+        title: row.title || '',
+        body: row.body || '',
+        created_at: row.created_at || null,
+        answer_count: safeInt(row.answer_count),
+        author_name: communityDisplayName(row),
+        profile_image_url: row.profile_image_url || null
+      })),
+      reviews: (reviewsRes.rows || []).map((row) => ({
+        id: row.id,
+        body: row.body || '',
+        rating: safeInt(row.rating),
+        created_at: row.created_at || null,
+        author_name: communityDisplayName(row),
+        profile_image_url: row.profile_image_url || null
+      }))
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      ok: false,
+      error: 'community_error'
+    });
+  } finally {
+    client.release();
+  }
+});
+
+router.get('/api/community/question/:questionId/answers', async (req, res) => {
+  const questionId = toPositiveInt(req.params.questionId);
+  if (!questionId) {
+    return res.status(400).json({ ok: false, error: 'Invalid question id.' });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    const questionRes = await client.query(
+      `
+      SELECT
+        p.id,
+        p.title,
+        p.body,
+        p.created_at,
+        u.display_name,
+        u.nickname,
+        u.profile_image_url
+      FROM public.community_posts p
+      LEFT JOIN public.users u
+        ON u.id = p.user_id
+      WHERE p.id = $1
+        AND p.post_type = 'question'
+        AND p.is_public = true
+      LIMIT 1
+      `,
+      [questionId]
+    );
+
+    const question = questionRes.rows[0];
+    if (!question) {
+      return res.status(404).json({ ok: false, error: 'Question not found.' });
+    }
+
+    const answersRes = await client.query(
+      `
+      SELECT
+        a.id,
+        a.body,
+        a.created_at,
+        u.display_name,
+        u.nickname,
+        u.profile_image_url
+      FROM public.community_answers a
+      LEFT JOIN public.users u
+        ON u.id = a.user_id
+      WHERE a.question_id = $1
+        AND a.is_public = true
+      ORDER BY a.created_at ASC, a.id ASC
+      `,
+      [questionId]
+    );
+
+    return res.json({
+      ok: true,
+      question: {
+        id: question.id,
+        title: question.title || '',
+        body: question.body || '',
+        created_at: question.created_at || null,
+        author_name: communityDisplayName(question),
+        profile_image_url: question.profile_image_url || null
+      },
+      answers: (answersRes.rows || []).map((row) => ({
+        id: row.id,
+        body: row.body || '',
+        created_at: row.created_at || null,
+        author_name: communityDisplayName(row),
+        profile_image_url: row.profile_image_url || null
+      }))
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ ok: false, error: 'Could not load answers.' });
+  } finally {
+    client.release();
+  }
+});
+
+router.post('/api/community/question/:questionId/answers', async (req, res) => {
+  const questionId = toPositiveInt(req.params.questionId);
+  if (!questionId) {
+    return res.status(400).json({ ok: false, error: 'Invalid question id.' });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    const userId = await getSignedInUserId(req);
+
+    if (!userId) {
+      return res.status(401).json({
+        ok: false,
+        error: 'Sign in required.'
+      });
+    }
+
+    const parsedBody = validateCommunityAnswerPayload(req.body || {});
+    if (!parsedBody.ok) {
+      return res.status(400).json({
+        ok: false,
+        error: parsedBody.error
+      });
+    }
+
+    const questionRes = await client.query(
+      `
+      SELECT id
+      FROM public.community_posts
+      WHERE id = $1
+        AND post_type = 'question'
+        AND is_public = true
+      LIMIT 1
+      `,
+      [questionId]
+    );
+
+    if (!questionRes.rowCount) {
+      return res.status(404).json({
+        ok: false,
+        error: 'Question not found.'
+      });
+    }
+
+    const burstRes = await client.query(
+      `
+      SELECT COUNT(*)::int AS n
+      FROM public.community_answers
+      WHERE user_id = $1
+        AND created_at >= now() - interval '10 minutes'
+      `,
+      [userId]
+    );
+
+    if (safeInt(burstRes.rows[0]?.n) >= 8) {
+      return res.status(429).json({
+        ok: false,
+        error: 'You are replying too fast. Please wait a few minutes.'
+      });
+    }
+
+    const duplicateKey = normalizeSpamText(parsedBody.value.body);
+
+    const duplicateRes = await client.query(
+      `
+      SELECT id
+      FROM public.community_answers
+      WHERE question_id = $1
+        AND user_id = $2
+        AND lower(regexp_replace(body, '\s+', ' ', 'g')) = $3
+        AND created_at >= now() - interval '1 day'
+      LIMIT 1
+      `,
+      [questionId, userId, duplicateKey]
+    );
+
+    if (duplicateRes.rowCount) {
+      return res.status(409).json({
+        ok: false,
+        error: 'That looks like a duplicate reply.'
+      });
+    }
+
+    const insertRes = await client.query(
+      `
+      INSERT INTO public.community_answers
+      (
+        question_id,
+        user_id,
+        body,
+        is_public
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        true
+      )
+      RETURNING id, created_at
+      `,
+      [questionId, userId, parsedBody.value.body]
+    );
+
+    return res.json({
+      ok: true,
+      answer: insertRes.rows[0] || null
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      ok: false,
+      error: 'Could not save reply.'
+    });
+  } finally {
+    client.release();
+  }
+});
+
+router.post('/api/community/:key/post', async (req, res) => {
+  const rawKey = req.params.key;
+  const client = await pool.connect();
+
+  try {
+    const userId = await getSignedInUserId(req);
+
+    if (!userId) {
+      return res.status(401).json({
+        ok: false,
+        error: 'Sign in required.'
+      });
+    }
+
+    const parsedBody = validateCommunityPayload(req.body || {});
+    if (!parsedBody.ok) {
+      return res.status(400).json({
+        ok: false,
+        error: parsedBody.error
+      });
+    }
+
+    const parsed = parseKey(rawKey);
+    const seed = await findSeedFromListings(client, parsed);
+
+    const selectedBase = await resolveSelectedVariant(client, rawKey);
+    const selectedCatalog = await resolveCatalogIdentity(client, selectedBase);
+
+    const selectedKeys = {
+      pci: (selectedCatalog?.pci || selectedBase.pci || seed.pci || null),
+      upc: (selectedCatalog?.upc || selectedBase.upc || seed.upc || null)
+    };
+
+    const pci = cleanText(selectedKeys.pci);
+    const upc = cleanText(selectedKeys.upc);
+
+    if (!pci && !upc) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Could not resolve this product.'
+      });
+    }
+
+    const payload = parsedBody.value;
+    const spamKey = normalizeSpamText(
+      [
+        payload.post_type,
+        payload.title || '',
+        payload.body || '',
+        payload.rating || ''
+      ].join(' | ')
+    );
+
+    const burstRes = await client.query(
+      `
+      SELECT COUNT(*)::int AS n
+      FROM public.community_posts
+      WHERE user_id = $1
+        AND created_at >= now() - interval '10 minutes'
+      `,
+      [userId]
+    );
+
+    if (safeInt(burstRes.rows[0]?.n) >= 3) {
+      return res.status(429).json({
+        ok: false,
+        error: 'You are posting too fast. Please wait a few minutes.'
+      });
+    }
+
+    const dailyRes = await client.query(
+      `
+      SELECT COUNT(*)::int AS n
+      FROM public.community_posts
+      WHERE user_id = $1
+        AND created_at >= now() - interval '1 day'
+      `,
+      [userId]
+    );
+
+    if (safeInt(dailyRes.rows[0]?.n) >= 20) {
+      return res.status(429).json({
+        ok: false,
+        error: 'Daily posting limit reached.'
+      });
+    }
+
+    const duplicateRes = await client.query(
+      `
+      SELECT id
+      FROM public.community_posts
+      WHERE user_id = $1
+        AND post_type = $2
+        AND (
+          ($3 <> '' AND product_pci IS NOT NULL AND btrim(product_pci) <> '' AND upper(btrim(product_pci)) = upper(btrim($3)))
+          OR
+          ($4 <> '' AND product_upc IS NOT NULL AND btrim(product_upc) <> '' AND norm_upc(product_upc) = norm_upc($4))
+        )
+        AND lower(
+          regexp_replace(
+            coalesce(title, '') || ' | ' || coalesce(body, '') || ' | ' || coalesce(rating::text, ''),
+            '\s+',
+            ' ',
+            'g'
+          )
+        ) = $5
+        AND created_at >= now() - interval '7 days'
+      LIMIT 1
+      `,
+      [userId, payload.post_type, pci, upc, spamKey]
+    );
+
+    if (duplicateRes.rowCount) {
+      return res.status(409).json({
+        ok: false,
+        error: 'That looks like a duplicate post.'
+      });
+    }
+
+    const insertRes = await client.query(
+      `
+      INSERT INTO public.community_posts
+      (
+        product_pci,
+        product_upc,
+        post_type,
+        title,
+        body,
+        rating,
+        visited_at,
+        user_id,
+        is_public
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        true
+      )
+      RETURNING id, created_at
+      `,
+      [
+        pci || null,
+        upc || null,
+        payload.post_type,
+        payload.title || null,
+        payload.body || null,
+        payload.rating || null,
+        payload.visited_at || null,
+        userId
+      ]
+    );
+
+    return res.json({
+      ok: true,
+      post: insertRes.rows[0] || null
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({
+      ok: false,
+      error: 'Could not save post.'
+    });
   } finally {
     client.release();
   }
