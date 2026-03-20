@@ -1280,6 +1280,7 @@ em {
 /* Mobile: force 2-up grid */
 @media (max-width: 560px){
   .home-deals{ padding: 0 12px; }
+  .nav{ padding: 10px 16px;gap: 0px;}
 
   .home-deal__range {
     display: none;
