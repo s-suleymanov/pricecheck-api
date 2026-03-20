@@ -1194,7 +1194,7 @@ function communityVisitedLabel(raw){
   const d = new Date(raw);
   if (Number.isNaN(d.getTime())) return '';
 
-  return `Visited ${new Intl.DateTimeFormat(undefined, {
+  return `Used ${new Intl.DateTimeFormat(undefined, {
     month: 'short',
     year: 'numeric'
   }).format(d)}`;
@@ -2292,7 +2292,7 @@ async function renderReviewsCard(productKey, runToken) {
     customerHtml = `
       <section class="pc-review-section">
         <div class="pc-rv-section-head">
-          <div class="pc-rv-section-title">Customer Reviews</div>
+          <div class="pc-rv-section-title">Store Reviews</div>
         </div>
 
         <div class="pc-rv-customer-layout">
@@ -2300,7 +2300,7 @@ async function renderReviewsCard(productKey, runToken) {
             <div class="pc-rv-summary-label">Average rating</div>
             <div class="pc-rv-summary-score">${overall.toFixed(1)}</div>
             <div class="pc-rv-summary-scale">out of 5</div>
-            <div class="pc-rv-summary-note">Based on ${fmtCompact(total)} customer reviews</div>
+            <div class="pc-rv-summary-note">Based on ${fmtCompact(total)} reviews</div>
 
             <div class="pc-rv-summary-meta">
               <span class="pc-rv-confidence pc-rv-confidence--${confidence}">${confidenceLabel}</span>
@@ -2333,9 +2333,9 @@ async function renderReviewsCard(productKey, runToken) {
     customerHtml = `
       <section class="pc-review-section">
         <div class="pc-rv-section-head">
-          <div class="pc-rv-section-title">Customer Reviews</div>
+          <div class="pc-rv-section-title">Store Reviews</div>
         </div>
-        <p class="note">No customer reviews found yet.</p>
+        <p class="note">No store reviews found yet.</p>
       </section>
     `;
   }
