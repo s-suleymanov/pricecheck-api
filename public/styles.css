@@ -1059,9 +1059,14 @@ em {
    =========================== */
 
 .home-layout{
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--pc-side-w);
   gap: var(--pc-side-gap);
+
   padding-top: 70px;
   padding-left: 20px;
   padding-right: 20px;
@@ -1102,8 +1107,11 @@ em {
 
 .home-main{ min-width: 0; }
 
-/* Sticky right sidebar that scrolls independently */
 .home-side{
+  width: var(--pc-side-w);
+  justify-self: end;
+  align-self: start;
+
   position: sticky;
   top: calc(var(--pc-nav-h, 80px) - 5px);
   height: calc(100vh - (var(--pc-nav-h, 80px) + 7px));
@@ -1273,8 +1281,9 @@ em {
 
 .home-deals__grid{
   display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap:12px;
+  width: 100%;
 }
 
 /* Mobile: force 2-up grid */
@@ -1410,9 +1419,13 @@ em {
 
 .home-center{
   min-height: 100vh;
-  display:flex;
+  display:block;
   padding-top: 0;
-  align-items: flex-start;
+}
+
+.home-center__inner{
+  width: 100%;
+  max-width: none;
 }
 
 /* Locked tabs should not feel "red / no sign" */
