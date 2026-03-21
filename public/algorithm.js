@@ -179,6 +179,14 @@
     const c=`<div class="home-deal" style="pointer-events:none" aria-hidden="true"><div class="home-deal__img is-empty pc-sk"></div><div class="home-deal__body"><div class="home-deal__content"><div class="pc-sk" style="width:70%;height:13px;margin-bottom:8px"></div><div class="pc-sk" style="width:40%;height:11px"></div></div></div></div>`;
     return Array.from({length:n},()=>c).join("");
   }
+  function stopSkeletonGrid() {
+    _bootLoading = false;
+    clearTimeout(_skelResizeTimer);
+    if (_skelRO) {
+      _skelRO.disconnect();
+      _skelRO = null;
+    }
+  }
 
 let _bootLoading = false;
 let _skelResizeTimer = null;
@@ -281,16 +289,24 @@ _skelResizeTimer = setTimeout(() => {
     const S = window.__pcSellersMap || {};
     feedEl._g.innerHTML = _rows.map(r=>cardHtml(r,S)).join("");
   }
+
+
   function swap(rows) {
-    if (!rows?.length) return;
-    scaffold();
-    feedEl._g.style.cssText = "transition:opacity .2s;opacity:0";
-    setTimeout(()=>{
-      feedEl._g.innerHTML = rows.map(r=>cardHtml(r,window.__pcSellersMap||{})).join("");
+  if (!rows?.length) return;
+  scaffold();
+
+  feedEl._g.style.transition = "opacity .2s";
+  feedEl._g.style.opacity = "0";
+
+  requestAnimationFrame(() => {
+    feedEl._g.innerHTML = rows.map(r => cardHtml(r, window.__pcSellersMap || {})).join("");
+    _seen = new Set(rows.map(r => r.key).filter(Boolean));
+
+    requestAnimationFrame(() => {
       feedEl._g.style.opacity = "1";
-      _seen = new Set(rows.map(r=>r.key).filter(Boolean));
-    }, 200);
-  }
+    });
+  });
+}
 
   // ── API call ──────────────────────────────────────────────────────────────
   async function apiFeed(sig, off, lim) {
@@ -312,22 +328,23 @@ _skelResizeTimer = setTimeout(() => {
     _bootLoading = true;
     scaffold(true);
 
-    try {
+         try {
         const j    = await apiFeed(sig, 0, PAGE);
         const rows = Array.isArray(j?.results) ? j.results : [];
         _rows = rows;
         _off = rows.length;
         _done = false;
 
+        stopSkeletonGrid();
         feedEl._g.innerHTML = "";
         paint(rows);
         return rows.length;
     } catch(e) {
         console.error("[PC] first page:", e);
+        stopSkeletonGrid();
         feedEl._g.innerHTML = "";
         return 0;
     } finally {
-        _bootLoading = false;
         document.body.classList.add("pc-home-ready");
     }
     }
