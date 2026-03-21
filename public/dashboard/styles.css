@@ -1165,7 +1165,6 @@ aside{
   height:48px;
   border-radius:12px;
   overflow:hidden;
-  border:1px solid var(--line);
   background:#fff;
   display:inline-flex;
   align-items:center;
