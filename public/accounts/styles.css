@@ -189,6 +189,24 @@ body{
   }
 }
 
+#pcAccountPrivacyNote{
+  grid-column:1 / -1;
+}
+
+.pc-account-note{
+  margin:0;
+  padding:0 4px;
+}
+
+.pc-account-note__text{
+  margin:0;
+  color:var(--muted);
+  font-size:16px;
+  line-height:1.6;
+  display: flex;
+  justify-content: center;
+}
+
 @media (max-width: 560px){
   .account-wrap{
     padding-left:16px;

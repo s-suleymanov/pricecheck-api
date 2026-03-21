@@ -4,6 +4,8 @@
   const signedOutBox = document.getElementById("pcAccountSignedOut");
   const signInBtn = document.getElementById("pcAccountSignInBtn");
 
+  const privacyNote = document.getElementById("pcAccountPrivacyNote");
+
   const panel = document.getElementById("pcAccountPanel");
   const stats = document.getElementById("pcAccountStats");
 
@@ -67,30 +69,32 @@
   }
 
   function showSignedOut() {
-    if (signedOutBox) signedOutBox.hidden = false;
-    if (panel) panel.hidden = true;
-    if (stats) stats.hidden = true;
-    renderAvatar(null);
-  }
+  if (signedOutBox) signedOutBox.hidden = false;
+  if (panel) panel.hidden = true;
+  if (stats) stats.hidden = true;
+  if (privacyNote) privacyNote.hidden = true;
+  renderAvatar(null);
+}
 
-  function showSignedIn(user) {
-    if (signedOutBox) signedOutBox.hidden = true;
-    if (panel) panel.hidden = false;
-    if (stats) stats.hidden = false;
+function showSignedIn(user) {
+  if (signedOutBox) signedOutBox.hidden = true;
+  if (panel) panel.hidden = false;
+  if (stats) stats.hidden = false;
+  if (privacyNote) privacyNote.hidden = false;
 
-    const displayName =
-      clean(user?.nickname) ||
-      clean(user?.display_name) ||
-      "Your Account";
+  const displayName =
+    clean(user?.nickname) ||
+    clean(user?.display_name) ||
+    "Your Account";
 
-    if (nameEl) nameEl.textContent = displayName;
-    if (emailEl) emailEl.textContent = clean(user?.email);
-    if (followingEl) followingEl.textContent = String(Number(user?.follow_count || 0));
-    if (memberSinceEl) memberSinceEl.textContent = formatDate(user?.created_at);
+  if (nameEl) nameEl.textContent = displayName;
+  if (emailEl) emailEl.textContent = clean(user?.email);
+  if (followingEl) followingEl.textContent = String(Number(user?.follow_count || 0));
+  if (memberSinceEl) memberSinceEl.textContent = formatDate(user?.created_at);
 
-    renderAvatar(user);
-    setStoredAuthUser(user);
-  }
+  renderAvatar(user);
+  setStoredAuthUser(user);
+}
 
   signInBtn?.addEventListener("click", () => {
     if (typeof window.pcOpenSignIn === "function") {
