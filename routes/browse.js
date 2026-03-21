@@ -72,22 +72,31 @@ router.get("/api/browse", async (req, res) => {
 
   const client = await pool.connect();
   try {
-        const countSql = `
+    const countSql = `
       WITH base AS (
         SELECT DISTINCT
-          upper(btrim(model_number)) AS model_number_norm,
-          COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm
-        FROM public.catalog
-        WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
-          AND ($5 = '' OR upper(btrim(model_number)) = upper(btrim($5)))
-          AND ($6 = '' OR (variant IS NOT NULL AND btrim(variant) <> '' AND lower(btrim(variant)) = lower(btrim($6))))
-          AND ($7 = '' OR (color IS NOT NULL AND btrim(color) <> '' AND lower(btrim(color)) = lower(btrim($7))))
+          upper(btrim(c.model_number)) AS model_number_norm,
+          ${VERSION_NORM_SQL} AS version_norm
+        FROM public.catalog c
+        WHERE c.model_number IS NOT NULL
+          AND btrim(c.model_number) <> ''
+          AND ($5 = '' OR upper(btrim(c.model_number)) = upper(btrim($5)))
+          AND ($6 = '' OR (
+            c.variant IS NOT NULL
+            AND btrim(c.variant) <> ''
+            AND lower(btrim(c.variant)) = lower(btrim($6))
+          ))
+          AND ($7 = '' OR (
+            c.color IS NOT NULL
+            AND btrim(c.color) <> ''
+            AND lower(btrim(c.color)) = lower(btrim($7))
+          ))
           AND (
-            ($1 = 'brand' AND lower(btrim(brand)) = lower(btrim($2)))
+            ($1 = 'brand' AND lower(btrim(c.brand)) = lower(btrim($2)))
             OR
-            ($1 = 'category' AND lower(btrim(category)) = lower(btrim($2)))
+            ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
             OR
-            ($1 = 'combo' AND lower(btrim(brand)) = lower(btrim($3)) AND lower(btrim(category)) = lower(btrim($4)))
+            ($1 = 'combo' AND lower(btrim(c.brand)) = lower(btrim($3)) AND lower(btrim(c.category)) = lower(btrim($4)))
           )
       )
       SELECT COUNT(*)::int AS total
@@ -95,8 +104,15 @@ router.get("/api/browse", async (req, res) => {
     `;
 
     const total =
-      (await client.query(countSql, [type, value, brand, category, family || "", variant || "", color || ""]))
-        .rows?.[0]?.total ?? 0;
+      (await client.query(countSql, [
+        type,
+        value,
+        brand,
+        category,
+        family || "",
+        variant || "",
+        color || "",
+      ])).rows?.[0]?.total ?? 0;
 
     const listSql = `
       WITH picked AS (
@@ -106,22 +122,31 @@ router.get("/api/browse", async (req, res) => {
         )
           btrim(c.model_number) AS model_number,
           upper(btrim(c.model_number)) AS model_number_norm,
-          COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
-          c.version,
-          c.model_name,
-          c.brand,
-          c.category,
-          c.image_url,
+          ${VERSION_NORM_SQL} AS version_norm,
+          btrim(COALESCE(c.version, '')) AS version,
+          NULLIF(btrim(c.model_name), '') AS model_name,
+          NULLIF(btrim(c.brand), '') AS brand,
+          NULLIF(btrim(c.category), '') AS category,
+          NULLIF(btrim(c.image_url), '') AS image_url,
           COALESCE(c.dropship_warning, false) AS dropship_warning,
-          c.pci,
-          c.upc,
+          NULLIF(btrim(c.pci), '') AS pci,
+          NULLIF(btrim(c.upc), '') AS upc,
           c.created_at,
           c.id
         FROM public.catalog c
-        WHERE c.model_number IS NOT NULL AND btrim(c.model_number) <> ''
+        WHERE c.model_number IS NOT NULL
+          AND btrim(c.model_number) <> ''
           AND ($5 = '' OR upper(btrim(c.model_number)) = upper(btrim($5)))
-          AND ($6 = '' OR (c.variant IS NOT NULL AND btrim(c.variant) <> '' AND lower(btrim(c.variant)) = lower(btrim($6))))
-          AND ($7 = '' OR (c.color IS NOT NULL AND btrim(c.color) <> '' AND lower(btrim(c.color)) = lower(btrim($7))))
+          AND ($6 = '' OR (
+            c.variant IS NOT NULL
+            AND btrim(c.variant) <> ''
+            AND lower(btrim(c.variant)) = lower(btrim($6))
+          ))
+          AND ($7 = '' OR (
+            c.color IS NOT NULL
+            AND btrim(c.color) <> ''
+            AND lower(btrim(c.color)) = lower(btrim($7))
+          ))
           AND (
             ($1 = 'brand' AND lower(btrim(c.brand)) = lower(btrim($2)))
             OR
@@ -132,34 +157,42 @@ router.get("/api/browse", async (req, res) => {
         ORDER BY
           upper(btrim(c.model_number)),
           ${VERSION_NORM_SQL},
+          (NULLIF(btrim(c.image_url), '') IS NOT NULL) DESC,
+          (NULLIF(btrim(c.model_name), '') IS NOT NULL) DESC,
           c.created_at DESC NULLS LAST,
           c.id DESC
       ),
-      page_rows AS (
-        SELECT *
-        FROM picked
-        ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number_norm, version_norm
-        LIMIT $8 OFFSET $9
-      ),
+
       anchors AS (
         SELECT
           p.*,
           CASE
-            WHEN p.pci IS NOT NULL AND btrim(p.pci) <> '' THEN ('pci:' || btrim(p.pci))
-            WHEN p.upc IS NOT NULL AND btrim(p.upc) <> '' THEN ('upc:' || btrim(p.upc))
+            WHEN p.pci IS NOT NULL THEN ('pci:' || p.pci)
+            WHEN p.upc IS NOT NULL THEN ('upc:' || p.upc)
             ELSE NULL
           END AS dashboard_key
-        FROM page_rows p
+        FROM picked p
       ),
-      cheapest AS (
+
+      listing_rollup AS (
         SELECT
           a.model_number_norm,
           a.version_norm,
-          MIN(l.current_price_cents) FILTER (WHERE l.current_price_cents IS NOT NULL) AS best_price_cents
+          MIN(l.current_price_cents) FILTER (
+            WHERE l.current_price_cents IS NOT NULL
+          ) AS best_price_cents,
+          COUNT(*) FILTER (
+            WHERE l.current_price_cents IS NOT NULL
+          )::int AS priced_listing_count,
+          COUNT(DISTINCT lower(btrim(l.store))) FILTER (
+            WHERE l.store IS NOT NULL
+              AND btrim(l.store) <> ''
+              AND l.current_price_cents IS NOT NULL
+          )::int AS priced_store_count
         FROM anchors a
         LEFT JOIN public.catalog c
           ON upper(btrim(c.model_number)) = a.model_number_norm
-         AND COALESCE(NULLIF(lower(btrim(c.version)), ''), '') = a.version_norm
+         AND ${VERSION_NORM_SQL.replace(/c\./g, "c.")} = a.version_norm
         LEFT JOIN public.listings l
           ON (
             (c.pci IS NOT NULL AND btrim(c.pci) <> '' AND l.pci IS NOT NULL AND btrim(l.pci) <> '' AND upper(btrim(l.pci)) = upper(btrim(c.pci)))
@@ -167,22 +200,101 @@ router.get("/api/browse", async (req, res) => {
             (c.upc IS NOT NULL AND btrim(c.upc) <> '' AND l.upc IS NOT NULL AND btrim(l.upc) <> '' AND public.norm_upc(l.upc) = public.norm_upc(c.upc))
           )
         GROUP BY a.model_number_norm, a.version_norm
+      ),
+
+      scored AS (
+        SELECT
+          a.model_number,
+          a.model_number_norm,
+          a.version,
+          a.version_norm,
+          a.model_name,
+          a.brand,
+          a.category,
+          a.image_url,
+          a.dropship_warning,
+          a.dashboard_key,
+          lr.best_price_cents,
+          COALESCE(lr.priced_listing_count, 0) AS priced_listing_count,
+          COALESCE(lr.priced_store_count, 0) AS priced_store_count,
+
+          CASE WHEN a.image_url IS NOT NULL THEN 1 ELSE 0 END AS has_image,
+          CASE WHEN lr.best_price_cents IS NOT NULL THEN 1 ELSE 0 END AS has_price,
+          CASE WHEN a.dashboard_key IS NOT NULL THEN 1 ELSE 0 END AS has_dashboard,
+          CASE WHEN a.model_name IS NOT NULL THEN 1 ELSE 0 END AS has_model_name,
+
+          (
+            CASE WHEN a.image_url IS NOT NULL THEN 100 ELSE 0 END +
+            CASE WHEN lr.best_price_cents IS NOT NULL THEN 80 ELSE 0 END +
+            CASE WHEN a.dashboard_key IS NOT NULL THEN 50 ELSE 0 END +
+            CASE WHEN a.model_name IS NOT NULL THEN 15 ELSE 0 END +
+            LEAST(COALESCE(lr.priced_store_count, 0), 6) * 12 +
+            LEAST(COALESCE(lr.priced_listing_count, 0), 8) * 4
+          )::int AS browse_score
+        FROM anchors a
+        LEFT JOIN listing_rollup lr
+          ON lr.model_number_norm = a.model_number_norm
+         AND lr.version_norm = a.version_norm
+      ),
+
+      ranked AS (
+        SELECT
+          s.*,
+
+          ROW_NUMBER() OVER (
+            PARTITION BY lower(COALESCE(s.brand, ''))
+            ORDER BY
+              s.browse_score DESC,
+              lower(COALESCE(s.model_name, '')),
+              s.model_number_norm,
+              s.version_norm
+          ) AS brand_pos,
+
+          ROW_NUMBER() OVER (
+            PARTITION BY s.model_number_norm
+            ORDER BY
+              s.browse_score DESC,
+              lower(COALESCE(s.model_name, '')),
+              s.version_norm
+          ) AS family_pos
+        FROM scored s
+      ),
+
+      ordered AS (
+        SELECT *
+        FROM ranked
+        ORDER BY
+          CASE
+            WHEN $1 = 'category' THEN brand_pos
+            ELSE 0
+          END ASC,
+
+          CASE
+            WHEN $1 = 'category' THEN family_pos
+            ELSE 0
+          END ASC,
+
+          browse_score DESC,
+          priced_store_count DESC,
+          priced_listing_count DESC,
+          lower(COALESCE(brand, 'zzzzzz')) ASC,
+          lower(COALESCE(model_name, model_number, 'zzzzzz')) ASC,
+          model_number_norm ASC,
+          version_norm ASC
       )
+
       SELECT
-        a.model_number,
-        a.version,
-        a.model_name,
-        a.brand,
-        a.category,
-        a.image_url,
-        a.dropship_warning,
-        a.dashboard_key,
-        ch.best_price_cents
-      FROM anchors a
-      LEFT JOIN cheapest ch
-        ON ch.model_number_norm = a.model_number_norm
-       AND ch.version_norm = a.version_norm
-      ORDER BY a.brand NULLS LAST, a.category NULLS LAST, a.model_name NULLS LAST, a.model_number_norm, a.version_norm
+        model_number,
+        version,
+        model_name,
+        brand,
+        category,
+        image_url,
+        dropship_warning,
+        dashboard_key,
+        best_price_cents
+      FROM ordered
+      LIMIT $8 OFFSET $9
     `;
 
     const { rows } = await client.query(listSql, [

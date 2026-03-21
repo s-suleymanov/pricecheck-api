@@ -83,6 +83,7 @@ body{
 
 .sidecard{
   padding: 16px;
+  margin-bottom: 16px;
 }
 
 .sidecard .side-title{
@@ -790,10 +791,6 @@ h1{
   color: inherit;
 }
 
-#sidecol > :not([hidden]) + :not([hidden]) {
-  margin-top: 20px;
-}
-
 .thumb{
   width: 200px;
   height: 200px;
@@ -802,7 +799,7 @@ h1{
 }
 
 .browse-tip-side{
-  padding: 4px 8px 0 8px;
+  padding: 0 8px 0 8px;
   font-size: 14px;
   line-height: 1.45;
   color: #7a7f87;

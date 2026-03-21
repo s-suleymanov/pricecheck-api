@@ -1576,7 +1576,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
       ${brands.length ? `
         <div class="side-block">
-          <div class="side-label">Brand</div>
+          <div class="side-label">Top Brands</div>
           <div class="pillrow">
             ${brands.map((b) => {
               const active = state.brand && state.brand.toLowerCase() === String(b).toLowerCase();
