@@ -413,25 +413,37 @@
       </aside>
     </section>
 
-    <section class="card" id="communityCard" hidden>
-  <div class="spaced pc-community-reviews__head">
-    <h2
-      data-icon-path="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"
-      style="margin:0;"
-    >
-      Community
-    </h2>
+    <section class="card" id="files" hidden>
+      <div class="spaced">
+        <h2 data-icon-path="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z">Files</h2>
+      </div>
 
-    <button
-      class="pc-community-add"
-      id="pcCommunityAddBtn"
-      type="button"
-      aria-label="Contribute"
-      title="Contribute"
-    >
-      +
-    </button>
-  </div>
+      <div id="filesContent">
+        <div class="sidebar-empty">No files available.</div>
+      </div>
+    </section>
+    
+    <section class="card" id="pc-reviews-card" hidden></section>
+
+    <section class="card" id="communityCard" hidden>
+    <div class="spaced pc-community-reviews__head">
+      <h2
+        data-icon-path="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"
+        style="margin:0;"
+      >
+        Community
+      </h2>
+
+      <button
+        class="pc-community-add"
+        id="pcCommunityAddBtn"
+        type="button"
+        aria-label="Contribute"
+        title="Contribute"
+      >
+        +
+      </button>
+    </div>
 
   <div class="pc-community-layout">
     <section class="pc-community-panel">
@@ -462,30 +474,18 @@
   </div>
 
   <section class="pc-community-reviews">
-    <div class="pc-community-panel__head" style="margin-bottom:16px;">
-      <div class="pc-community-panel__title-wrap">
-        <h2 class="pc-community-panel__title">User Reviews</h2>
-        <div class="pc-community-panel__count" id="pcCommunityReviewsCount">(0)</div>
-      </div>
-    </div>
-
-    <div class="pc-community-review-list" id="pcCommunityReviewList">
-      <div class="sidebar-empty">No reviews yet.</div>
-    </div>
-  </section>
-</section>
-    
-    <section class="card" id="pc-reviews-card" hidden></section>
-
-    <section class="card" id="files" hidden>
-      <div class="spaced">
-        <h2 data-icon-path="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z">Files</h2>
+      <div class="pc-community-panel__head" style="margin-bottom:16px;">
+        <div class="pc-community-panel__title-wrap">
+          <h2 class="pc-community-panel__title">User Reviews</h2>
+          <div class="pc-community-panel__count" id="pcCommunityReviewsCount">(0)</div>
+        </div>
       </div>
 
-      <div id="filesContent">
-        <div class="sidebar-empty">No files available.</div>
+      <div class="pc-community-review-list" id="pcCommunityReviewList">
+        <div class="sidebar-empty">No reviews yet.</div>
       </div>
     </section>
+  </section>
 
   </main>
 

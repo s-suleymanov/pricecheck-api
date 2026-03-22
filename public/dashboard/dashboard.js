@@ -1957,9 +1957,9 @@ async function renderCommunityCard(productKey, runToken){
   } catch (_err) {
     if (runToken != null && isStaleRun(runToken)) return;
 
-    tipsListEl.innerHTML = '<div class="sidebar-empty">Could not load community tips.</div>';
-    questionsListEl.innerHTML = '<div class="sidebar-empty">Could not load questions.</div>';
-    reviewListEl.innerHTML = '<div class="sidebar-empty">Could not load reviews.</div>';
+    tipsListEl.innerHTML = '<div class="community-empty">Could not load community tips.</div>';
+    questionsListEl.innerHTML = '<div class="community-empty">Could not load questions.</div>';
+    reviewListEl.innerHTML = '<div class="community-empty">Could not load reviews.</div>';
     return;
   }
 
@@ -1980,14 +1980,11 @@ async function renderCommunityCard(productKey, runToken){
   };
 
   const totalCount =
-    state.community.counts.tips +
-    state.community.counts.questions +
-    state.community.counts.reviews;
+  state.community.counts.tips +
+  state.community.counts.questions +
+  state.community.counts.reviews;
 
-  if (totalCount <= 0) {
-    card.hidden = true;
-    return;
-  }
+  card.hidden = false;
 
   tipsCountEl.textContent = `(${state.community.counts.tips})`;
   questionsCountEl.textContent = `(${state.community.counts.questions})`;
@@ -2007,7 +2004,7 @@ async function renderCommunityCard(productKey, runToken){
           </div>
         </article>
       `).join('')
-    : '<div class="sidebar-empty">No tips yet.</div>';
+        : '<div class="sidebar-community">No tips yet. Be the first to contribute something useful.</div>';
 
       questionsListEl.innerHTML = questions.length
     ? questions.map((q) => {
@@ -2085,7 +2082,7 @@ async function renderCommunityCard(productKey, runToken){
           </article>
         `;
       }).join('')
-    : '<div class="sidebar-empty">No questions yet.</div>';
+        : '<div class="sidebar-community">No questions yet.</div>';
 
   reviewListEl.innerHTML = reviews.length
     ? reviews.map((review) => `
@@ -2100,7 +2097,7 @@ async function renderCommunityCard(productKey, runToken){
           <div class="pc-community-review-card__meta">${escapeHtml(communityRelativeTime(review.created_at) || '')}</div>
         </article>
       `).join('')
-    : '<div class="sidebar-empty">No reviews yet.</div>';
+        : '<div class="sidebar-community">No reviews yet. Share your experience to help others.</div>';
 
     wireQuestionReplyUi(signedIn);
 }
@@ -2178,13 +2175,9 @@ async function renderReviewsCard(productKey, runToken) {
   const hasExpert = expertReviews.length > 0;
 
   if (!hasCustomer && !hasExpert) {
-    mount(`
-      <div class="spaced">
-        <h2 data-icon-path="${iconPath}">Reviews</h2>
-      </div>
-      <p class="note">No reviews found yet.</p>
-    `);
-    wireCardIcons();
+    el.hidden = true;
+    el.innerHTML = '';
+    clearTopbarRatingSummary();
     return;
   }
 
@@ -3238,10 +3231,32 @@ async function run(raw){
   const communityQuestionsCount = document.getElementById('pcCommunityQuestionsCount');
   const communityReviewsCount = document.getElementById('pcCommunityReviewsCount');
 
-  if (communityCard) communityCard.hidden = true;
-  if (communityTips) communityTips.innerHTML = '';
-  if (communityQuestions) communityQuestions.innerHTML = '';
-  if (communityReviews) communityReviews.innerHTML = '';
+    if (communityCard) communityCard.hidden = false;
+
+  if (communityTips) {
+    communityTips.innerHTML = `
+      <div class="sidebar-empty">
+        No tips yet. Be the first to share something useful about this product.
+      </div>
+    `;
+  }
+
+  if (communityQuestions) {
+    communityQuestions.innerHTML = `
+      <div class="sidebar-empty">
+        No questions yet.
+      </div>
+    `;
+  }
+
+  if (communityReviews) {
+    communityReviews.innerHTML = `
+      <div class="sidebar-empty">
+        No reviews yet. Share your experience to help the next person.
+      </div>
+    `;
+  }
+
   if (communityTipsCount) communityTipsCount.textContent = '(0)';
   if (communityQuestionsCount) communityQuestionsCount.textContent = '(0)';
   if (communityReviewsCount) communityReviewsCount.textContent = '(0)';
