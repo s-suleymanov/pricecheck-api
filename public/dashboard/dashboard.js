@@ -6526,6 +6526,8 @@ function renderLineup(){
   });
 }
 
+const DIMENSION_WEIGHT_ICON_PATH = 'M240-200h480-480Zm240-480q17 0 28.5-11.5T520-720q0-17-11.5-28.5T480-760q-17 0-28.5 11.5T440-720q0 17 11.5 28.5T480-680Zm113 0h70q30 0 52 20t27 49l57 400q5 36-18.5 63.5T720-120H240q-37 0-60.5-27.5T161-211l57-400q5-29 27-49t52-20h70q-3-10-5-19.5t-2-20.5q0-50 35-85t85-35q50 0 85 35t35 85q0 11-2 20.5t-5 19.5ZM240-200h480Z';
+
 function dimNum(v){
   const n = Number(v);
   if (!Number.isFinite(n)) return null;
@@ -6728,14 +6730,14 @@ function renderDimensionVisual(d, unit){
   const xTextY = xLineY + 18;
   const yLineX = left - 28;
 
-  const xLabel = `X ${formatAxisUnit(xIn, unit)}`;
-  const yLabel = `Y ${formatAxisUnit(yIn, unit)}`;
-  const zLabel = zIn != null ? `Z ${formatAxisUnit(zIn, unit)}` : '';
+  const xLabel = formatAxisUnit(xIn, unit);
+  const yLabel = formatAxisUnit(yIn, unit);
+  const zLabel = zIn != null ? formatAxisUnit(zIn, unit) : '';
 
   const zGuideGap = 24;
   const zGuideDrop = Math.max(40, Math.min(70, frontH * 0.58));
   const zGuideX1 = right + zGuideGap;
-  const zGuideY1 = top + zGuideDrop - 60;
+  const zGuideY1 = top + zGuideDrop + 5;
   const zGuideX2 = zGuideX1 + dx;
   const zGuideY2 = zGuideY1 + dy;
 
@@ -6746,14 +6748,14 @@ function renderDimensionVisual(d, unit){
       <polygon
         points="${left},${top} ${right},${top} ${right + dx},${top + dy} ${left + dx},${top + dy}"
         fill="#eef2ff"
-        stroke="#c7d2fe"
+        stroke="#94a3b8"
         stroke-width="1.5"
       ></polygon>
 
       <polygon
         points="${right},${top} ${right},${bottom} ${right + dx},${bottom + dy} ${right + dx},${top + dy}"
         fill="#e2e8f0"
-        stroke="#cbd5e1"
+        stroke="#94a3b8"
         stroke-width="1.5"
       ></polygon>
 
@@ -6794,7 +6796,7 @@ function renderDimensionVisual(d, unit){
               y1="${zGuideY1}"
               x2="${zGuideX2}"
               y2="${zGuideY2}"
-              stroke="#64748b"
+              stroke="#d97706"
               stroke-width="2"
             ></line>
 
@@ -6803,7 +6805,7 @@ function renderDimensionVisual(d, unit){
               y1="${zGuideY1}"
               x2="${zGuideX1 + 6}"
               y2="${zGuideY1}"
-              stroke="#64748b"
+              stroke="#d97706"
               stroke-width="2"
             ></line>
 
@@ -6812,16 +6814,16 @@ function renderDimensionVisual(d, unit){
               y1="${zGuideY2}"
               x2="${zGuideX2 + 6}"
               y2="${zGuideY2}"
-              stroke="#64748b"
+              stroke="#d97706"
               stroke-width="2"
             ></line>
 
             <text
-              x="${zGuideX2 + 14}"
-              y="${zGuideY2 + 8}"
+              x="${zGuideX2 - 12}"
+              y="${zGuideY2 + 24}"
               font-size="14"
               font-weight="700"
-              fill="#475569"
+              fill="#d97706"
             >${escapeHtml(zLabel)}</text>
           `
           : ''
@@ -6856,10 +6858,6 @@ function renderDimensionSection(section, unit, showHeading){
     stats.push(renderDimStat('Size', `${axisText.join(' x ')} ${axisUnit}`));
   }
 
-  if (d.weightLb != null) {
-    stats.push(renderDimStat('Weight', formatWeightUnit(d.weightLb, unit)));
-  }
-
   if (d.screenIn != null) {
     stats.push(renderDimStat('Screen', formatLengthUnit(d.screenIn, unit)));
   }
@@ -6872,7 +6870,20 @@ function renderDimensionSection(section, unit, showHeading){
     stats.push(renderDimStat('Depth', formatLengthUnit(d.depthIn, unit)));
   }
 
-  if (!visual && !stats.length) return '';
+  const weightMarkup = d.weightLb != null
+    ? `
+      <div class="dim-weight-badge" aria-label="Product weight">
+        <span class="dim-weight-badge__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" focusable="false">
+            <path d="${escapeHtml(DIMENSION_WEIGHT_ICON_PATH)}"></path>
+          </svg>
+        </span>
+        <span class="dim-weight-badge__text">${escapeHtml(formatWeightUnit(d.weightLb, unit))}</span>
+      </div>
+    `
+    : '';
+
+  if (!visual && !stats.length && !weightMarkup) return '';
 
   return `
     <section class="dim-section">
@@ -6890,6 +6901,17 @@ function renderDimensionSection(section, unit, showHeading){
                 <div class="dim-visual-stage">
                   ${visual}
                 </div>
+                ${weightMarkup}
+              </div>
+            `
+            : ''
+        }
+
+        ${
+          !visual && weightMarkup
+            ? `
+              <div class="dim-weight-row">
+                ${weightMarkup}
               </div>
             `
             : ''

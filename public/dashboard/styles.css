@@ -1435,13 +1435,6 @@ aside{
   gap:14px;
 }
 
-.dim-visual-card{
-  border:1px solid var(--line);
-  border-radius:16px;
-  background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  padding:14px;
-}
-
 .dim-visual-stage{
   min-height:220px;
   display:flex;
@@ -3347,6 +3340,65 @@ button.pc-lineup-model{
   display:flex;
   flex-direction:column;
   gap:10px;
+}
+
+.dim-visual-card{
+  position:relative;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding:14px;
+}
+
+.dim-weight-badge{
+  position:absolute;
+  right:18px;
+  bottom:16px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:var(--ink);
+  background:transparent;
+  border:0;
+  padding:0;
+  pointer-events:none;
+}
+
+.dim-weight-badge__icon{
+  width:30px;
+  height:30px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#64748b;
+  flex:0 0 auto;
+  margin-bottom: 5px;
+}
+
+.dim-weight-badge__icon svg{
+  width:30px;
+  height:30px;
+  display:block;
+  fill:currentColor;
+}
+
+.dim-weight-badge__text{
+  font-size:18px;
+  line-height:1.2;
+  font-weight:600;
+  color:var(--ink);
+}
+
+.dim-weight-row{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  min-height:24px;
+}
+
+.dim-weight-row .dim-weight-badge{
+  position:static;
+  pointer-events:auto;
 }
 
 .dashboard-toc__btn--plus svg{
