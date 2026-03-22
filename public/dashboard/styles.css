@@ -1897,6 +1897,8 @@ button.pc-lineup-model{
 }
 
 .pc-timeline-simple{
+  margin-top: 40px;
+  margin-bottom: 40px;
   --pc-timeline-past: 14%;
   --pc-timeline-current: 50%;
   --pc-timeline-future: 86%;
