@@ -614,24 +614,20 @@ function buildDashboardToc() {
 
   document.title = pageTitle;
 
-  const desc = `Compare prices for ${cleanTitle} across stores. See price history, cross-store offers, and any verified coupons, matched to the exact variant by PCI and UPC.`;
+  const desc = `Compare prices, price history, store offers, and verified coupons for ${cleanTitle} on PriceCheck.`;
 
-  // Update <meta name="description">
-  setMeta('description', desc);
-
-  // Build pretty path on the current origin (pushState must stay same-origin)
   const pretty = prettyDashboardUrl(key, cleanTitle);
-
-  // Canonical URL can be cross-host (pricechecktool.com -> www.pricechecktool.com)
   const canonical = `${canonicalOriginForMeta()}${pretty.pathname}`;
+  const img = absoluteImageForMeta(imageUrl);
 
+  setMeta('description', desc);
   setCanonical(canonical);
 
+  setOg('og:type', 'product');
+  setOg('og:site_name', 'PriceCheck');
   setOg('og:title', pageTitle);
   setOg('og:description', desc);
   setOg('og:url', canonical);
-
-  const img = absoluteImageForMeta(imageUrl);
   setOg('og:image', img);
 
   setMeta('twitter:card', 'summary_large_image');
