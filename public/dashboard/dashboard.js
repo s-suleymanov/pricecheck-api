@@ -6819,8 +6819,8 @@ function renderDimensionVisual(d, unit){
             ></line>
 
             <text
-              x="${zGuideX2 - 12}"
-              y="${zGuideY2 + 24}"
+              x="${zGuideX2 - 13}"
+              y="${zGuideY2 + 27.32}"
               font-size="14"
               font-weight="700"
               fill="#d97706"
