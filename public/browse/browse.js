@@ -1810,6 +1810,11 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         `
             : ""
         }
+
+        <div class="browse-tip browse-tip-top" aria-label="Browse tip">
+          Tip: Single-click a product card to preview it. Double-click a product card to open its full page.
+        </div>
+
       </div>
 
       <div class="browse-topbar__right">
@@ -1831,6 +1836,22 @@ async function applyCardVariantSelection(cardEl, nextKey) {
       </div>
     </div>
   `;
+
+  el.querySelectorAll("[data-condition]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const v = String(btn.getAttribute("data-condition") || "").trim().toLowerCase();
+
+      if (v === "new") state.refurbished = false;
+      else if (v === "refurbished") state.refurbished = true;
+      else state.refurbished = null;
+
+      state.page = 1;
+      state.animateNextRender = false;
+      startPageTransitionUI();
+      writeUrl({ replace: false });
+      load();
+    });
+  });
 
   el.querySelector("#browseSort")?.addEventListener("change", (e) => {
     state.sort = String(e.target.value || "recommended").trim().toLowerCase();
