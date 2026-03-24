@@ -196,6 +196,112 @@ body{
 .side-block { margin-top: 12px; }
 .side-label { font-size: 16px; opacity: 0.7; margin: 18px 0 8px 0; }
 
+#conditionFilter {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  padding: 12px 18px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+#conditionFilter[hidden] { display: none; }
+
+.condition-seg {
+  display: inline-flex !important;
+  border: 1px solid rgba(0,0,0,0.14) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  gap: 0 !important;
+}
+
+.browse-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.browse-topbar__left,
+.browse-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.browse-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.browse-sort__label {
+  font-size: 13px;
+  color: var(--muted, #6b7280);
+  white-space: nowrap;
+}
+
+.browse-sort__select {
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 10px;
+  color: #6b7280;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .browse-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .browse-topbar__left,
+  .browse-topbar__right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .browse-sort {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .browse-sort__select {
+    min-width: 170px;
+  }
+}
+
+.condition-seg__btn {
+  padding: 5px 12px 4px 12px !important;
+  font-size: 14px !important;
+  font-family: inherit !important;
+  font-weight: 400 !important;
+  background: transparent !important;
+  border: none !important;
+  border-right: 1px solid rgba(0,0,0,0.14) !important;
+  color: #6b7280 !important;
+  cursor: pointer !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+.condition-seg__btn:last-child {
+  border-right: none !important;
+}
+
+.condition-seg__btn:hover {
+  background: #f3f4f6 !important;
+  color: #111 !important;
+}
+
+.condition-seg__btn.is-active {
+  background: var(--ink) !important;
+  color: #fff !important;
+  font-weight: 500 !important;
+}
 
 .sidecard .mini{
   display: inline-block;

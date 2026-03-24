@@ -34,31 +34,26 @@
     <nav id="browseRail" class="browse-rail" aria-label="Browse navigation"></nav>
 
         <main class="wrap">
+            <div id="conditionFilter" hidden></div>
+
             <div class="layout">
                 <div class="maincol">
-                    <section class="card-main controls">
-                        <div class="row">
-                        <div class="muted" id="meta"></div>
-                        <div id="emptyInline" class="empty-inline" hidden></div>
-                        </div>
-                    </section>
+                <div class="muted" id="meta"></div>
+                <div id="emptyInline" class="empty-inline" hidden></div>
 
-                    <section class="grid" id="grid"></section>
-                    </div>
+                <section class="grid" id="grid"></section>
+                </div>
 
                 <aside class="sidecol" id="sidecol" hidden>
-                    <section class="card sidecard" id="categoryPanel" hidden></section>
-
-                    <section class="card sidecard" id="brandPanel"></section>
-
-                    <div class="browse-tip browse-tip-side" aria-label="Browse tip">
-                          Tip: Single-click a product card to preview it. Double-click a product card to open its full page.
-                    </div>
-
-                    <section class="card sidecard" id="familyPanel" hidden></section>
+                <section class="card sidecard" id="categoryPanel" hidden></section>
+                <section class="card sidecard" id="brandPanel"></section>
+                <div class="browse-tip browse-tip-side" aria-label="Browse tip">
+                    Tip: Single-click a product card to preview it. Double-click a product card to open its full page.
+                </div>
+                <section class="card sidecard" id="familyPanel" hidden></section>
                 </aside>
             </div>
-            </main>
+        </main>
 
         <div id="site-footer"></div>
     </div>

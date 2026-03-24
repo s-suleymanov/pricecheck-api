@@ -39,6 +39,11 @@ router.get("/api/browse", async (req, res) => {
   const color = normText(req.query.color);
   const hasVariant = !!variant;
   const hasColor = !!color;
+  const sort = normText(req.query.sort).toLowerCase();
+  const sortKey =
+    sort === "lowest-price" || sort === "highest-price" || sort === "az"
+      ? sort
+      : "recommended";
 
   if (brand) {
     type = "brand";
@@ -49,6 +54,8 @@ router.get("/api/browse", async (req, res) => {
   }
 
   const hasBrand = !!brand;
+  const refurbishedParam = normText(req.query.refurbished); // '1', '0', or ''
+  const hasRefurbishedFilter = refurbishedParam === '1' || refurbishedParam === '0';
   const hasCategory = !!category;
 
   if (hasBrand && hasCategory) {
@@ -72,6 +79,31 @@ router.get("/api/browse", async (req, res) => {
 
   const client = await pool.connect();
   try {
+    const baseParams = [
+      type, value, brand, category,
+      family || "", variant || "", color || "",
+    ];
+
+    const detectSql = `
+      SELECT
+        COUNT(*) FILTER (WHERE c.is_refurbished = false)::int > 0 AS has_new,
+        COUNT(*) FILTER (WHERE c.is_refurbished = true)::int  > 0 AS has_refurbished
+      FROM public.catalog c
+      WHERE c.model_number IS NOT NULL
+        AND btrim(c.model_number) <> ''
+        AND ($5 = '' OR upper(btrim(c.model_number)) = upper(btrim($5)))
+        AND ($6 = '' OR (c.variant IS NOT NULL AND btrim(c.variant) <> ''
+              AND lower(btrim(c.variant)) = lower(btrim($6))))
+        AND ($7 = '' OR (c.color IS NOT NULL AND btrim(c.color) <> ''
+              AND lower(btrim(c.color)) = lower(btrim($7))))
+        AND (
+          ($1 = 'brand'    AND lower(btrim(c.brand))    = lower(btrim($2)))
+          OR ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
+          OR ($1 = 'combo'    AND lower(btrim(c.brand))    = lower(btrim($3))
+                              AND lower(btrim(c.category)) = lower(btrim($4)))
+        )
+    `;
+
     const countSql = `
       WITH base AS (
         SELECT DISTINCT
@@ -81,38 +113,26 @@ router.get("/api/browse", async (req, res) => {
         WHERE c.model_number IS NOT NULL
           AND btrim(c.model_number) <> ''
           AND ($5 = '' OR upper(btrim(c.model_number)) = upper(btrim($5)))
-          AND ($6 = '' OR (
-            c.variant IS NOT NULL
-            AND btrim(c.variant) <> ''
-            AND lower(btrim(c.variant)) = lower(btrim($6))
-          ))
-          AND ($7 = '' OR (
-            c.color IS NOT NULL
-            AND btrim(c.color) <> ''
-            AND lower(btrim(c.color)) = lower(btrim($7))
-          ))
+          AND ($6 = '' OR (c.variant IS NOT NULL AND btrim(c.variant) <> ''
+                AND lower(btrim(c.variant)) = lower(btrim($6))))
+          AND ($7 = '' OR (c.color IS NOT NULL AND btrim(c.color) <> ''
+                AND lower(btrim(c.color)) = lower(btrim($7))))
+          AND ($8 = '' OR c.is_refurbished = ($8 = '1'))
           AND (
-            ($1 = 'brand' AND lower(btrim(c.brand)) = lower(btrim($2)))
-            OR
-            ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
-            OR
-            ($1 = 'combo' AND lower(btrim(c.brand)) = lower(btrim($3)) AND lower(btrim(c.category)) = lower(btrim($4)))
+            ($1 = 'brand'    AND lower(btrim(c.brand))    = lower(btrim($2)))
+            OR ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
+            OR ($1 = 'combo'    AND lower(btrim(c.brand))    = lower(btrim($3))
+                                AND lower(btrim(c.category)) = lower(btrim($4)))
           )
       )
-      SELECT COUNT(*)::int AS total
-      FROM base
+      SELECT COUNT(*)::int AS total FROM base
     `;
 
-    const total =
-      (await client.query(countSql, [
-        type,
-        value,
-        brand,
-        category,
-        family || "",
-        variant || "",
-        color || "",
-      ])).rows?.[0]?.total ?? 0;
+    const [detectRow, total] = await Promise.all([
+      client.query(detectSql, baseParams).then(r => r.rows?.[0] ?? {}),
+      client.query(countSql, [...baseParams, hasRefurbishedFilter ? refurbishedParam : ""])
+            .then(r => r.rows?.[0]?.total ?? 0),
+    ]);
 
     const listSql = `
       WITH picked AS (
@@ -131,28 +151,23 @@ router.get("/api/browse", async (req, res) => {
           COALESCE(c.dropship_warning, false) AS dropship_warning,
           NULLIF(btrim(c.pci), '') AS pci,
           NULLIF(btrim(c.upc), '') AS upc,
+          c.is_refurbished,
           c.created_at,
           c.id
         FROM public.catalog c
         WHERE c.model_number IS NOT NULL
           AND btrim(c.model_number) <> ''
           AND ($5 = '' OR upper(btrim(c.model_number)) = upper(btrim($5)))
-          AND ($6 = '' OR (
-            c.variant IS NOT NULL
-            AND btrim(c.variant) <> ''
-            AND lower(btrim(c.variant)) = lower(btrim($6))
-          ))
-          AND ($7 = '' OR (
-            c.color IS NOT NULL
-            AND btrim(c.color) <> ''
-            AND lower(btrim(c.color)) = lower(btrim($7))
-          ))
+          AND ($6 = '' OR (c.variant IS NOT NULL AND btrim(c.variant) <> ''
+                AND lower(btrim(c.variant)) = lower(btrim($6))))
+          AND ($7 = '' OR (c.color IS NOT NULL AND btrim(c.color) <> ''
+                AND lower(btrim(c.color)) = lower(btrim($7))))
+          AND ($8 = '' OR c.is_refurbished = ($8 = '1'))
           AND (
-            ($1 = 'brand' AND lower(btrim(c.brand)) = lower(btrim($2)))
-            OR
-            ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
-            OR
-            ($1 = 'combo' AND lower(btrim(c.brand)) = lower(btrim($3)) AND lower(btrim(c.category)) = lower(btrim($4)))
+            ($1 = 'brand'    AND lower(btrim(c.brand))    = lower(btrim($2)))
+            OR ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
+            OR ($1 = 'combo'    AND lower(btrim(c.brand))    = lower(btrim($3))
+                                AND lower(btrim(c.category)) = lower(btrim($4)))
           )
         ORDER BY
           upper(btrim(c.model_number)),
@@ -195,9 +210,11 @@ router.get("/api/browse", async (req, res) => {
          AND ${VERSION_NORM_SQL.replace(/c\./g, "c.")} = a.version_norm
         LEFT JOIN public.listings l
           ON (
-            (c.pci IS NOT NULL AND btrim(c.pci) <> '' AND l.pci IS NOT NULL AND btrim(l.pci) <> '' AND upper(btrim(l.pci)) = upper(btrim(c.pci)))
+            (c.pci IS NOT NULL AND btrim(c.pci) <> '' AND l.pci IS NOT NULL AND btrim(l.pci) <> ''
+              AND upper(btrim(l.pci)) = upper(btrim(c.pci)))
             OR
-            (c.upc IS NOT NULL AND btrim(c.upc) <> '' AND l.upc IS NOT NULL AND btrim(l.upc) <> '' AND public.norm_upc(l.upc) = public.norm_upc(c.upc))
+            (c.upc IS NOT NULL AND btrim(c.upc) <> '' AND l.upc IS NOT NULL AND btrim(l.upc) <> ''
+              AND public.norm_upc(l.upc) = public.norm_upc(c.upc))
           )
         GROUP BY a.model_number_norm, a.version_norm
       ),
@@ -213,16 +230,15 @@ router.get("/api/browse", async (req, res) => {
           a.category,
           a.image_url,
           a.dropship_warning,
+          a.is_refurbished,
           a.dashboard_key,
           lr.best_price_cents,
           COALESCE(lr.priced_listing_count, 0) AS priced_listing_count,
           COALESCE(lr.priced_store_count, 0) AS priced_store_count,
-
           CASE WHEN a.image_url IS NOT NULL THEN 1 ELSE 0 END AS has_image,
           CASE WHEN lr.best_price_cents IS NOT NULL THEN 1 ELSE 0 END AS has_price,
           CASE WHEN a.dashboard_key IS NOT NULL THEN 1 ELSE 0 END AS has_dashboard,
           CASE WHEN a.model_name IS NOT NULL THEN 1 ELSE 0 END AS has_model_name,
-
           (
             CASE WHEN a.image_url IS NOT NULL THEN 100 ELSE 0 END +
             CASE WHEN lr.best_price_cents IS NOT NULL THEN 80 ELSE 0 END +
@@ -240,7 +256,6 @@ router.get("/api/browse", async (req, res) => {
       ranked AS (
         SELECT
           s.*,
-
           ROW_NUMBER() OVER (
             PARTITION BY lower(COALESCE(s.brand, ''))
             ORDER BY
@@ -249,7 +264,6 @@ router.get("/api/browse", async (req, res) => {
               s.model_number_norm,
               s.version_norm
           ) AS brand_pos,
-
           ROW_NUMBER() OVER (
             PARTITION BY s.model_number_norm
             ORDER BY
@@ -265,18 +279,22 @@ router.get("/api/browse", async (req, res) => {
         FROM ranked
         ORDER BY
           CASE
-            WHEN $1 = 'category' THEN brand_pos
+            WHEN $11 = 'lowest-price' THEN CASE WHEN best_price_cents IS NULL THEN 1 ELSE 0 END
+            WHEN $11 = 'highest-price' THEN CASE WHEN best_price_cents IS NULL THEN 1 ELSE 0 END
             ELSE 0
           END ASC,
 
-          CASE
-            WHEN $1 = 'category' THEN family_pos
-            ELSE 0
-          END ASC,
+          CASE WHEN $1 = 'category' THEN brand_pos  ELSE 0 END ASC,
+          CASE WHEN $1 = 'category' THEN family_pos ELSE 0 END ASC,
 
-          browse_score DESC,
-          priced_store_count DESC,
-          priced_listing_count DESC,
+          CASE WHEN $11 = 'lowest-price'  THEN best_price_cents END ASC NULLS LAST,
+          CASE WHEN $11 = 'highest-price' THEN best_price_cents END DESC NULLS LAST,
+          CASE WHEN $11 = 'az' THEN lower(COALESCE(model_name, model_number, 'zzzzzz')) END ASC,
+
+          CASE WHEN $11 = 'recommended' THEN browse_score END DESC,
+          CASE WHEN $11 = 'recommended' THEN priced_store_count END DESC,
+          CASE WHEN $11 = 'recommended' THEN priced_listing_count END DESC,
+
           lower(COALESCE(brand, 'zzzzzz')) ASC,
           lower(COALESCE(model_name, model_number, 'zzzzzz')) ASC,
           model_number_norm ASC,
@@ -284,29 +302,20 @@ router.get("/api/browse", async (req, res) => {
       )
 
       SELECT
-        model_number,
-        version,
-        model_name,
-        brand,
-        category,
-        image_url,
-        dropship_warning,
-        dashboard_key,
-        best_price_cents
+        model_number, version, model_name, brand, category,
+        image_url, dropship_warning, dashboard_key, best_price_cents,
+        is_refurbished
       FROM ordered
-      LIMIT $8 OFFSET $9
+      LIMIT $9 OFFSET $10
     `;
 
     const { rows } = await client.query(listSql, [
-      type,
-      value,
-      brand,
-      category,
-      family || "",
-      variant || "",
-      color || "",
+      type, value, brand, category,
+      family || "", variant || "", color || "",
+      hasRefurbishedFilter ? refurbishedParam : "",
       limit,
       offset,
+      sortKey,
     ]);
 
     res.json({
@@ -320,6 +329,8 @@ router.get("/api/browse", async (req, res) => {
       limit,
       total,
       pages: Math.max(1, Math.ceil(total / limit)),
+      has_new: !!detectRow.has_new,
+      has_refurbished: !!detectRow.has_refurbished,
       results: rows || [],
     });
   } catch (e) {
