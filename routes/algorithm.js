@@ -19,8 +19,6 @@ function cacheSet(k, v) {
 }
 
 // ── Brand → category inference table ─────────────────────────────────────────
-// When we see a brand signal we also boost these categories.
-// When we see a category signal we also boost these brands.
 const BRAND_TO_CATS = {
   apple:       ["laptop","laptops","computer","computers","tablet","tablets","phone","phones","headphones","smartwatch","monitor"],
   samsung:     ["phone","phones","tv","television","monitor","tablet","tablets","headphones","speaker"],
@@ -51,7 +49,6 @@ for (const [brand, cats] of Object.entries(BRAND_TO_CATS)) {
   }
 }
 
-// Keyword → brand/category inference
 const KEYWORD_INFER = {
   macbook:    { brands: ["apple"],     cats: ["laptop","laptops","computer"] },
   imac:       { brands: ["apple"],     cats: ["computer","computers","desktop","monitor"] },
@@ -106,20 +103,16 @@ function kwRegex(kws) {
 function uniq(arr) { return [...new Set(arr)]; }
 
 // ── Cross-signal expansion ────────────────────────────────────────────────────
-// Given brands + categories + keywords, expand to related brands/cats.
-// This is what makes "macbook" → show Apple AND laptops.
 function expandSignals(brands, cats, kws) {
   const eBrands = new Set(brands);
   const eCats   = new Set(cats);
 
-  // Keywords → infer brands + cats
   for (const kw of kws) {
     const inf = KEYWORD_INFER[kw];
     if (inf) {
       inf.brands.forEach(b => eBrands.add(b));
       inf.cats.forEach(c => eCats.add(c));
     }
-    // Partial keyword match
     for (const [key, inf2] of Object.entries(KEYWORD_INFER)) {
       if (kw.includes(key) || key.includes(kw)) {
         inf2.brands.forEach(b => eBrands.add(b));
@@ -128,13 +121,11 @@ function expandSignals(brands, cats, kws) {
     }
   }
 
-  // Brand → infer cats
   for (const b of brands) {
     const inferredCats = BRAND_TO_CATS[b] || [];
     inferredCats.slice(0, 4).forEach(c => eCats.add(c));
   }
 
-  // Cat → infer brands (weaker signal, fewer)
   for (const c of cats) {
     const inferredBrands = CAT_TO_BRANDS[c] || [];
     inferredBrands.slice(0, 3).forEach(b => eBrands.add(b));
@@ -157,17 +148,13 @@ router.post("/api/home_feed", async (req, res) => {
   const rawKws     = safeArr(sig.keywords,   20);
   const excl       = offset > 0 ? safeArr(req.body?.exclude_keys, 1000) : [];
 
-  // Expand signals with cross-signal inference
   const { brands: expBrands, cats: expCats } = expandSignals(rawBrands, rawCats, rawKws);
   const kwr     = kwRegex(rawKws);
   const hasSig  = rawBrands.length > 0 || rawCats.length > 0 || rawKws.length > 0;
 
-  // "Broadening" mode: the deeper the user scrolls, the more variety we inject.
-  // Pages 1-2: strict scoring. Pages 3+: relax brand diversity cap.
-  // Pages 5+: also include tangentially related items to keep feed endless.
-  const pageNum          = Math.floor(offset / limit);
+  const pageNum           = Math.floor(offset / limit);
   const brandDiversityCap = pageNum < 2 ? 4 : pageNum < 5 ? 6 : 12;
-  const broadenThreshold  = hasSig ? Math.max(0, pageNum - 2) : 0; // extra variety after page 2
+  const broadenThreshold  = hasSig ? Math.max(0, pageNum - 2) : 0;
 
   const userId = await maybeGetUserId(req);
   let followed = [];
@@ -179,7 +166,6 @@ router.post("/api/home_feed", async (req, res) => {
         [userId]
       );
       followed = fq.rows.map(r => r.b).filter(Boolean);
-      // Also expand followed brands → categories
       for (const b of followed) {
         const fc = BRAND_TO_CATS[b] || [];
         fc.slice(0, 3).forEach(c => { if (!expCats.includes(c)) expCats.push(c); });
@@ -195,16 +181,8 @@ router.post("/api/home_feed", async (req, res) => {
 
   const client = await pool.connect();
   try {
-    // We run two queries and merge:
-    //   Q1: Signal-scored (personalized) — scored by brand/cat/keyword match
-    //   Q2: Popularity fill — ensures page is never empty, provides endless variety
-    // On cold-start (no signals), Q1 is skipped and Q2 fills everything.
-    // On deep scroll (pageNum > broadenThreshold), Q2 is weighted toward
-    // different categories to prevent echo chamber.
-
     const sql = `
       WITH
-      -- ── Raw listings → normalised product key ────────────────────────────────
       base AS (
         SELECT
           CASE
@@ -215,8 +193,7 @@ router.post("/api/home_feed", async (req, res) => {
           END AS key,
           replace(lower(btrim(l.store)), ' ', '') AS store_key,
           COALESCE(l.effective_price_cents, l.current_price_cents) AS price_cents,
-          COALESCE(l.current_price_observed_at, l.created_at)      AS observed_at,
-          l.title AS listing_title
+          COALESCE(l.current_price_observed_at, l.created_at)      AS observed_at
         FROM public.listings l
         WHERE coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
           AND COALESCE(l.effective_price_cents, l.current_price_cents) > 0
@@ -227,22 +204,17 @@ router.post("/api/home_feed", async (req, res) => {
       ),
       bk AS (SELECT * FROM base WHERE key IS NOT NULL),
 
-      -- ── Aggregate per key ─────────────────────────────────────────────────────
       agg AS (
         SELECT
           key,
-          MIN(price_cents)::int            AS min_price_cents,
-          MAX(price_cents)::int            AS max_price_cents,
-          COUNT(DISTINCT store_key)::int   AS store_count,
-          MAX(observed_at)                 AS last_seen,
-          (ARRAY_AGG(listing_title ORDER BY price_cents ASC NULLS LAST)
-             FILTER (WHERE listing_title IS NOT NULL AND btrim(listing_title) <> '')
-          )[1] AS fallback_title
+          MIN(price_cents)::int          AS min_price_cents,
+          MAX(price_cents)::int          AS max_price_cents,
+          COUNT(DISTINCT store_key)::int AS store_count,
+          MAX(observed_at)               AS last_seen
         FROM bk
         GROUP BY key
       ),
 
-      -- ── Per-key cheapest store ────────────────────────────────────────────────
       sb AS (
         SELECT key, store_key, MIN(price_cents)::int AS bp
         FROM bk GROUP BY key, store_key
@@ -252,11 +224,10 @@ router.post("/api/home_feed", async (req, res) => {
         FROM sb GROUP BY key
       ),
 
-      -- ── Join catalog metadata (one lateral per key) ───────────────────────────
       with_cat AS (
         SELECT
           a.key, a.min_price_cents, a.max_price_cents,
-          a.store_count, a.last_seen, a.fallback_title,
+          a.store_count, a.last_seen,
           c.model_name, c.model_number, c.brand, c.category, c.image_url
         FROM agg a
         LEFT JOIN LATERAL (
@@ -277,16 +248,13 @@ router.post("/api/home_feed", async (req, res) => {
         WHERE cardinality($6::text[]) = 0 OR a.key != ALL($6::text[])
       ),
 
-      -- ── Color grouping ────────────────────────────────────────────────────────
-      -- Same model_number+brand = same product in diff colors → one card.
-      -- Winner = variant with most store coverage (widest availability).
       grouped AS (
         SELECT DISTINCT ON (
           COALESCE(NULLIF(btrim(model_number), ''), key),
           lower(btrim(COALESCE(brand, '')))
         )
           key, min_price_cents, max_price_cents, store_count, last_seen,
-          COALESCE(NULLIF(btrim(model_name), ''), fallback_title, 'Product') AS title,
+          COALESCE(NULLIF(btrim(model_name), ''), 'Product') AS title,
           brand, category, image_url
         FROM with_cat
         ORDER BY
@@ -296,59 +264,33 @@ router.post("/api/home_feed", async (req, res) => {
           last_seen DESC NULLS LAST
       ),
 
-      -- ── Score every product ───────────────────────────────────────────────────
-      -- Signals:
-      --   +60  followed brand (you explicitly chose to follow this brand)
-      --   +35  history brand match
-      --   +30  expanded brand (inferred from category/keyword cross-signal)
-      --   +25  exact category match
-      --   +18  expanded category (inferred from brand cross-signal)
-      --   +15  keyword hit in title / brand / category
-      --   + 8  fresh listing (seen in last 7 days)
-      --   + N  store_count (coverage tie-breaker, uncapped)
       scored AS (
         SELECT
           g.*,
           sa.stores,
           (
-            -- ① Followed brand — explicit user signal
             CASE WHEN cardinality($4::text[]) > 0
               AND lower(btrim(COALESCE(g.brand,''))) = ANY($4::text[])
             THEN 60 ELSE 0 END
-
-            -- ② Direct history brand match
             + CASE WHEN cardinality($1::text[]) > 0
               AND lower(btrim(COALESCE(g.brand,''))) = ANY($1::text[])
             THEN 35 ELSE 0 END
-
-            -- ③ Expanded/inferred brand (e.g. laptop history → also show Dell)
             + CASE WHEN cardinality($2::text[]) > 0
               AND lower(btrim(COALESCE(g.brand,''))) = ANY($2::text[])
             THEN 30 ELSE 0 END
-
-            -- ④ Direct category match
             + CASE WHEN cardinality($3::text[]) > 0
               AND lower(btrim(COALESCE(g.category,''))) = ANY($3::text[])
             THEN 25 ELSE 0 END
-
-            -- ⑤ Expanded/inferred category (e.g. apple history → also boost headphones)
             + CASE WHEN cardinality($5::text[]) > 0
               AND lower(btrim(COALESCE(g.category,''))) = ANY($5::text[])
             THEN 18 ELSE 0 END
-
-            -- ⑥ Keyword match in title, brand, or category
             + CASE WHEN $7::text IS NOT NULL AND (
-                lower(COALESCE(g.title,''))    ~ $7
+                lower(COALESCE(g.title,''))       ~ $7
                 OR lower(COALESCE(g.brand,''))    ~ $7
                 OR lower(COALESCE(g.category,'')) ~ $7
               ) THEN 15 ELSE 0 END
-
-            -- ⑦ Freshness bonus
             + CASE WHEN g.last_seen > now() - interval '7 days' THEN 8 ELSE 0 END
-
-            -- ⑧ Store coverage — ensures well-stocked items bubble up
             + g.store_count
-
           )::int AS score
         FROM grouped g
         LEFT JOIN sa ON sa.key = g.key
@@ -364,21 +306,19 @@ router.post("/api/home_feed", async (req, res) => {
     `;
 
     const params = [
-      rawBrands,   // $1  direct brand signals
-      expBrands,   // $2  expanded/inferred brands
-      rawCats,     // $3  direct category signals
-      followed,    // $4  followed brands
-      expCats,     // $5  expanded/inferred categories
-      excl,        // $6  exclusion list
-      kwr,         // $7  keyword regex or null
-      limit,       // $8
-      offset,      // $9
+      rawBrands,  // $1
+      expBrands,  // $2
+      rawCats,    // $3
+      followed,   // $4
+      expCats,    // $5
+      excl,       // $6
+      kwr,        // $7
+      limit,      // $8
+      offset,     // $9
     ];
 
     const { rows } = await client.query(sql, params);
 
-    // Brand diversity cap — relaxes as user scrolls deeper
-    // (endlessly scrolling = they want to explore, not just their faves)
     const bc = {};
     const results = rows.filter(r => {
       if (!r.brand) return true;
@@ -387,8 +327,6 @@ router.post("/api/home_feed", async (req, res) => {
       return bc[b] <= brandDiversityCap;
     });
 
-    // If we have signals but got fewer results than limit, pad with popular items
-    // that aren't already in the result set — this guarantees the feed never dies.
     let finalResults = results;
     if (results.length < limit) {
       const resultKeys = new Set(results.map(r => r.key));
@@ -403,8 +341,7 @@ router.post("/api/home_feed", async (req, res) => {
               END AS key,
               replace(lower(btrim(l.store)), ' ', '') AS store_key,
               COALESCE(l.effective_price_cents, l.current_price_cents) AS price_cents,
-              COALESCE(l.current_price_observed_at, l.created_at) AS observed_at,
-              l.title AS listing_title
+              COALESCE(l.current_price_observed_at, l.created_at) AS observed_at
             FROM public.listings l
             WHERE coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
               AND COALESCE(l.effective_price_cents, l.current_price_cents) > 0
@@ -412,16 +349,18 @@ router.post("/api/home_feed", async (req, res) => {
           ),
           bk AS (SELECT * FROM base WHERE key IS NOT NULL),
           agg AS (
-            SELECT key, MIN(price_cents)::int AS min_price_cents, MAX(price_cents)::int AS max_price_cents,
-              COUNT(DISTINCT store_key)::int AS store_count, MAX(observed_at) AS last_seen,
-              (ARRAY_AGG(listing_title ORDER BY price_cents ASC NULLS LAST) FILTER (WHERE listing_title IS NOT NULL AND btrim(listing_title) <> ''))[1] AS fallback_title
+            SELECT key,
+              MIN(price_cents)::int          AS min_price_cents,
+              MAX(price_cents)::int          AS max_price_cents,
+              COUNT(DISTINCT store_key)::int AS store_count,
+              MAX(observed_at)               AS last_seen
             FROM bk GROUP BY key
           ),
           sb AS (SELECT key, store_key, MIN(price_cents)::int AS bp FROM bk GROUP BY key, store_key),
           sa AS (SELECT key, ARRAY_AGG(store_key ORDER BY bp ASC, store_key ASC) AS stores FROM sb GROUP BY key),
           wc AS (
             SELECT a.key, a.min_price_cents, a.max_price_cents, a.store_count, a.last_seen,
-              c.model_name, c.model_number, c.brand, c.category, c.image_url, a.fallback_title
+              c.model_name, c.model_number, c.brand, c.category, c.image_url
             FROM agg a
             LEFT JOIN LATERAL (
               SELECT c2.model_name, c2.model_number, c2.brand, c2.category, c2.image_url
@@ -437,7 +376,7 @@ router.post("/api/home_feed", async (req, res) => {
           g AS (
             SELECT DISTINCT ON (COALESCE(NULLIF(btrim(model_number),''),key), lower(btrim(COALESCE(brand,''))))
               key, min_price_cents, max_price_cents, store_count, last_seen,
-              COALESCE(NULLIF(btrim(model_name),''), fallback_title, 'Product') AS title,
+              COALESCE(NULLIF(btrim(model_name),''), 'Product') AS title,
               brand, category, image_url
             FROM wc
             ORDER BY COALESCE(NULLIF(btrim(model_number),''),key), lower(btrim(COALESCE(brand,''))),

@@ -526,7 +526,7 @@ async function findSeedFromListings(client, parsed) {
   if (kind === 'asin') {
     const r = await client.query(
       `
-      select store, store_sku, upc, pci, title, url, current_price_cents, current_price_observed_at, created_at
+      select store, store_sku, upc, pci, url, current_price_cents, current_price_observed_at, created_at
       from public.listings
       where lower(btrim(store)) = 'amazon'
         and norm_sku(store_sku) = norm_sku($1)
@@ -553,7 +553,7 @@ async function findSeedFromListings(client, parsed) {
   if (kind === 'upc') {
     const r = await client.query(
       `
-      select store, store_sku, upc, pci, title, url, current_price_cents, current_price_observed_at, created_at
+      select store, store_sku, upc, pci, url, current_price_cents, current_price_observed_at, created_at
       from public.listings
       where norm_upc(upc) = norm_upc($1)
         and coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
@@ -572,7 +572,7 @@ async function findSeedFromListings(client, parsed) {
   if (kind === 'pci') {
     const r = await client.query(
       `
-      select store, store_sku, upc, pci, title, url, current_price_cents, current_price_observed_at, created_at
+      select store, store_sku, upc, pci, url, current_price_cents, current_price_observed_at, created_at
       from public.listings
       where pci is not null and btrim(pci) <> ''
         and upper(btrim(pci)) = upper(btrim($1))
@@ -593,7 +593,7 @@ async function findSeedFromListings(client, parsed) {
     const store = storeForKind(kind);
     const r = await client.query(
       `
-      select store, store_sku, upc, pci, title, url, current_price_cents, current_price_observed_at, created_at
+      select store, store_sku, upc, pci, url, current_price_cents, current_price_observed_at, created_at
       from public.listings
       where replace(lower(btrim(store)), ' ', '') = $1
         and norm_sku(store_sku) = norm_sku($2)
@@ -774,7 +774,7 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
 }
 
 const OFFER_COLS = `
-  store, store_sku, upc, pci, url, title, offer_tag,
+  store, store_sku, upc, pci, url, offer_tag,
   current_price_cents, current_price_observed_at, created_at,
   coupon_text,
   coupon_type,
