@@ -3338,10 +3338,25 @@ async function run(raw){
 
     const brandRow = document.getElementById('pBrandRow');
     const brandLine = document.getElementById('pBrandLine');
+    const brandHref = sellerHrefFromStore(brand);
 
     if (brandRow) brandRow.hidden = !brand;
-    if (brandLine) brandLine.textContent = brand || '';
-        const prevBrandKey = String(state.followBrand || '').trim().toLowerCase();
+
+    if (brandLine) {
+      brandLine.textContent = brand || '';
+
+      if (brand && brandHref) {
+        brandLine.href = brandHref;
+        brandLine.hidden = false;
+        brandLine.setAttribute('aria-label', `Open ${brand} seller page`);
+        brandLine.removeAttribute('tabindex');
+      } else {
+        brandLine.removeAttribute('href');
+        brandLine.hidden = !brand;
+      }
+    }
+
+    const prevBrandKey = String(state.followBrand || '').trim().toLowerCase();
     const nextBrand = String(brand || '').trim();
     const nextBrandKey = nextBrand.toLowerCase();
 

@@ -1906,6 +1906,14 @@ button.pc-lineup-model{
   gap:14px;
 }
 
+#pBrandLine {
+  text-decoration: none;
+}
+
+#pBrandLine:hover {
+  text-decoration: underline;
+}
+
 .pc-timeline-simple__top{
   display:grid;
   grid-template-columns:28% 44% 28%;
