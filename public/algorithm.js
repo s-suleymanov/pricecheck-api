@@ -1,8 +1,4 @@
 (() => {
-  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
-    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
-  }
-
   const feedEl  = document.getElementById("homeDeals");
   const pillsEl = document.getElementById("homePills");
   if (!feedEl) return;
