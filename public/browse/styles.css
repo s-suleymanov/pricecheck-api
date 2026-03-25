@@ -415,9 +415,9 @@ h1{
   .browse-page .browse-rail{
     position:fixed;
     left:0;
-    top:64px;
+    top:63px;
     bottom:0;
-    height:calc(100dvh - 64px);
+    height:calc(100dvh - 63px);
     width:56px;
     z-index:50;
   }
