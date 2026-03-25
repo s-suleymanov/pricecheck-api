@@ -272,23 +272,23 @@
       const base = String(inlineBase || input.value || "");
       if (!base) return clearInlineOnly();
 
-      const baseTrimEnd = base.replace(/\s+$/g, "");
-      if (!baseTrimEnd) return clearInlineOnly();
+      if (/\s$/.test(base)) return clearInlineOnly();
+
+      const baseLower = base.toLowerCase();
 
       const top = items[0];
       const sug = String(top?.fill || top?.value || "").trim().toLowerCase();
       if (!sug) return clearInlineOnly();
 
-      const baseLower = baseTrimEnd.toLowerCase();
       if (!sug.startsWith(baseLower)) return clearInlineOnly();
       if (sug.length === baseLower.length) return clearInlineOnly();
 
       const tail = sug.slice(baseLower.length);
-      const filled = baseTrimEnd + tail;
+      const filled = base + tail;
 
       input.value = filled;
       try {
-        input.setSelectionRange(baseTrimEnd.length, filled.length);
+        input.setSelectionRange(base.length, filled.length);
       } catch {}
 
       inlineOn = true;
@@ -334,8 +334,6 @@
             it.kind === "family" ? "Family" :
             "Page";
 
-          const count = Number(it.products || 0);
-          const countText = !isPage && count > 0 ? `${count}` : "";
           const cls = idx === active ? "pc-ac__item is-active" : "pc-ac__item";
 
           return `
@@ -345,7 +343,6 @@
               </div>
               <div class="pc-ac__meta">
                 <span class="pc-ac__pill">${pill}</span>
-                ${countText ? `<span class="pc-ac__count">${countText}</span>` : ""}
               </div>
             </div>
           `;

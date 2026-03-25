@@ -199,7 +199,6 @@ router.get("/api/suggest", async (req, res) => {
   if (!q && !popular) return res.json({ ok: true, q: "", results: [] });
 
   const limit = clampInt(req.query.limit, 1, 20, 8);
-  const half = Math.max(1, Math.ceil(limit / 2));
 
   const qLower = normLower(q);
   const toks = tokenize(qLower);
@@ -208,7 +207,7 @@ router.get("/api/suggest", async (req, res) => {
 
   const client = await pool.connect();
   try {
-    if (popular) {
+        if (popular) {
       const popularSql = `
         WITH base AS (
           SELECT
@@ -225,35 +224,38 @@ router.get("/api/suggest", async (req, res) => {
         ),
         brand_counts AS (
           SELECT
+            'brand'::text AS kind,
             MIN(btrim(brand)) AS value,
             COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products
           FROM base
           WHERE brand IS NOT NULL AND btrim(brand) <> ''
           GROUP BY lower(btrim(brand))
-          ORDER BY products DESC, value ASC
-          LIMIT $1
         ),
         category_counts AS (
           SELECT
+            'category'::text AS kind,
             MIN(btrim(category)) AS value,
             COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products
           FROM base
           WHERE category IS NOT NULL AND btrim(category) <> ''
           GROUP BY lower(btrim(category))
-          ORDER BY products DESC, value ASC
-          LIMIT $2
         )
-        SELECT 'category'::text AS kind, value, products FROM category_counts
-        UNION ALL
-        SELECT 'brand'::text AS kind, value, products FROM brand_counts
+        SELECT kind, value, products
+        FROM (
+          SELECT * FROM brand_counts
+          UNION ALL
+          SELECT * FROM category_counts
+        ) ranked
+        ORDER BY products DESC, kind ASC, value ASC
+        LIMIT $1
       `;
 
-      const r = await client.query(popularSql, [half, limit - half]);
+      const r = await client.query(popularSql, [limit]);
       const results = Array.isArray(r.rows) ? r.rows : [];
       return res.json({ ok: true, q: "", results });
     }
 
-    const facetsLikeSql = `
+        const facetsLikeSql = `
       WITH base AS (
         SELECT
           ${PRODUCT_KEY_SQL} AS product_key,
@@ -269,34 +271,37 @@ router.get("/api/suggest", async (req, res) => {
       ),
       brand_counts AS (
         SELECT
+          'brand'::text AS kind,
           lower(btrim(brand)) AS facet_norm,
-          MIN(btrim(brand)) AS facet_label,
+          MIN(btrim(brand)) AS value,
           COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products
         FROM base
         WHERE brand IS NOT NULL AND btrim(brand) <> ''
           AND lower(btrim(brand)) LIKE $1
         GROUP BY lower(btrim(brand))
-        ORDER BY products DESC, facet_label ASC
-        LIMIT $2
       ),
       category_counts AS (
         SELECT
+          'category'::text AS kind,
           lower(btrim(category)) AS facet_norm,
-          MIN(btrim(category)) AS facet_label,
+          MIN(btrim(category)) AS value,
           COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products
         FROM base
         WHERE category IS NOT NULL AND btrim(category) <> ''
           AND lower(btrim(category)) LIKE $1
         GROUP BY lower(btrim(category))
-        ORDER BY products DESC, facet_label ASC
-        LIMIT $3
       )
-      SELECT 'brand'::text AS kind, facet_label AS value, products FROM brand_counts
-      UNION ALL
-      SELECT 'category'::text AS kind, facet_label AS value, products FROM category_counts
+      SELECT kind, value, products
+      FROM (
+        SELECT * FROM brand_counts
+        UNION ALL
+        SELECT * FROM category_counts
+      ) ranked
+      ORDER BY products DESC, kind ASC, value ASC
+      LIMIT $2
     `;
 
-    const facetsFuzzySql = `
+        const facetsFuzzySql = `
       WITH base AS (
         SELECT
           ${PRODUCT_KEY_SQL} AS product_key,
@@ -312,33 +317,36 @@ router.get("/api/suggest", async (req, res) => {
       ),
       brand_counts AS (
         SELECT
+          'brand'::text AS kind,
           lower(btrim(brand)) AS facet_norm,
-          MIN(btrim(brand)) AS facet_label,
+          MIN(btrim(brand)) AS value,
           COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products,
           similarity(lower(btrim(brand)), $1) AS sim
         FROM base
         WHERE brand IS NOT NULL AND btrim(brand) <> ''
           AND lower(btrim(brand)) % $1
         GROUP BY lower(btrim(brand))
-        ORDER BY sim DESC, products DESC, facet_label ASC
-        LIMIT $2
       ),
       category_counts AS (
         SELECT
+          'category'::text AS kind,
           lower(btrim(category)) AS facet_norm,
-          MIN(btrim(category)) AS facet_label,
+          MIN(btrim(category)) AS value,
           COUNT(DISTINCT (product_key || '|' || version_norm))::int AS products,
           similarity(lower(btrim(category)), $1) AS sim
         FROM base
         WHERE category IS NOT NULL AND btrim(category) <> ''
           AND lower(btrim(category)) % $1
         GROUP BY lower(btrim(category))
-        ORDER BY sim DESC, products DESC, facet_label ASC
-        LIMIT $3
       )
-      SELECT 'brand'::text AS kind, facet_label AS value, products FROM brand_counts
-      UNION ALL
-      SELECT 'category'::text AS kind, facet_label AS value, products FROM category_counts
+      SELECT kind, value, products
+      FROM (
+        SELECT * FROM brand_counts
+        UNION ALL
+        SELECT * FROM category_counts
+      ) ranked
+      ORDER BY sim DESC, products DESC, kind ASC, value ASC
+      LIMIT $2
     `;
 
     const modelsSql = `
@@ -383,13 +391,13 @@ router.get("/api/suggest", async (req, res) => {
 
     let facetRows = [];
     {
-      const r1 = await client.query(facetsLikeSql, [likeLoose, half, half]);
+      const r1 = await client.query(facetsLikeSql, [likeLoose, limit]);
       facetRows = r1.rows || [];
     }
 
     if ((!facetRows || facetRows.length === 0) && qLower.length >= 3) {
       try {
-        const r2 = await client.query(facetsFuzzySql, [qLower, half, half]);
+        const r2 = await client.query(facetsFuzzySql, [qLower, limit]);
         facetRows = r2.rows || [];
       } catch (e) {
         console.warn("fuzzy facets disabled (pg_trgm missing?):", e?.message || e);
@@ -597,12 +605,10 @@ router.get("/api/suggest", async (req, res) => {
     return String(a.value || "").localeCompare(String(b.value || ""));
   });
 
-  // Fill remaining slots with models (families)
-  const remaining = Math.max(0, limit - (comboItem ? 1 : 0) - facetResults.length);
-  let modelResults = [];
+    let modelResults = [];
 
-  if (remaining > 0 && qLower.length >= 2) {
-    const mr = await client.query(modelsSql, [likeLoose, remaining]);
+  if (qLower.length >= 2) {
+    const mr = await client.query(modelsSql, [likeLoose, limit]);
     const rows = Array.isArray(mr.rows) ? mr.rows : [];
 
     modelResults = rows
@@ -615,21 +621,34 @@ router.get("/api/suggest", async (req, res) => {
         if (pci) href = `/dashboard/pci/${encodeURIComponent(pci)}/`;
         else if (upc) href = `/dashboard/upc/${encodeURIComponent(upc.replace(/\D/g, ""))}/`;
 
-        // If no PCI/UPC, still let it route as a normal typed search:
-        // we return no href and the client will route() on pick.
         return {
           kind: "family",
-          value: String(r.value || "").trim(), // model_number (family key)
+          value: String(r.value || "").trim(),
           products: 0,
           href,
         };
       });
   }
 
-  const merged = [];
+    const merged = [];
   if (comboItem) merged.push(comboItem);
   for (const r of facetResults) merged.push(r);
   for (const r of modelResults) merged.push(r);
+
+  merged.sort((a, b) => {
+    const ap = Number(a.products || 0);
+    const bp = Number(b.products || 0);
+    if (bp !== ap) return bp - ap;
+
+    const aKind = String(a.kind || "");
+    const bKind = String(b.kind || "");
+    const kindRank = { combo: 0, brand: 1, category: 2, family: 3 };
+    const ak = kindRank[aKind] ?? 99;
+    const bk = kindRank[bKind] ?? 99;
+    if (ak !== bk) return ak - bk;
+
+    return String(a.value || "").localeCompare(String(b.value || ""));
+  });
 
     const seen = new Set();
     const results = merged
