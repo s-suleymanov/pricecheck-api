@@ -1824,7 +1824,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         <div class="condition-seg">
           ${state.hasRefurbished ? `
             <button type="button" class="condition-seg__btn${state.condition === "refurbished" ? " is-active" : ""}" data-condition="refurbished">
-              Refurbished
+              Refurb
             </button>` : ""}
           ${state.hasBundle ? `
             <button type="button" class="condition-seg__btn${state.condition === "bundle" ? " is-active" : ""}" data-condition="bundle">
