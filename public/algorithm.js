@@ -179,11 +179,11 @@
     if (brand) pushIcon(brand, brand);
 
     // then stores, but never duplicate the brand/store already shown
-    for (const st of uniq(stores || []).slice(0, 3)) {
+    for (const st of uniq(stores || []).slice(0, 2)) {
       pushIcon(st, st);
     }
 
-    return icons.slice(0, 4).map(it => {
+    return icons.slice(0, 3).map(it => {
       const t = esc(it.label);
       return it.u
         ? `<span class="home-deal__icon" title="${t}"><img src="${esc(it.u)}" alt="" loading="lazy" decoding="async" onerror="this.closest('.home-deal__icon')?.remove()"></span>`
