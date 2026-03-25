@@ -154,16 +154,44 @@
     const s=new Set();
     return (a||[]).filter(x=>{const k=String(x||"").toLowerCase();if(!k||s.has(k))return false;s.add(k);return true;});
   }
-  function iconsHtml({brand,stores}, S) {
-    const icons=[];
-    if (brand) icons.push({u:logoUrl(slugify(brand),S),label:brand,fb:(brand[0]||"?").toUpperCase()});
-    for (const st of uniq(stores||[]).slice(0,3))
-      icons.push({u:logoUrl(String(st).toLowerCase().replace(/\s+/g,""),S),label:st,fb:(st[0]||"?").toUpperCase()});
-    return icons.slice(0,4).map(it=>{
-      const t=esc(it.label);
+  function normIconKey(v) {
+    return String(v || "")
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "");
+  }
+
+  function iconsHtml({ brand, stores }, S) {
+    const icons = [];
+    const seen = new Set();
+
+    function pushIcon(rawKey, label) {
+      const key = normIconKey(rawKey || label);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+
+      const url = logoUrl(key, S);
+      icons.push({
+        u: url,
+        label,
+        fb: (String(label || "?")[0] || "?").toUpperCase()
+      });
+    }
+
+    // brand/manufacturer first
+    if (brand) pushIcon(brand, brand);
+
+    // then stores, but never duplicate the brand/store already shown
+    for (const st of uniq(stores || []).slice(0, 3)) {
+      pushIcon(st, st);
+    }
+
+    return icons.slice(0, 4).map(it => {
+      const t = esc(it.label);
       return it.u
-        ?`<span class="home-deal__icon" title="${t}"><img src="${esc(it.u)}" alt="" loading="lazy" decoding="async" onerror="this.closest('.home-deal__icon')?.remove()"></span>`
-        :`<span class="home-deal__icon home-deal__icon--fallback" title="${t}">${esc(it.fb)}</span>`;
+        ? `<span class="home-deal__icon" title="${t}"><img src="${esc(it.u)}" alt="" loading="lazy" decoding="async" onerror="this.closest('.home-deal__icon')?.remove()"></span>`
+        : `<span class="home-deal__icon home-deal__icon--fallback" title="${t}">${esc(it.fb)}</span>`;
     }).join("");
   }
   function cardHtml(item, S) {
