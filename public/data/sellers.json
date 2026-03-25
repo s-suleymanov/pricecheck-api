@@ -301,7 +301,7 @@
   },
   "arlo": {
     "name": "Arlo",
-    "logo": "",
+    "logo": "/logo/seller/arlo.png",
     "website": "https://www.arlo.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -641,7 +641,7 @@
   },
   "gopro": {
     "name": "GoPro",
-    "logo": "",
+    "logo": "/logo/seller/gopro.png",
     "website": "https://gopro.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1019,6 +1019,26 @@
       "support_page": "https://support.ouraring.com"
     }
   },
+  "zeiss": {
+  "name": "ZEISS",
+  "logo": "/logo/seller/zeiss.png",
+  "website": "https://www.zeiss.com",
+  "owned_by": "Carl Zeiss Foundation",
+  "type": "Proprietary",
+  "location": "Germany",
+  "founded": 1846,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "10% on products showing signs of use/wear",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-800-441-3005",
+    "chat_available": false,
+    "support_page": "https://www.zeiss.com/corporate/us/contact.html"
+  }
+},
   "playstation": {
     "name": "PlayStation",
     "logo": "",
@@ -1101,7 +1121,7 @@
   },
   "ring": {
     "name": "Ring",
-    "logo": "",
+    "logo": "/logo/seller/ring.jpg",
     "website": "https://ring.com",
     "owned_by": "Amazon",
     "type": "Proprietary",
@@ -1259,6 +1279,146 @@
       "support_page": null
     }
   },
+  "blackmagic design": {
+  "name": "Blackmagic-Design",
+  "logo": "/logo/seller/bmd.jpg",
+  "website": "https://www.blackmagicdesign.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Australia",
+  "founded": 2001,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "+1 408 954 0500",
+    "chat_available": false,
+    "support_page": "https://www.blackmagicdesign.com/support"
+  }
+},
+"polaroid": {
+  "name": "Polaroid",
+  "logo": "/logo/seller/polaroid.jpg",
+  "website": "https://www.polaroid.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Netherlands",
+  "founded": 1937,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": null,
+    "chat_available": false,
+    "support_page": "https://support.polaroid.com/hc/en-us"
+  }
+},
+  "olympus": {
+  "name": "Olympus",
+  "logo": "/logo/seller/olympus.svg",
+  "website": "https://www.olympus-global.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Japan",
+  "founded": 1919,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-855-532-7490",
+    "chat_available": false,
+    "support_page": "https://explore.omsystem.com/us/en/service-and-support"
+  }
+},
+  "panasonic": {
+  "name": "Panasonic",
+  "logo": "/logo/seller/panasonic.jpg",
+  "website": "https://www.panasonic.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Japan",
+  "founded": 1918,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "+1 (201) 348-7000",
+    "chat_available": true,
+    "support_page": "https://shop.panasonic.com/pages/frequently-asked-questions"
+  }
+},
+  "fujifilm": {
+  "name": "Fujifilm",
+  "logo": "/logo/seller/fujifilm.png",
+  "website": "https://www.fujifilm.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Japan",
+  "founded": 1934,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "833-313-3331",
+    "chat_available": false,
+    "support_page": "https://shopusa.fujifilm-x.com/support"
+  }
+},
+  "leica": {
+  "name": "Leica",
+  "logo": "/logo/seller/leica.svg",
+  "website": "https://www.leica-camera.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Germany",
+  "founded": 1869,
+  "policies": {
+    "return_period": "14 days",
+    "restocking_fee": "15% on opened returns",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-800-480-5422",
+    "chat_available": true,
+    "support_page": "https://leicacamerausa.com/pages/contact-online-store.html"
+  }
+},
+  "kodak": {
+  "name": "Kodak",
+  "logo": "/logo/seller/kodak.jpg",
+  "website": "https://www.kodak.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "United States",
+  "founded": 1880,
+  "policies": {
+    "return_period": "Unknown",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-800-356-3259",
+    "chat_available": false,
+    "support_page": "https://www.kodak.com/en/print/page/support-contacts/"
+  }
+},
   "shure": {
     "name": "Shure",
     "logo": "",
@@ -1279,6 +1439,26 @@
       "support_page": null
     }
   },
+  "canon": {
+  "name": "Canon",
+  "logo": "/logo/seller/canon.webp",
+  "website": "https://www.usa.canon.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Japan",
+  "founded": 1937,
+  "policies": {
+    "return_period": "14 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-800-385-2155",
+    "chat_available": true,
+    "support_page": "https://www.usa.canon.com/contact-us/support"
+  }
+},
   "skullcandy": {
     "name": "Skullcandy",
     "logo": "/logo/seller/skull.png",
@@ -1381,7 +1561,7 @@
   },
   "tcl": {
     "name": "TCL",
-    "logo": "",
+    "logo": "/logo/seller/tcl.png",
     "website": "https://www.tcl.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1481,7 +1661,7 @@
   },
   "wyze": {
     "name": "Wyze",
-    "logo": "",
+    "logo": "/logo/seller/wyze.webp",
     "website": "https://www.wyze.com",
     "owned_by": "",
     "type": "Private Label",
