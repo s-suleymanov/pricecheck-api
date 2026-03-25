@@ -79,6 +79,46 @@
       "support_page": "https://service.alibaba.com"
     }
   },
+    "nvidia": {
+    "name": "NVIDIA",
+    "logo": "/logo/seller/nvidia.png",
+    "website": "https://www.nvidia.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": 1993,
+    "policies": {
+      "return_period": "30 days",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": "+1 (408) 486-2000",
+      "chat_available": true,
+      "support_page": "https://www.nvidia.com/en-us/support/consumer/"
+    }
+  },
+  "celestron": {
+  "name": "Celestron",
+  "logo": "/logo/seller/celestron.avif",
+  "website": "https://www.celestron.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "United States",
+  "founded": 1960,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Minimum 15% if return conditions are not met",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "310-328-9560",
+    "chat_available": true,
+    "support_page": "https://www.celestron.com/pages/support"
+  }
+},
   "aliexpress": {
     "name": "AliExpress",
     "logo": "/logo/seller/aliexpress.png",
@@ -741,7 +781,7 @@
   },
   "lg": {
     "name": "LG",
-    "logo": "",
+    "logo": "/logo/seller/lg.png",
     "website": "https://www.lg.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -941,7 +981,7 @@
   },
   "oneplus": {
     "name": "OnePlus",
-    "logo": "",
+    "logo": "/logo/seller/oneplus.png",
     "website": "https://www.oneplus.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1081,7 +1121,7 @@
   },
   "roku": {
     "name": "Roku",
-    "logo": "",
+    "logo": "/logo/seller/roku.png",
     "website": "https://www.roku.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1099,9 +1139,29 @@
       "support_page": null
     }
   },
+  "infomir": {
+  "name": "Infomir",
+  "logo": "/logo/seller/infomir.png",
+  "website": "https://www.infomir.eu",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Europe",
+  "founded": 2001,
+  "policies": {
+    "return_period": "Option of return or exchange in accordance with applicable law",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "+1 (631) 482 66 36",
+    "chat_available": false,
+    "support_page": "https://www.infomir.eu/eng/contact/"
+  }
+},
   "samsung": {
     "name": "Samsung",
-    "logo": "/logo/seller/samsung.webp",
+    "logo": "/logo/seller/samsung.png",
     "website": "https://www.samsung.com",
     "owned_by": "",
     "type": "Manufacturer Direct / Consumer Electronics",
@@ -1261,7 +1321,7 @@
   },
   "sony": {
     "name": "Sony",
-    "logo": "",
+    "logo": "/logo/seller/sony.png",
     "website": "https://www.sony.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1279,6 +1339,26 @@
       "support_page": null
     }
   },
+  "nikon": {
+  "name": "Nikon",
+  "logo": "/logo/seller/nikon.png",
+  "website": "https://www.nikonusa.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Japan",
+  "founded": 1917,
+  "policies": {
+    "return_period": "14 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-800-645-6687",
+    "chat_available": true,
+    "support_page": "https://www.nikonusa.com/content/contact-us"
+  }
+},
   "steelseries": {
     "name": "SteelSeries",
     "logo": "/logo/seller/steelseries.png",
@@ -1441,7 +1521,7 @@
   },
   "xiaomi": {
     "name": "Xiaomi",
-    "logo": "",
+    "logo": "/logo/seller/xiaomi.svg",
     "website": "https://www.mi.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1561,7 +1641,7 @@
   },
   "soundcore": {
     "name": "Soundcore",
-    "logo": "",
+    "logo": "/logo/seller/soundcore.png",
     "website": "https://www.soundcore.com",
     "owned_by": "Anker",
     "type": "Proprietary",
@@ -1698,5 +1778,185 @@
       "chat_available": true,
       "support_page": "https://customerservice.costco.com"
     }
+  },
+    "viewsonic": {
+    "name": "ViewSonic",
+    "logo": "/logo/seller/viewsonic.webp",
+    "website": "https://www.viewsonic.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "United States",
+    "founded": 1987,
+    "policies": {
+      "return_period": "30 days",
+      "restocking_fee": "Unknown",
+      "free_shipping_threshold": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": "1-800-688-6688",
+      "chat_available": true,
+      "support_page": "https://www.viewsonic.com/us/customer-support"
+    }
+  },
+  "msi": {
+  "name": "MSI",
+  "logo": "/logo/seller/msi.jpg",
+  "website": "https://www.msi.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Taiwan",
+  "founded": 1986,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-888-447-6564",
+    "chat_available": true,
+    "support_page": "https://us.msi.com/support/contact"
   }
+},
+"acer": {
+  "name": "Acer",
+  "logo": "/logo/seller/acer.webp",
+  "website": "https://www.acer.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Taiwan",
+  "founded": 1976,
+  "policies": {
+    "return_period": "15 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-866-695-2237",
+    "chat_available": true,
+    "support_page": "https://www.acer.com/us-en/support/contact-acer"
+  }
+},
+"asus": {
+  "name": "ASUS",
+  "logo": "/logo/seller/asus.png",
+  "website": "https://www.asus.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Taiwan",
+  "founded": 1989,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "15% (non-defective or opened/missing accessories)",
+    "free_shipping_threshold": "$29.99+",
+    "price_match": "Yes"
+  },
+  "contact": {
+    "phone": "1-812-282-2787",
+    "chat_available": true,
+    "support_page": "https://www.asus.com/us/support/"
+  }
+},
+"philips": {
+  "name": "Philips",
+  "logo": "/logo/seller/philips.jpg",
+  "website": "https://www.philips.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "Netherlands",
+  "founded": 1891,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "No",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-866-309-3263",
+    "chat_available": true,
+    "support_page": "https://www.usa.philips.com/c-w/support-home.html"
+  }
+},
+"alienware": {
+  "name": "Alienware",
+  "logo": "/logo/seller/alienware.jpg",
+  "website": "https://www.dell.com/en-us/gaming/alienware",
+  "owned_by": "Dell",
+  "type": "Proprietary",
+  "location": "United States",
+  "founded": 1996,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "No minimum (Free Standard Shipping)",
+    "price_match": "Yes"
+  },
+  "contact": {
+    "phone": "1-800-624-9897",
+    "chat_available": true,
+    "support_page": "https://www.dell.com/en-us/lp/contact-us"
+  }
+},
+"benq": {
+  "name": "BenQ",
+  "logo": "/logo/seller/benq.jpg",
+  "website": "https://www.benq.com",
+  "owned_by": "Qisda",
+  "type": "Proprietary",
+  "location": "Taiwan",
+  "founded": 1984,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "No",
+    "free_shipping_threshold": "$35+",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-888-512-2367",
+    "chat_available": true,
+    "support_page": "https://www.benq.com/en-us/support.html"
+  }
+},
+"hp": {
+  "name": "HP",
+  "logo": "/logo/seller/hp.svg",
+  "website": "https://www.hp.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "United States",
+  "founded": 1939,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Up to 15% on select returns",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-888-999-4747",
+    "chat_available": true,
+    "support_page": "https://support.hp.com/us-en/contact"
+  }
+},
+"z-edge": {
+  "name": "Z-EDGE",
+  "logo": "/logo/seller/zedge.png",
+  "website": "https://www.z-edge.com",
+  "owned_by": "Zero Edge Technology LLC",
+  "type": "Proprietary",
+  "location": "United States",
+  "founded": 2015,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": null,
+    "chat_available": false,
+    "support_page": "https://www.z-edge.com/pages/contact-us"
+  }
+}
 }

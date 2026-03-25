@@ -1584,39 +1584,65 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   // Sidebar renderers (3 panels)
   // ----------------------------
   async function renderCategoryPanel() {
-    if (!els.sidecol || !els.categoryPanel) return;
+  if (!els.sidecol || !els.categoryPanel) return;
 
-    const catName = String(state.category || "").trim();
-    if (!catName) {
-      els.categoryPanel.innerHTML = "";
-      els.categoryPanel.hidden = true;
-      return;
-    }
-
-    const brands = (Array.isArray(state.sideBrands) ? state.sideBrands : []).slice(0, 14);
-
-    els.categoryPanel.hidden = false;
-    els.categoryPanel.innerHTML = `
-      <h2 class="side-title">${escapeHtml(catName)}</h2>
-
-      ${brands.length ? `
-        <div class="side-block">
-          <div class="side-label">Top Brands</div>
-          <div class="pillrow">
-            ${brands.map((b) => {
-              const active = state.brand && state.brand.toLowerCase() === String(b).toLowerCase();
-              return `
-                <button type="button" class="pillbtn ${active ? "is-active" : ""}"
-                  data-side-set="brand" data-side-value="${escapeHtml(b)}">
-                  ${escapeHtml(b)}
-                </button>
-              `;
-            }).join("")}
-          </div>
-        </div>
-      ` : ""}
-    `;
+  const catName = String(state.category || "").trim();
+  if (!catName) {
+    els.categoryPanel.innerHTML = "";
+    els.categoryPanel.hidden = true;
+    return;
   }
+
+  const brands = (Array.isArray(state.sideBrands) ? state.sideBrands : []).slice(0, 12);
+
+  const brandButtons = await Promise.all(
+    brands.map(async (b) => {
+      const brandName = String(b || "").trim();
+      if (!brandName) return "";
+
+      const active = state.brand && state.brand.toLowerCase() === brandName.toLowerCase();
+      const logoUrl = await storeLogoUrlForKey(brandName);
+      const label = escapeHtml(brandName);
+
+      return `
+        <button
+          type="button"
+          class="brand-icon-btn ${active ? "is-active" : ""}"
+          data-side-set="brand"
+          data-side-value="${label}"
+          aria-label="${label}"
+          title="${label}"
+        >
+          ${
+            logoUrl
+              ? `<img
+                  class="brand-icon-img"
+                  src="${escapeHtml(logoUrl)}"
+                  alt="${label}"
+                  loading="lazy"
+                  onerror="this.closest('button')?.remove()"
+                >`
+              : `<span class="brand-icon-fallback">${label.slice(0, 1).toUpperCase()}</span>`
+          }
+        </button>
+      `;
+    })
+  );
+
+  els.categoryPanel.hidden = false;
+  els.categoryPanel.innerHTML = `
+    <h2 class="side-title">${escapeHtml(catName)}</h2>
+
+    ${brandButtons.filter(Boolean).length ? `
+      <div class="side-block">
+        <div class="side-label">Top Brands</div>
+        <div class="brand-icon-grid">
+          ${brandButtons.filter(Boolean).join("")}
+        </div>
+      </div>
+    ` : ""}
+  `;
+}
 
   async function renderBrandPanel() {
     if (!els.sidecol || !els.brandPanel) return;
