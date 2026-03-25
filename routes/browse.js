@@ -54,9 +54,9 @@ router.get("/api/browse", async (req, res) => {
   }
 
   const hasBrand = !!brand;
-  const refurbishedParam = normText(req.query.refurbished); // '1', '0', or ''
-  const hasRefurbishedFilter = refurbishedParam === '1' || refurbishedParam === '0';
   const hasCategory = !!category;
+  const conditionParam = normText(req.query.condition).toLowerCase();
+  const condition = (conditionParam === "refurbished" || conditionParam === "bundle") ? conditionParam : "new";
 
   if (hasBrand && hasCategory) {
     type = "combo";
@@ -86,8 +86,9 @@ router.get("/api/browse", async (req, res) => {
 
     const detectSql = `
       SELECT
-        COUNT(*) FILTER (WHERE c.is_refurbished = false)::int > 0 AS has_new,
-        COUNT(*) FILTER (WHERE c.is_refurbished = true)::int  > 0 AS has_refurbished
+        COUNT(*) FILTER (WHERE c.is_refurbished = false AND c.is_bundle = false)::int > 0 AS has_new,
+        COUNT(*) FILTER (WHERE c.is_refurbished = true)::int  > 0 AS has_refurbished,
+        COUNT(*) FILTER (WHERE c.is_bundle = true)::int        > 0 AS has_bundle
       FROM public.catalog c
       WHERE c.model_number IS NOT NULL
         AND btrim(c.model_number) <> ''
@@ -117,7 +118,11 @@ router.get("/api/browse", async (req, res) => {
                 AND lower(btrim(c.variant)) = lower(btrim($6))))
           AND ($7 = '' OR (c.color IS NOT NULL AND btrim(c.color) <> ''
                 AND lower(btrim(c.color)) = lower(btrim($7))))
-          AND ($8 = '' OR c.is_refurbished = ($8 = '1'))
+          AND (
+            ($8 = 'new'         AND c.is_refurbished = false AND c.is_bundle = false)
+            OR ($8 = 'refurbished' AND c.is_refurbished = true)
+            OR ($8 = 'bundle'      AND c.is_bundle = true)
+          )
           AND (
             ($1 = 'brand'    AND lower(btrim(c.brand))    = lower(btrim($2)))
             OR ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
@@ -130,7 +135,7 @@ router.get("/api/browse", async (req, res) => {
 
     const [detectRow, total] = await Promise.all([
       client.query(detectSql, baseParams).then(r => r.rows?.[0] ?? {}),
-      client.query(countSql, [...baseParams, hasRefurbishedFilter ? refurbishedParam : ""])
+      client.query(countSql, [...baseParams, condition])
             .then(r => r.rows?.[0]?.total ?? 0),
     ]);
 
@@ -152,6 +157,7 @@ router.get("/api/browse", async (req, res) => {
           NULLIF(btrim(c.pci), '') AS pci,
           NULLIF(btrim(c.upc), '') AS upc,
           c.is_refurbished,
+          c.is_bundle,
           c.created_at,
           c.id
         FROM public.catalog c
@@ -162,7 +168,11 @@ router.get("/api/browse", async (req, res) => {
                 AND lower(btrim(c.variant)) = lower(btrim($6))))
           AND ($7 = '' OR (c.color IS NOT NULL AND btrim(c.color) <> ''
                 AND lower(btrim(c.color)) = lower(btrim($7))))
-          AND ($8 = '' OR c.is_refurbished = ($8 = '1'))
+          AND (
+            ($8 = 'new'         AND c.is_refurbished = false AND c.is_bundle = false)
+            OR ($8 = 'refurbished' AND c.is_refurbished = true)
+            OR ($8 = 'bundle'      AND c.is_bundle = true)
+          )
           AND (
             ($1 = 'brand'    AND lower(btrim(c.brand))    = lower(btrim($2)))
             OR ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
@@ -231,6 +241,7 @@ router.get("/api/browse", async (req, res) => {
           a.image_url,
           a.dropship_warning,
           a.is_refurbished,
+          a.is_bundle,
           a.dashboard_key,
           lr.best_price_cents,
           COALESCE(lr.priced_listing_count, 0) AS priced_listing_count,
@@ -304,7 +315,7 @@ router.get("/api/browse", async (req, res) => {
       SELECT
         model_number, version, model_name, brand, category,
         image_url, dropship_warning, dashboard_key, best_price_cents,
-        is_refurbished
+        is_refurbished, is_bundle
       FROM ordered
       LIMIT $9 OFFSET $10
     `;
@@ -312,7 +323,7 @@ router.get("/api/browse", async (req, res) => {
     const { rows } = await client.query(listSql, [
       type, value, brand, category,
       family || "", variant || "", color || "",
-      hasRefurbishedFilter ? refurbishedParam : "",
+      condition,
       limit,
       offset,
       sortKey,
@@ -331,6 +342,8 @@ router.get("/api/browse", async (req, res) => {
       pages: Math.max(1, Math.ceil(total / limit)),
       has_new: !!detectRow.has_new,
       has_refurbished: !!detectRow.has_refurbished,
+      has_bundle: !!detectRow.has_bundle,
+      condition,
       results: rows || [],
     });
   } catch (e) {

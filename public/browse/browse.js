@@ -266,10 +266,9 @@ const state = {
     color: "",
     colorNorm: "",
 
-    // condition filter
-    refurbished: null,     // null = no filter, true = refurbished only, false = new only
-    hasNew: false,
+    condition: "new",      // "new" | "refurbished" | "bundle"
     hasRefurbished: false,
+    hasBundle: false,
 
     // sidebar cached facets
     sideCats: [],
@@ -438,8 +437,7 @@ const state = {
 
     const sp = new URLSearchParams();
 
-    if (state.refurbished === true) sp.set("condition", "refurbished");
-    else if (state.refurbished === false) sp.set("condition", "new");
+    if (state.condition && state.condition !== "new") sp.set("condition", state.condition);
 
     if (state.sort && state.sort !== "recommended") sp.set("sort", state.sort);
 
@@ -516,9 +514,7 @@ const state = {
 
     const _sp = new URLSearchParams(location.search);
     const _cond = _sp.get("condition");
-    if (_cond === "refurbished") state.refurbished = true;
-    else if (_cond === "new") state.refurbished = false;
-    else state.refurbished = null;
+    state.condition = (_cond === "refurbished" || _cond === "bundle") ? _cond : "new";
     const _sort = String(_sp.get("sort") || "").trim().toLowerCase();
     state.sort =
       _sort === "lowest-price" ||
@@ -662,6 +658,8 @@ const state = {
       : `<div class="img ph"></div>`;
 
     const warn = r.dropship_warning ? `<span class="warn">Dropshipping risk</span>` : "";
+    const refurbBadge = r.is_refurbished ? `<span class="card-badge card-badge--refurb"><svg viewBox="0 -960 960 960" width="13" height="13" aria-hidden="true" style="vertical-align:-1px;fill:currentColor"><path d="M204-318q-22-38-33-78t-11-82q0-134 93-228t227-94h7l-64-64 56-56 160 160-160 160-56-56 64-64h-7q-100 0-170 70.5T240-478q0 26 6 51t18 49l-60 60ZM481-40 321-200l160-160 56 56-64 64h7q100 0 170-70.5T720-482q0-26-6-51t-18-49l60-60q22 38 33 78t11 82q0 134-93 228t-227 94h-7l64 64-56 56Z"/></svg> Refurb</span>` : "";
+    const bundleBadge = r.is_bundle ? `<span class="card-badge card-badge--bundle"><svg viewBox="0 -960 960 960" width="13" height="13" aria-hidden="true" style="vertical-align:-1px;fill:currentColor"><path d="M240-400v80h-80q-33 0-56.5-23.5T80-400v-400q0-33 23.5-56.5T160-880h400q33 0 56.5 23.5T640-800v80h-80v-80H160v400h80ZM400-80q-33 0-56.5-23.5T320-160v-400q0-33 23.5-56.5T400-640h400q33 0 56.5 23.5T880-560v400q0 33-23.5 56.5T800-80H400Zm0-80h400v-400H400v400Zm200-200Z"/></svg> Bundle</span>` : "";
 
     const brand = (r.brand || "").trim();
     const brandLine = brand ? brand : "";
@@ -675,7 +673,7 @@ const state = {
         <div class="price-row">
           <div class="price">${fmtPrice(r.best_price_cents)}</div>
           <div class="store-stack" data-store-stack="1"></div>
-          ${warn}
+          ${warn}${refurbBadge}${bundleBadge}
         </div>
       </div>
     `;
@@ -1809,85 +1807,69 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   }
 
   function renderConditionFilter() {
-  const el = document.getElementById("conditionFilter");
-  if (!el) return;
+    const el = document.getElementById("conditionFilter");
+    if (!el) return;
 
-  const showCondition = state.hasNew && state.hasRefurbished && !state.lastError;
-  const showSort = !state.lastError && (state.brand || state.category || state.q);
+    const showToggles = (state.hasRefurbished || state.hasBundle) && !state.lastError;
+    const showSort = !state.lastError && (state.brand || state.category || state.q);
+    const show = showToggles || showSort;
 
-  const show = showCondition || showSort;
-  el.hidden = !show;
+    el.hidden = !show;
+    if (!show) { el.innerHTML = ""; return; }
 
-  if (!show) {
-    el.innerHTML = "";
-    return;
-  }
-
-  el.innerHTML = `
-    <div class="browse-topbar">
-      <div class="browse-topbar__left">
-        ${
-          showCondition
-            ? `
-          <div class="condition-seg">
-            <button type="button" class="condition-seg__btn${state.refurbished === false ? " is-active" : ""}" data-condition="new">New</button>
-            <button type="button" class="condition-seg__btn${state.refurbished === true ? " is-active" : ""}" data-condition="refurbished">Refurbished</button>
-          </div>
-        `
-            : ""
-        }
-
-        <div class="browse-tip browse-tip-top" aria-label="Browse tip">
-          Tip: Single-click a product card to preview it. Double-click a product card to open its full page.
+    el.innerHTML = `
+  <div class="browse-topbar">
+    <div class="browse-topbar__left">
+      ${showToggles ? `
+        <div class="condition-seg">
+          ${state.hasRefurbished ? `
+            <button type="button" class="condition-seg__btn${state.condition === "refurbished" ? " is-active" : ""}" data-condition="refurbished">
+              Refurbished
+            </button>` : ""}
+          ${state.hasBundle ? `
+            <button type="button" class="condition-seg__btn${state.condition === "bundle" ? " is-active" : ""}" data-condition="bundle">
+              Bundle
+            </button>` : ""}
         </div>
-
+      ` : ""}
       </div>
-
-      <div class="browse-topbar__right">
-        ${
-          showSort
-            ? `
-          <label class="browse-sort" for="browseSort">
-            <span class="browse-sort__label">Sort</span>
-            <select id="browseSort" class="browse-sort__select">
-              <option value="recommended" ${state.sort === "recommended" ? "selected" : ""}>Recommended</option>
-              <option value="lowest-price" ${state.sort === "lowest-price" ? "selected" : ""}>Lowest Price</option>
-              <option value="highest-price" ${state.sort === "highest-price" ? "selected" : ""}>Highest Price</option>
-              <option value="az" ${state.sort === "az" ? "selected" : ""}>A to Z</option>
-            </select>
-          </label>
-        `
-            : ""
-        }
+        <div class="browse-topbar__right">
+          ${showSort ? `
+            <label class="browse-sort" for="browseSort">
+              <span class="browse-sort__label">Sort</span>
+              <select id="browseSort" class="browse-sort__select">
+                <option value="recommended" ${state.sort === "recommended" ? "selected" : ""}>Recommended</option>
+                <option value="lowest-price" ${state.sort === "lowest-price" ? "selected" : ""}>Lowest Price</option>
+                <option value="highest-price" ${state.sort === "highest-price" ? "selected" : ""}>Highest Price</option>
+                <option value="az" ${state.sort === "az" ? "selected" : ""}>A to Z</option>
+              </select>
+            </label>
+          ` : ""}
+        </div>
       </div>
-    </div>
-  `;
+    `;
 
-  el.querySelectorAll("[data-condition]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const v = String(btn.getAttribute("data-condition") || "").trim().toLowerCase();
+    el.querySelectorAll("[data-condition]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const v = btn.getAttribute("data-condition");
+        state.condition = state.condition === v ? "new" : v;
+        state.page = 1;
+        state.animateNextRender = false;
+        startPageTransitionUI();
+        writeUrl({ replace: false });
+        load();
+      });
+    });
 
-      if (v === "new") state.refurbished = false;
-      else if (v === "refurbished") state.refurbished = true;
-      else state.refurbished = null;
-
+    el.querySelector("#browseSort")?.addEventListener("change", (e) => {
+      state.sort = String(e.target.value || "recommended").trim().toLowerCase();
       state.page = 1;
       state.animateNextRender = false;
       startPageTransitionUI();
       writeUrl({ replace: false });
       load();
     });
-  });
-
-  el.querySelector("#browseSort")?.addEventListener("change", (e) => {
-    state.sort = String(e.target.value || "recommended").trim().toLowerCase();
-    state.page = 1;
-    state.animateNextRender = false;
-    startPageTransitionUI();
-    writeUrl({ replace: false });
-    load();
-  });
-}
+  }
 
   // ----------------------------
   // Render main grid
@@ -2074,7 +2056,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         if (state.family) qs.set("family", state.family);
         if (state.variant) qs.set("variant", state.variant);
         if (state.color) qs.set("color", state.color);
-        if (state.refurbished !== null) qs.set("refurbished", state.refurbished ? "1" : "0");
+        qs.set("condition", state.condition || "new");
         if (state.sort) qs.set("sort", state.sort);
 
         const data = await apiJson(`/api/browse?${qs.toString()}`, { signal });
@@ -2086,8 +2068,8 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         state.pages = typeof data.pages === "number" ? data.pages : 1;
         state.results = Array.isArray(data.results) ? data.results : [];
         state.also = [];
-        state.hasNew = !!data.has_new;
         state.hasRefurbished = !!data.has_refurbished;
+        state.hasBundle = !!data.has_bundle;
 
         await loadCategoryPanelFacets(reqId, { signal });
         await loadBrandPanelFacets(reqId, { signal });
@@ -2191,7 +2173,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     state.sellerKey = "";
     state.sellerLogoUrl = "";
 
-    state.refurbished = null;
+    state.condition = "new";
     state.page = 1;
     writeUrl({ replace: false });
     load();
@@ -3260,7 +3242,7 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
     state.sellerKey = "";
     state.sellerLogoUrl = "";
 
-    state.refurbished = null;
+    state.condition = "new";
 
     if (state.detailOpen) await closeDetail();
 

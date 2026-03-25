@@ -298,6 +298,27 @@ body{
   font-size: 12px;
 }
 
+.card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.card-badge--refurb {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+.card-badge--bundle {
+  background: #ede9fe;
+  color: #5b21b6;
+  border: 1px solid #ddd6fe;
+}
+
 /* Hide sidebar on tablet/mobile (keeps your current grid switch) */
 @media (max-width: 860px){
   .layout{
