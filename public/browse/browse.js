@@ -117,12 +117,6 @@
     `;
   }
 
-  function browseRailResultCount() {
-    const n = Number(state.total || 0);
-    if (!Number.isFinite(n) || n <= 0) return "0";
-    return String(Math.min(n, 999));
-  }
-
   function stepBrowsePage(delta) {
     if (state.loading) return;
 
@@ -180,15 +174,6 @@ rail.innerHTML = `
           ${BROWSE_RAIL_ARROW_SVG}
         </button>
       ` : ""}
-
-      <div
-        class="browse-rail__count"
-        id="browseRailCount"
-        aria-label="${escapeHtml(`${state.total || 0} results`)}"
-        title="${escapeHtml(`${state.total || 0} results`)}"
-      >
-        ${escapeHtml(browseRailResultCount())}
-      </div>
 
       ${showNext ? `
         <button
@@ -1917,16 +1902,6 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
     const q = (state.value || state.q || "").trim();
     const isPaged = state.page > 1;
-
-        // Publish results count to the tabs bar (partials.js owns the UI)
-    try {
-      const hasQuery = !!(state.brand || state.category || String(state.q || "").trim());
-      const total = typeof state.total === "number" ? state.total : 0;
-
-      // Hide on error or on empty /browse/ with no query
-      const show = !state.lastError && hasQuery;
-      window.dispatchEvent(new CustomEvent("pc:browse_results", { detail: { show, total } }));
-    } catch (_e) {}
 
     const canonical = `${location.origin}${buildBrowsePath({
       q: (state.value || state.q || "").trim(),

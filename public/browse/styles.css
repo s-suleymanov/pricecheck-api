@@ -562,18 +562,6 @@ h1{
     transform:rotate(180deg);
   }
 
-  .browse-page .browse-rail__count{
-    width:40px;
-    min-height:18px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    color:#6b7280;
-    font-size:14px;
-    font-weight:600;
-    line-height:1;
-  }
-
   .browse-page #site-footer{
     margin-left:56px;
   }
