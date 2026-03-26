@@ -17,7 +17,7 @@
 /* Layout */
 .grid-shell{
   display:grid;
-  grid-template-columns:minmax(0, 1fr) 300px;
+  grid-template-columns:minmax(0, 1fr) 280px;
   grid-template-areas:
     "header header"
     "variant variant"
@@ -90,8 +90,8 @@ aside .note{
 
 /* Cards */
 .card{
-  background:#fff;border:1px solid var(--line);border-radius:var(--radius-card);
-  padding:16px 18px;box-shadow:0 1px 2px rgba(15,23,42,.06); margin-top: 24px;
+  background:#fff; /*border:1px solid var(--line); box-shadow:0 1px 2px rgba(15,23,42,.06);*/ border-radius:var(--radius-card);
+  padding:16px 18px; margin-top: 24px; border: none;
 }
 
 .ph-grid{
@@ -2899,7 +2899,7 @@ button.pc-lineup-model{
 
   .dashboard-page .wrap{
     box-sizing:border-box;
-    width:min(1400px, calc(100% - 76px));
+    width:min(1300px, calc(100% - 76px));
     max-width:1400px;
     margin-right:auto;
   }
