@@ -735,22 +735,6 @@ h1{
   margin-bottom: 0;
 }
 
-.detail-about-bullets{
-  margin: 12px 0 0 18px;
-  padding: 0;
-}
-
-.detail-about-bullets li{
-  margin: 0 0 8px 0;
-  font-size: 15px;
-  line-height: 1.5;
-  color: #3c4043;
-}
-
-.detail-about-bullets li:last-child{
-  margin-bottom: 0;
-}
-
 .card-variants{
   display: flex;
   flex-wrap: nowrap;      /* never allow a second row */

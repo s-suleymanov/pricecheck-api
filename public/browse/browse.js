@@ -17,33 +17,25 @@
   }
 
   function aboutHtmlFull(about) {
-  if (!about || typeof about !== "object") return "";
+    if (!about || typeof about !== "object") return "";
 
-  const paragraphs = Array.isArray(about.paragraphs) ? about.paragraphs : [];
-  const bullets = Array.isArray(about.bullets) ? about.bullets : [];
+    const paragraphs = Array.isArray(about.paragraphs) ? about.paragraphs : [];
 
-  const paraHtml = paragraphs
-    .map((p) => String(p || "").trim())
-    .filter(Boolean)
-    .map((p) => `<p>${escapeHtml(p)}</p>`)
-    .join("");
+    const paraHtml = paragraphs
+      .map((p) => String(p || "").trim())
+      .filter(Boolean)
+      .map((p) => `<p>${escapeHtml(p)}</p>`)
+      .join("");
 
-  const bulletsHtml = bullets
-    .map((b) => String(b || "").trim())
-    .filter(Boolean)
-    .map((b) => `<li>${escapeHtml(b)}</li>`)
-    .join("");
+    if (!paraHtml) return "";
 
-  if (!paraHtml && !bulletsHtml) return "";
-
-  return `
-    <div class="detail-about">
-      <div class="side-label">About</div>
-      ${paraHtml ? `<div class="detail-about-paragraphs">${paraHtml}</div>` : ""}
-      ${bulletsHtml ? `<ul class="detail-about-bullets">${bulletsHtml}</ul>` : ""}
-    </div>
-  `;
-}
+    return `
+      <div class="detail-about">
+        <div class="side-label">About</div>
+        <div class="detail-about-paragraphs">${paraHtml}</div>
+      </div>
+    `;
+  }
 
   function safeHref(raw, { sameOrigin = false } = {}) {
   const s = String(raw ?? "").trim();
