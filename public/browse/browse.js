@@ -695,7 +695,9 @@ const state = {
         String(paragraphs.find(Boolean) || bullets.find(Boolean) || "").trim();
     }
 
-    const aboutHtml = aboutText
+    const hasAbout = !!aboutText;
+
+    const aboutHtml = hasAbout
       ? `<div class="about-snippet">${escapeHtml(aboutText)}</div>`
       : "";
 
@@ -703,7 +705,7 @@ const state = {
       <div class="thumb">${img}</div>
       <div class="body">
         <div class="subtitle">${escapeHtml(brandLine)}</div>
-        <div class="name">${escapeHtml(displayName)}</div>
+        <div class="name ${hasAbout ? "name--with-about" : "name--no-about"}">${escapeHtml(displayName)}</div>
         ${aboutHtml}
         <div class="card-variants" data-card-variants="1"></div>
         <div class="price-row">
