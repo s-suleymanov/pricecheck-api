@@ -756,6 +756,9 @@ router.get("/api/search", async (req, res) => {
             c.category,
             c.image_url,
             COALESCE(c.dropship_warning, false) AS dropship_warning,
+            c.about,
+            COALESCE(c.is_refurbished, false) AS is_refurbished,
+            COALESCE(c.is_bundle, false) AS is_bundle,
             c.pci,
             c.upc,
             c.created_at,
@@ -814,6 +817,9 @@ router.get("/api/search", async (req, res) => {
           a.category,
           a.image_url,
           a.dropship_warning,
+          a.about,
+          a.is_refurbished,
+          a.is_bundle,
           a.dashboard_key,
           ch.best_price_cents
         FROM anchors a
@@ -881,6 +887,8 @@ router.get("/api/search", async (req, res) => {
             lower(coalesce(model_name,'')) LIKE $1
             OR lower(coalesce(model_number,'')) LIKE $1
             OR lower(coalesce(version,'')) LIKE $1
+            OR lower(coalesce(brand,'')) LIKE $1
+            OR lower(coalesce(category,'')) LIKE $1
           )
       )
       SELECT COUNT(*)::int AS total
@@ -921,6 +929,9 @@ router.get("/api/search", async (req, res) => {
           c.category,
           c.image_url,
           COALESCE(c.dropship_warning, false) AS dropship_warning,
+          c.about,
+          COALESCE(c.is_refurbished, false) AS is_refurbished,
+          COALESCE(c.is_bundle, false) AS is_bundle,
           c.pci,
           c.upc,
           c.created_at,
@@ -931,6 +942,8 @@ router.get("/api/search", async (req, res) => {
             lower(coalesce(c.model_name,'')) LIKE $1
             OR lower(coalesce(c.model_number,'')) LIKE $1
             OR lower(coalesce(c.version,'')) LIKE $1
+            OR lower(coalesce(c.brand,'')) LIKE $1
+            OR lower(coalesce(c.category,'')) LIKE $1
           )
         ORDER BY
           upper(btrim(c.model_number)),
@@ -979,6 +992,9 @@ router.get("/api/search", async (req, res) => {
         a.category,
         a.image_url,
         a.dropship_warning,
+        a.about,
+        a.is_refurbished,
+        a.is_bundle,
         a.dashboard_key,
         ch.best_price_cents
       FROM anchors a

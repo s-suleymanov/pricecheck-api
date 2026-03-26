@@ -40,11 +40,6 @@ body{
 
 /* Hide sidebar scrollbar but keep scroll */
 @media (min-width: 861px){
-  body.has-detail .sidecol{
-    -ms-overflow-style: none;   /* IE/Edge legacy */
-    scrollbar-width: none;      /* Firefox */
-  }
-
   body.has-detail .sidecol::-webkit-scrollbar{
     width: 0;
     height: 0;
@@ -56,26 +51,18 @@ body{
 }
 
 @media (min-width: 861px){
-
-  /* Make the right column its own scroll container */
   body.has-detail .sidecol{
     position: sticky;
     top: var(--pc-detail-top, 74px);
-
-    /* separate scroll area */
     height: calc(100vh - var(--pc-detail-top, 80px));
     overflow-y: auto;
     overflow-x: hidden;
-
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-
-    /* IMPORTANT: do not hide the scrollbar */
     scrollbar-width: auto;
     -ms-overflow-style: auto;
   }
 
-  /* Ensure any old "sticky panel" rules don’t reintroduce overflow clipping */
   body.has-detail #detailPanel.side-panel.detail{
     max-height: none;
   }
@@ -128,7 +115,7 @@ body{
     top: auto !important;
     max-height: none !important;
     overflow: visible !important;
-    margin-bottom: 20px;
+    margin-bottom: 6px;
   }
 }
 
@@ -201,7 +188,6 @@ body{
   border: 1px solid rgba(0,0,0,0.08);
   border-radius: 14px;
   padding: 12px 18px;
-  margin-top: 10px;
   margin-bottom: 10px;
 }
 
@@ -302,7 +288,7 @@ body{
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   padding: 3px 8px;
   border-radius: 999px;
@@ -379,15 +365,56 @@ h1{
   overflow: visible;
 }
 
+/* ── Detail panel action toolbar ─────────────────────── */
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 6px;
+}
+
+.detail-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 20px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.12s ease, color 0.12s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.detail-action-btn:hover {
+  color: #111;
+}
+
+.detail-action-btn[aria-pressed="true"] {
+  color: #111;
+}
+
+/* Remove old individual button styles */
+.detail-close,
+.detail-expand {
+  all: unset;
+}
+
+/* Keep the head layout clean */
 .detail-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  margin-bottom: 4px;
 }
 
 .detail-close {
-  margin-bottom: 3px;
   border: none;
   padding: 0;
   border-radius: 10px;
@@ -643,7 +670,8 @@ h1{
   align-items: center;
   justify-content: flex-start;   /* no pushing away */
   gap: 8px;                      /* small space between price and logos */
-  margin-top: 10px;              /* keep your existing spacing where .price had it */
+  margin-top: auto;
+  padding-top: 10px;              /* keep your existing spacing where .price had it */
 }
 
 /* remove top margin from .price because the row owns spacing now */
@@ -653,8 +681,8 @@ h1{
 
 /* circles */
 .store-badge{
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   object-fit: cover;
   border: 1px solid rgba(0,0,0,0.10);
@@ -672,33 +700,55 @@ h1{
 
 /* make sure each badge is its own row */
 .store-stack > *{
-  width: 28px;
-  height: 28px;
-  display: block;
-}
-
-/* ensure the image fills the box */
-.store-stack img.store-badge{
-  width: 24px;
-  height: 24px;
   display: block;
 }
 
 .store-stack > * + *{
-  margin-left: -6px;       /* adjust: -4px (less) to -10px (more) */
+  margin-left: -6px;
 }
 
 /* make the +N badge match circle sizing */
 .store-badge-more,
 .store-badge-fallback{
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   line-height: 1;
+}
+
+.detail-about{
+  margin-top: 18px;
+}
+
+.detail-about-paragraphs p{
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #3c4043;
+}
+
+.detail-about-paragraphs p:last-child{
+  margin-bottom: 0;
+}
+
+.detail-about-bullets{
+  margin: 12px 0 0 18px;
+  padding: 0;
+}
+
+.detail-about-bullets li{
+  margin: 0 0 8px 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #3c4043;
+}
+
+.detail-about-bullets li:last-child{
+  margin-bottom: 0;
 }
 
 .card-variants{
@@ -940,10 +990,10 @@ h1{
 
 .card.item{
   display: grid;
-  grid-template-columns: 180px 1fr auto;
-  align-items: center;
+  grid-template-columns: 180px minmax(0, 1fr);
+  align-items: stretch;
   gap: 40px;
-  padding: 8px 28px 8px 22px;
+  padding: 8px 22px 8px 22px;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
@@ -979,7 +1029,24 @@ h1{
 
 .body{
   padding: 0;
+  padding-bottom: 10px;
+  padding-top: 6px;
   min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.about-snippet{
+  margin-top: 6px;
+  font-size: 16px;
+  line-height: 1.35;
+  color: #5f6368;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .subtitle{
@@ -992,8 +1059,14 @@ h1{
 
 .name{
   font-weight: 500;
-  font-size: 24px;
-  margin-top: 4px;
+  padding-top: 4px;
+  font-size: 22px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  line-clamp: 1
 }
 
 .right{

@@ -16,6 +16,35 @@
       .replaceAll("'", "&#39;");
   }
 
+  function aboutHtmlFull(about) {
+  if (!about || typeof about !== "object") return "";
+
+  const paragraphs = Array.isArray(about.paragraphs) ? about.paragraphs : [];
+  const bullets = Array.isArray(about.bullets) ? about.bullets : [];
+
+  const paraHtml = paragraphs
+    .map((p) => String(p || "").trim())
+    .filter(Boolean)
+    .map((p) => `<p>${escapeHtml(p)}</p>`)
+    .join("");
+
+  const bulletsHtml = bullets
+    .map((b) => String(b || "").trim())
+    .filter(Boolean)
+    .map((b) => `<li>${escapeHtml(b)}</li>`)
+    .join("");
+
+  if (!paraHtml && !bulletsHtml) return "";
+
+  return `
+    <div class="detail-about">
+      <div class="side-label">About</div>
+      ${paraHtml ? `<div class="detail-about-paragraphs">${paraHtml}</div>` : ""}
+      ${bulletsHtml ? `<ul class="detail-about-bullets">${bulletsHtml}</ul>` : ""}
+    </div>
+  `;
+}
+
   function safeHref(raw, { sameOrigin = false } = {}) {
   const s = String(raw ?? "").trim();
   if (!s) return "";
@@ -664,11 +693,26 @@ const state = {
     const brand = (r.brand || "").trim();
     const brandLine = brand ? brand : "";
 
+        let aboutText = "";
+
+    if (r.about && typeof r.about === "object") {
+      const paragraphs = Array.isArray(r.about.paragraphs) ? r.about.paragraphs : [];
+      const bullets = Array.isArray(r.about.bullets) ? r.about.bullets : [];
+
+      aboutText =
+        String(paragraphs.find(Boolean) || bullets.find(Boolean) || "").trim();
+    }
+
+    const aboutHtml = aboutText
+      ? `<div class="about-snippet">${escapeHtml(aboutText)}</div>`
+      : "";
+
     const inner = `
       <div class="thumb">${img}</div>
       <div class="body">
         <div class="subtitle">${escapeHtml(brandLine)}</div>
         <div class="name">${escapeHtml(displayName)}</div>
+        ${aboutHtml}
         <div class="card-variants" data-card-variants="1"></div>
         <div class="price-row">
           <div class="price">${fmtPrice(r.best_price_cents)}</div>
@@ -2085,10 +2129,12 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         q: state.q,
         page: String(state.page),
         limit: String(state.limit),
+        condition: state.condition || "new",
       });
-      if (state.refurbished !== null) searchQs.set("refurbished", state.refurbished ? "1" : "0");
+      if (state.sort) searchQs.set("sort", state.sort);
 
       const data = await apiJson(`/api/search?${searchQs.toString()}`, { signal });
+
       if (reqId !== state.lastReqId) return;
 
       state.kind = data.kind || "product";
@@ -2112,6 +2158,8 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         state.q = state.brand;
         state.page = 1;
         writeUrl({ replace: true });
+        load();
+        return;
       }
 
       if (state.kind === "category" && state.value) {
@@ -2127,6 +2175,8 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         state.q = state.category;
         state.page = 1;
         writeUrl({ replace: true });
+        load();
+        return;
       }
 
       await loadCategoryPanelFacets(reqId, { signal });
@@ -2183,32 +2233,35 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   // Detail sidebar (expanded view)
   // ----------------------------
   const DETAIL_CLOSE_SVG = `
-    <svg xmlns="http://www.w3.org/2000/svg" height="31px" viewBox="0 -960 960 960" width="32px" fill="#000000" aria-hidden="true" focusable="false">
-      <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
+    <svg xmlns="http://www.w3.org/2000/svg" height="26px" viewBox="0 0 24 24" width="26px"
+        fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" aria-hidden="true" focusable="false">
+      <line x1="5" y1="5" x2="19" y2="19"/>
+      <line x1="19" y1="5" x2="5" y2="19"/>
     </svg>
   `;
 
   const DETAIL_EXPAND_SVG = `
-  <svg xmlns="http://www.w3.org/2000/svg"
-       height="24px" viewBox="0 -960 960 960" width="24px"
-       fill="#000000" aria-hidden="true" focusable="false">
-    <path d="M120-120v-320h80v184l504-504H520v-80h320v320h-80v-184L256-200h184v80H120Z"/>
-  </svg>
-`;
+    <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 0 24 24" width="22px"
+        fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <rect x="3" y="3" width="18" height="18" rx="2.5"/>
+    </svg>
+  `;
 
   const DETAIL_BOOKMARK_OFF_SVG = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-         height="28px" viewBox="0 -960 960 960" width="36px"
-         fill="#000000" aria-hidden="true" focusable="false" style="margin-bottom: 2px;">
-      <path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/>
+    <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 0 24 24" width="22px"
+        fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
     </svg>
   `;
 
   const DETAIL_BOOKMARK_ON_SVG = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-         height="28px" viewBox="0 -960 960 960" width="36px"
-         fill="#000000" aria-hidden="true" focusable="false" style="margin-bottom: 2px;">
-      <path d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Z"/>
+    <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 0 24 24" width="22px"
+        fill="currentColor" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
     </svg>
   `;
 
@@ -2226,37 +2279,38 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   }
 
   function detailBookmarkButtonHtml() {
-    return `
-      <button type="button"
-              class="detail-expand detail-bookmark"
-              data-detail-bookmark="1"
-              aria-label="Save to bookmarks"
-              aria-pressed="false"
-              title="Save to bookmarks"
-              style="display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;padding:0;cursor:pointer;">
-        <span data-detail-bookmark-icon="off">${DETAIL_BOOKMARK_OFF_SVG}</span>
-        <span data-detail-bookmark-icon="on" hidden>${DETAIL_BOOKMARK_ON_SVG}</span>
-      </button>
-    `;
-  }
+  return `
+    <button type="button"
+            class="detail-action-btn"
+            data-detail-bookmark="1"
+            aria-label="Save"
+            aria-pressed="false"
+            title="Save">
+      <span style="padding-top: 3px;" data-detail-bookmark-icon="off">${DETAIL_BOOKMARK_OFF_SVG}</span>
+      <span style="padding-top: 3px;" data-detail-bookmark-icon="on" hidden>${DETAIL_BOOKMARK_ON_SVG}</span>
+    </button>
+  `;
+}
 
   function detailHeadActionsHtml(dashHref) {
-    return `
+  return `
+    <div class="detail-actions">
       ${detailBookmarkButtonHtml()}
-      <a class="detail-expand"
+      <a class="detail-action-btn"
         href="${escapeHtml(dashHref)}"
-        title="Open dashboard"
-        aria-label="Open dashboard">
+        title="Open full page"
+        aria-label="Open full page">
         ${DETAIL_EXPAND_SVG}
       </a>
       <button type="button"
-              class="detail-close"
+              class="detail-action-btn"
               data-detail-close="1"
-              aria-label="Close">
+              aria-label="Minimize">
         ${DETAIL_CLOSE_SVG}
       </button>
-    `;
-  }
+    </div>
+  `;
+}
 
   function setDetailBookmarkUi() {
     const btn = document.querySelector('#detailPanel [data-detail-bookmark="1"]');
@@ -2556,6 +2610,9 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
     // Sync selected label/color from the current variant key (if available)
     const curVar = findByKey(variants, state.detailDashKey);
+    const detailAbout =
+      aboutHtmlFull(curVar?.about) ||
+      aboutHtmlFull(data?.about);
 
     if (!curVar) {
       state.detailSelectedVariantLabel = "";
@@ -2662,13 +2719,13 @@ async function applyCardVariantSelection(cardEl, nextKey) {
       </div>
 
       <div class="detail-img-wrap">
-        ${state.detailImg
-          ? `<img class="detail-img" src="${escapeHtml(state.detailImg)}" alt="">`
-          : `<div class="detail-img ph"></div>`}
+        ${state.detailImg ? `<img class="detail-img" src="${escapeHtml(state.detailImg)}" alt="">` : `<div class="detail-img ph"></div>`}
       </div>
 
       ${variantRow}
+
       ${colorsRow}
+      ${detailAbout}
 
       <div class="detail-block" style="margin-top:12px;">
         ${offerRows}
