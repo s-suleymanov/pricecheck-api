@@ -619,6 +619,26 @@
       "support_page": null
     }
   },
+  "lenovo": {
+  "name": "Lenovo",
+  "logo": "/logo/seller/lenovo.webp",
+  "website": "https://www.lenovo.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "China",
+  "founded": 1984,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-855-253-6686",
+    "chat_available": true,
+    "support_page": "https://pcsupport.lenovo.com/us/en"
+  }
+},
   "tesla": {
   "name": "Tesla",
   "logo": "/logo/seller/tesla.png",
