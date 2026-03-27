@@ -10,6 +10,13 @@ process.on("unhandledRejection", (e) => {
   process.exit(1);
 });
 
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: 0.2
+});
+
 const path = require("path");
 const express = require("express");
 const cookieParser = require("cookie-parser");
@@ -45,6 +52,9 @@ app.use("/api/reviews", require("./routes/reviews"));
 
 // health
 app.get("/health", (_req, res) => res.json({ ok: true }));
+
+// Sentry Express error handler
+Sentry.setupExpressErrorHandler(app);
 
 // Catch-all 404
 app.use((req, res) => {
