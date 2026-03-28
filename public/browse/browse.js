@@ -19,20 +19,18 @@
   function aboutHtmlFull(about) {
     if (!about || typeof about !== "object") return "";
 
-    const paragraphs = Array.isArray(about.paragraphs) ? about.paragraphs : [];
+    const firstParagraph = Array.isArray(about.paragraphs)
+      ? String(about.paragraphs.find((p) => String(p || "").trim()) || "").trim()
+      : "";
 
-    const paraHtml = paragraphs
-      .map((p) => String(p || "").trim())
-      .filter(Boolean)
-      .map((p) => `<p>${escapeHtml(p)}</p>`)
-      .join("");
-
-    if (!paraHtml) return "";
+    if (!firstParagraph) return "";
 
     return `
       <div class="detail-about">
         <div class="side-label">About</div>
-        <div class="detail-about-paragraphs">${paraHtml}</div>
+        <div class="detail-about-paragraphs">
+          <p>${escapeHtml(firstParagraph)}</p>
+        </div>
       </div>
     `;
   }
