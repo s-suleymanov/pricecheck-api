@@ -3633,6 +3633,13 @@ button.pc-lineup-model{
   display:none;
 }
 
+.pc-community-add svg{
+  width:28px;
+  height:28px;
+  display:block;
+  fill:currentColor;
+}
+
 @media (max-width: 900px){
   .ph-media-hero{
     grid-template-columns:1fr;
