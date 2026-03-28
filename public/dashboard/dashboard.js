@@ -5739,8 +5739,15 @@ function detectImageUrl(raw){
   const url = safeUrl(raw);
   if (!url) return null;
 
+  const host = String(url.hostname || '').toLowerCase();
   const pathname = String(url.pathname || '').toLowerCase();
+
   if (/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(pathname)) return url.href;
+
+  // Target Scene7 image URLs
+  if (host.endsWith('target.scene7.com') && pathname.includes('/is/image/')) {
+    return url.href;
+  }
 
   return null;
 }
@@ -6551,7 +6558,7 @@ function dimNum(v){
 
 function dimText(n){
   if (!Number.isFinite(n)) return '';
-  const rounded = Math.round(n * 10) / 10;
+  const rounded = Math.round(n * 100) / 100;
   return Number.isInteger(rounded) ? String(rounded) : String(rounded);
 }
 

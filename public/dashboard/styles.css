@@ -256,7 +256,7 @@ aside .note{
   background:#f8fafc;
 }
 
-@media (max-width:530px){
+@media (max-width:900px){
   .ph-brand-row{
     justify-content:center;
     flex-wrap:wrap;
