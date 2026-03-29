@@ -16,6 +16,193 @@
       .replaceAll("'", "&#39;");
   }
 
+  const SHORTLIST_ADD_SVG = `
+  <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+    <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"></path>
+  </svg>
+`;
+
+const SHORTLIST_ON_SVG = `
+  <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+    <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"></path>
+  </svg>
+`;
+
+const SHORTLIST_REMOVE_SVG = `
+  <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+    <path d="M256-200 200-256l224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"></path>
+  </svg>
+`;
+
+function shortlistApi() {
+  return window.PriceCheckShortlist || null;
+}
+
+function shortlistButtonHtml() {
+  return `
+    <button
+      type="button"
+      class="card-shortlist-btn"
+      data-shortlist-toggle="1"
+      aria-label="Save to shortlist"
+      title="Save to shortlist"
+    >
+      <span data-shortlist-icon="off">${SHORTLIST_ADD_SVG}</span>
+      <span data-shortlist-icon="on" hidden>${SHORTLIST_ON_SVG}</span>
+    </button>
+  `;
+}
+
+function shortlistItemFromCardEl(cardEl) {
+  const api = shortlistApi();
+  if (!api || !cardEl) return null;
+
+  const key = String(cardEl.getAttribute("data-dash-key") || "").trim();
+  if (!key) return null;
+
+  const href = api.safeHref(cardEl.getAttribute("href") || "", { sameOrigin: true });
+  if (!href) return null;
+
+  const priceEl = cardEl.querySelector(".price");
+  const priceText = String(priceEl?.textContent || "").trim();
+  const priceMatch = priceText.match(/\$([\d,]+(?:\.\d{2})?)/);
+  const priceCents = priceMatch
+    ? Math.round(Number(priceMatch[1].replace(/,/g, "")) * 100)
+    : null;
+
+  return api.normalizeItem({
+    key,
+    href,
+    title: cardEl.getAttribute("data-title") || "",
+    brand: cardEl.getAttribute("data-brand") || "",
+    img: cardEl.getAttribute("data-img") || "",
+    priceCents,
+    source: "browse"
+  });
+}
+
+function syncShortlistButtons(root = document) {
+  const api = shortlistApi();
+  if (!api) return;
+
+  root.querySelectorAll(".card.item[data-dash-key]").forEach((card) => {
+    let btn = card.querySelector("[data-shortlist-toggle='1']");
+    if (!btn) {
+      card.insertAdjacentHTML("beforeend", shortlistButtonHtml());
+      btn = card.querySelector("[data-shortlist-toggle='1']");
+    }
+    if (!btn) return;
+
+    const key = String(card.getAttribute("data-dash-key") || "").trim();
+    const on = api.has(key);
+
+    btn.classList.toggle("is-active", on);
+    btn.setAttribute("aria-label", on ? "Remove from shortlist" : "Save to shortlist");
+    btn.title = on ? "Remove from shortlist" : "Save to shortlist";
+
+    const off = btn.querySelector("[data-shortlist-icon='off']");
+    const onEl = btn.querySelector("[data-shortlist-icon='on']");
+    if (off) off.hidden = on;
+    if (onEl) onEl.hidden = !on;
+  });
+}
+
+function renderShortlistRail() {
+  const api = shortlistApi();
+  if (!api) return;
+
+  const rail = document.getElementById("shortlistRail");
+  const mini = document.getElementById("shortlistMini");
+  if (!rail || !mini) return;
+
+  const items = api.readItems();
+
+  if (!items.length) {
+    rail.hidden = true;
+    document.body.classList.remove("has-shortlist");
+    mini.innerHTML = "";
+    return;
+  }
+
+  rail.hidden = false;
+  document.body.classList.add("has-shortlist");
+
+  mini.innerHTML = items.map((item) => `
+    <div class="shortlist-mini-item" title="${escapeHtml(item.title || item.brand || "Saved product")}">
+      <a class="shortlist-mini-link" href="${escapeHtml(item.href)}"
+         aria-label="${escapeHtml(item.title || item.brand || "Saved product")}">
+        ${item.img
+          ? `<img class="shortlist-mini-img" src="${escapeHtml(item.img)}" alt="">`
+          : `<div class="shortlist-mini-img"></div>`
+        }
+      </a>
+      <button type="button" class="shortlist-mini-remove"
+        data-shortlist-remove="${escapeHtml(item.key)}"
+        aria-label="Remove from shortlist" title="Remove from shortlist">
+        ${SHORTLIST_REMOVE_SVG}
+      </button>
+    </div>
+  `).join("");
+}
+
+function initShortlistBrowseUi() {
+  const api = shortlistApi();
+  if (!api) return;
+
+  if (!document.body.dataset.shortlistBrowseBound) {
+    document.body.dataset.shortlistBrowseBound = "1";
+
+    document.body.addEventListener("click", (e) => {
+      const specsPromoBtn = e.target.closest("[data-open-specs='1']");
+      if (specsPromoBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (state.activeTab !== "specs") {
+          state.activeTab = "specs";
+          render().catch(() => {});
+        }
+        return;
+      }
+
+      const saveBtn = e.target.closest("[data-shortlist-toggle='1']");
+      if (saveBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const card = saveBtn.closest(".card.item[data-dash-key]");
+        const item = shortlistItemFromCardEl(card);
+        if (!item) return;
+
+        api.toggle(item);
+        renderShortlistRail();
+        syncShortlistButtons(document);
+        return;
+      }
+
+      const removeBtn = e.target.closest("[data-shortlist-remove]");
+      if (removeBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const key = String(removeBtn.getAttribute("data-shortlist-remove") || "").trim();
+        if (!key) return;
+
+        api.remove(key);
+        renderShortlistRail();
+        syncShortlistButtons(document);
+      }
+    });
+  }
+
+  window.addEventListener("pc:shortlist_changed", () => {
+    renderShortlistRail();
+    syncShortlistButtons(document);
+  });
+
+  renderShortlistRail();
+  syncShortlistButtons(document);
+}
+
   function aboutHtmlFull(about) {
     if (!about || typeof about !== "object") return "";
 
@@ -424,6 +611,7 @@ rail.innerHTML = `
     next: null,
     pager: null,
     sidecol: null,
+    sideSpecsPromo: null,
     categoryPanel: null,
     brandPanel: null,
     familyPanel: null,
@@ -438,6 +626,7 @@ rail.innerHTML = `
     els.next = $("#next");
     els.pager = document.querySelector(".pager");
     els.sidecol = $("#sidecol");
+    els.sideSpecsPromo = $("#sideSpecsPromo");
     els.categoryPanel = $("#categoryPanel");
     els.brandPanel = $("#brandPanel");
     els.familyPanel = $("#familyPanel");
@@ -542,6 +731,37 @@ const state = {
   function showEmpty(show) {
     if (els.empty) els.empty.hidden = !show;
   }
+
+  function syncSideSpecsPromo() {
+  if (!els.sideSpecsPromo) return;
+
+  const shouldShow =
+    state.activeTab === "stores" &&
+    !state.detailOpen &&
+    !!state.category &&
+    !els.categoryPanel?.hidden;
+
+  els.sideSpecsPromo.hidden = !shouldShow;
+
+  if (!shouldShow) {
+    els.sideSpecsPromo.innerHTML = "";
+    return;
+  }
+
+  els.sideSpecsPromo.innerHTML = `
+    <button type="button" class="side-specs-promo-card" data-open-specs="1">
+      <div class="side-specs-promo__icon">
+        <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+          <path d="M440-120v-240h80v80h320v80H520v80h-80Zm-320-80v-80h240v80H120Zm160-160v-80H120v-80h160v-80h80v240h-80Zm160-80v-80h400v80H440Zm160-160v-240h80v80h160v80H680v80h-80Zm-480-80v-80h400v80H120Z"></path>
+        </svg>
+      </div>
+      <div class="side-specs-promo__body">
+        <div class="side-specs-promo__title">Specs are now available!</div>
+        <div class="side-specs-promo__text">Compare key product specs side by side.</div>
+      </div>
+    </button>
+  `;
+}
 
   // ----------------------------
   // URL parsing + building
@@ -1894,11 +2114,6 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     return;
   }
 
-  const showSpecsPromo =
-    state.activeTab === "stores" &&
-    !state.detailOpen &&
-    !!catName;
-
   const brands = (Array.isArray(state.sideBrands) ? state.sideBrands : []).slice(0, 12);
 
   const brandButtons = await Promise.all(
@@ -1947,32 +2162,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         </div>
       </div>
     ` : ""}
-
-        ${showSpecsPromo ? `
-      <button
-        type="button"
-        class="side-specs-promo"
-        data-side-open-specs="1"
-        aria-label="Open Specs view"
-        title="Open Specs view"
-      >
-        <div class="side-specs-promo__icon" aria-hidden="true">
-          <svg viewBox="0 -960 960 960" focusable="false">
-            <path d="M440-120v-240h80v80h320v80H520v80h-80Zm-320-80v-80h240v80H120Zm160-160v-80H120v-80h160v-80h80v240h-80Zm160-80v-80h400v80H440Zm160-160v-240h80v80h160v80H680v80h-80Zm-480-80v-80h400v80H120Z"></path>
-          </svg>
-        </div>
-        <div class="side-specs-promo__body">
-          <div class="side-specs-promo__title">Specs are now available!</div>
-          <div class="side-specs-promo__text">Compare key product specs side by side.</div>
-        </div>
-      </button>
-    ` : ""}
   `;
-
-  els.categoryPanel.querySelector("[data-side-open-specs='1']")?.addEventListener("click", () => {
-    state.activeTab = "specs";
-    render().catch(() => {});
-  });
 }
 
   async function renderBrandPanel() {
@@ -2322,10 +2512,13 @@ async function applyCardVariantSelection(cardEl, nextKey) {
       showInlineEmpty(false);
       showEmpty(false);
     }
-    
+
+    syncShortlistButtons(els.grid || document);
+    renderShortlistRail();
     renderConditionFilter();
     await renderCategoryPanel();
     await renderBrandPanel();
+    syncSideSpecsPromo();
     setPager();
   }
 
@@ -2818,6 +3011,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     if (els.categoryPanel) els.categoryPanel.hidden = true;
     if (els.brandPanel) els.brandPanel.hidden = true;
     if (els.familyPanel) els.familyPanel.hidden = true;
+    syncSideSpecsPromo();
   }
 
   async function restoreFacetPanelsAfterDetail() {
@@ -3367,6 +3561,8 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
         const a = e.target.closest('a.card.item[href]');
         if (!a) return;
 
+        if (e.target.closest("[data-shortlist-toggle='1']")) return;
+
         if (e.defaultPrevented) return;
         if (e.button && e.button !== 0) return;
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -3614,6 +3810,7 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
   // ----------------------------
     document.addEventListener("DOMContentLoaded", async () => {
     cacheEls();
+    initShortlistBrowseUi();
     readUrl();
     wire();
     renderBrowseRail();

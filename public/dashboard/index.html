@@ -36,12 +36,17 @@
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/dashboard/styles.css">
   <script src="/search.js" defer></script>
+  <script src="/shortlist/shortlist.js" defer></script>
   <script src="/dashboard/dashboard.js" defer></script>
   <script src="/partials/partials.js" defer></script>
 </head>
 <body class="dashboard-page" style="margin: 0;">
 
   <div id="site-header"></div>
+
+  <div id="shortlistRail" class="shortlist-rail" hidden aria-label="Shortlist">
+    <div class="shortlist-mini" id="shortlistMini"></div>
+  </div>
 
   <nav id="dashboardToc" class="dashboard-toc" aria-label="Dashboard sections" hidden></nav>
 
@@ -80,8 +85,29 @@
         <h1 id="pTitle">Loading...</h1>
       </div>
 
-            <div class="ph-topbar__side">
+      <div class="ph-topbar__side">
         <div class="ph-tools" aria-label="Product actions">
+          
+          <button
+            class="ph-tool"
+            id="phShortlistBtn"
+            type="button"
+            aria-label="Save to shortlist"
+            title="Save to shortlist"
+            hidden
+          >
+            <span data-shortlist-icon="off">
+              <svg viewBox="0 -960 960 960" width="22" height="22" focusable="false" aria-hidden="true">
+                <path fill="currentColor" d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z"/>
+              </svg>
+            </span>
+            <span data-shortlist-icon="on" hidden>
+              <svg viewBox="0 -960 960 960" width="22" height="22" focusable="false" aria-hidden="true">
+                <path fill="currentColor" d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
+              </svg>
+            </span>
+          </button>
+
           <button
             class="ph-tool"
             data-pc-bookmark="1"
