@@ -76,7 +76,195 @@
   function fmtPrice(cents) {
     if (typeof cents !== "number") return "";
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+  }  
+
+  function isPlainObject(v) {
+  return !!v && typeof v === "object" && !Array.isArray(v);
+}
+
+function isBooleanLikeSpecValue(v) {
+  if (typeof v === "boolean") return true;
+  const s = String(v ?? "").trim().toLowerCase();
+  return s === "yes" || s === "no" || s === "true" || s === "false";
+}
+
+function specValueIsTrue(v) {
+  if (typeof v === "boolean") return v === true;
+  const s = String(v ?? "").trim().toLowerCase();
+  return s === "yes" || s === "true";
+}
+
+function formatSpecLabel(label) {
+  return String(label ?? "").trim();
+}
+
+function formatSpecValue(value) {
+  if (value == null) return "";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value).trim();
+}
+
+function hashSpecKey(str) {
+  const s = String(str || "").trim().toLowerCase();
+  let h = 0;
+
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h) + s.charCodeAt(i);
+    h |= 0;
   }
+
+  return Math.abs(h);
+}
+
+function specPillVars(key) {
+  const h = hashSpecKey(key) % 360;
+
+  const bg = `hsla(${h}, 72%, 92%, 1)`;
+  const border = `hsla(${h}, 58%, 72%, 1)`;
+  const text = `hsla(${h}, 62%, 34%, 1)`;
+
+  return `--spec-pill-bg:${bg};--spec-pill-border:${border};--spec-pill-text:${text};`;
+}
+
+function splitSpecsForCard(specs, selectedSpecKeys = []) {
+  if (!isPlainObject(specs)) {
+    return { pills: [], rows: [], availableKeys: [] };
+  }
+
+  const pills = [];
+  const nonBinaryRows = [];
+
+  for (const [rawKey, rawValue] of Object.entries(specs)) {
+    const key = formatSpecLabel(rawKey);
+    if (!key) continue;
+
+    if (isBooleanLikeSpecValue(rawValue)) {
+      if (specValueIsTrue(rawValue)) {
+        pills.push({ key, value: true });
+      }
+      continue;
+    }
+
+    const value = formatSpecValue(rawValue);
+    if (!value) continue;
+
+    nonBinaryRows.push({ key, value });
+  }
+
+  const availableKeys = nonBinaryRows.map((row) => row.key);
+
+  const byKey = new Map(
+    nonBinaryRows.map((row) => [row.key.toLowerCase(), row])
+  );
+
+  const selected = (Array.isArray(selectedSpecKeys) ? selectedSpecKeys : [])
+    .map((x) => formatSpecLabel(x))
+    .filter(Boolean)
+    .slice(0, 4);
+
+  let rows = [];
+
+  if (selected.length) {
+    rows = selected.map((key) => {
+      const hit = byKey.get(key.toLowerCase());
+      return {
+        key,
+        value: hit ? hit.value : ""
+      };
+    });
+  } else {
+    rows = nonBinaryRows.slice(0, 4).map((row) => ({
+      key: row.key,
+      value: row.value
+    }));
+  }
+
+  return {
+    pills,
+    rows,
+    availableKeys
+  };
+}
+
+function collectTopSpecKeys(results) {
+  const counts = new Map();
+
+  for (const r of Array.isArray(results) ? results : []) {
+    const split = splitSpecsForCard(r?.specs, []);
+    for (const key of split.availableKeys) {
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  }
+
+  return Array.from(counts.entries())
+    .sort((a, b) => {
+      if (b[1] !== a[1]) return b[1] - a[1];
+      return a[0].localeCompare(b[0]);
+    })
+    .map(([key]) => key);
+}
+
+function ensureSpecsTopSelection() {
+  const available = new Set(state.specsTopKeys);
+  state.selectedSpecsTopKeys = (state.selectedSpecsTopKeys || []).filter((k) => available.has(k));
+
+  if (!state.selectedSpecsTopKeys.length) {
+    state.selectedSpecsTopKeys = state.specsTopKeys.slice(0, 4);
+  }
+}
+
+function renderSpecsTopbar() {
+  const el = document.getElementById("conditionFilter");
+  if (!el) return;
+
+  if (state.activeTab !== "specs") return;
+
+  const keys = Array.isArray(state.specsTopKeys) ? state.specsTopKeys : [];
+  if (!keys.length) {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
+
+  el.hidden = false;
+  el.innerHTML = `
+    <div class="browse-topbar browse-topbar--specs">
+      <div class="browse-topbar__left browse-topbar__left--specs">
+        ${keys.map((key) => {
+          const active = state.selectedSpecsTopKeys.includes(key);
+          return `
+            <button
+              type="button"
+              class="spec-top-pill${active ? " is-active" : ""}"
+              data-spec-top-key="${escapeHtml(key)}"
+            >
+              ${escapeHtml(key)}
+            </button>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+
+  el.querySelectorAll("[data-spec-top-key]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = String(btn.getAttribute("data-spec-top-key") || "").trim();
+      if (!key) return;
+
+      const cur = new Set(state.selectedSpecsTopKeys || []);
+      if (cur.has(key)) cur.delete(key);
+      else cur.add(key);
+
+      state.selectedSpecsTopKeys = state.specsTopKeys.filter((k) => cur.has(k)).slice(0, 4);
+
+      if (!state.selectedSpecsTopKeys.length) {
+        state.selectedSpecsTopKeys = state.specsTopKeys.slice(0, 4);
+      }
+
+      render().catch(() => {});
+    });
+  });
+}
 
   function isBrowseRailSignedIn() {
     try {
@@ -92,8 +280,8 @@
 
   const BROWSE_RAIL_FIXED_TABS = [
     { key: "stores",   label: "Stores",   pathData: "M841-518v318q0 33-23.5 56.5T761-120H201q-33 0-56.5-23.5T121-200v-318q-23-21-35.5-54t-.5-72l42-136q8-26 28.5-43t47.5-17h556q27 0 47 16.5t29 43.5l42 136q12 39-.5 71T841-518Zm-272-42q27 0 41-18.5t11-41.5l-22-140h-78v148q0 21 14 36.5t34 15.5Zm-180 0q23 0 37.5-15.5T441-612v-148h-78l-22 140q-4 24 10.5 42t37.5 18Zm-178 0q18 0 31.5-13t16.5-33l22-154h-78l-40 134q-6 20 6.5 43t41.5 23Zm540 0q29 0 42-23t6-43l-42-134h-76l22 154q3 20 16.5 33t31.5 13ZM201-200h560v-282q-5 2-6.5 2H751q-27 0-47.5-9T663-518q-18 18-41 28t-49 10q-27 0-50.5-10T481-518q-17 18-39.5 28T393-480q-29 0-52.5-10T299-518q-21 21-41.5 29.5T211-480h-4.5q-2.5 0-5.5-2v282Zm560 0H201h560Z",   active: true  },
-    { key: "intel",    label: "Intel",    pathData: "M324-111.5Q251-143 197-197t-85.5-127Q80-397 80-480t31.5-156Q143-709 197-763t127-85.5Q397-880 480-880t156 31.5Q709-817 763-763t85.5 127Q880-563 880-480t-31.5 156Q817-251 763-197t-127 85.5Q563-80 480-80t-156-31.5ZM480-160q56 0 105.5-17.5T676-227l-57-57q-29 21-64.5 32.5T480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 39-12 75t-33 65l57 57q32-41 50-91t18-106q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-160q22 0 42.5-5.5T561-342l-61-61q-5 2-10 2.5t-10 .5q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 6-.5 11.5T557-458l60 60q11-18 17-38.5t6-43.5q0-66-47-113t-113-47q-66 0-113 47t-47 113q0 66 47 113t113 47Z",    active: false },
     { key: "specs",    label: "Specs",    pathData: "M440-120v-240h80v80h320v80H520v80h-80Zm-320-80v-80h240v80H120Zm160-160v-80H120v-80h160v-80h80v240h-80Zm160-80v-80h400v80H440Zm160-160v-240h80v80h160v80H680v80h-80Zm-480-80v-80h400v80H120Z",    active: false },
+    { key: "intel",    label: "Intel",    pathData: "M324-111.5Q251-143 197-197t-85.5-127Q80-397 80-480t31.5-156Q143-709 197-763t127-85.5Q397-880 480-880t156 31.5Q709-817 763-763t85.5 127Q880-563 880-480t-31.5 156Q817-251 763-197t-127 85.5Q563-80 480-80t-156-31.5ZM480-160q56 0 105.5-17.5T676-227l-57-57q-29 21-64.5 32.5T480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 39-12 75t-33 65l57 57q32-41 50-91t18-106q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-160q22 0 42.5-5.5T561-342l-61-61q-5 2-10 2.5t-10 .5q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 6-.5 11.5T557-458l60 60q11-18 17-38.5t6-43.5q0-66-47-113t-113-47q-66 0-113 47t-47 113q0 66 47 113t113 47Z",    active: false },
     { key: "history",  label: "History",  pathData: "M120-240q-33 0-56.5-23.5T40-320q0-33 23.5-56.5T120-400h10.5q4.5 0 9.5 2l182-182q-2-5-2-9.5V-600q0-33 23.5-56.5T400-680q33 0 56.5 23.5T480-600q0 2-2 20l102 102q5-2 9.5-2h21q4.5 0 9.5 2l142-142q-2-5-2-9.5V-640q0-33 23.5-56.5T840-720q33 0 56.5 23.5T920-640q0 33-23.5 56.5T840-560h-10.5q-4.5 0-9.5-2L678-420q2 5 2 9.5v10.5q0 33-23.5 56.5T600-320q-33 0-56.5-23.5T520-400v-10.5q0-4.5 2-9.5L420-522q-5 2-9.5 2H400q-2 0-20-2L198-340q2 5 2 9.5v10.5q0 33-23.5 56.5T120-240Z",  active: false },
     { key: "media",    label: "Media",    pathData: "m380-300 280-180-280-180v360ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z",    active: false }
   ];
@@ -144,18 +332,21 @@ rail.innerHTML = `
   <div class="browse-rail__inner">
     <div class="browse-rail__main">
       <div class="browse-rail__tabs">
-        ${BROWSE_RAIL_FIXED_TABS.map((tab) => `
+        ${BROWSE_RAIL_FIXED_TABS.map((tab) => {
+          const isActive = tab.key === state.activeTab;
+          return `
           <button
             type="button"
-            class="browse-rail__btn${tab.active ? " is-active" : ""}"
+            class="browse-rail__btn${isActive ? " is-active" : ""}"
             data-browse-rail-tab="${escapeHtml(tab.key)}"
             aria-label="${escapeHtml(tab.label)}"
             title="${escapeHtml(tab.label)}"
-            ${tab.active ? 'aria-current="page"' : ""}
+            ${isActive ? 'aria-current="page"' : ""}
           >
             ${createBrowseRailIconMarkup(tab.pathData)}
-          </button>
-        `).join("")}
+            </button>
+        `;
+        }).join("")}
       </div>
     </div>
 
@@ -198,26 +389,27 @@ rail.innerHTML = `
     });
 
     rail.querySelectorAll("[data-browse-rail-tab]").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const key = String(btn.getAttribute("data-browse-rail-tab") || "").trim().toLowerCase();
+  btn.addEventListener("click", (e) => {
+    const key = String(btn.getAttribute("data-browse-rail-tab") || "").trim().toLowerCase();
 
-        // Prices is the current browse page, so do nothing
-        if (key === "prices") return;
+    e.preventDefault();
+    e.stopPropagation();
 
-        e.preventDefault();
-        e.stopPropagation();
+    if (key === "stores" || key === "specs") {
+      if (state.activeTab === key) return;
+      state.activeTab = key;
+      render().catch(() => {});
+      return;
+    }
 
-        // Show quick sign in for gated tabs when signed out
-        if (!isBrowseRailSignedIn()) {
-          if (typeof window.pcOpenSignIn === "function") {
-            window.pcOpenSignIn();
-          }
-          return;
-        }
-
-        // Signed in but not built yet: do nothing for now
-      });
-    });
+    if (!isBrowseRailSignedIn()) {
+      if (typeof window.pcOpenSignIn === "function") {
+        window.pcOpenSignIn();
+      }
+      return;
+    }
+  });
+});
   }
 
   // ----------------------------
@@ -259,6 +451,9 @@ const state = {
     page: 1,
     limit: 36,
     sort: "recommended",
+    activeTab: "stores",
+    specsTopKeys: [],
+    selectedSpecsTopKeys: [],
 
     // main filters (URL)
     brand: "",
@@ -725,6 +920,93 @@ const state = {
       </a>
     `;
   }
+
+  function cardProductSpecs(r) {
+  const dashKey = String(r.dashboard_key || "").trim();
+  const displayName = r.model_name || r.title || r.model_number || "Untitled";
+
+  const img = r.image_url
+    ? `<img class="img" src="${escapeHtml(r.image_url)}" alt="">`
+    : `<div class="img ph"></div>`;
+
+  const brand = (r.brand || "").trim();
+  const brandLine = brand ? brand : "";
+
+  const { pills, rows } = splitSpecsForCard(r.specs, state.selectedSpecsTopKeys);
+
+  const pillsHtml = pills.length
+  ? `
+    <div class="spec-card-pills">
+      ${pills.map((p) => `
+        <span
+          class="spec-pill"
+          style="${specPillVars(p.key)}"
+        >${escapeHtml(p.key)}</span>
+      `).join("")}
+    </div>
+  `
+  : "";
+
+  const rowsHtml = rows.length
+    ? `
+      <div class="spec-card-grid">
+        ${rows.map((row) => `
+          <div class="spec-card-stat">
+            <div class="spec-card-stat-label">${escapeHtml(row.key)}</div>
+            <div class="spec-card-stat-value">${escapeHtml(row.value)}</div>
+          </div>
+        `).join("")}
+      </div>
+    `
+    : "";
+
+  const priceHtml = typeof r.best_price_cents === "number"
+    ? fmtPrice(r.best_price_cents)
+    : "";
+
+  const inner = `
+  <div class="thumb">${img}</div>
+  <div class="body spec-card-body">
+    <div class="spec-card-main">
+      <div class="spec-card-head">
+        <div class="spec-card-titlewrap">
+          <div class="subtitle">${escapeHtml(brandLine)}</div>
+          <div class="name name--no-about">${escapeHtml(displayName)}</div>
+        </div>
+        <div class="spec-card-price">${escapeHtml(priceHtml)}</div>
+      </div>
+
+      ${pillsHtml}
+      ${rowsHtml}
+    </div>
+  </div>
+`;
+
+  if (!dashKey) {
+    return `
+      <div class="card item spec-card is-disabled"
+        aria-disabled="true"
+        data-title="${escapeHtml(displayName)}"
+        data-brand="${escapeHtml(brandLine)}"
+        data-img="${escapeHtml(String(r.image_url || ""))}">
+        ${inner}
+      </div>
+    `;
+  }
+
+  const href = dashPathFromKeyAndTitle(dashKey, displayName);
+
+  return `
+    <a class="card item spec-card"
+      href="${escapeHtml(href)}"
+      data-dash-key="${escapeHtml(dashKey)}"
+      data-title="${escapeHtml(displayName)}"
+      data-brand="${escapeHtml(brandLine)}"
+      data-img="${escapeHtml(String(r.image_url || ""))}">
+      ${inner}
+    </a>
+  `;
+}
 
   function cardFacet(f) {
     const img = f.image_url
@@ -1612,6 +1894,11 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     return;
   }
 
+  const showSpecsPromo =
+    state.activeTab === "stores" &&
+    !state.detailOpen &&
+    !!catName;
+
   const brands = (Array.isArray(state.sideBrands) ? state.sideBrands : []).slice(0, 12);
 
   const brandButtons = await Promise.all(
@@ -1660,7 +1947,32 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         </div>
       </div>
     ` : ""}
+
+        ${showSpecsPromo ? `
+      <button
+        type="button"
+        class="side-specs-promo"
+        data-side-open-specs="1"
+        aria-label="Open Specs view"
+        title="Open Specs view"
+      >
+        <div class="side-specs-promo__icon" aria-hidden="true">
+          <svg viewBox="0 -960 960 960" focusable="false">
+            <path d="M440-120v-240h80v80h320v80H520v80h-80Zm-320-80v-80h240v80H120Zm160-160v-80H120v-80h160v-80h80v240h-80Zm160-80v-80h400v80H440Zm160-160v-240h80v80h160v80H680v80h-80Zm-480-80v-80h400v80H120Z"></path>
+          </svg>
+        </div>
+        <div class="side-specs-promo__body">
+          <div class="side-specs-promo__title">Specs are now available!</div>
+          <div class="side-specs-promo__text">Compare key product specs side by side.</div>
+        </div>
+      </button>
+    ` : ""}
   `;
+
+  els.categoryPanel.querySelector("[data-side-open-specs='1']")?.addEventListener("click", () => {
+    state.activeTab = "specs";
+    render().catch(() => {});
+  });
 }
 
   async function renderBrandPanel() {
@@ -1831,6 +2143,11 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     const el = document.getElementById("conditionFilter");
     if (!el) return;
 
+    if (state.activeTab === "specs") {
+      renderSpecsTopbar();
+      return;
+    }
+
     const showToggles = (state.hasRefurbished || state.hasBundle) && !state.lastError;
     const showSort = !state.lastError && (state.brand || state.category || state.q);
     const show = showToggles || showSort;
@@ -1898,6 +2215,20 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   async function render() {
     if (!els.grid) return;
 
+    if (state.activeTab === "specs") {
+      state.specsTopKeys = collectTopSpecKeys(state.results);
+      ensureSpecsTopSelection();
+    }
+
+    const layoutEl = document.querySelector(".layout");
+    if (layoutEl) {
+      layoutEl.classList.toggle("layout--specs", state.activeTab === "specs");
+    }
+
+    if (els.sidecol) {
+      els.sidecol.hidden = state.activeTab === "specs";
+    }
+
     const q = (state.value || state.q || "").trim();
     const isPaged = state.page > 1;
 
@@ -1946,7 +2277,10 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     }
 
     if (Array.isArray(state.results) && state.results.length) {
-      for (let i = 0; i < state.results.length; i++) parts.push(cardProduct(state.results[i]));
+      for (let i = 0; i < state.results.length; i++) {
+        const r = state.results[i];
+        parts.push(state.activeTab === "specs" ? cardProductSpecs(r) : cardProduct(r));
+      }
     }
 
     els.grid.innerHTML = parts.join("");

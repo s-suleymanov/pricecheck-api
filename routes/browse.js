@@ -157,6 +157,7 @@ router.get("/api/browse", async (req, res) => {
           NULLIF(btrim(c.pci), '') AS pci,
           NULLIF(btrim(c.upc), '') AS upc,
           c.about,
+          c.specs,
           c.is_refurbished,
           c.is_bundle,
           c.created_at,
@@ -242,6 +243,7 @@ router.get("/api/browse", async (req, res) => {
           a.image_url,
           a.dropship_warning,
           a.about,
+          a.specs,
           a.is_refurbished,
           a.is_bundle,
           a.dashboard_key,
@@ -317,7 +319,7 @@ router.get("/api/browse", async (req, res) => {
       SELECT
         model_number, version, model_name, brand, category,
         image_url, dropship_warning, dashboard_key, best_price_cents,
-        about, is_refurbished, is_bundle
+        about, specs, is_refurbished, is_bundle
       FROM ordered
       LIMIT $9 OFFSET $10
     `;
