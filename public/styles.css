@@ -844,10 +844,6 @@ em {
   transition-delay: var(--pc-delay, 0ms);
 }
 
-.card.item.pc-enter-active:hover{
-  transform: translateY(-2px);
-}
-
 @media (prefers-reduced-motion: reduce){
   .card.item.pc-enter,
   .card.item.pc-enter.pc-enter-active{
