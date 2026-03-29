@@ -319,8 +319,8 @@ aside .note{
 
   .dashboard-page .shortlist-mini-remove {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: 5px;
+    right: 10px;
     width: 14px;
     height: 50px;
     border: 0;
