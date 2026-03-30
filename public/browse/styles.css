@@ -186,7 +186,7 @@ body{
     height: 50px;
     border: 0;
     border-radius: 999px;
-    background: rgb(244 188 188 / 98%);
+    background: #FDECEA;
     box-shadow: 0 1px 4px rgba(0,0,0,0.14);
     color: #111;
     opacity: 0;
@@ -210,7 +210,7 @@ body{
   .browse-page .shortlist-mini-remove svg{
     width: 12px;
     height: 12px;
-    fill: currentColor;
+    fill: #EA4335;
     display: block;
   }
 }
@@ -793,8 +793,8 @@ h1{
   }
 
   .browse-page .browse-rail__btn.is-active{
-    background:#eef2ff;
-    color:#4338ca;
+    background: #E8F0FE;
+    color: #4285F4;
   }
 
   .browse-page .browse-rail__btn:disabled{
@@ -1269,8 +1269,8 @@ h1{
 
 .card-shortlist-btn.is-active{
   opacity: 1;
-  color: #4338ca;
-  background: #eef2ff;
+  color: #34A853;
+  background: #E6F4EA;
 }
 
 .card-shortlist-btn svg{

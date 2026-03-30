@@ -325,7 +325,7 @@ aside .note{
     height: 50px;
     border: 0;
     border-radius: 999px;
-    background: rgb(244 188 188 / 98%);
+    background: #FDECEA;
     color: #111;
     opacity: 0;
     cursor: pointer;
@@ -340,16 +340,13 @@ aside .note{
   .dashboard-page .shortlist-mini-item:hover .shortlist-mini-remove { opacity: 1; }
   .dashboard-page .shortlist-mini-remove:hover { transform: scale(1.05); }
   .dashboard-page .shortlist-mini-remove svg {
-    width: 12px; height: 12px; fill: currentColor; display: block;
+    width: 12px; height: 12px; fill: #EA4335; display: block;
   }
 }
 
 @media (max-width: 1279px) {
   .dashboard-page .shortlist-rail { display: none !important; }
 }
-
-/* Active state for the shortlist ph-tool button */
-.ph-tool.is-active { color: #4338ca; }
 
 @media (max-width:900px){
   .ph-brand-row{
@@ -3084,8 +3081,8 @@ button.pc-lineup-model{
   }
 
   .dashboard-page .dashboard-toc__btn.is-active {
-    background: #eef2ff;
-    color: #4338ca;
+    background: #E8F0FE;
+    color: #4285F4;
   }
 
   .dashboard-page .dashboard-toc__btn svg {
