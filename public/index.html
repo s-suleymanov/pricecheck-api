@@ -82,8 +82,10 @@
   </script>
 
   <script src="/search.js" defer></script>
-  <script src="/algorithm.js" defer></script>
   <script src="/partials/partials.js" defer></script>
+  <script src="/shortlist/shortlist-page.js" defer></script>
+  <script src="/shortlist/shortlist.js" defer></script>
+  <script src="/algorithm.js" defer></script>
 </head>
 
 <body class="pc-home" data-side-active="home" style="margin:0;">
@@ -93,14 +95,6 @@
   <main class="home-center" role="main">
     <div class="home-center__inner">
       <div class="home-layout">
-        <!-- MAIN FEED -->
-        <section class="home-main" aria-label="Home feed">
-          <!-- Trend pills row -->
-          <div id="homePills" class="home-pills" aria-label="Trending" hidden></div>
-
-          <!-- Deals grid -->
-          <section id="homeDeals" class="home-deals" hidden></section>
-        </section>
         <aside class="home-side" aria-label="Home sidebar">
           <div class="home-side__inner">
             <nav class="home-side__section" aria-label="About">
@@ -218,6 +212,18 @@
             </nav>
 
           </div>
+        </aside>
+        <!-- MAIN FEED -->
+        <section class="home-main" aria-label="Home feed">
+          <!-- Trend pills row -->
+          <div id="homePills" class="home-pills" aria-label="Trending" hidden></div>
+
+          <!-- Deals grid -->
+          <section id="homeDeals" class="home-deals" hidden></section>
+        </section>
+
+        <aside id="shortlistRail" class="shortlist-rail" hidden aria-label="Shortlist">
+          <div id="shortlistMini" class="shortlist-mini"></div>
         </aside>
       </div>
     </div>

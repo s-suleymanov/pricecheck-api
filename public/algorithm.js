@@ -15,6 +15,182 @@
   const $   = id => document.getElementById(id);
   const c2u = c  => { const n = Number(c); return Number.isFinite(n) ? fmt.format(n/100) : "—"; };
 
+    const SHORTLIST_ADD_SVG = `
+    <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+      <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"></path>
+    </svg>
+  `;
+
+  const SHORTLIST_ON_SVG = `
+    <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+      <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"></path>
+    </svg>
+  `;
+
+  const SHORTLIST_REMOVE_SVG = `
+    <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+      <path d="M256-200 200-256l224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"></path>
+    </svg>
+  `;
+
+  function shortlistApi() {
+    return window.PriceCheckShortlist || null;
+  }
+
+  function shortlistButtonHtml() {
+    return `
+      <button
+        type="button"
+        class="home-deal__shortlist"
+        data-shortlist-toggle="1"
+        aria-label="Save to shortlist"
+        title="Save to shortlist"
+      >
+        <span data-shortlist-icon="off">${SHORTLIST_ADD_SVG}</span>
+        <span data-shortlist-icon="on" hidden>${SHORTLIST_ON_SVG}</span>
+      </button>
+    `;
+  }
+
+  function shortlistItemFromHomeCard(cardEl) {
+    const api = shortlistApi();
+    if (!api || !cardEl) return null;
+
+    const key = String(cardEl.getAttribute("data-dash-key") || "").trim();
+    if (!key) return null;
+
+    const linkEl = cardEl.querySelector(".home-deal__link");
+    const href = api.safeHref(linkEl?.getAttribute("href") || "", { sameOrigin: true });
+    if (!href) return null;
+
+    const priceCents = Number.isFinite(Number(cardEl.getAttribute("data-price-cents")))
+      ? Number(cardEl.getAttribute("data-price-cents"))
+      : null;
+
+    return api.normalizeItem({
+      key,
+      href,
+      title: cardEl.getAttribute("data-title") || "",
+      brand: cardEl.getAttribute("data-brand") || "",
+      img: cardEl.getAttribute("data-img") || "",
+      priceCents,
+      source: "home"
+    });
+  }
+
+  function syncShortlistButtons(root = document) {
+    const api = shortlistApi();
+    if (!api) return;
+
+    root.querySelectorAll(".home-deal[data-dash-key]").forEach((card) => {
+      let btn = card.querySelector("[data-shortlist-toggle='1']");
+      if (!btn) {
+        card.insertAdjacentHTML("beforeend", shortlistButtonHtml());
+        btn = card.querySelector("[data-shortlist-toggle='1']");
+      }
+      if (!btn) return;
+
+      const key = String(card.getAttribute("data-dash-key") || "").trim();
+      const on = api.has(key);
+
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-label", on ? "Remove from shortlist" : "Save to shortlist");
+      btn.title = on ? "Remove from shortlist" : "Save to shortlist";
+
+      const off = btn.querySelector("[data-shortlist-icon='off']");
+      const onEl = btn.querySelector("[data-shortlist-icon='on']");
+      if (off) off.hidden = on;
+      if (onEl) onEl.hidden = !on;
+    });
+  }
+
+  function renderShortlistRail() {
+  const api = shortlistApi();
+  if (!api) return;
+
+  const rail = document.getElementById("shortlistRail");
+  const mini = document.getElementById("shortlistMini");
+  if (!rail || !mini) return;
+
+  const items = api.readItems();
+
+  if (!items.length) {
+    rail.hidden = true;
+    document.body.classList.remove("has-shortlist");
+    mini.innerHTML = "";
+    return;
+  }
+
+  rail.hidden = false;
+  document.body.classList.add("has-shortlist");
+
+  mini.innerHTML = items.map((item) => `
+    <div class="shortlist-mini-item" title="${esc(item.title || item.brand || "Saved product")}">
+      <a class="shortlist-mini-link" href="${esc(item.href)}"
+         aria-label="${esc(item.title || item.brand || "Saved product")}">
+        ${item.img
+          ? `<img class="shortlist-mini-img" src="${esc(item.img)}" alt="">`
+          : `<div class="shortlist-mini-img"></div>`
+        }
+      </a>
+      <button type="button" class="shortlist-mini-remove"
+        data-shortlist-remove="${esc(item.key)}"
+        aria-label="Remove from shortlist" title="Remove from shortlist">
+        ${SHORTLIST_REMOVE_SVG}
+      </button>
+    </div>
+  `).join("");
+}
+
+  function initHomeShortlistUi() {
+  const api = shortlistApi();
+  if (!api) return;
+
+  if (!document.body.dataset.homeShortlistBound) {
+    document.body.dataset.homeShortlistBound = "1";
+
+    document.body.addEventListener("click", (e) => {
+      const saveBtn = e.target.closest("[data-shortlist-toggle='1']");
+      if (saveBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const card = saveBtn.closest(".home-deal[data-dash-key]");
+        const item = shortlistItemFromHomeCard(card);
+        if (!item) return;
+
+        api.toggle(item);
+        document.body.classList.add("has-shortlist");
+        renderShortlistRail();
+        syncShortlistButtons(document);
+        return;
+      }
+
+      const removeBtn = e.target.closest("[data-shortlist-remove]");
+      if (removeBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const key = String(removeBtn.getAttribute("data-shortlist-remove") || "").trim();
+        if (!key) return;
+
+        api.remove(key);
+        renderShortlistRail();
+        syncShortlistButtons(document);
+        return;
+      }
+    });
+  }
+
+  window.addEventListener("pc:shortlist_changed", () => {
+    renderShortlistRail();
+    syncShortlistButtons(document);
+  });
+
+  renderShortlistRail();
+  syncShortlistButtons(document);
+}
+
   function slugify(s) {
     return String(s ?? "").trim().toLowerCase()
       .replace(/['"]/g,"").replace(/&/g,"and").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
@@ -190,15 +366,48 @@
         : `<span class="home-deal__icon home-deal__icon--fallback" title="${t}">${esc(it.fb)}</span>`;
     }).join("");
   }
+
   function cardHtml(item, S) {
-    const title  = esc(item.title||"Product");
-    const img    = String(item.image_url||"").trim();
-    const href   = esc(dashHref(item.key));
-    const imgTag = img
-      ?`<img class="home-deal__img" src="${esc(img)}" alt="" loading="lazy" decoding="async">`
-      :`<div class="home-deal__img is-empty" aria-hidden="true"></div>`;
-    return `<a class="home-deal" href="${href}">${imgTag}<div class="home-deal__body"><div class="home-deal__icons" aria-hidden="true">${iconsHtml({brand:item.brand,stores:item.stores},S)}</div><div class="home-deal__content"><div class="home-deal__title">${title}</div><div class="home-deal__meta"><span class="home-deal__price">${c2u(item.min_price_cents)}</span><span class="home-deal__range"> – ${c2u(item.max_price_cents)}</span></div></div></div></a>`;
-  }
+  const title = esc(item.title || "Product");
+  const brand = esc(item.brand || "");
+  const img = String(item.image_url || "").trim();
+  const href = esc(dashHref(item.key));
+  const key = esc(item.key || "");
+  const priceCents = Number.isFinite(Number(item.min_price_cents)) ? Number(item.min_price_cents) : "";
+  const imgTag = img
+    ? `<img class="home-deal__img" src="${esc(img)}" alt="" loading="lazy" decoding="async">`
+    : `<div class="home-deal__img is-empty" aria-hidden="true"></div>`;
+
+  return `
+    <article
+      class="home-deal"
+      data-dash-key="${key}"
+      data-title="${title}"
+      data-brand="${brand}"
+      data-img="${esc(img)}"
+      data-price-cents="${priceCents}"
+    >
+      ${shortlistButtonHtml()}
+
+      <a class="home-deal__link" href="${href}" aria-label="${title}">
+        ${imgTag}
+        <div class="home-deal__body">
+          <div class="home-deal__icons" aria-hidden="true">
+            ${iconsHtml({ brand: item.brand, stores: item.stores }, S)}
+          </div>
+          <div class="home-deal__content">
+            <div class="home-deal__title">${title}</div>
+            <div class="home-deal__meta">
+              <span class="home-deal__price">${c2u(item.min_price_cents)}</span>
+              <span class="home-deal__range"> - ${c2u(item.max_price_cents)}</span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </article>
+  `;
+}
+
   function skelHtml(n) {
     const c=`<div class="home-deal" style="pointer-events:none" aria-hidden="true"><div class="home-deal__img is-empty pc-sk"></div><div class="home-deal__body"><div class="home-deal__content"><div class="pc-sk" style="width:70%;height:13px;margin-bottom:8px"></div><div class="pc-sk" style="width:40%;height:11px"></div></div></div></div>`;
     return Array.from({length:n},()=>c).join("");
@@ -301,36 +510,39 @@ _skelResizeTimer = setTimeout(() => {
         if (skel) renderSkeletonGrid();
     }
 
-  function paint(rows) {
+    function paint(rows) {
     if (!rows?.length) return;
     scaffold();
     const S = window.__pcSellersMap || {};
-    feedEl._g.insertAdjacentHTML("beforeend", rows.map(r=>cardHtml(r,S)).join(""));
-    rows.forEach(r=>{ if(r.key) _seen.add(r.key); });
+    feedEl._g.insertAdjacentHTML("beforeend", rows.map(r => cardHtml(r, S)).join(""));
+    rows.forEach(r => { if (r.key) _seen.add(r.key); });
+    syncShortlistButtons(feedEl._g);
   }
+
   function repaint() {
     if (!feedEl._rdy) return;
     const S = window.__pcSellersMap || {};
-    feedEl._g.innerHTML = _rows.map(r=>cardHtml(r,S)).join("");
+    feedEl._g.innerHTML = _rows.map(r => cardHtml(r, S)).join("");
+    syncShortlistButtons(feedEl._g);
   }
 
-
   function swap(rows) {
-  if (!rows?.length) return;
-  scaffold();
+    if (!rows?.length) return;
+    scaffold();
 
-  feedEl._g.style.transition = "opacity .2s";
-  feedEl._g.style.opacity = "0";
-
-  requestAnimationFrame(() => {
-    feedEl._g.innerHTML = rows.map(r => cardHtml(r, window.__pcSellersMap || {})).join("");
-    _seen = new Set(rows.map(r => r.key).filter(Boolean));
+    feedEl._g.style.transition = "opacity .2s";
+    feedEl._g.style.opacity = "0";
 
     requestAnimationFrame(() => {
-      feedEl._g.style.opacity = "1";
+      feedEl._g.innerHTML = rows.map(r => cardHtml(r, window.__pcSellersMap || {})).join("");
+      _seen = new Set(rows.map(r => r.key).filter(Boolean));
+      syncShortlistButtons(feedEl._g);
+
+      requestAnimationFrame(() => {
+        feedEl._g.style.opacity = "1";
+      });
     });
-  });
-}
+  }
 
   // ── API call ──────────────────────────────────────────────────────────────
   async function apiFeed(sig, off, lim) {
@@ -453,40 +665,44 @@ _skelResizeTimer = setTimeout(() => {
   }
 
   // ── Boot ──────────────────────────────────────────────────────────────────
-  async function boot() {
+    async function boot() {
     const cold = { brands:[], categories:[], keywords:[], seenKeys:[] };
 
-    // Fire history in parallel — don't wait for it before showing content
     const histP = fetch("/api/history",{headers:{Accept:"application/json"},cache:"no-cache"})
       .then(r=>r.ok?r.json():null).catch(()=>null);
 
-    // Show shimmer → cold popular feed immediately
     await loadFirst(cold);
     _sig = cold;
     wireScroll();
     setTimeout(()=>renderPills(cold), 0);
+    initHomeShortlistUi();
 
-    // Logos in background
-    const doLogos = async()=>{
-      try{window.__pcSellersMap=await getSellers();repaint();}catch(_){}
+    const doLogos = async () => {
+      try {
+        window.__pcSellersMap = await getSellers();
+        repaint();
+      } catch (_) {}
     };
     "requestIdleCallback" in window ? requestIdleCallback(doLogos) : setTimeout(doLogos, 0);
 
-    // Personalization: once history loads, enrich signals and swap feed
-    histP.then(async json=>{
+    histP.then(async json => {
       if (!json?.signed_in || !json.results?.length) return;
       const sig = extractSignals(json.results);
       if (!sig.brands.length && !sig.categories.length && !sig.keywords.length) return;
       try {
-        const j    = await apiFeed(sig, 0, PAGE);
+        const j = await apiFeed(sig, 0, PAGE);
         const rows = Array.isArray(j?.results) ? j.results : [];
         if (rows.length >= 4) {
-          _rows = rows; _off = rows.length; _done = false;
-          _sig  = sig;
+          _rows = rows;
+          _off = rows.length;
+          _done = false;
+          _sig = sig;
           swap(rows);
         }
-        setTimeout(()=>renderPills(sig), 0);
-      } catch(e) { console.error("[PC] personalize:", e); }
+        setTimeout(() => renderPills(sig), 0);
+      } catch (e) {
+        console.error("[PC] personalize:", e);
+      }
     });
   }
 

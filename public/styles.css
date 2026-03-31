@@ -10,7 +10,7 @@
 
   --max:1220px;
 
-  --pc-side-w:250px;
+  --pc-side-w:230px;
   --pc-side-gap:18px;
 }
 
@@ -1041,13 +1041,102 @@ em {
   box-sizing: border-box;
 
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--pc-side-w);
+  grid-template-columns: var(--pc-side-w) minmax(0, 1fr);
   gap: var(--pc-side-gap);
 
   padding-top: 70px;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: 18px;
+  padding-right: 18px;
   align-items: start;
+}
+
+.home-deal{
+  position: relative;
+}
+
+.home-deal__shortlist{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.96);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .15s ease, visibility .15s ease, border-color .15s ease, background .15s ease;
+}
+
+.home-deal:hover .home-deal__shortlist,
+.home-deal__shortlist.is-active{
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.home-deal__shortlist:hover{
+  border-color: rgba(0,0,0,0.18);
+  background: #fff;
+}
+
+.home-deal__shortlist.is-active{
+  color: #16a34a;
+  border-color: rgba(22,163,74,0.28);
+  background: #f0fdf4;
+}
+
+.home-deal__shortlist svg{
+  width: 22px;
+  height: 22px;
+  display: block;
+  fill: currentColor;
+  pointer-events: none;
+}
+
+.shortlist-rail{
+  display: none;
+}
+
+body.has-shortlist .shortlist-rail{
+  display: block;
+}
+
+.home-deal{
+  position: relative;
+}
+
+.home-deal__link{
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (min-width: 1280px){
+
+  .home-main{
+    min-width: 0;
+    padding-right: 0;
+    transition: padding-right .18s ease;
+  }
+
+  body.has-shortlist .home-main{
+    padding-right: 69px;
+  }
+
+  .shortlist-mini-remove:hover{
+    transform: scale(1.05);
+  }
 }
 
 .pc-page-layout{
@@ -2131,4 +2220,114 @@ body.pc-signin-open{
   width: 22px;
   height: 22px;
   display: block;
+}
+
+.shortlist-rail[hidden]{
+  display: none !important;
+}
+
+@media (min-width: 1280px){
+  .shortlist-rail{
+    position: fixed;
+    right: 0;
+    top: 63px;
+    bottom: 0;
+    height: calc(100dvh - 63px);
+    z-index: 55;
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+    overflow: visible;
+    padding: 0;
+  }
+
+  .shortlist-mini{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: visible;
+    padding: 8px 0;
+  }
+
+  .shortlist-mini::-webkit-scrollbar{
+    width: 0;
+    height: 0;
+  }
+
+  .shortlist-mini-item{
+    position: relative;
+    width: 70px;
+    height: 60px;
+    overflow: visible;
+    flex: 0 0 auto;
+    transition: width 0.2s ease;
+  }
+
+  .shortlist-mini-item:hover{
+    width: 80px;
+  }
+
+  .shortlist-mini-link{
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 60px;
+    overflow: hidden;
+    text-decoration: none;
+    background: #fff;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-right: none;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .shortlist-mini-img{
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+  }
+
+  .shortlist-mini-remove{
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    width: 14px;
+    height: 50px;
+    border: 0;
+    border-radius: 999px;
+    background: #FDECEA;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.14);
+    color: #111;
+    opacity: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .14s ease, transform .14s ease;
+    padding: 0;
+    z-index: 2;
+  }
+
+  .shortlist-mini-item:hover .shortlist-mini-remove{
+    opacity: 1;
+  }
+
+  .shortlist-mini-remove svg{
+    width: 12px;
+    height: 12px;
+    fill: #EA4335;
+    display: block;
+  }
+}
+
+@media (max-width: 1279px){
+  .shortlist-rail{
+    display: none !important;
+  }
 }
