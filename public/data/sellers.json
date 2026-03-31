@@ -1239,6 +1239,26 @@
       "support_page": "https://www.samsung.com/us/support"
     }
   },
+  "microsoft": {
+  "name": "Microsoft",
+  "logo": "/logo/seller/microsoft.svg",
+  "website": "https://www.microsoft.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "United States",
+  "founded": null,
+  "policies": {
+    "return_period": "See Website",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": null,
+    "chat_available": false,
+    "support_page": null
+  }
+},
   "segway": {
     "name": "Segway",
     "logo": "/logo/seller/segway.png",
