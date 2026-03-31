@@ -2171,7 +2171,7 @@ body.pc-signin-open{
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px 10px 8px;
+  padding: 10px 12px 10px 9px;
   border-radius: 14px;
   color: #111;
   text-decoration: none;
