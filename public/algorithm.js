@@ -310,12 +310,29 @@
   }
 
   // ── Seller logos ──────────────────────────────────────────────────────────
-  let _sp = null;
   function getSellers() {
-    if (_sp) return _sp;
-    _sp = fetch("/data/sellers.json",{headers:{Accept:"application/json"}})
-      .then(r=>r.ok?r.json():{}).then(j=>j&&typeof j==="object"?j:{}).catch(()=>({}));
-    return _sp;
+    if (window.__pcSellersMap && typeof window.__pcSellersMap === "object") {
+      return Promise.resolve(window.__pcSellersMap);
+    }
+
+    if (window.__pcSellersMapPromise) {
+      return window.__pcSellersMapPromise;
+    }
+
+    window.__pcSellersMapPromise = fetch("/data/sellers.json", {
+      headers: { Accept: "application/json" }
+    })
+      .then(r => (r.ok ? r.json() : {}))
+      .then(j => {
+        window.__pcSellersMap = (j && typeof j === "object") ? j : {};
+        return window.__pcSellersMap;
+      })
+      .catch(() => {
+        window.__pcSellersMap = {};
+        return window.__pcSellersMap;
+      });
+
+    return window.__pcSellersMapPromise;
   }
   function logoUrl(id, S) {
     const k = String(id||"").trim().toLowerCase();
@@ -487,7 +504,6 @@ _skelResizeTimer = setTimeout(() => {
   let _rows  = [];
   let _seen  = new Set();   // all keys ever shown (prevents repeats across pages)
   let _off   = 0;
-  let _done  = false;
   let _busy  = false;
   const PAGE = 24;
 
@@ -569,7 +585,6 @@ _skelResizeTimer = setTimeout(() => {
         const rows = Array.isArray(j?.results) ? j.results : [];
         _rows = rows;
         _off = rows.length;
-        _done = false;
 
         stopSkeletonGrid();
         feedEl._g.innerHTML = "";
@@ -587,13 +602,6 @@ _skelResizeTimer = setTimeout(() => {
 
   async function loadMore() {
     if (_busy) return;
-    // Never permanently done — if we somehow emptied the feed, reset offset
-    // and start showing popular items again (endless loop)
-    if (_done) {
-      _off  = 0;
-      _seen.clear();
-      _done = false;
-    }
     _busy = true;
     if (feedEl._m) feedEl._m.hidden = true;
     try {
@@ -637,8 +645,28 @@ _skelResizeTimer = setTimeout(() => {
   }
 
   // ── Trend pills ───────────────────────────────────────────────────────────
-  const FALLBACK = ["Apple","Samsung","Sony","LG","Dell","HP","TV","Laptop","Headphones","Monitor","Phone","Tablet","Camera","Smartwatch","Speaker","Gaming","Robot Vacuum","Coffee Maker","Router","Keyboard"]
-    .map(label=>({label,q:label}));
+    const FALLBACK = [
+    "TV",
+    "Laptop",
+    "Headphones",
+    "Monitor",
+    "Phone",
+    "Tablet",
+    "Camera",
+    "Smartwatch",
+    "Speaker",
+    "Gaming",
+    "Robot Vacuum",
+    "Coffee Maker",
+    "Router",
+    "Keyboard",
+    "Mouse",
+    "Earbuds",
+    "Soundbar",
+    "Desktop",
+    "Printer",
+    "Console"
+  ].map(label => ({ label, q: label }));
 
   function mkPills(sig) {
     if (!sig?.brands.length && !sig?.categories.length && !sig?.keywords.length) return FALLBACK;
@@ -664,47 +692,56 @@ _skelResizeTimer = setTimeout(() => {
     pillsEl.innerHTML = list.map(x=>`<a class="home-pill" href="${esc(x.href?String(x.href):bHref(x.q||x.label||""))}">${esc(x.label||x.title||"")}</a>`).join("");
   }
 
-  // ── Boot ──────────────────────────────────────────────────────────────────
-    async function boot() {
-    const cold = { brands:[], categories:[], keywords:[], seenKeys:[] };
+  async function boot() {
+  const cold = { brands:[], categories:[], keywords:[], seenKeys:[] };
 
-    const histP = fetch("/api/history",{headers:{Accept:"application/json"},cache:"no-cache"})
-      .then(r=>r.ok?r.json():null).catch(()=>null);
+  const histP = fetch("/api/history", {
+    headers: { Accept:"application/json" },
+    cache: "no-cache"
+  })
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null);
 
-    await loadFirst(cold);
-    _sig = cold;
-    wireScroll();
-    setTimeout(()=>renderPills(cold), 0);
-    initHomeShortlistUi();
+  await loadFirst(cold);
+  _sig = cold;
+  wireScroll();
+  setTimeout(() => renderPills(cold), 0);
+  initHomeShortlistUi();
 
-    const doLogos = async () => {
-      try {
-        window.__pcSellersMap = await getSellers();
-        repaint();
-      } catch (_) {}
-    };
-    "requestIdleCallback" in window ? requestIdleCallback(doLogos) : setTimeout(doLogos, 0);
+  const doLogos = async () => {
+    try {
+      await getSellers();
+      repaint();
+    } catch (_) {}
+  };
 
-    histP.then(async json => {
-      if (!json?.signed_in || !json.results?.length) return;
-      const sig = extractSignals(json.results);
-      if (!sig.brands.length && !sig.categories.length && !sig.keywords.length) return;
-      try {
-        const j = await apiFeed(sig, 0, PAGE);
-        const rows = Array.isArray(j?.results) ? j.results : [];
-        if (rows.length >= 4) {
-          _rows = rows;
-          _off = rows.length;
-          _done = false;
-          _sig = sig;
-          swap(rows);
-        }
-        setTimeout(() => renderPills(sig), 0);
-      } catch (e) {
-        console.error("[PC] personalize:", e);
+  "requestIdleCallback" in window
+    ? requestIdleCallback(doLogos)
+    : setTimeout(doLogos, 0);
+
+  histP.then(async json => {
+    if (!json?.signed_in || !json.results?.length) return;
+
+    const sig = extractSignals(json.results);
+    if (!sig.brands.length && !sig.categories.length && !sig.keywords.length) return;
+
+    try {
+      const j = await apiFeed(sig, 0, PAGE);
+      const rows = Array.isArray(j?.results) ? j.results : [];
+
+      if (rows.length >= 4) {
+        _rows = rows;
+        _off = rows.length;
+        _sig = sig;
+        swap(rows);
       }
-    });
-  }
+
+      setTimeout(() => renderPills(sig), 0);
+    } catch (e) {
+      console.error("[PC] personalize:", e);
+    }
+  });
+}
 
   boot();
 })();

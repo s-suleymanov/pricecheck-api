@@ -1,5 +1,39 @@
 /* ─── History page layout ──────────────────────────────────────────────────── */
 
+.pc-history-page .home-side__inner{
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.pc-history-page .pc-page-layout{
+  display: grid;
+  grid-template-columns: var(--pc-side-w) minmax(0, 1fr);
+  grid-template-areas: "side main";
+  gap: var(--pc-side-gap);
+  align-items: start;
+}
+
+.pc-history-page .home-side{
+  grid-area: side;
+}
+
+.pc-history-page .pc-history-main{
+  grid-area: main;
+  min-width: 0;
+  min-height: 150vh;
+}
+
+@media (max-width: 980px){
+  .pc-history-page .pc-page-layout{
+    grid-template-columns: 1fr;
+  }
+
+  .pc-history-page .home-side,
+  .pc-history-page .pc-history-main{
+    grid-area: auto;
+  }
+}
+
 .pc-history-page .home-center__inner { width: 100%; }
 .pc-history-main { min-width: 0; min-height: 150vh; }
 

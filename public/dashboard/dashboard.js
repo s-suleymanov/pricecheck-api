@@ -3629,77 +3629,6 @@ function _dbEsc(s) {
     .replace(/'/g, "&#039;");
 }
 
-
-let _bookmarkBusy = false;
-
-async function wireBookmarkButton(entityKey, title, imageUrl, brand) {
-  const btn = document.querySelector("[data-pc-bookmark='1']");
-  if (!btn) return;
-
-  const iconOn  = btn.querySelector("[data-bookmark-icon='on']");
-  const iconOff = btn.querySelector("[data-bookmark-icon='off']");
-
-  function setBookmarked(on) {
-    if (iconOn)  iconOn.style.display  = on ? "" : "none";
-    if (iconOff) iconOff.style.display = on ? "none" : "";
-    btn.setAttribute("aria-pressed", String(!!on));
-    btn.title = on ? "Remove bookmark" : "Save to bookmarks";
-  }
-
-  setBookmarked(false); // default until API returns
-
-  // Check current state
-  try {
-    const res  = await fetch(`/api/bookmarks/check?entity_key=${encodeURIComponent(entityKey)}`, {
-      credentials: "same-origin", headers: { Accept: "application/json" }
-    });
-    const data = await res.json().catch(() => null);
-    if (data?.ok) setBookmarked(!!data.bookmarked);
-  } catch (_e) {}
-
-  // Remove any old listener
-  if (btn._pcBookmarkBound) {
-    btn.removeEventListener("click", btn._pcBookmarkBound);
-  }
-
-  btn._pcBookmarkBound = async function handleBookmarkClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (_bookmarkBusy) return;
-
-    _bookmarkBusy = true;
-    btn.disabled = true;
-
-    try {
-      const res = await fetch("/api/bookmarks/toggle", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          entity_key: entityKey,
-          title:      _dbClean(title).slice(0, 200),
-          image_url:  _dbClean(imageUrl).slice(0, 500) || null,
-          brand:      _dbClean(brand).slice(0, 100) || null
-        })
-      });
-      if (res.status === 401) {
-        window.pcOpenSignIn?.();
-        return;
-      }
-      const data = await res.json().catch(() => null);
-      if (data?.ok) setBookmarked(!!data.bookmarked);
-    } catch (_e) {}
-    finally {
-      _bookmarkBusy = false;
-      btn.disabled = false;
-    }
-  };
-
-  btn.addEventListener("click", btn._pcBookmarkBound);
-}
-
-
 let _labelPanelOpen   = false;
 let _labelPanelEl     = null;
 
@@ -3709,7 +3638,7 @@ function _ensureLabelPanel() {
   _labelPanelEl = document.createElement("div");
   _labelPanelEl.id = "pcLabelPickerPanel";
   _labelPanelEl.setAttribute("role", "dialog");
-  _labelPanelEl.setAttribute("aria-label", "Save to label");
+  _labelPanelEl.setAttribute("aria-label", "Save to Bookmarks");
   _labelPanelEl.style.cssText = `
     position:fixed; z-index:9000;
     bottom:24px; right:24px;
@@ -3786,8 +3715,8 @@ function _renderLabelPanel(panel, labels, inLabels, entityKey, title, imageUrl, 
   const headerHtml = `
     <div style="display:flex;align-items:center;justify-content:space-between;
                 padding:12px 14px 10px;border-bottom:1px solid rgba(0,0,0,.07);flex-shrink:0;">
-      <span style="font-size:14px;font-weight:700;color:#111827;">Save to Label</span>
-      <a href="/labels/" style="font-size:12px;color:#6366f1;text-decoration:none;font-weight:600;">Manage</a>
+      <span style="font-size:14px;font-weight:700;color:#111827;">Bookmark Manager</span>
+      <a href="/labels/" style="font-size:14px;color:#6366f1;text-decoration:none;font-weight:600;">Edit</a>
     </div>
   `;
 
@@ -3951,7 +3880,6 @@ async function wireLabelTrigger(entityKey, title, imageUrl, brand) {
 async function wireProductActions(entityKey, title, imageUrl, brand) {
   if (!entityKey) return;
   await Promise.all([
-    wireBookmarkButton(entityKey, title, imageUrl, brand),
     wireLabelTrigger(entityKey, title, imageUrl, brand),
     wireFavoriteButton(entityKey, title, imageUrl, brand)
   ]);

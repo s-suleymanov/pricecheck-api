@@ -6,6 +6,23 @@
   min-width:0;
 }
 
+.pc-following-page .pc-page-layout{
+  display: grid;
+  grid-template-columns: var(--pc-side-w) minmax(0, 1fr);
+  grid-template-areas: "side main";
+  gap: var(--pc-side-gap);
+  align-items: start;
+}
+
+.pc-following-page .home-side{
+  grid-area: side;
+}
+
+.pc-following-page .pc-following-main{
+  grid-area: main;
+  min-width: 0;
+}
+
 .pc-following-list{
   width:100%;
   padding:24px 0 0;

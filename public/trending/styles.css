@@ -9,7 +9,8 @@
 
 .pc-trending-page .pc-trending-layout{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--pc-side-w);
+  grid-template-columns: var(--pc-side-w) minmax(0, 1fr);
+  grid-template-areas: "side main";
   gap: 24px;
   align-items: start;
   width: 100%;
@@ -17,6 +18,15 @@
   padding-left: 20px;
   padding-right: 20px;
   box-sizing: border-box;
+}
+
+.pc-trending-page .home-side{
+  grid-area: side;
+}
+
+.pc-trending-page .pc-trending-main{
+  grid-area: main;
+  min-width: 0;
 }
 
 .pc-trending-page .pc-trending-main{

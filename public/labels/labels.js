@@ -84,7 +84,7 @@
       btn.addEventListener("click", async e => {
         e.stopPropagation();
         const id = Number(btn.closest("[data-label-id]").getAttribute("data-label-id"));
-        if (confirm("Delete this label and all its products?")) await deleteLabel(id);
+        if (confirm("Delete this bookmark and all its products?")) await deleteLabel(id);
       });
     });
 

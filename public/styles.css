@@ -1078,6 +1078,46 @@ em {
   transition: opacity .15s ease, visibility .15s ease, border-color .15s ease, background .15s ease;
 }
 
+.home-side__subs-avatar{
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #fff;
+}
+
+.home-side__subs-avatar--brand{
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #fff;
+}
+
+.home-side__subs-avatar--brand img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.home-side__subs-avatar-fallback{
+  width: 100%;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #111;
+  background: #f3f4f6;
+  border-radius: 999px;
+}
+
 .home-deal:hover .home-deal__shortlist,
 .home-deal__shortlist.is-active{
   opacity: 1;
@@ -2131,7 +2171,7 @@ body.pc-signin-open{
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px 10px 6px;
+  padding: 10px 12px 10px 8px;
   border-radius: 14px;
   color: #111;
   text-decoration: none;
@@ -2194,8 +2234,8 @@ body.pc-signin-open{
 }
 
 .home-side__subs-avatar--sm {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
 }
 
 .home-side__subs-avatar img {

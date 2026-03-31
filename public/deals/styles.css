@@ -6,6 +6,23 @@
   min-width: 0;
 }
 
+.pc-deals-page .pc-page-layout{
+  display: grid;
+  grid-template-columns: var(--pc-side-w) minmax(0, 1fr);
+  grid-template-areas: "side main";
+  gap: var(--pc-side-gap);
+  align-items: start;
+}
+
+.pc-deals-page .home-side{
+  grid-area: side;
+}
+
+.pc-deals-page .pc-deals-main{
+  grid-area: main;
+  min-width: 0;
+}
+
 /* If you still have any "hide sidebar until ready" rule, this guarantees Deals shows it */
 .pc-deals-page .home-side__inner{
   opacity: 1 !important;

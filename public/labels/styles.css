@@ -1,3 +1,19 @@
+.pc-labels-page .pc-page-layout{
+  display: grid;
+  grid-template-columns: var(--pc-side-w) minmax(0, 1fr);
+  grid-template-areas: "side main";
+  gap: var(--pc-side-gap);
+  align-items: start;
+}
+
+.pc-labels-page .home-side{
+  grid-area: side;
+}
+
+.pc-labels-page .pc-labels-main{
+  grid-area: main;
+  min-width: 0;
+}
 
 .pc-labels-main { min-width: 0; min-height: 150vh; }
 

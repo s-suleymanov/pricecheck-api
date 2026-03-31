@@ -45,7 +45,6 @@ app.use(require("./routes/auth"));
 app.use(require("./routes/follows"));
 app.use(require("./routes/account"));
 app.use(require("./routes/history"));
-app.use(require("./routes/bookmarks"));
 app.use(require("./routes/labels"));
 app.use(require("./routes/algorithm"));
 app.use("/api/reviews", require("./routes/reviews"));

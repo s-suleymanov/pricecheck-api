@@ -28,7 +28,7 @@ router.get("/api/home_deals", async (req, res) => {
 
   const client = await pool.connect();
   try {
-        const sql = `
+    const sql = `
       WITH base AS (
         SELECT
           CASE
@@ -38,8 +38,7 @@ router.get("/api/home_deals", async (req, res) => {
           END AS key,
           replace(lower(btrim(l.store)), ' ', '') AS store_key,
           COALESCE(l.effective_price_cents, l.current_price_cents) AS price_cents,
-          COALESCE(l.current_price_observed_at, l.created_at) AS t,
-          l.title AS listing_title
+          COALESCE(l.current_price_observed_at, l.created_at) AS t
         FROM public.listings l
         WHERE coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
           AND COALESCE(l.effective_price_cents, l.current_price_cents) IS NOT NULL
@@ -89,7 +88,7 @@ router.get("/api/home_deals", async (req, res) => {
           s.max_price_cents,
           s.store_count,
           s.deal_score,
-          c.model_name,
+          COALESCE(NULLIF(btrim(c.model_name), ''), 'Product') AS title,
           c.brand,
           c.category,
           c.image_url
@@ -106,22 +105,6 @@ router.get("/api/home_deals", async (req, res) => {
           ORDER BY c2.created_at DESC NULLS LAST, c2.id DESC
           LIMIT 1
         ) c ON true
-      ),
-      picked_title AS (
-        SELECT
-          p.*,
-          COALESCE(
-            NULLIF(btrim(p.model_name), ''),
-            (
-              SELECT b.listing_title
-              FROM base b
-              WHERE b.key = p.key AND b.listing_title IS NOT NULL AND btrim(b.listing_title) <> ''
-              ORDER BY b.t DESC NULLS LAST
-              LIMIT 1
-            ),
-            'Product'
-          ) AS title
-        FROM picked_meta p
       )
       SELECT
         p.key,
@@ -134,7 +117,7 @@ router.get("/api/home_deals", async (req, res) => {
         p.store_count,
         p.deal_score,
         COALESCE(st.stores, ARRAY[]::text[]) AS stores
-      FROM picked_title p
+      FROM picked_meta p
       LEFT JOIN stores st ON st.key = p.key
       ORDER BY p.deal_score DESC, p.store_count DESC, (p.max_price_cents - p.min_price_cents) DESC
       LIMIT $1

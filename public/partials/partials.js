@@ -737,15 +737,53 @@
     `;
   }
 
+  function _sidebarSignedOutBrandsHtml(sellers) {
+    const brands = ["apple", "microsoft", "samsung", "google"];
+
+    return brands.map((brand) => {
+      const label = sidebarTitleCase(brand);
+      const logo  = logoFromSellers(brand, sellers);
+      const initial = sidebarEsc((label[0] || "?").toUpperCase());
+
+      return `
+        <li>
+          <a class="home-side__item home-side__item--sub" href="/browse/?brand=${encodeURIComponent(label)}">
+            <span
+              class="home-side__subs-avatar home-side__subs-avatar--sm"
+              aria-hidden="true"
+              style="overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+            >
+              ${
+                logo
+                  ? `<img
+                      src="${sidebarEsc(logo)}"
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      style="width:100%;height:100%;object-fit:contain;border-radius:4px;"
+                      onerror="this.style.display='none';this.nextElementSibling.style.display='inline';"
+                    >
+                    <span style="display:none;font-size:11px;font-weight:700;line-height:1;">${initial}</span>`
+                  : `<span style="font-size:11px;font-weight:700;line-height:1;">${initial}</span>`
+              }
+            </span>
+            <span class="home-side__label">${sidebarEsc(label)}</span>
+          </a>
+        </li>
+      `;
+    }).join("");
+  }
+
   async function loadSidebarFollowing() {
     const list = document.getElementById("homeSideSubsList");
     if (!list) return;
 
     const signedIn = !!(pcAuthUser && pcAuthUser.email);
 
-    // Not signed in → show default placeholder
+    // Not signed in → show static company list, never "Add Brands"
     if (!signedIn) {
-      list.innerHTML = _sidebarDefaultHtml();
+      const sellers = await getSharedSellersMap();
+      list.innerHTML = _sidebarSignedOutBrandsHtml(sellers);
       return;
     }
 
