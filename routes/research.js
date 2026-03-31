@@ -175,7 +175,6 @@ router.get('/api/research/gainers', async (req, res) => {
         coalesce(
           nullif(btrim(cp.model_name),''),
           nullif(btrim(cu.model_name),''),
-          nullif(btrim(li.title),''),
           'Unknown'
         ) as title,
         coalesce(
@@ -297,7 +296,6 @@ router.get('/api/research/losers', async (req, res) => {
         coalesce(
           nullif(btrim(cp.model_name),''),
           nullif(btrim(cu.model_name),''),
-          nullif(btrim(li.title),''),
           'Unknown'
         ) as title,
         coalesce(
