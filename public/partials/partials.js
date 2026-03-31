@@ -728,7 +728,7 @@
           <span class="home-side__subs-avatar home-side__subs-avatar--sm" aria-hidden="true"
                 style="display:flex;align-items:center;justify-content:center;">
             <svg viewBox="0 -960 960 960" width="20" height="20">
-              <path fill="currentColor" d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 128.5-46.5T480-440q66 0 132.5 15.5T741-378q29 15 46.5 43.5T805-272v112H160Z"/>
+              <path fill="currentColor" d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/>
             </svg>
           </span>
           <span class="home-side__label">Add Brands</span>
