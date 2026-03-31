@@ -576,29 +576,33 @@ _skelResizeTimer = setTimeout(() => {
     return r.json();
   }
 
-    async function loadFirst(sig) {
+  async function loadFirst(sig) {
     _bootLoading = true;
     scaffold(true);
 
-         try {
-        const j    = await apiFeed(sig, 0, PAGE);
-        const rows = Array.isArray(j?.results) ? j.results : [];
-        _rows = rows;
-        _off = rows.length;
+    try {
+      const [j] = await Promise.all([
+        apiFeed(sig, 0, PAGE),
+        getSellers().catch(() => (window.__pcSellersMap || {}))
+      ]);
 
-        stopSkeletonGrid();
-        feedEl._g.innerHTML = "";
-        paint(rows);
-        return rows.length;
-    } catch(e) {
-        console.error("[PC] first page:", e);
-        stopSkeletonGrid();
-        feedEl._g.innerHTML = "";
-        return 0;
+      const rows = Array.isArray(j?.results) ? j.results : [];
+      _rows = rows;
+      _off = rows.length;
+
+      stopSkeletonGrid();
+      feedEl._g.innerHTML = "";
+      paint(rows);
+      return rows.length;
+    } catch (e) {
+      console.error("[PC] first page:", e);
+      stopSkeletonGrid();
+      feedEl._g.innerHTML = "";
+      return 0;
     } finally {
-        document.body.classList.add("pc-home-ready");
+      document.body.classList.add("pc-home-ready");
     }
-    }
+  }
 
   async function loadMore() {
     if (_busy) return;
@@ -693,55 +697,34 @@ _skelResizeTimer = setTimeout(() => {
   }
 
   async function boot() {
-  const cold = { brands:[], categories:[], keywords:[], seenKeys:[] };
+    const cold = { brands: [], categories: [], keywords: [], seenKeys: [] };
 
-  const histP = fetch("/api/history", {
-    headers: { Accept:"application/json" },
-    cache: "no-cache"
-  })
-    .then(r => r.ok ? r.json() : null)
-    .catch(() => null);
+    initHomeShortlistUi();
 
-  await loadFirst(cold);
-  _sig = cold;
-  wireScroll();
-  setTimeout(() => renderPills(cold), 0);
-  initHomeShortlistUi();
-
-  const doLogos = async () => {
-    try {
-      await getSellers();
-      repaint();
-    } catch (_) {}
-  };
-
-  "requestIdleCallback" in window
-    ? requestIdleCallback(doLogos)
-    : setTimeout(doLogos, 0);
-
-  histP.then(async json => {
-    if (!json?.signed_in || !json.results?.length) return;
-
-    const sig = extractSignals(json.results);
-    if (!sig.brands.length && !sig.categories.length && !sig.keywords.length) return;
+    let initialSig = cold;
 
     try {
-      const j = await apiFeed(sig, 0, PAGE);
-      const rows = Array.isArray(j?.results) ? j.results : [];
+      const r = await fetch("/api/history", {
+        headers: { Accept: "application/json" },
+        cache: "no-cache"
+      });
 
-      if (rows.length >= 4) {
-        _rows = rows;
-        _off = rows.length;
-        _sig = sig;
-        swap(rows);
+      const json = r.ok ? await r.json() : null;
+
+      if (json?.signed_in && Array.isArray(json.results) && json.results.length) {
+        const sig = extractSignals(json.results);
+        if (sig.brands.length || sig.categories.length || sig.keywords.length) {
+          initialSig = sig;
+        }
       }
+    } catch (_) {}
 
-      setTimeout(() => renderPills(sig), 0);
-    } catch (e) {
-      console.error("[PC] personalize:", e);
-    }
-  });
-}
+    _sig = initialSig;
+
+    await loadFirst(initialSig);
+    wireScroll();
+    setTimeout(() => renderPills(initialSig), 0);
+  }
 
   boot();
 })();
