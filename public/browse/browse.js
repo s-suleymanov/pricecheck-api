@@ -1047,6 +1047,66 @@ const state = {
     return data;
   }
 
+  function clearSidebarState() {
+    state.sideCats = [];
+    state.sideFams = [];
+    state.sideFacetKey = "";
+
+    state.sideBrands = [];
+    state.sideBrandsFacetKey = "";
+
+    state.familyPanelKey = "";
+    state.familyVariants = [];
+    state.familyColors = [];
+
+    state.hasSeller = false;
+    state.sellerSlug = "";
+    state.sellerKey = "";
+    state.sellerLogoUrl = "";
+
+    if (els.categoryPanel) {
+      els.categoryPanel.innerHTML = "";
+      els.categoryPanel.hidden = true;
+    }
+
+    if (els.brandPanel) {
+      els.brandPanel.innerHTML = "";
+      els.brandPanel.hidden = true;
+    }
+
+    if (els.familyPanel) {
+      els.familyPanel.innerHTML = "";
+      els.familyPanel.hidden = true;
+    }
+
+    syncSideSpecsPromo();
+  }
+
+  function hydratePostPaintUi() {
+    requestAnimationFrame(() => {
+      syncShortlistButtons(els.grid || document);
+      renderShortlistRail();
+    });
+  }
+
+  async function loadSidebarDataInBackground(reqId, signal) {
+    await Promise.allSettled([
+      loadCategoryPanelFacets(reqId, { signal }),
+      loadBrandPanelFacets(reqId, { signal }),
+      loadBrandSeller(reqId, { signal }),
+      loadFamilyPanelFacets(reqId, { signal }),
+    ]);
+
+    if (reqId !== state.lastReqId) return;
+    if (signal?.aborted) return;
+    if (state.detailOpen) return;
+
+    await renderCategoryPanel();
+    await renderBrandPanel();
+    syncSideSpecsPromo();
+    setPager();
+  }
+
   // ----------------------------
   // Dashboard path builder (same logic you had)
   // ----------------------------
@@ -2402,7 +2462,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   // ----------------------------
   // Render main grid
   // ----------------------------
-  async function render() {
+  async function render({ sidebar = true, shortlist = true } = {}) {
     if (!els.grid) return;
 
     if (state.activeTab === "specs") {
@@ -2474,7 +2534,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     }
 
     els.grid.innerHTML = parts.join("");
-    animateGridCards(els.grid, { animate: !!state.animateNextRender });
+    animateGridCards(els.grid, { animate: !state.animateNextRender });
     state.animateNextRender = true;
 
     setupVariantHydrator(els.grid);
@@ -2513,12 +2573,19 @@ async function applyCardVariantSelection(cardEl, nextKey) {
       showEmpty(false);
     }
 
-    syncShortlistButtons(els.grid || document);
-    renderShortlistRail();
     renderConditionFilter();
-    await renderCategoryPanel();
-    await renderBrandPanel();
-    syncSideSpecsPromo();
+
+    if (shortlist) {
+      syncShortlistButtons(els.grid || document);
+      renderShortlistRail();
+    }
+
+    if (sidebar) {
+      await renderCategoryPanel();
+      await renderBrandPanel();
+      syncSideSpecsPromo();
+    }
+
     setPager();
   }
 
@@ -2545,6 +2612,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     state.kind = "product";
     state.value = "";
     state.didYouMean = null;
+    clearSidebarState();
 
     try {
       if (!state.q && !state.brand && !state.category) {
@@ -2609,13 +2677,10 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         state.hasRefurbished = !!data.has_refurbished;
         state.hasBundle = !!data.has_bundle;
 
-        await loadCategoryPanelFacets(reqId, { signal });
-        await loadBrandPanelFacets(reqId, { signal });
-        await loadBrandSeller(reqId, { signal });
-        await loadFamilyPanelFacets(reqId, { signal });
-
         setLoading(false);
-        await render();
+        await render({ sidebar: false, shortlist: false });
+        hydratePostPaintUi();
+        void loadSidebarDataInBackground(reqId, signal);
         return;
       }
 
@@ -2673,13 +2738,10 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         return;
       }
 
-      await loadCategoryPanelFacets(reqId, { signal });
-      await loadBrandPanelFacets(reqId, { signal });
-      await loadBrandSeller(reqId, { signal });
-      await loadFamilyPanelFacets(reqId, { signal });
-
       setLoading(false);
-      await render();
+      await render({ sidebar: false, shortlist: false });
+      hydratePostPaintUi();
+      void loadSidebarDataInBackground(reqId, signal);
     } catch (e) {
       if (reqId !== state.lastReqId) return;
 
