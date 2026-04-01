@@ -384,46 +384,54 @@
     }).join("");
   }
 
-  function cardHtml(item, S) {
-  const title = esc(item.title || "Product");
-  const brand = esc(item.brand || "");
-  const img = String(item.image_url || "").trim();
-  const href = esc(dashHref(item.key));
-  const key = esc(item.key || "");
-  const priceCents = Number.isFinite(Number(item.min_price_cents)) ? Number(item.min_price_cents) : "";
-  const imgTag = img
-    ? `<img class="home-deal__img" src="${esc(img)}" alt="" loading="lazy" decoding="async">`
-    : `<div class="home-deal__img is-empty" aria-hidden="true"></div>`;
+  function cardHtml(item, S, eager = false) {
+    const title = esc(item.title || "Product");
+    const brand = esc(item.brand || "");
+    const img = String(item.image_url || "").trim();
+    const href = esc(dashHref(item.key));
+    const key = esc(item.key || "");
+    const priceCents = Number.isFinite(Number(item.min_price_cents)) ? Number(item.min_price_cents) : "";
 
-  return `
-    <article
-      class="home-deal"
-      data-dash-key="${key}"
-      data-title="${title}"
-      data-brand="${brand}"
-      data-img="${esc(img)}"
-      data-price-cents="${priceCents}"
-    >
-      ${shortlistButtonHtml()}
+    const imgTag = img
+      ? `<img
+          class="home-deal__img"
+          src="${esc(img)}"
+          alt=""
+          loading="${eager ? "eager" : "lazy"}"
+          fetchpriority="${eager ? "high" : "auto"}"
+          decoding="async"
+        >`
+      : `<div class="home-deal__img is-empty" aria-hidden="true"></div>`;
 
-      <a class="home-deal__link" href="${href}" aria-label="${title}">
-        ${imgTag}
-        <div class="home-deal__body">
-          <div class="home-deal__icons" aria-hidden="true">
-            ${iconsHtml({ brand: item.brand, stores: item.stores }, S)}
-          </div>
-          <div class="home-deal__content">
-            <div class="home-deal__title">${title}</div>
-            <div class="home-deal__meta">
-              <span class="home-deal__price">${c2u(item.min_price_cents)}</span>
-              <span class="home-deal__range"> - ${c2u(item.max_price_cents)}</span>
+    return `
+      <article
+        class="home-deal"
+        data-dash-key="${key}"
+        data-title="${title}"
+        data-brand="${brand}"
+        data-img="${esc(img)}"
+        data-price-cents="${priceCents}"
+      >
+        ${shortlistButtonHtml()}
+
+        <a class="home-deal__link" href="${href}" aria-label="${title}">
+          ${imgTag}
+          <div class="home-deal__body">
+            <div class="home-deal__icons" aria-hidden="true">
+              ${iconsHtml({ brand: item.brand, stores: item.stores }, S)}
+            </div>
+            <div class="home-deal__content">
+              <div class="home-deal__title">${title}</div>
+              <div class="home-deal__meta">
+                <span class="home-deal__price">${c2u(item.min_price_cents)}</span>
+                <span class="home-deal__range"> - ${c2u(item.max_price_cents)}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </a>
-    </article>
-  `;
-}
+        </a>
+      </article>
+    `;
+  }
 
   function skelHtml(n) {
     const c=`<div class="home-deal" style="pointer-events:none" aria-hidden="true"><div class="home-deal__img is-empty pc-sk"></div><div class="home-deal__body"><div class="home-deal__content"><div class="pc-sk" style="width:70%;height:13px;margin-bottom:8px"></div><div class="pc-sk" style="width:40%;height:11px"></div></div></div></div>`;
@@ -526,14 +534,20 @@ _skelResizeTimer = setTimeout(() => {
         if (skel) renderSkeletonGrid();
     }
 
-    function paint(rows) {
-    if (!rows?.length) return;
-    scaffold();
-    const S = window.__pcSellersMap || {};
-    feedEl._g.insertAdjacentHTML("beforeend", rows.map(r => cardHtml(r, S)).join(""));
-    rows.forEach(r => { if (r.key) _seen.add(r.key); });
-    syncShortlistButtons(feedEl._g);
-  }
+  function paint(rows) {
+  if (!rows?.length) return;
+  scaffold();
+  const S = window.__pcSellersMap || {};
+
+  const existing = feedEl._g.children.length;
+  feedEl._g.insertAdjacentHTML(
+    "beforeend",
+    rows.map((r, i) => cardHtml(r, S, existing + i < 8)).join("")
+  );
+
+  rows.forEach(r => { if (r.key) _seen.add(r.key); });
+  syncShortlistButtons(feedEl._g);
+}
 
   function repaint() {
     if (!feedEl._rdy) return;
@@ -704,8 +718,11 @@ _skelResizeTimer = setTimeout(() => {
     const cold = { brands: [], categories: [], keywords: [], seenKeys: [] };
 
     initHomeShortlistUi();
+    _sig = cold;
 
-    let initialSig = cold;
+    const firstPaintPromise = loadFirst(cold);
+    wireScroll();
+    setTimeout(() => renderPills(cold), 0);
 
     try {
       const r = await fetch("/api/history", {
@@ -718,16 +735,25 @@ _skelResizeTimer = setTimeout(() => {
       if (json?.signed_in && Array.isArray(json.results) && json.results.length) {
         const sig = extractSignals(json.results);
         if (sig.brands.length || sig.categories.length || sig.keywords.length) {
-          initialSig = sig;
+          await firstPaintPromise;
+
+          _sig = sig;
+          _rows = [];
+          _seen.clear();
+          _off = 0;
+
+          const j = await apiFeed(sig, 0, PAGE);
+          const rows = Array.isArray(j?.results) ? j.results : [];
+
+          if (rows.length) {
+            _rows = rows;
+            _off = rows.length;
+            swap(rows);
+            setTimeout(() => renderPills(sig), 0);
+          }
         }
       }
     } catch (_) {}
-
-    _sig = initialSig;
-
-    await loadFirst(initialSig);
-    wireScroll();
-    setTimeout(() => renderPills(initialSig), 0);
   }
 
   boot();
