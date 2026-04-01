@@ -12,6 +12,7 @@
 
   --pc-side-w:230px;
   --pc-side-gap:18px;
+  --pc-nav-h:64px;
 }
 
 .home-logo,
@@ -1218,8 +1219,8 @@ body.has-shortlist .shortlist-rail{
   align-self: start;
 
   position: sticky;
-  top: calc(var(--pc-nav-h, 71px));
-  height: calc(100vh - var(--pc-nav-h, 80px));
+  top: calc(var(--pc-nav-h) + 8px);
+  height: calc(100vh - var(--pc-nav-h) - 16px);
   min-height: 240px;
 }
 
@@ -1322,6 +1323,7 @@ body.has-shortlist .shortlist-rail{
   display: flex;
   gap: 10px;
   align-items: center;
+  min-height: 36px;
   margin: 7px 0 10px;
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -1539,10 +1541,17 @@ body.has-shortlist .shortlist-rail{
   opacity: 1;
 }
 
+.pc-home .home-side__inner{
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .pc-home.pc-home-ready .home-side__inner{
   opacity: 1;
   visibility: visible;
-  transition: opacity 160ms ease;
+  pointer-events: auto;
+  transition: none;
 }
 
 /* Small toast for "A PriceCheck+ Feature" */

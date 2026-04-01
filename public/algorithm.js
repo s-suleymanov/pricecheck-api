@@ -10,6 +10,13 @@
     document.head.appendChild(s);
   }
 
+  function paintPills(list) {
+    if (!pillsEl) return;
+    pillsEl.innerHTML = list.map(x =>
+      `<a class="home-pill" href="${esc(x.href ? String(x.href) : bHref(x.q || x.label || ""))}">${esc(x.label || x.title || "")}</a>`
+    ).join("");
+  }
+
   const fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
   const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
   const $   = id => document.getElementById(id);
@@ -703,15 +710,25 @@ _skelResizeTimer = setTimeout(() => {
 
   async function renderPills(sig) {
     if (!pillsEl) return;
-    let list = [];
+
+    const fallback = mkPills(sig);
+    paintPills(fallback);
+
     try {
-      const r = await fetch("/api/home_trends",{headers:{Accept:"application/json"},cache:"no-cache"});
-      if (r.ok){const j=await r.json();list=Array.isArray(j.results)?j.results:[];}
-    } catch(_){}
-    list = list.length ? list : mkPills(sig);
-    if (!list.length){pillsEl.hidden=true;return;}
-    pillsEl.hidden = false;
-    pillsEl.innerHTML = list.map(x=>`<a class="home-pill" href="${esc(x.href?String(x.href):bHref(x.q||x.label||""))}">${esc(x.label||x.title||"")}</a>`).join("");
+      const r = await fetch("/api/home_trends", {
+        headers: { Accept: "application/json" },
+        cache: "no-cache"
+      });
+
+      if (!r.ok) return;
+
+      const j = await r.json();
+      const list = Array.isArray(j?.results) ? j.results : [];
+
+      if (list.length) {
+        paintPills(list);
+      }
+    } catch (_) {}
   }
 
   async function boot() {
@@ -720,9 +737,9 @@ _skelResizeTimer = setTimeout(() => {
     initHomeShortlistUi();
     _sig = cold;
 
+    renderPills(cold);
     const firstPaintPromise = loadFirst(cold);
     wireScroll();
-    setTimeout(() => renderPills(cold), 0);
 
     try {
       const r = await fetch("/api/history", {
