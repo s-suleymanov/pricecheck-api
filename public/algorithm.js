@@ -580,11 +580,10 @@ _skelResizeTimer = setTimeout(() => {
     _bootLoading = true;
     scaffold(true);
 
+    const sellersPromise = getSellers().catch(() => (window.__pcSellersMap || {}));
+
     try {
-      const [j] = await Promise.all([
-        apiFeed(sig, 0, PAGE),
-        getSellers().catch(() => (window.__pcSellersMap || {}))
-      ]);
+      const j = await apiFeed(sig, 0, PAGE);
 
       const rows = Array.isArray(j?.results) ? j.results : [];
       _rows = rows;
@@ -593,6 +592,11 @@ _skelResizeTimer = setTimeout(() => {
       stopSkeletonGrid();
       feedEl._g.innerHTML = "";
       paint(rows);
+
+      sellersPromise.then(() => {
+        if (_rows.length) repaint();
+      });
+
       return rows.length;
     } catch (e) {
       console.error("[PC] first page:", e);

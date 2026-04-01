@@ -10,24 +10,29 @@
   let _sellersMapCache   = null;
   let _sellersMapPromise = null;
 
-  async function getSharedSellersMap() {
-    if (_sellersMapCache) return _sellersMapCache;
-    if (_sellersMapPromise) return _sellersMapPromise;
+  function getSharedSellersMap() {
+    if (window.__pcSellersMap && typeof window.__pcSellersMap === "object") {
+      return Promise.resolve(window.__pcSellersMap);
+    }
 
-    _sellersMapPromise = fetch("/data/sellers.json", {
+    if (window.__pcSellersMapPromise) {
+      return window.__pcSellersMapPromise;
+    }
+
+    window.__pcSellersMapPromise = fetch("/data/sellers.json", {
       headers: { Accept: "application/json" }
     })
       .then(r => (r.ok ? r.json() : {}))
       .then(data => {
-        _sellersMapCache = (data && typeof data === "object") ? data : {};
-        return _sellersMapCache;
+        window.__pcSellersMap = (data && typeof data === "object") ? data : {};
+        return window.__pcSellersMap;
       })
       .catch(() => {
-        _sellersMapCache = {};
-        return {};
+        window.__pcSellersMap = {};
+        return window.__pcSellersMap;
       });
 
-    return _sellersMapPromise;
+    return window.__pcSellersMapPromise;
   }
 
   function logoFromSellers(key, sellers) {

@@ -1044,7 +1044,6 @@ em {
   grid-template-columns: var(--pc-side-w) minmax(0, 1fr);
   gap: var(--pc-side-gap);
 
-  padding-top: 64px;
   padding-left: 18px;
   padding-right: 18px;
   align-items: start;
