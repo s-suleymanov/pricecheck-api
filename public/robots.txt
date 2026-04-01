@@ -4,4 +4,5 @@ Disallow: /admin/api/
 Disallow: /api/
 Disallow: /v1/
 Disallow: /data/
-Allow: /
+
+Sitemap: https://www.pricechecktool.com/sitemap.xml
