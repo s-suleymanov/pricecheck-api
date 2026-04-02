@@ -391,24 +391,51 @@
     }).join("");
   }
 
+  function dealImageUrl(raw, target = 320) {
+    const s = String(raw || "").trim();
+    if (!s) return "";
+
+    // Best Buy
+    if (s.includes("bbystatic.com")) {
+      let out = s;
+
+      out = out.replace(/maxWidth=\d+/i, `maxWidth=${target}`);
+      out = out.replace(/maxHeight=\d+/i, `maxHeight=${target}`);
+
+      if (!/format=/i.test(out)) {
+        out += ";format=webp";
+      }
+
+      return out;
+    }
+
+    return s;
+  }
+
   function cardHtml(item, S, eager = false) {
     const title = esc(item.title || "Product");
     const brand = esc(item.brand || "");
     const img = String(item.image_url || "").trim();
+    const img320 = dealImageUrl(img, 320);
+    const img640 = dealImageUrl(img, 640);
     const href = esc(dashHref(item.key));
     const key = esc(item.key || "");
     const priceCents = Number.isFinite(Number(item.min_price_cents)) ? Number(item.min_price_cents) : "";
 
     const imgTag = img
-      ? `<img
-          class="home-deal__img"
-          src="${esc(img)}"
-          alt=""
-          loading="${eager ? "eager" : "lazy"}"
-          fetchpriority="${eager ? "high" : "auto"}"
-          decoding="async"
-        >`
-      : `<div class="home-deal__img is-empty" aria-hidden="true"></div>`;
+  ? `<img
+      class="home-deal__img"
+      src="${esc(img320)}"
+      srcset="${esc(img320)} 320w, ${esc(img640)} 640w"
+      sizes="(max-width: 560px) 50vw, (max-width: 980px) 33vw, 260px"
+      width="320"
+      height="320"
+      alt=""
+      loading="${eager ? "eager" : "lazy"}"
+      fetchpriority="${eager ? "high" : "auto"}"
+      decoding="async"
+    >`
+  : `<div class="home-deal__img is-empty" aria-hidden="true"></div>`;
 
     return `
       <article

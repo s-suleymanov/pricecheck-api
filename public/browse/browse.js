@@ -1128,13 +1128,48 @@ const state = {
   // ----------------------------
   // Cards
   // ----------------------------
+  function dealImageUrl(raw, target = 320) {
+    const s = String(raw || "").trim();
+    if (!s) return "";
+
+    // Best Buy
+    if (s.includes("bbystatic.com")) {
+      let out = s;
+
+      out = out.replace(/maxWidth=\d+/i, `maxWidth=${target}`);
+      out = out.replace(/maxHeight=\d+/i, `maxHeight=${target}`);
+
+      if (!/format=/i.test(out)) {
+        out += ";format=webp";
+      }
+
+      return out;
+    }
+
+    return s;
+  }
+
   function cardProduct(r) {
     const dashKey = String(r.dashboard_key || "").trim();
     const displayName = r.model_name || r.title || r.model_number || "Untitled";
 
-    const img = r.image_url
-      ? `<img class="img" src="${escapeHtml(r.image_url)}" alt="">`
-      : `<div class="img ph"></div>`;
+    const rawImg = String(r.image_url || "").trim();
+const img320 = dealImageUrl(rawImg, 320);
+const img640 = dealImageUrl(rawImg, 640);
+
+const img = rawImg
+  ? `<img
+      class="img"
+      src="${escapeHtml(img320)}"
+      srcset="${escapeHtml(img320)} 320w, ${escapeHtml(img640)} 640w"
+      sizes="(max-width: 560px) 50vw, (max-width: 980px) 33vw, 260px"
+      width="320"
+      height="320"
+      alt=""
+      loading="lazy"
+      decoding="async"
+    >`
+  : `<div class="img ph"></div>`;
 
     const warn = r.dropship_warning ? `<span class="warn">Dropshipping risk</span>` : "";
     const refurbBadge = r.is_refurbished ? `<span class="card-badge card-badge--refurb"><svg viewBox="0 -960 960 960" width="13" height="13" aria-hidden="true" style="vertical-align:-1px;fill:currentColor"><path d="M204-318q-22-38-33-78t-11-82q0-134 93-228t227-94h7l-64-64 56-56 160 160-160 160-56-56 64-64h-7q-100 0-170 70.5T240-478q0 26 6 51t18 49l-60 60ZM481-40 321-200l160-160 56 56-64 64h7q100 0 170-70.5T720-482q0-26-6-51t-18-49l60-60q22 38 33 78t11 82q0 134-93 228t-227 94h-7l64 64-56 56Z"/></svg> Refurb</span>` : "";
@@ -1205,9 +1240,23 @@ const state = {
   const dashKey = String(r.dashboard_key || "").trim();
   const displayName = r.model_name || r.title || r.model_number || "Untitled";
 
-  const img = r.image_url
-    ? `<img class="img" src="${escapeHtml(r.image_url)}" alt="">`
-    : `<div class="img ph"></div>`;
+  const rawImg = String(r.image_url || "").trim();
+const img320 = dealImageUrl(rawImg, 320);
+const img640 = dealImageUrl(rawImg, 640);
+
+const img = rawImg
+  ? `<img
+      class="img"
+      src="${escapeHtml(img320)}"
+      srcset="${escapeHtml(img320)} 320w, ${escapeHtml(img640)} 640w"
+      sizes="(max-width: 560px) 50vw, (max-width: 980px) 33vw, 260px"
+      width="320"
+      height="320"
+      alt=""
+      loading="lazy"
+      decoding="async"
+    >`
+  : `<div class="img ph"></div>`;
 
   const brand = (r.brand || "").trim();
   const brandLine = brand ? brand : "";
