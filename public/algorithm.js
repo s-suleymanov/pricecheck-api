@@ -458,7 +458,6 @@
               <div class="home-deal__title">${title}</div>
               <div class="home-deal__meta">
                 <span class="home-deal__price">${c2u(item.min_price_cents)}</span>
-                <span class="home-deal__range"> - ${c2u(item.max_price_cents)}</span>
               </div>
             </div>
           </div>
