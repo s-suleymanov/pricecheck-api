@@ -1240,8 +1240,8 @@ h1{
 
 .card-shortlist-btn{
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 5px;
+  right: 10px;
   z-index: 3;
   width: 34px;
   height: 34px;
