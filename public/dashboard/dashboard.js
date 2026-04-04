@@ -5223,7 +5223,9 @@ function fitSimilarProductsToSidebar(items) {
     return;
   }
 
+  panel.style.maxHeight = `${availableHeight}px`;
   panel.innerHTML = `<div class="pc-similar-list"></div>`;
+
   const list = panel.querySelector('.pc-similar-list');
   if (!list) return;
 

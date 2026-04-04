@@ -218,11 +218,16 @@ async function getFamiliesForBrand(client, brandRaw) {
   }));
 }
 
-async function getSimilarProducts(client, selectedMeta, limit = 12) {
+async function getSimilarProducts(client, selectedMeta, anchorPriceCents = null, limit = 48) {
   const category = String(selectedMeta?.category || '').trim();
-  const brand = String(selectedMeta?.brand || '').trim();
+  const currentModelNumber = String(selectedMeta?.model_number || '').trim();
 
-  if (!category || !brand) return [];
+  if (!category) return [];
+
+  const anchor =
+    Number.isFinite(Number(anchorPriceCents)) && Number(anchorPriceCents) > 0
+      ? Math.round(Number(anchorPriceCents))
+      : null;
 
   const r = await client.query(
     `
@@ -234,7 +239,6 @@ async function getSimilarProducts(client, selectedMeta, limit = 12) {
         btrim(c.model_number) AS model_number,
         upper(btrim(c.model_number)) AS model_number_norm,
         COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
-        c.version,
         c.model_name,
         c.brand,
         c.category,
@@ -249,12 +253,18 @@ async function getSimilarProducts(client, selectedMeta, limit = 12) {
         AND c.category IS NOT NULL
         AND btrim(c.category) <> ''
         AND lower(btrim(c.category)) = lower(btrim($1))
-        AND c.brand IS NOT NULL
-        AND btrim(c.brand) <> ''
-        AND lower(btrim(c.brand)) <> lower(btrim($2))
+        AND (
+          $2::text = ''
+          OR upper(btrim(c.model_number)) <> upper(btrim($2))
+        )
       ORDER BY
         upper(btrim(c.model_number)),
         COALESCE(NULLIF(lower(btrim(c.version)), ''), ''),
+        CASE
+          WHEN c.pci IS NOT NULL AND btrim(c.pci) <> '' THEN 0
+          WHEN c.upc IS NOT NULL AND btrim(c.upc) <> '' THEN 1
+          ELSE 2
+        END,
         c.created_at DESC NULLS LAST,
         c.id DESC
     ),
@@ -262,8 +272,8 @@ async function getSimilarProducts(client, selectedMeta, limit = 12) {
       SELECT
         p.*,
         CASE
-          WHEN p.pci IS NOT NULL AND btrim(p.pci) <> '' THEN ('pci:' || btrim(p.pci))
-          WHEN p.upc IS NOT NULL AND btrim(p.upc) <> '' THEN ('upc:' || btrim(p.upc))
+          WHEN p.pci IS NOT NULL AND btrim(p.pci) <> '' THEN 'pci:' || btrim(p.pci)
+          WHEN p.upc IS NOT NULL AND btrim(p.upc) <> '' THEN 'upc:' || btrim(p.upc)
           ELSE NULL
         END AS dashboard_key
       FROM picked p
@@ -272,9 +282,20 @@ async function getSimilarProducts(client, selectedMeta, limit = 12) {
       SELECT
         a.model_number_norm,
         a.version_norm,
-        MIN(l.current_price_cents) FILTER (
-          WHERE l.current_price_cents IS NOT NULL
-            AND l.current_price_cents > 0
+        MIN(
+          CASE
+            WHEN l.effective_price_cents IS NOT NULL
+             AND l.effective_price_cents > 0
+             AND (
+               l.current_price_cents IS NULL
+               OR l.current_price_cents <= 0
+               OR l.effective_price_cents <= l.current_price_cents
+             )
+            THEN l.effective_price_cents
+            WHEN l.current_price_cents IS NOT NULL AND l.current_price_cents > 0
+            THEN l.current_price_cents
+            ELSE NULL
+          END
         ) AS best_price_cents
       FROM anchors a
       LEFT JOIN public.catalog c2
@@ -314,15 +335,20 @@ async function getSimilarProducts(client, selectedMeta, limit = 12) {
      AND ch.version_norm = a.version_norm
     WHERE a.dashboard_key IS NOT NULL
     ORDER BY
+      CASE
+        WHEN $3::int IS NOT NULL AND ch.best_price_cents IS NOT NULL
+        THEN ABS(ch.best_price_cents - $3::int)
+        ELSE 2147483647
+      END ASC,
       CASE WHEN ch.best_price_cents IS NULL THEN 1 ELSE 0 END,
       ch.best_price_cents ASC NULLS LAST,
       a.brand ASC NULLS LAST,
       a.model_name ASC NULLS LAST,
       a.model_number_norm,
       a.version_norm
-    LIMIT $3
+    LIMIT $4
     `,
-    [category, brand, limit]
+    [category, currentModelNumber, anchor, limit]
   );
 
   return r.rows || [];
@@ -1395,8 +1421,27 @@ router.get('/api/compare/:key', async (req, res) => {
     '';
 
     const families = brand ? await getFamiliesForBrand(client, brand) : [];
-    const similar = meta ? await getSimilarProducts(client, meta, 12) : [];
-    const lineup = meta ? await getLineupData(client, meta) : null;
+
+const anchorPriceCents = (offers || [])
+  .map((o) => {
+    const p = Number(o?.price_cents);
+    const e = Number(o?.effective_price_cents);
+
+    if (Number.isFinite(e) && e > 0 && (!Number.isFinite(p) || p <= 0 || e <= p)) {
+      return e;
+    }
+
+    if (Number.isFinite(p) && p > 0) {
+      return p;
+    }
+
+    return null;
+  })
+  .filter((v) => typeof v === 'number' && v > 0)
+  .sort((a, b) => a - b)[0] || null;
+
+const similar = meta ? await getSimilarProducts(client, meta, anchorPriceCents, 48) : [];
+const lineup = meta ? await getLineupData(client, meta) : null;
 
     return res.json({
       ok: true,
