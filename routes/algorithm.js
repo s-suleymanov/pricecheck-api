@@ -224,14 +224,21 @@ router.post("/api/home_feed", async (req, res) => {
         FROM sb GROUP BY key
       ),
 
-      with_cat AS (
+            with_cat AS (
         SELECT
           a.key, a.min_price_cents, a.max_price_cents,
           a.store_count, a.last_seen,
+          c.matched_new,
           c.model_name, c.model_number, c.brand, c.category, c.image_url
         FROM agg a
         LEFT JOIN LATERAL (
-          SELECT c2.model_name, c2.model_number, c2.brand, c2.category, c2.image_url
+          SELECT
+            1 AS matched_new,
+            c2.model_name,
+            c2.model_number,
+            c2.brand,
+            c2.category,
+            c2.image_url
           FROM public.catalog c2
           WHERE (
             (a.key LIKE 'pci:%'
@@ -242,10 +249,29 @@ router.post("/api/home_feed", async (req, res) => {
               AND c2.upc IS NOT NULL AND btrim(c2.upc) <> ''
               AND public.norm_upc(c2.upc) = public.norm_upc(substring(a.key FROM 5)))
           )
+            AND COALESCE(c2.is_refurbished, false) = false
+            AND COALESCE(c2.is_bundle, false) = false
           ORDER BY c2.created_at DESC NULLS LAST, c2.id DESC
           LIMIT 1
         ) c ON true
-        WHERE cardinality($6::text[]) = 0 OR a.key != ALL($6::text[])
+      WHERE
+        (cardinality($6::text[]) = 0 OR a.key != ALL($6::text[]))
+        AND (
+          c.matched_new IS NOT NULL
+          OR NOT EXISTS (
+            SELECT 1
+            FROM public.catalog c3
+            WHERE (
+              (a.key LIKE 'pci:%'
+                AND c3.pci IS NOT NULL AND btrim(c3.pci) <> ''
+                AND upper(btrim(c3.pci)) = substring(a.key FROM 5))
+              OR
+              (a.key LIKE 'upc:%'
+                AND c3.upc IS NOT NULL AND btrim(c3.upc) <> ''
+                AND public.norm_upc(c3.upc) = public.norm_upc(substring(a.key FROM 5)))
+            )
+          )
+        )
       ),
 
       grouped AS (
@@ -358,32 +384,86 @@ router.post("/api/home_feed", async (req, res) => {
           ),
           sb AS (SELECT key, store_key, MIN(price_cents)::int AS bp FROM bk GROUP BY key, store_key),
           sa AS (SELECT key, ARRAY_AGG(store_key ORDER BY bp ASC, store_key ASC) AS stores FROM sb GROUP BY key),
-          wc AS (
-            SELECT a.key, a.min_price_cents, a.max_price_cents, a.store_count, a.last_seen,
-              c.model_name, c.model_number, c.brand, c.category, c.image_url
+                    wc AS (
+            SELECT
+              a.key,
+              a.min_price_cents,
+              a.max_price_cents,
+              a.store_count,
+              a.last_seen,
+              c.matched_new,
+              c.model_name,
+              c.model_number,
+              c.brand,
+              c.category,
+              c.image_url
             FROM agg a
             LEFT JOIN LATERAL (
-              SELECT c2.model_name, c2.model_number, c2.brand, c2.category, c2.image_url
+              SELECT
+                1 AS matched_new,
+                c2.model_name,
+                c2.model_number,
+                c2.brand,
+                c2.category,
+                c2.image_url
               FROM public.catalog c2
               WHERE (
-                (a.key LIKE 'pci:%' AND c2.pci IS NOT NULL AND btrim(c2.pci) <> '' AND upper(btrim(c2.pci)) = substring(a.key FROM 5))
-                OR (a.key LIKE 'upc:%' AND c2.upc IS NOT NULL AND btrim(c2.upc) <> '' AND public.norm_upc(c2.upc) = public.norm_upc(substring(a.key FROM 5)))
+                (a.key LIKE 'pci:%'
+                  AND c2.pci IS NOT NULL AND btrim(c2.pci) <> ''
+                  AND upper(btrim(c2.pci)) = substring(a.key FROM 5))
+                OR
+                (a.key LIKE 'upc:%'
+                  AND c2.upc IS NOT NULL AND btrim(c2.upc) <> ''
+                  AND public.norm_upc(c2.upc) = public.norm_upc(substring(a.key FROM 5)))
               )
-              ORDER BY c2.created_at DESC NULLS LAST, c2.id DESC LIMIT 1
+                AND COALESCE(c2.is_refurbished, false) = false
+                AND COALESCE(c2.is_bundle, false) = false
+              ORDER BY c2.created_at DESC NULLS LAST, c2.id DESC
+              LIMIT 1
             ) c ON true
-            WHERE cardinality($1::text[]) = 0 OR a.key != ALL($1::text[])
+            WHERE
+              (cardinality($1::text[]) = 0 OR a.key != ALL($1::text[]))
+              AND (
+                c.matched_new IS NOT NULL
+                OR NOT EXISTS (
+                  SELECT 1
+                  FROM public.catalog c3
+                  WHERE (
+                    (a.key LIKE 'pci:%'
+                      AND c3.pci IS NOT NULL AND btrim(c3.pci) <> ''
+                      AND upper(btrim(c3.pci)) = substring(a.key FROM 5))
+                    OR
+                    (a.key LIKE 'upc:%'
+                      AND c3.upc IS NOT NULL AND btrim(c3.upc) <> ''
+                      AND public.norm_upc(c3.upc) = public.norm_upc(substring(a.key FROM 5)))
+                  )
+                )
+              )
           ),
           g AS (
-            SELECT DISTINCT ON (COALESCE(NULLIF(btrim(model_number),''),key), lower(btrim(COALESCE(brand,''))))
-              key, min_price_cents, max_price_cents, store_count, last_seen,
+            SELECT DISTINCT ON (
+              COALESCE(NULLIF(btrim(model_number),''), key),
+              lower(btrim(COALESCE(brand,'')))
+            )
+              key,
+              min_price_cents,
+              max_price_cents,
+              store_count,
+              last_seen,
               COALESCE(NULLIF(btrim(model_name),''), 'Product') AS title,
-              brand, category, image_url
+              brand,
+              category,
+              image_url
             FROM wc
-            ORDER BY COALESCE(NULLIF(btrim(model_number),''),key), lower(btrim(COALESCE(brand,''))),
-              store_count DESC, last_seen DESC NULLS LAST
+            ORDER BY
+              COALESCE(NULLIF(btrim(model_number),''), key),
+              lower(btrim(COALESCE(brand,''))),
+              store_count DESC,
+              last_seen DESC NULLS LAST
           )
           SELECT g.*, COALESCE(sa.stores, ARRAY[]::text[]) AS stores, store_count AS score
-          FROM g LEFT JOIN sa ON sa.key = g.key
+          FROM g
+          LEFT JOIN sa ON sa.key = g.key
           ORDER BY store_count DESC, last_seen DESC NULLS LAST
           LIMIT $2
         `;
