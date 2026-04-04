@@ -181,7 +181,7 @@ body{
   .browse-page .shortlist-mini-remove{
     position: absolute;
     top: 5px;
-    right: 10px;
+    right: 7px;
     width: 14px;
     height: 50px;
     border: 0;
@@ -275,14 +275,15 @@ body{
 }
 
 .spec-card-price{
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1;
+  padding-right: 30px;
+  padding-top: 2px;
   font-weight: 600;
   color: #111;
   white-space: nowrap;
   text-align: right;
   justify-self: end;
-  align-self: end;
 }
 
 .spec-pill{
@@ -1240,8 +1241,8 @@ h1{
 
 .card-shortlist-btn{
   position: absolute;
-  top: 5px;
-  right: 10px;
+  top: 10px;
+  right: 12px;
   z-index: 3;
   width: 34px;
   height: 34px;
@@ -1256,6 +1257,18 @@ h1{
   opacity: 0;
   transition: opacity .14s ease, color .14s ease, background .14s ease;
   padding: 0;
+}
+
+.card.item.spec-card .card-shortlist-btn{
+  opacity: 0.55;
+}
+
+.card.item.spec-card:hover .card-shortlist-btn{
+  opacity: 1;
+}
+
+.card.item.spec-card .card-shortlist-btn.is-active{
+  opacity: 1;
 }
 
 .card.item:hover .card-shortlist-btn{
