@@ -223,7 +223,7 @@ function scheduleDashboardTocActiveSync() {
   function scrollToDashboardCard(card) {
     if (!card) return;
 
-    const offset = getDashboardHeaderOffset() + 18;
+    const offset = getDashboardHeaderOffset() + 6;
     const y = Math.max(
       0,
       Math.round(window.scrollY + card.getBoundingClientRect().top - offset)
@@ -231,7 +231,7 @@ function scheduleDashboardTocActiveSync() {
 
     window.scrollTo({
       top: y,
-      behavior: 'smooth'
+      behavior: 'auto'
     });
   }
 
