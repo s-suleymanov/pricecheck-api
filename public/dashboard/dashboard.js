@@ -1478,12 +1478,29 @@ function wireTopbarCommentButton(){
 function communityAvatarHtml(name, imageUrl){
   const img = String(imageUrl || '').trim();
   const safeName = String(name || 'User').trim() || 'User';
+  const initial = escapeHtml((safeName[0] || 'U').toUpperCase());
 
   if (img) {
-    return `<img class="pc-tip-card__avatar" src="${escapeHtml(img)}" alt="${escapeHtml(safeName)}" loading="lazy" decoding="async">`;
+    return `
+      <span class="pc-tip-card__avatar pc-tip-card__avatar--wrap" aria-hidden="true">
+        <img
+          class="pc-tip-card__avatar"
+          src="${escapeHtml(img)}"
+          alt="${escapeHtml(safeName)}"
+          loading="lazy"
+          decoding="async"
+          onerror="this.style.display='none';this.nextElementSibling.hidden=false;"
+        >
+        <span class="pc-tip-card__avatar-fallback" hidden>${initial}</span>
+      </span>
+    `;
   }
 
-  return `<div class="pc-tip-card__avatar"></div>`;
+  return `
+    <span class="pc-tip-card__avatar pc-tip-card__avatar--text" aria-hidden="true">
+      ${initial}
+    </span>
+  `;
 }
 
 function communityRelativeTime(raw){

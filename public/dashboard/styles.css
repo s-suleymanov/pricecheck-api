@@ -3802,6 +3802,31 @@ button.pc-lineup-model{
   display: block;
 }
 
+.pc-tip-card__avatar--wrap{
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: #475569;
+}
+
+.pc-tip-card__avatar--text,
+.pc-tip-card__avatar-fallback{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  color: #475569;
+}
+
+.pc-tip-card__avatar-fallback[hidden]{
+  display: none;
+}
+
 .pc-tip-card__meta{
   min-width:0;
 }
