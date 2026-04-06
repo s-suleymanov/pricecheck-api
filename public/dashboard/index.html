@@ -122,42 +122,6 @@
 
           <button
             class="ph-tool"
-            data-pc-favorite="1"
-            type="button"
-            aria-label="Add to Favorites"
-            aria-pressed="false"
-            title="Add to Favorites"
-          >
-            <svg
-              data-fav-icon="on"
-              style="display:none"
-              viewBox="0 -960 960 960"
-              width="22" height="22"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <path
-                fill="currentColor"
-                d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"
-              />
-            </svg>
-
-            <svg
-              data-fav-icon="off"
-              viewBox="0 -960 960 960"
-              width="22" height="22"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <path
-                fill="currentColor"
-                d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"
-              />
-            </svg>
-          </button>
-
-          <button
-            class="ph-tool"
             type="button"
             aria-label="Compare"
             data-pc-plus="1"
@@ -167,24 +131,26 @@
               <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"></path>
             </svg>
           </button>
-
-          <button
-            class="ph-tool"
-            id="phCodeBtn"
-            data-pc-code-trigger="1"
-            type="button"
-            aria-label="Codes"
-            title="View product codes"
-          >
-            <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
-              <path d="M223.5-423.5Q200-447 200-480t23.5-56.5Q247-560 280-560t56.5 23.5Q360-513 360-480t-23.5 56.5Q313-400 280-400t-56.5-23.5ZM280-240q-100 0-170-70T40-480q0-100 70-170t170-70q67 0 121.5 33t86.5 87h352l120 120-180 180-80-60-80 60-85-60h-47q-32 54-86.5 87T280-240Zm0-80q56 0 98.5-34t56.5-86h125l58 41 82-61 71 55 75-75-40-40H435q-14-52-56.5-86T280-640q-66 0-113 47t-47 113q0 66 47 113t113 47Z"></path>
-            </svg>
-          </button>
         </div>
 
-        <div id="phRatingSummary" class="ph-rating-summary" hidden>
-          <span class="ph-rating-summary__score" id="phRatingScore"></span>
-          <span class="ph-rating-summary__count" id="phRatingCount"></span>
+        <div class="ph-rating-row">
+          <div id="phRatingSummary" class="ph-rating-summary" hidden>
+            <span class="ph-rating-summary__score" id="phRatingScore"></span>
+            <span class="ph-rating-summary__count" id="phRatingCount"></span>
+          </div>
+
+          <button
+            class="ph-comment-btn"
+            id="phCommentBtn"
+            type="button"
+            aria-label="Add Comment"
+            title="Add Comment"
+          >
+            <svg viewBox="0 -960 960 960" width="22" height="22" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M440-400h80v-120h120v-80H520v-120h-80v120H320v80h120v120ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z"></path>
+            </svg>
+            <span>Add Comment</span>
+          </button>
         </div>
       </div>
     </div>
@@ -405,6 +371,14 @@
           </div>
         </section>
 
+        <section class="card" id="pcReviewsMainCard" hidden>
+          <h2 style="margin-bottom: 20px;" data-icon-path="m354-287 126-76 126 77-33-144 111-96-146-13-58-136-58 135-146 13 111 97-33 143ZM233-120l65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Zm247-350Z">
+            Ratings
+          </h2>
+
+          <div id="pcReviewsMainContent"></div>
+        </section>
+
         <section class="card" id="lineup" style="padding-bottom: 40px;" hidden>
           <h2 data-icon-path="M75-155q-35-35-35-85t35-85q35-35 85-35 9 0 17.5 1.5T194-355l162-223q-17-21-26.5-47t-9.5-55q0-66 47-113t113-47q66 0 113 47t47 113q0 29-10 55t-27 47l163 223q8-2 16.5-3.5T800-360q50 0 85 35t35 85q0 50-35 85t-85 35q-50 0-85-35t-35-85q0-19 5.5-36.5T701-308L539-531q-5 2-9.5 3t-9.5 3v172q35 12 57.5 43t22.5 70q0 50-35 85t-85 35q-50 0-85-35t-35-85q0-39 22.5-69.5T440-353v-172q-5-2-9.5-3t-9.5-3L259-308q10 14 15.5 31.5T280-240q0 50-35 85t-85 35q-50 0-85-35Zm113.5-56.5Q200-223 200-240t-11.5-28.5Q177-280 160-280t-28.5 11.5Q120-257 120-240t11.5 28.5Q143-200 160-200t28.5-11.5ZM480-680Zm28.5 468.5Q520-223 520-240t-11.5-28.5Q497-280 480-280t-28.5 11.5Q440-257 440-240t11.5 28.5Q463-200 480-200t28.5-11.5Zm320 0Q840-223 840-240t-11.5-28.5Q817-280 800-280t-28.5 11.5Q760-257 760-240t11.5 28.5Q783-200 800-200t28.5-11.5ZM160-240Zm320 0Zm320 0ZM536.5-623.5Q560-647 560-680t-23.5-56.5Q513-760 480-760t-56.5 23.5Q400-713 400-680t23.5 56.5Q447-600 480-600t56.5-23.5Z" style="margin-bottom: 20px;">Lineup</h2>
 
@@ -424,6 +398,16 @@
       </aside>
     </section>
 
+    <section class="card" id="marketingImagesCard" hidden>
+      <div class="spaced" style="margin: 0;">
+        <h2 data-icon-path="M120-160q-17 0-28.5-11.5T80-200v-560q0-17 11.5-28.5T120-800q8 0 35.5 9.5T229-770q46 11 108.5 20.5T480-740q80 0 142.5-9.5T731-770q46-11 73.5-20.5T840-800q17 0 28.5 11.5T880-760v560q0 17-11.5 28.5T840-160q-8 0-35.5-9.5T731-190q-46-11-108.5-20.5T480-220q-80 0-142.5 9.5T229-190q-46 11-73.5 20.5T120-160Zm40-94q78-23 158.5-34.5T480-300q81 0 161.5 11.5T800-254v-451q-78 23-158.5 34T480-660q-81 0-161.5-11T160-705v451Zm320-226Z">
+          Banners
+        </h2>
+      </div>
+
+      <div id="marketingImagesContent" class="sidebar-empty">No marketing images found.</div>
+    </section>
+
     <section class="card" id="files" hidden>
       <div class="spaced">
         <h2 data-icon-path="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z">Files</h2>
@@ -433,73 +417,6 @@
         <div class="sidebar-empty">No files available.</div>
       </div>
     </section>
-    
-    <section class="card" id="pc-reviews-card" hidden></section>
-
-    <section class="card" id="communityCard" hidden>
-    <div class="spaced pc-community-reviews__head">
-      <h2
-        data-icon-path="M880-80 720-240H320q-33 0-56.5-23.5T240-320v-40h440q33 0 56.5-23.5T760-440v-280h40q33 0 56.5 23.5T880-640v560ZM160-473l47-47h393v-280H160v327ZM80-280v-520q0-33 23.5-56.5T160-880h440q33 0 56.5 23.5T680-800v280q0 33-23.5 56.5T600-440H240L80-280Zm80-240v-280 280Z"
-        style="margin:0;"
-      >
-        Community
-      </h2>
-
-      <button
-        class="pc-community-add"
-        id="pcCommunityAddBtn"
-        type="button"
-        aria-label="Contribute"
-        title="Contribute"
-      >
-        <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-          <path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z"></path>
-        </svg>
-      </button>
-    </div>
-
-  <div class="pc-community-layout">
-    <section class="pc-community-panel">
-      <div class="pc-community-panel__head">
-        <div class="pc-community-panel__title-wrap">
-          <h2 class="pc-community-panel__title">Inside Tips</h2>
-          <div class="pc-community-panel__count" id="pcCommunityTipsCount">(0)</div>
-        </div>
-      </div>
-
-      <div class="pc-tip-grid" id="pcCommunityTipsList">
-        <div class="sidebar-empty">No tips yet.</div>
-      </div>
-    </section>
-
-    <section class="pc-community-panel pc-community-panel--qa">
-      <div class="pc-community-panel__head">
-        <div class="pc-community-panel__title-wrap">
-          <h2 class="pc-community-panel__title">Q&amp;A</h2>
-          <div class="pc-community-panel__count" id="pcCommunityQuestionsCount">(0)</div>
-        </div>
-      </div>
-
-      <div class="pc-qa-list" id="pcCommunityQuestionsList">
-        <div class="sidebar-empty">No questions yet.</div>
-      </div>
-    </section>
-  </div>
-
-  <section class="pc-community-reviews">
-      <div class="pc-community-panel__head" style="margin-bottom:16px;">
-        <div class="pc-community-panel__title-wrap">
-          <h2 class="pc-community-panel__title">User Reviews</h2>
-          <div class="pc-community-panel__count" id="pcCommunityReviewsCount">(0)</div>
-        </div>
-      </div>
-
-      <div class="pc-community-review-list" id="pcCommunityReviewList">
-        <div class="sidebar-empty">No reviews yet.</div>
-      </div>
-    </section>
-  </section>
-
   </main>
 
   <div id="site-footer"></div>

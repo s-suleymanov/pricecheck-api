@@ -728,9 +728,9 @@ h1{
   .browse-page .browse-rail{
     position:fixed;
     left:0;
-    top:63px;
+    top:59px;
     bottom:0;
-    height:calc(100dvh - 63px);
+    height:calc(100dvh - 59px);
     width:56px;
     z-index:50;
   }
@@ -1404,7 +1404,7 @@ h1{
 
   .grid{
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 7px;
   }
 

@@ -27,6 +27,8 @@
     </svg>
   `;
 
+  const DASHBOARD_BOTTOM_EXPAND_ICON_PATH = 'M200-120q-33 0-56.5-23.5T120-200v-160h80v160h160v80H200Zm400 0v-80h160v-160h80v160q0 33-23.5 56.5T760-120H600ZM120-600v-160q0-33 23.5-56.5T200-840h160v80H200v160h-80Zm640 0v-160H600v-80h160q33 0 56.5 23.5T840-760v160h-80Z';
+
   const state = {
     identity:null,
     variants:[],
@@ -62,7 +64,8 @@
   };
 
   let _runToken = 0;
-
+  const marketingImagesCard = document.getElementById('marketingImagesCard');
+  const marketingImagesContent = document.getElementById('marketingImagesContent');
   const tocEl = document.getElementById('dashboardToc');
   let _tocResizeObserver = null;
   let _tocMutationObserver = null;
@@ -70,6 +73,12 @@
   let _tocScrollItems = [];
   let _tocScrollRaf = 0;
   let _tocScrollHandler = null;
+  let _dashboardBottomPanelEl = null;
+  let _dashboardBottomPanelResizerEl = null;
+  let _dashboardBottomPanelOpen = false;
+  let _dashboardBottomPanelHeight = 300;
+  let _dashboardBottomPanelTab = 'reviews';
+  let _dashboardBottomPanelDragCleanup = null;
 
   const PRODUCT_HEADER_TOC_ICON_PATH = 'M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z';
   const QA_REPLY_ICON_PATH = 'M760-200v-160q0-50-35-85t-85-35H273l144 144-57 56-240-240 240-240 57 56-144 144h367q83 0 141.5 58.5T840-360v160h-80Z';
@@ -172,6 +181,57 @@
     .filter(Boolean);
 }
 
+function normalizeMarketingImagesInput(raw){
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map(v => String(v || '').trim())
+    .filter(Boolean)
+    .filter((url, index, arr) => arr.indexOf(url) === index);
+}
+
+function marketingImagesSource(){
+  const cur = getCurrentVariant() || null;
+
+  const fromVariant = normalizeMarketingImagesInput(cur?.marketing_images);
+  if (fromVariant.length) return fromVariant;
+
+  const fromIdentity = normalizeMarketingImagesInput(state.identity?.marketing_images);
+  if (fromIdentity.length) return fromIdentity;
+
+  return [];
+}
+
+function renderMarketingImagesCard(){
+  if (!marketingImagesCard || !marketingImagesContent) return;
+
+  const items = marketingImagesSource();
+
+  if (!items.length) {
+    marketingImagesCard.hidden = true;
+    marketingImagesContent.innerHTML = '';
+    return;
+  }
+
+  marketingImagesCard.hidden = false;
+
+  marketingImagesContent.innerHTML = `
+    <div class="pc-marketing-grid">
+      ${items.map((url, index) => `
+        <figure class="pc-marketing-tile">
+          <img
+            src="${escapeHtml(url)}"
+            alt="${escapeHtml(`Marketing image ${index + 1}`)}"
+            loading="lazy"
+            decoding="async"
+            referrerpolicy="no-referrer"
+          />
+        </figure>
+      `).join('')}
+    </div>
+  `;
+}
+
   function setDashboardTocActive(targetId) {
     if (!tocEl) return;
 
@@ -264,6 +324,299 @@ function scheduleDashboardTocActiveSync() {
   scheduleDashboardTocActiveSync();
 }
 
+function clampDashboardBottomPanelHeight(value) {
+  const viewport = window.innerHeight || document.documentElement.clientHeight || 900;
+  const max = Math.max(180, Math.floor(viewport - 60));
+  return Math.max(42, Math.min(max, Math.round(Number(value) || 320)));
+}
+
+function ensureDashboardBottomPanel() {
+  if (_dashboardBottomPanelEl) return _dashboardBottomPanelEl;
+
+  const panel = document.createElement('div');
+  panel.id = 'dashboardBottomPanel';
+  panel.className = 'dashboard-bottom-panel';
+  panel.hidden = true;
+  panel.setAttribute('aria-hidden', 'true');
+
+    panel.innerHTML = `
+    <div class="dashboard-bottom-panel__resizer" id="dashboardBottomPanelResizer" aria-hidden="true"></div>
+
+    <div class="dashboard-bottom-panel__body">
+      <div class="dashboard-bottom-panel__topbar">
+        <div class="dashboard-bottom-panel__tabs">
+          <button
+            type="button"
+            class="dashboard-bottom-panel__tab is-active"
+            id="dashboardBottomPanelTabReviews"
+            data-panel-tab="reviews"
+            aria-pressed="true"
+          >
+            Reviews
+          </button>
+
+          <button
+            type="button"
+            class="dashboard-bottom-panel__tab"
+            id="dashboardBottomPanelTabTips"
+            data-panel-tab="tips"
+            aria-pressed="false"
+          >
+            Tips
+          </button>
+
+          <button
+            type="button"
+            class="dashboard-bottom-panel__tab"
+            id="dashboardBottomPanelTabQuestions"
+            data-panel-tab="questions"
+            aria-pressed="false"
+          >
+            Q&amp;A
+          </button>
+        </div>
+
+        <div class="dashboard-bottom-panel__actions">
+          <button
+            type="button"
+            class="dashboard-bottom-panel__iconbtn"
+            id="dashboardBottomPanelAddBtn"
+            aria-label="Add"
+            title="Add"
+          >
+            <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+              <path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z"></path>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="dashboard-bottom-panel__iconbtn"
+            id="dashboardBottomPanelExpandBtn"
+            aria-label="Expand"
+            title="Expand"
+          >
+            <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+              <path d="${DASHBOARD_BOTTOM_EXPAND_ICON_PATH}"></path>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="dashboard-bottom-panel__iconbtn"
+            id="dashboardBottomPanelCloseBtn"
+            aria-label="Close"
+            title="Close"
+          >
+            <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+              <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="dashboard-bottom-panel__content">
+        <section
+          class="dashboard-bottom-panel__pane"
+          id="dashboardBottomPanelPaneReviews"
+          data-panel-pane="reviews"
+        >
+          <div id="dashboardBottomReviewsContent">
+            <div class="sidebar-empty">No reviews yet.</div>
+          </div>
+        </section>
+
+        <section
+          class="dashboard-bottom-panel__pane"
+          id="dashboardBottomPanelPaneTips"
+          data-panel-pane="tips"
+          hidden
+        >
+      <div class="dashboard-bottom-community">
+        <section class="dashboard-bottom-community__block">
+          <div id="dashboardBottomCommunityTipsList">
+            <div class="sidebar-empty">No tips yet.</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section
+      class="dashboard-bottom-panel__pane"
+      id="dashboardBottomPanelPaneQuestions"
+      data-panel-pane="questions"
+      hidden
+    >
+  <div class="dashboard-bottom-community">
+    <section class="dashboard-bottom-community__block">
+      <div id="dashboardBottomCommunityQuestionsList">
+        <div class="sidebar-empty">No questions yet.</div>
+      </div>
+    </section>
+  </div>
+</section>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(panel);
+
+  _dashboardBottomPanelEl = panel;
+  _dashboardBottomPanelResizerEl = panel.querySelector('#dashboardBottomPanelResizer');
+
+  if (_dashboardBottomPanelResizerEl) {
+    _dashboardBottomPanelResizerEl.addEventListener('mousedown', startDashboardBottomPanelResize);
+  }
+
+  panel.querySelectorAll('[data-panel-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tab = String(btn.getAttribute('data-panel-tab') || '').trim();
+      if (!tab) return;
+      setDashboardBottomPanelTab(tab);
+    });
+  });
+
+  const addBtn = panel.querySelector('#dashboardBottomPanelAddBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', async () => {
+      await openCommunityComposerFromTrigger();
+    });
+  }
+
+  const expandBtn = panel.querySelector('#dashboardBottomPanelExpandBtn');
+  if (expandBtn) {
+    expandBtn.addEventListener('click', () => {
+      const viewport = window.innerHeight || document.documentElement.clientHeight || 900;
+      _dashboardBottomPanelHeight = clampDashboardBottomPanelHeight(viewport);
+      panel.style.height = `${_dashboardBottomPanelHeight}px`;
+    });
+  }
+
+  const closeBtn = panel.querySelector('#dashboardBottomPanelCloseBtn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      closeDashboardBottomPanel();
+    });
+  }
+
+  window.addEventListener('resize', () => {
+    if (!_dashboardBottomPanelEl || _dashboardBottomPanelEl.hidden) return;
+    _dashboardBottomPanelHeight = clampDashboardBottomPanelHeight(_dashboardBottomPanelHeight);
+    _dashboardBottomPanelEl.style.height = `${_dashboardBottomPanelHeight}px`;
+  });
+
+  setDashboardBottomPanelTab(_dashboardBottomPanelTab);
+  trapDashboardBottomPanelWheel();
+
+  return panel;
+}
+
+function trapDashboardBottomPanelWheel() {
+  const panel = ensureDashboardBottomPanel();
+  const panes = panel.querySelectorAll('.dashboard-bottom-panel__pane');
+
+  panes.forEach((pane) => {
+    if (pane._pcWheelBound) return;
+    pane._pcWheelBound = true;
+
+    pane.addEventListener('wheel', (event) => {
+      const el = pane;
+      const delta = event.deltaY;
+      const atTop = el.scrollTop <= 0;
+      const atBottom = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight;
+
+      if ((delta < 0 && atTop) || (delta > 0 && atBottom)) {
+        event.preventDefault();
+      }
+
+      event.stopPropagation();
+    }, { passive: false });
+  });
+}
+
+function setDashboardBottomPanelTab(tab) {
+  const raw = String(tab || '').trim().toLowerCase();
+
+  let next = 'reviews';
+  if (raw === 'tips') next = 'tips';
+  else if (raw === 'questions') next = 'questions';
+
+  _dashboardBottomPanelTab = next;
+
+  const panel = ensureDashboardBottomPanel();
+
+  panel.querySelectorAll('[data-panel-tab]').forEach((btn) => {
+    const isActive = String(btn.getAttribute('data-panel-tab') || '') === next;
+    btn.classList.toggle('is-active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+
+  panel.querySelectorAll('[data-panel-pane]').forEach((pane) => {
+    pane.hidden = String(pane.getAttribute('data-panel-pane') || '') !== next;
+  });
+}
+
+function syncDashboardReviewsTocButton() {
+  const btn = document.getElementById('dashboardTocReviewsBtn');
+  if (!btn) return;
+
+  btn.classList.toggle('is-open', !!_dashboardBottomPanelOpen);
+  btn.setAttribute('aria-pressed', _dashboardBottomPanelOpen ? 'true' : 'false');
+}
+
+function openDashboardBottomPanel() {
+  const panel = ensureDashboardBottomPanel();
+  const viewport = window.innerHeight || document.documentElement.clientHeight || 900;
+  _dashboardBottomPanelHeight = clampDashboardBottomPanelHeight(viewport * 0.5);
+
+  panel.hidden = false;
+  panel.setAttribute('aria-hidden', 'false');
+  panel.style.height = `${_dashboardBottomPanelHeight}px`;
+
+  document.body.classList.add('dashboard-bottom-panel-open');
+  _dashboardBottomPanelOpen = true;
+
+  setDashboardBottomPanelTab(_dashboardBottomPanelTab);
+  syncDashboardReviewsTocButton();
+}
+
+function closeDashboardBottomPanel() {
+  if (!_dashboardBottomPanelEl) return;
+
+  _dashboardBottomPanelEl.hidden = true;
+  _dashboardBottomPanelEl.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('dashboard-bottom-panel-open');
+  _dashboardBottomPanelOpen = false;
+  syncDashboardReviewsTocButton();
+}
+
+function startDashboardBottomPanelResize(event) {
+  if (!_dashboardBottomPanelEl) return;
+  event.preventDefault();
+
+  const startY = event.clientY;
+  const startHeight = _dashboardBottomPanelHeight;
+
+  const onMove = (moveEvent) => {
+    const delta = startY - moveEvent.clientY;
+    _dashboardBottomPanelHeight = clampDashboardBottomPanelHeight(startHeight + delta);
+    _dashboardBottomPanelEl.style.height = `${_dashboardBottomPanelHeight}px`;
+  };
+
+  const onUp = () => {
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    document.body.classList.remove('dashboard-bottom-panel-resizing');
+    _dashboardBottomPanelDragCleanup = null;
+  };
+
+  document.body.classList.add('dashboard-bottom-panel-resizing');
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+
+  _dashboardBottomPanelDragCleanup = onUp;
+}
+
 function buildDashboardToc() {
   if (!tocEl) return;
 
@@ -311,13 +664,13 @@ function buildDashboardToc() {
       <div class="dashboard-toc__bottom">
         <button
           type="button"
-          class="dashboard-toc__btn dashboard-toc__btn--plus"
-          id="dashboardTocCommunityBtn"
-          aria-label="Contribute"
-          title="Contribute"
+          class="dashboard-toc__btn"
+          id="dashboardTocReviewsBtn"
+          aria-label="Reviews"
+          title="Reviews"
         >
           <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-            <path d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z"></path>
+            <path d="M240-400h320v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z"></path>
           </svg>
         </button>
 
@@ -347,20 +700,25 @@ function buildDashboardToc() {
     });
   });
 
-  const communityBtn = document.getElementById('dashboardTocCommunityBtn');
-  if (communityBtn) {
-    communityBtn.addEventListener('click', async () => {
-      await openCommunityComposerFromTrigger();
+  const reviewsBtn = document.getElementById('dashboardTocReviewsBtn');
+  if (reviewsBtn) {
+    reviewsBtn.addEventListener('click', () => {
+      if (_dashboardBottomPanelOpen) {
+        closeDashboardBottomPanel();
+        return;
+      }
+
+      openDashboardBottomPanel();
+      setDashboardBottomPanelTab('reviews');
     });
   }
 
   const moreBtn = document.getElementById('dashboardTocMoreBtn');
   if (moreBtn) {
-    moreBtn.addEventListener('click', () => {
-      window.location.href = '/apps/';
-    });
+    moreBtn.hidden = true;
   }
 
+  syncDashboardReviewsTocButton();
   setDashboardTocActive(getDashboardTocActiveId(items));
   observeDashboardToc(items);
 }
@@ -867,12 +1225,6 @@ function getCurrentVariant(){
 let versionCard = null;
 let versionPills = null;
 
-function ensureVersionCard(){
-  versionCard = null;
-  versionPills = null;
-  return { versionCard: null, versionPills: null };
-}
-
 const variantColorSection = document.getElementById('variantColorSection');
 const variant2Card = $('#variant2Card');
 const variant2Pills = $('#variant2Pills');
@@ -891,8 +1243,6 @@ const aboutPoints = document.getElementById('aboutPoints');
 const lineupCard = document.getElementById('lineup');
 
 const lineupContent = document.getElementById('lineupContent');
-let _codePanelEl = null;
-let _codePanelOpen = false;
 
 function normalizeSpaces(s){
   return String(s ?? '').replace(/\s+/g,' ').trim();
@@ -991,28 +1341,6 @@ function imageOf(v){
   return raw || '/logo/default.webp';
 }
 
-function versionChoicesForVariants(list){
-  const seen = new Set();
-  const out = [];
-
-  for (const v of list){
-    const label = normalizeSpaces(versionOf(v) || 'Default');
-    if (!label) continue;
-
-    const key = label.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    out.push({
-      label,
-      image: imageOf(v)
-    });
-  }
-
-  out.sort((a, b) => smartOptionCompare(a.label, b.label));
-  return out;
-}
-
 function variantChoicesForVersion(list, version){
   const wantV = normLower(version || 'Default');
   const seen = new Set();
@@ -1064,23 +1392,6 @@ function colorChoicesForVersionVariant(list, version, variant){
   }
 
   out.sort((a, b) => smartOptionCompare(a.label, b.label));
-  return out;
-}
-
-function uniqList(arr){
-  const seen = new Set();
-  const out = [];
-
-  for (const s of arr){
-    const val = normalizeSpaces(s);
-    const k = val.toLowerCase();
-    if (!k) continue;
-    if (seen.has(k)) continue;
-    seen.add(k);
-    out.push(val);
-  }
-
-  out.sort(smartOptionCompare);
   return out;
 }
 
@@ -1152,6 +1463,16 @@ function setTopbarRatingSummary(overall, count){
 
 function clearTopbarRatingSummary(){
   setTopbarRatingSummary(null, null);
+}
+
+function wireTopbarCommentButton(){
+  const btn = document.getElementById('phCommentBtn');
+  if (!btn || btn._pcBound) return;
+
+  btn._pcBound = true;
+  btn.addEventListener('click', async () => {
+    await openCommunityComposerFromTrigger();
+  });
 }
 
 function communityAvatarHtml(name, imageUrl){
@@ -1801,18 +2122,6 @@ async function openCommunityComposerFromTrigger(){
   }
 }
 
-function wireCommunityAddButton(){
-  const btn = document.getElementById('pcCommunityAddBtn');
-  if (!btn || btn._pcCommunityBound) return;
-
-  btn._pcCommunityBound = true;
-
-  btn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    await openCommunityComposerFromTrigger();
-  });
-}
-
 function wireQuestionReplyUi(signedIn){
   document.querySelectorAll('[data-question-answer-link]').forEach((el) => {
     if (el._pcBound) return;
@@ -1901,36 +2210,35 @@ function wireQuestionReplyUi(signedIn){
 }
 
 async function renderCommunityCard(productKey, runToken){
-  const card = document.getElementById('communityCard');
-  const tipsCountEl = document.getElementById('pcCommunityTipsCount');
-  const questionsCountEl = document.getElementById('pcCommunityQuestionsCount');
-  const reviewsCountEl = document.getElementById('pcCommunityReviewsCount');
-  const tipsListEl = document.getElementById('pcCommunityTipsList');
-  const questionsListEl = document.getElementById('pcCommunityQuestionsList');
-  const reviewListEl = document.getElementById('pcCommunityReviewList');
+  ensureDashboardBottomPanel();
 
-  if (!card || !tipsCountEl || !questionsCountEl || !reviewsCountEl || !tipsListEl || !questionsListEl || !reviewListEl) {
+  const tipsListEl = document.getElementById('dashboardBottomCommunityTipsList');
+  const questionsListEl = document.getElementById('dashboardBottomCommunityQuestionsList');
+
+  if (!tipsListEl || !questionsListEl) {
     return;
   }
 
-  wireCommunityAddButton();
+  const resolvedProductKey =
+  typeof productKey === 'string'
+    ? productKey
+    : (productKey && typeof productKey.key === 'string' ? productKey.key : '');
 
-  tipsCountEl.textContent = '(0)';
-  questionsCountEl.textContent = '(0)';
-  reviewsCountEl.textContent = '(0)';
+  if (!resolvedProductKey) {
+    tipsListEl.innerHTML = '<div class="sidebar-empty">No tips yet.</div>';
+    questionsListEl.innerHTML = '<div class="sidebar-empty">No questions yet.</div>';
+    return;
+  }
 
-  tipsListEl.innerHTML = '<div class="sidebar-empty">Loading...</div>';
-  questionsListEl.innerHTML = '<div class="sidebar-empty">Loading...</div>';
-  reviewListEl.innerHTML = '<div class="sidebar-empty">Loading...</div>';
-
-  card.hidden = false;
+  tipsListEl.innerHTML = '<div class="sidebar-empty">Loading.</div>';
+  questionsListEl.innerHTML = '<div class="sidebar-empty">Loading.</div>';
 
   let signedIn = false;
   let data;
 
   try {
     const [communityRes, authRes] = await Promise.all([
-      fetch(`/api/community/${encodeURIComponent(productKey)}`, {
+      fetch(`/api/community/${encodeURIComponent(resolvedProductKey)}`, {
         headers: { Accept: 'application/json' }
       }),
       fetch('/api/auth/me', {
@@ -1955,7 +2263,6 @@ async function renderCommunityCard(productKey, runToken){
 
     tipsListEl.innerHTML = '<div class="community-empty">Could not load community tips.</div>';
     questionsListEl.innerHTML = '<div class="community-empty">Could not load questions.</div>';
-    reviewListEl.innerHTML = '<div class="community-empty">Could not load reviews.</div>';
     return;
   }
 
@@ -1975,17 +2282,6 @@ async function renderCommunityCard(productKey, runToken){
     }
   };
 
-  const totalCount =
-  state.community.counts.tips +
-  state.community.counts.questions +
-  state.community.counts.reviews;
-
-  card.hidden = false;
-
-  tipsCountEl.textContent = `(${state.community.counts.tips})`;
-  questionsCountEl.textContent = `(${state.community.counts.questions})`;
-  reviewsCountEl.textContent = `(${state.community.counts.reviews})`;
-
   tipsListEl.innerHTML = tips.length
     ? tips.map((tip) => `
         <article class="pc-tip-card">
@@ -2000,75 +2296,54 @@ async function renderCommunityCard(productKey, runToken){
           </div>
         </article>
       `).join('')
-        : '<div class="sidebar-community">No tips yet. Be the first to contribute something useful.</div>';
+    : '<div class="sidebar-community">No tips yet. Be the first to contribute something useful.</div>';
 
-      questionsListEl.innerHTML = questions.length
-    ? questions.map((q) => {
-        const answerCount = Number(q.answer_count || 0);
-        const replyBoxId = `q-reply-${q.id}`;
+  questionsListEl.innerHTML = questions.length
+    ? questions.map((question) => {
+        const questionId = String(question.id || '').trim();
+        const answerCount = Number(question.answer_count || 0);
+        const canReply = !!questionId;
 
         return `
-          <article class="pc-qa-item">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-              <div style="min-width:0;flex:1;">
-                <div class="pc-qa-item__question" style="font-weight:700;color:#0f172a;">${escapeHtml(q.title || '')}</div>
-                ${q.body ? `<div class="pc-community-review-card__body" style="margin-top:8px;">${escapeHtml(q.body)}</div>` : ''}
+          <article class="pc-question-card">
+            <div class="pc-question-card__body">${escapeHtml(question.body || '')}</div>
+
+            <div class="pc-question-card__meta">
+              <div class="pc-question-card__author">
+                ${communityAvatarHtml(question.author_name, question.profile_image_url)}
+                <div class="pc-question-card__author-meta">
+                  <div class="pc-question-card__name">${escapeHtml(question.author_name || 'User')}</div>
+                  <div class="pc-question-card__sub">${escapeHtml(communityRelativeTime(question.created_at) || '')}</div>
+                </div>
               </div>
 
-              ${
-                signedIn
-                  ? `
-                    <button
-                      type="button"
-                      data-question-reply-toggle="${escapeHtml(String(q.id))}"
-                      aria-label="Reply to this question"
-                      title="Reply"
-                      style="flex:0 0 auto;width:40px;height:40px;border:none;background:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#0f172a;"
-                    >
-                      ${replyIconSvg()}
-                    </button>
-                  `
-                  : ''
-              }
-            </div>
+              <div class="pc-question-card__actions">
+                ${
+                  canReply
+                    ? `
+                      <a href="#" class="pc-question-card__link" data-question-answer-link="${escapeHtml(questionId)}">
+                        ${answerCountLabel(answerCount)}
+                      </a>
 
-            <div class="pc-qa-item__meta" style="display:flex;align-items:center;gap:12px;margin-top:12px;font-size:13px;color:#64748b;">
-              <span style="font-size:14px;">${escapeHtml(communityRelativeTime(q.created_at) || '')}</span>
-              <a
-                href="#"
-                data-question-answer-link="${escapeHtml(String(q.id))}"
-                style="color:#4f46e5;text-decoration:none;font-weight:600;font-size:14px;"
-              >
-                ${escapeHtml(answerCountLabel(answerCount))}
-              </a>
+                      <button type="button" class="pc-question-card__reply" data-question-reply-toggle="${escapeHtml(questionId)}">
+                        ${replyIconSvg()}
+                        <span>Reply</span>
+                      </button>
+                    `
+                    : ''
+                }
+              </div>
             </div>
 
             ${
-              signedIn
+              canReply
                 ? `
-                  <div
-                    data-question-reply-box="${escapeHtml(String(q.id))}"
-                    hidden
-                    style="margin-top:14px;padding-top:14px;border-top:1px solid #e5e7eb;"
-                  >
-                    <form data-question-reply-form="${escapeHtml(String(q.id))}" style="display:grid;gap:10px;">
-                      <textarea
-                        rows="3"
-                        maxlength="1000"
-                        placeholder="Write a reply..."
-                        style="width:100%;padding:12px 14px;border:1px solid #dbe2ea;border-radius:12px;font:inherit;resize:vertical;"
-                        required
-                      ></textarea>
-
-                      <div data-question-reply-error hidden style="font-size:14px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 14px;"></div>
-
-                      <div style="display:flex;justify-content:flex-end;">
-                        <button
-                          type="submit"
-                          style="padding:10px 16px;border:none;border-radius:12px;background:#111827;color:#fff;font:inherit;font-weight:700;cursor:pointer;"
-                        >
-                          Reply
-                        </button>
+                  <div class="pc-question-reply-box" data-question-reply-box="${escapeHtml(questionId)}" hidden>
+                    <form class="pc-question-reply-form" data-question-reply-form="${escapeHtml(questionId)}">
+                      <textarea rows="3" placeholder="Write a helpful reply"></textarea>
+                      <div class="pc-question-reply-actions">
+                        <div class="pc-question-reply-error" data-question-reply-error hidden></div>
+                        <button type="submit">Reply</button>
                       </div>
                     </form>
                   </div>
@@ -2078,43 +2353,68 @@ async function renderCommunityCard(productKey, runToken){
           </article>
         `;
       }).join('')
-        : '<div class="sidebar-community">No questions yet.</div>';
+    : '<div class="sidebar-community">No questions yet. Ask the first useful question.</div>';
 
-  reviewListEl.innerHTML = reviews.length
-    ? reviews.map((review) => `
-        <article class="pc-community-review-card">
-          <div class="pc-community-review-card__top">
-            <div class="pc-community-review-card__name">${escapeHtml(review.author_name || 'User')}</div>
-            <div class="pc-community-review-card__rating">${escapeHtml(communityStars(review.rating))}</div>
-          </div>
-
-          <div class="pc-community-review-card__body">${escapeHtml(review.body || '')}</div>
-
-          <div class="pc-community-review-card__meta">${escapeHtml(communityRelativeTime(review.created_at) || '')}</div>
-        </article>
-      `).join('')
-        : '<div class="sidebar-community">No reviews yet. Share your experience to help others.</div>';
-
-    wireQuestionReplyUi(signedIn);
+  wireQuestionReplyUi(signedIn);
 }
 
 async function renderReviewsCard(productKey, runToken) {
-  const el = document.getElementById('pc-reviews-card');
-  if (!el) return;
 
-  function mount(inner) {
+  ensureDashboardBottomPanel();
+
+  const cardEl = document.getElementById('pcReviewsMainCard');
+  const el = document.getElementById('pcReviewsMainContent');
+  const bottomReviewsEl = document.getElementById('dashboardBottomReviewsContent');
+
+  if (!cardEl || !el) return;
+
+  function mountCustomerReviews(inner) {
     if (runToken != null && isStaleRun(runToken)) return;
-    el.hidden = false;
+    if (!cardEl || !el) return;
+
+    if (!inner) {
+      cardEl.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+
+    cardEl.hidden = false;
     el.innerHTML = inner;
   }
 
-  const iconPath = 'M240-400h320v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM480-80 373-240H160q-33 0-56.5-23.5T80-320v-480q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H587L480-80Zm0-144 64-96h256v-480H160v480h256l64 96Zm0-336Z';
+  function mountUserReviews(inner) {
+    if (runToken != null && isStaleRun(runToken)) return;
+    if (bottomReviewsEl) bottomReviewsEl.innerHTML = inner;
+  }
 
-  mount(`
-    <div class="spaced">
-      <h2 data-icon-path="${iconPath}">Reviews</h2>
+  const resolvedProductKey =
+    typeof productKey === 'string'
+      ? productKey
+      : (productKey && typeof productKey.key === 'string' ? productKey.key : '');
+
+  if (!resolvedProductKey) {
+    mountCustomerReviews('');
+
+    mountUserReviews(`
+      <section class="pc-review-section">
+        <p class="note">No reviews yet. Be the first to share your experience with this product.</p>
+      </section>
+    `);
+
+    clearTopbarRatingSummary();
+    wireCardIcons();
+    return;
+  }
+
+  mountCustomerReviews(`
+    <div class="pc-reviews-wrap pc-reviews-loading">
+      <div class="pc-reviews-skeleton"></div>
+      <div class="pc-reviews-skeleton pc-reviews-skeleton--short"></div>
+      <div class="pc-reviews-skeleton"></div>
     </div>
+  `);
 
+  mountUserReviews(`
     <div class="pc-reviews-wrap pc-reviews-loading">
       <div class="pc-reviews-skeleton"></div>
       <div class="pc-reviews-skeleton pc-reviews-skeleton--short"></div>
@@ -2125,7 +2425,7 @@ async function renderReviewsCard(productKey, runToken) {
 
   let data;
   try {
-    const res = await fetch(`/api/reviews/${encodeURIComponent(productKey)}`, {
+    const res = await fetch(`/api/reviews/${encodeURIComponent(resolvedProductKey)}`, {
       headers: { Accept: 'application/json' }
     });
 
@@ -2138,12 +2438,15 @@ async function renderReviewsCard(productKey, runToken) {
   } catch (_err) {
     if (runToken != null && isStaleRun(runToken)) return;
 
-    mount(`
-      <div class="spaced">
-        <h2 data-icon-path="${iconPath}">Reviews</h2>
-      </div>
-      <p class="note">Review data is not available for this product yet.</p>
+    mountCustomerReviews('');
+    clearTopbarRatingSummary();
+
+    mountUserReviews(`
+      <section class="pc-review-section">
+        <p class="note">No reviews yet. Be the first to share your experience with this product.</p>
+      </section>
     `);
+
     wireCardIcons();
     return;
   }
@@ -2153,6 +2456,39 @@ async function renderReviewsCard(productKey, runToken) {
     ? data.customer_sources
     : (Array.isArray(data?.sources) ? data.sources : []);
   const expertReviews = Array.isArray(data?.expert_reviews) ? data.expert_reviews : [];
+  let communityReviews = Array.isArray(state.community?.reviews) ? state.community.reviews : [];
+
+  if (!communityReviews.length) {
+    try {
+      const communityRes = await fetch(`/api/community/${encodeURIComponent(resolvedProductKey)}`, {
+        headers: { Accept: 'application/json' }
+      });
+
+      if (runToken != null && isStaleRun(runToken)) return;
+
+      if (communityRes.ok) {
+        const communityData = await communityRes.json().catch(() => null);
+        const fetchedReviews = Array.isArray(communityData?.reviews) ? communityData.reviews : [];
+
+        if (fetchedReviews.length) {
+          communityReviews = fetchedReviews;
+
+          state.community = {
+            tips: Array.isArray(communityData?.tips) ? communityData.tips : (state.community?.tips || []),
+            questions: Array.isArray(communityData?.questions) ? communityData.questions : (state.community?.questions || []),
+            reviews: fetchedReviews,
+            counts: {
+              tips: Number(communityData?.counts?.tips || state.community?.counts?.tips || 0),
+              questions: Number(communityData?.counts?.questions || state.community?.counts?.questions || 0),
+              reviews: Number(communityData?.counts?.reviews || fetchedReviews.length || 0)
+            }
+          };
+        }
+      }
+    } catch {
+      // keep fallback from state.community only
+    }
+  }
   const distribution = (data && typeof data.distribution === 'object' && data.distribution)
     ? data.distribution
     : { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
@@ -2169,13 +2505,21 @@ async function renderReviewsCard(productKey, runToken) {
 
   const hasCustomer = total > 0 && overall > 0;
   const hasExpert = expertReviews.length > 0;
+  const hasCommunity = communityReviews.length > 0;
 
-  if (!hasCustomer && !hasExpert) {
-    el.hidden = true;
-    el.innerHTML = '';
-    clearTopbarRatingSummary();
-    return;
-  }
+  if (!hasCustomer && !hasExpert && !hasCommunity) {
+  mountCustomerReviews('');
+
+  mountUserReviews(`
+    <section class="pc-review-section">
+      <p class="note">No reviews yet. Be the first to share your experience with this product.</p>
+    </section>
+  `);
+
+  clearTopbarRatingSummary();
+  wireCardIcons();
+  return;
+}
 
   const fmtCompact = (n) => {
     const v = Number(n || 0);
@@ -2192,123 +2536,157 @@ async function renderReviewsCard(productKey, runToken) {
 
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
-  let customerHtml = '';
+  let userReviewsHtml = '';
 
-  if (hasCustomer) {
-    const breakdownRows = [5, 4, 3, 2, 1].map((star) => {
-      const count = Number(distribution[star] || 0);
-      const width = pct(count, total);
+if (communityReviews.length) {
+  userReviewsHtml = `
+    <section class="pc-review-section">
+      <div class="pc-rv-user-grid">
+        ${communityReviews.map((review) => `
+          <article class="pc-rv-expert-card">
+            <div class="pc-rv-expert-top">
+              <div class="pc-rv-expert-main">
+                <div class="pc-rv-expert-source">${escapeHtml(review.author_name || 'User')}</div>
+              </div>
 
-      return `
-        <div class="pc-rv-breakdown-row" aria-label="${star} stars: ${count} reviews">
-          <div class="pc-rv-breakdown-left">
-            <span class="pc-rv-breakdown-label">
-              <span class="pc-rv-breakdown-star-icon" aria-hidden="true">
-                ${REVIEW_STAR_SVG}
-              </span>
-              <span>${star} stars</span>
-            </span>
-          </div>
+              <div class="pc-rv-expert-score">
+                <div class="pc-rv-expert-score-main">${escapeHtml(communityStars(review.rating))}</div>
+              </div>
+            </div>
 
-          <div class="pc-rv-breakdown-bar">
-            <div class="pc-rv-breakdown-fill pc-rv-breakdown-fill--${star}" style="width:${clamp(width, 0, 100)}%"></div>
-          </div>
+            <div class="pc-rv-expert-verdict">${escapeHtml(review.body || '')}</div>
 
-          <div class="pc-rv-breakdown-right">
-            <span class="pc-rv-breakdown-count">${fmtCompact(count)}</span>
-            <span class="pc-rv-breakdown-pct">${width}%</span>
-          </div>
-        </div>
-      `;
-    }).join('');
+            <div class="pc-rv-expert-footer">
+              <div class="pc-rv-expert-date">${escapeHtml(communityRelativeTime(review.created_at) || '')}</div>
+            </div>
+          </article>
+        `).join('')}
+      </div>
+    </section>
+  `;
+} else {
+  userReviewsHtml = `
+    <section class="pc-review-section">
+      <p class="note">No reviews yet. Be the first to share your experience with this product.</p>
+    </section>
+  `;
+}
 
-    const sortedSources = customerSources
-      .slice()
-      .sort((a, b) => Number(b.count || 0) - Number(a.count || 0));
+let customerHtml = '';
 
-    const sourceCards = sortedSources.map((s) => {
-      const sourceName = String(s.name || s.slug || 'Source').trim() || 'Source';
-      const sourceUrl = safeHttpHref(s.url || '');
-      const sourceCount = Number(s.count || 0);
-      const sourceRatingNum = Number(s.rating || 0);
-      const sourceRatingText =
-        Number.isFinite(sourceRatingNum) && sourceRatingNum > 0
-          ? `${sourceRatingNum.toFixed(1)} / 5`
-          : 'No rating';
+if (hasCustomer) {
+  const breakdownRows = [5, 4, 3, 2, 1].map((star) => {
+    const count = Number(distribution[star] || 0);
+    const width = pct(count, total);
 
-      return `
-        <article class="pc-rv-source-card">
-          <div class="pc-rv-source-card__top">
-            <div class="pc-rv-source-card__name">${escapeHtml(sourceName)}</div>
-            ${
-              sourceUrl
-                ? `
-                  <a
-                    class="pc-rv-source-card__link"
-                    href="${escapeHtml(sourceUrl)}"
-                    target="_blank"
-                    rel="noopener"
-                    aria-label="Open ${escapeHtml(sourceName)} reviews"
-                  >
-                    ${REVIEW_EXTERNAL_SVG}
-                  </a>
-                `
-                : ''
-            }
-          </div>
-
-          <div class="pc-rv-source-card__rating">${escapeHtml(sourceRatingText)}</div>
-          <div class="pc-rv-source-card__count">${fmtCompact(sourceCount)} reviews</div>
-        </article>
-      `;
-    }).join('');
-
-    const confidence =
-      total < 50 ? 'low' :
-      total < 500 ? 'med' :
-      'high';
-
-    const confidenceLabel = {
-      low: 'Low Confidence',
-      med: 'Moderate Confidence',
-      high: 'High Confidence'
-    }[confidence];
-
-    const verifiedPill = verifiedPct != null
-      ? `<span class="pc-rv-pill">${verifiedPct}% Verified</span>`
-      : '';
-
-    customerHtml = `
-      <section class="pc-review-section">
-        <div class="pc-rv-section-head">
-          <div class="pc-rv-section-title">Store Reviews</div>
+    return `
+      <div class="pc-rv-breakdown-row">
+        <div class="pc-rv-breakdown-left">
+          <span class="pc-rv-breakdown-star-icon">${REVIEW_STAR_SVG}</span>
+          <span>${star} star</span>
         </div>
 
-        <div class="pc-rv-customer-layout">
-          <div class="pc-rv-summary-card">
-            <div class="pc-rv-summary-label">Average rating</div>
-            <div class="pc-rv-summary-score">${overall.toFixed(1)}</div>
-            <div class="pc-rv-summary-scale">out of 5</div>
-            <div class="pc-rv-summary-note">Based on ${fmtCompact(total)} reviews</div>
+        <div class="pc-rv-breakdown-bar">
+          <div class="pc-rv-breakdown-fill pc-rv-breakdown-fill--${star}" style="width:${clamp(width, 0, 100)}%"></div>
+        </div>
 
-            <div class="pc-rv-summary-meta">
-              <span class="pc-rv-confidence pc-rv-confidence--${confidence}">${confidenceLabel}</span>
-              ${verifiedPill}
-            </div>
+        <div class="pc-rv-breakdown-right">
+          <span class="pc-rv-breakdown-count">${fmtCompact(count)}</span>
+          <span class="pc-rv-breakdown-pct">${width}%</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const sortedSources = [...customerSources]
+    .map((source) => {
+      const count = Number(source?.review_count || source?.count || 0);
+      return {
+        ...source,
+        _count: Number.isFinite(count) ? count : 0
+      };
+    })
+    .sort((a, b) => b._count - a._count);
+
+  const sourceCards = sortedSources.map((source) => {
+    const sourceName = String(source?.name || source?.store || 'Source').trim() || 'Source';
+    const sourceUrl = safeHttpHref(source?.url || '');
+    const sourceCount = Number(source?._count || 0);
+    const sourceRatingNum = Number(source?.rating || source?.average_rating || 0);
+
+    const sourceRatingText =
+      Number.isFinite(sourceRatingNum) && sourceRatingNum > 0
+        ? `${sourceRatingNum.toFixed(1)} / 5`
+        : 'No rating';
+
+    return `
+      <article class="pc-rv-source-card">
+        <div class="pc-rv-source-card__top">
+          <div class="pc-rv-source-card__name">${escapeHtml(sourceName)}</div>
+          ${
+            sourceUrl
+              ? `
+                <a
+                  class="pc-rv-source-card__link"
+                  href="${escapeHtml(sourceUrl)}"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Open ${escapeHtml(sourceName)} reviews"
+                >
+                  ${REVIEW_EXTERNAL_SVG}
+                </a>
+              `
+              : ''
+          }
+        </div>
+
+        <div class="pc-rv-source-card__rating">${escapeHtml(sourceRatingText)}</div>
+        <div class="pc-rv-source-card__count">${fmtCompact(sourceCount)} reviews</div>
+      </article>
+    `;
+  }).join('');
+
+  const confidence =
+    total < 50 ? 'low' :
+    total < 500 ? 'med' :
+    'high';
+
+  const confidenceLabel = {
+    low: 'Low Confidence',
+    med: 'Moderate Confidence',
+    high: 'High Confidence'
+  }[confidence];
+
+  const verifiedPill = verifiedPct != null
+    ? `<span class="pc-rv-pill">${verifiedPct}% Verified</span>`
+    : '';
+
+  customerHtml = `
+    <section class="pc-review-section">
+      <div class="pc-rv-customer-layout">
+        <div class="pc-rv-summary-card">
+          <div class="pc-rv-summary-label">Average rating</div>
+          <div class="pc-rv-summary-score">${overall.toFixed(1)}</div>
+          <div class="pc-rv-summary-scale">out of 5</div>
+          <div class="pc-rv-summary-note">Based on ${fmtCompact(total)} reviews</div>
+
+          <div class="pc-rv-summary-meta">
+            <span class="pc-rv-confidence pc-rv-confidence--${confidence}">${confidenceLabel}</span>
+            ${verifiedPill}
           </div>
+        </div>
 
-          <div class="pc-rv-breakdown-card">
-            <div class="pc-rv-subhead">Rating breakdown</div>
-            <div class="pc-rv-breakdown-list">
-              ${breakdownRows}
-            </div>
+        <div class="pc-rv-breakdown-card">
+          <div class="pc-rv-subhead">Rating breakdown</div>
+          <div class="pc-rv-breakdown-list">
+            ${breakdownRows}
           </div>
         </div>
 
         ${
           sortedSources.length
             ? `
-              <div class="pc-rv-block">
+              <div class="pc-rv-sources-side">
                 <div class="pc-rv-source-grid">
                   ${sourceCards}
                 </div>
@@ -2316,9 +2694,10 @@ async function renderReviewsCard(productKey, runToken) {
             `
             : ''
         }
-      </section>
-    `;
-  } else {
+      </div>
+    </section>
+  `;
+    } else {
     customerHtml = `
       <section class="pc-review-section">
         <div class="pc-rv-section-head">
@@ -2372,26 +2751,28 @@ async function renderReviewsCard(productKey, runToken) {
         <article class="pc-rv-expert-card">
           <div class="pc-rv-expert-top">
             <div class="pc-rv-expert-main">
-              <div class="pc-rv-expert-source">${escapeHtml(source)}</div>
-
-              <div class="pc-rv-expert-title-row">
-                <div class="pc-rv-expert-title">${escapeHtml(title)}</div>
-                ${
-                  url
-                    ? `
-                      <a
-                        class="pc-rv-expert-title-link"
-                        href="${escapeHtml(url)}"
-                        target="_blank"
-                        rel="noopener"
-                        aria-label="Open ${escapeHtml(title)}"
-                      >
+              ${
+                url
+                  ? `
+                    <a
+                      class="pc-rv-expert-title-row pc-rv-expert-title-row--link"
+                      href="${escapeHtml(url)}"
+                      target="_blank"
+                      rel="noopener"
+                      aria-label="Open ${escapeHtml(title)}"
+                    >
+                      <div class="pc-rv-expert-title">${escapeHtml(source)}</div>
+                      <span class="pc-rv-expert-title-link" aria-hidden="true">
                         ${REVIEW_EXTERNAL_SVG}
-                      </a>
-                    `
-                    : ''
-                }
-              </div>
+                      </span>
+                    </a>
+                  `
+                  : `
+                    <div class="pc-rv-expert-title-row">
+                      <div class="pc-rv-expert-title">${escapeHtml(source)}</div>
+                    </div>
+                  `
+              }
             </div>
 
             ${
@@ -2447,10 +2828,6 @@ async function renderReviewsCard(productKey, runToken) {
 
     expertHtml = `
       <section class="pc-review-section">
-        <div class="pc-rv-section-head">
-          <div class="pc-rv-section-title">Expert Reviews</div>
-        </div>
-
         <div class="pc-rv-expert-list">
           ${expertRows}
         </div>
@@ -2459,9 +2836,6 @@ async function renderReviewsCard(productKey, runToken) {
   } else {
     expertHtml = `
       <section class="pc-review-section">
-        <div class="pc-rv-section-head">
-          <div class="pc-rv-section-title">Expert Reviews</div>
-        </div>
         <p class="note">No expert reviews found yet.</p>
       </section>
     `;
@@ -2469,14 +2843,23 @@ async function renderReviewsCard(productKey, runToken) {
 
   if (runToken != null && isStaleRun(runToken)) return;
 
-  mount(`
-    <div class="spaced">
-      <h2 data-icon-path="${iconPath}">Reviews</h2>
-    </div>
-
-    <div class="pc-reviews-stack">
+  mountCustomerReviews(`
+    <div class="pc-reviews-wrap">
       ${customerHtml}
-      ${expertHtml}
+      ${expertHtml || `
+        <section class="pc-review-section">
+          <div class="pc-rv-section-head">
+            <div class="pc-rv-section-title">Expert Reviews</div>
+          </div>
+          <p class="note">No expert reviews found yet.</p>
+        </section>
+      `}
+    </div>
+  `);
+
+  mountUserReviews(`
+    <div class="pc-reviews-wrap">
+      ${userReviewsHtml}
     </div>
   `);
 
@@ -2532,173 +2915,6 @@ function pushVariantSelectionAndRun(){
   if (!state.selectedVariantKey) return;
   applyPrettyUrl(state.selectedVariantKey, $('#pTitle')?.textContent || 'Product', 'push');
   run(state.selectedVariantKey);
-}
-
-const FAVORITE_LABEL_NAME = 'Favorites';
-
-let _favBusy        = false;
-let _favIsFavorited = false;
-let _favLabelId     = null;   // cached label id once we know it
-
-async function wireFavoriteButton(entityKey, title, imageUrl, brand) {
-  const btn = document.querySelector("[data-pc-favorite='1']");
-  if (!btn) return;
-
-  const iconOn  = btn.querySelector("[data-fav-icon='on']");
-  const iconOff = btn.querySelector("[data-fav-icon='off']");
-
-  // ── visual helpers ──────────────────────────────────────────────────────────
-  function setFavorited(on) {
-    if (iconOn)  iconOn.style.display  = on ? '' : 'none';
-    if (iconOff) iconOff.style.display = on ? 'none' : '';
-    btn.setAttribute('aria-pressed', String(!!on));
-    btn.setAttribute('aria-label', on ? 'Remove from Favorites' : 'Add to Favorites');
-    btn.title = on ? 'Remove from Favorites' : 'Add to Favorites';
-  }
-
-  // reset to unloaded state while we fetch
-  _favIsFavorited = false;
-  _favLabelId     = null;
-  setFavorited(false);
-
-  // ── load current state ──────────────────────────────────────────────────────
-  try {
-    const [labelsRes, checkRes] = await Promise.all([
-      fetch('/api/labels', {
-        credentials: 'same-origin',
-        headers: { Accept: 'application/json' }
-      }),
-      fetch(`/api/labels/check?entity_key=${encodeURIComponent(entityKey)}`, {
-        credentials: 'same-origin',
-        headers: { Accept: 'application/json' }
-      })
-    ]);
-
-    // 401 = not signed in; silently skip — button stays neutral
-    if (labelsRes.status === 401) return;
-
-    const labelsData = await labelsRes.json().catch(() => null);
-    const checkData  = await checkRes.json().catch(() => null);
-
-    if (!labelsData?.ok) return;
-
-    const labels    = labelsData.results || [];
-    const inIds     = new Set((checkData?.label_ids || []).map(Number));
-    const favLabel  = labels.find(l => l.name === FAVORITE_LABEL_NAME);
-
-    if (favLabel) {
-      _favLabelId = favLabel.id;
-      if (inIds.has(favLabel.id)) {
-        _favIsFavorited = true;
-        setFavorited(true);
-      }
-    }
-  } catch (_e) {
-    // network error — leave button in neutral state
-  }
-
-  // ── wire click ─────────────────────────────────────────────────────────────
-  if (btn._pcFavBound) btn.removeEventListener('click', btn._pcFavBound);
-
-  btn._pcFavBound = async function handleFavClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (_favBusy) return;
-
-    _favBusy    = true;
-    btn.disabled = true;
-
-    try {
-      // ── REMOVE ─────────────────────────────────────────────────────────────
-      if (_favIsFavorited) {
-        if (_favLabelId) {
-          // fetch items to get the item's own id, then delete it
-          const r = await fetch(`/api/labels/${_favLabelId}/items`, {
-            credentials: 'same-origin',
-            headers: { Accept: 'application/json' }
-          });
-          const d    = await r.json().catch(() => null);
-          const item = (d?.results || []).find(i => i.entity_key === entityKey);
-
-          if (item) {
-            await fetch(`/api/labels/${_favLabelId}/items/${item.id}`, {
-              method: 'DELETE',
-              credentials: 'same-origin'
-            });
-          }
-        }
-
-        _favIsFavorited = false;
-        setFavorited(false);
-        return;
-      }
-
-      // ── ADD ────────────────────────────────────────────────────────────────
-
-      // 1. Ensure the Favorites label exists (create once if missing)
-      if (!_favLabelId) {
-        const createRes = await fetch('/api/labels', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: FAVORITE_LABEL_NAME })
-        });
-
-        if (createRes.status === 401) {
-          window.pcOpenSignIn?.();
-          return;
-        }
-
-        // If it already exists (race or the user has it but wasn't fetched),
-        // the server might 400. Re-fetch labels to find it.
-        if (!createRes.ok) {
-          const refetchRes  = await fetch('/api/labels', {
-            credentials: 'same-origin',
-            headers: { Accept: 'application/json' }
-          });
-          const refetchData = await refetchRes.json().catch(() => null);
-          const existing    = (refetchData?.results || []).find(l => l.name === FAVORITE_LABEL_NAME);
-          if (existing) _favLabelId = existing.id;
-        } else {
-          const createData = await createRes.json().catch(() => null);
-          if (createData?.ok) _favLabelId = createData.label.id;
-        }
-
-        if (!_favLabelId) return; // could not resolve label
-      }
-
-      // 2. Add the product to the Favorites label
-      const addRes = await fetch(`/api/labels/${_favLabelId}/items`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          entity_key: entityKey,
-          title:      _dbClean(title).slice(0, 200),
-          image_url:  _dbClean(imageUrl).slice(0, 500) || null,
-          brand:      _dbClean(brand).slice(0, 100)    || null
-        })
-      });
-
-      if (addRes.status === 401) {
-        window.pcOpenSignIn?.();
-        return;
-      }
-
-      if (addRes.ok) {
-        _favIsFavorited = true;
-        setFavorited(true);
-      }
-
-    } catch (_e) {
-      // leave state unchanged on network error
-    } finally {
-      _favBusy    = false;
-      btn.disabled = false;
-    }
-  };
-
-  btn.addEventListener('click', btn._pcFavBound);
 }
 
 function renderVersionVariantColor(){
@@ -2857,11 +3073,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   wireCardIcons();
   wireBrandFollowButton();
   await loadNameOverridesOnce();
-  wireCodeButton();
-  renderCodeButtonState();
   initDashboardShortlistUi();
   initDashboardTocObservers();
   scheduleDashboardTocRefresh();
+  wireTopbarCommentButton();
   initSimilarSidebarObserver();
 
   window.addEventListener('pc:auth_changed', () => {
@@ -3018,11 +3233,12 @@ async function run(raw){
     if (isStaleRun(runToken)) return;
     await renderOffers(true, runToken);
 
+    renderMarketingImagesCard();
+
     if (isStaleRun(runToken)) return;
     await renderReviewsCard(state.lastKey, runToken);
 
     if (isStaleRun(runToken)) return;
-
     await renderCommunityCard(state.lastKey, runToken);
 
     if (isStaleRun(runToken)) return;
@@ -3091,9 +3307,6 @@ async function run(raw){
   state.selectedTimelineIndex = -1;
   state.selectedLineupFamily = null;
 
-  _closeCodePanel();
-  renderCodeButtonState();
-
   if (aboutCard) aboutCard.hidden = true;
   if (aboutParagraphs) aboutParagraphs.innerHTML = '';
   if (aboutPoints) aboutPoints.innerHTML = '';
@@ -3111,9 +3324,6 @@ async function run(raw){
 
   const limitedEl = document.getElementById('ps-limited');
   if (limitedEl) limitedEl.hidden = true;
-
-  if (versionCard) versionCard.hidden = true;
-  if (versionPills) versionPills.innerHTML = '';
 
   if (contentsCard) contentsCard.hidden = true;
   if (contentsContent) contentsContent.innerHTML = '';
@@ -3221,43 +3431,33 @@ async function run(raw){
     counts: { tips: 0, questions: 0, reviews: 0 }
   };
 
-  const communityCard = document.getElementById('communityCard');
-  const communityTips = document.getElementById('pcCommunityTipsList');
-  const communityQuestions = document.getElementById('pcCommunityQuestionsList');
-  const communityReviews = document.getElementById('pcCommunityReviewList');
-  const communityTipsCount = document.getElementById('pcCommunityTipsCount');
-  const communityQuestionsCount = document.getElementById('pcCommunityQuestionsCount');
-  const communityReviewsCount = document.getElementById('pcCommunityReviewsCount');
+  const bottomTips = document.getElementById('dashboardBottomCommunityTipsList');
+  const bottomQuestions = document.getElementById('dashboardBottomCommunityQuestionsList');
+  const bottomReviews = document.getElementById('dashboardBottomReviewsContent');
 
-    if (communityCard) communityCard.hidden = false;
-
-  if (communityTips) {
-    communityTips.innerHTML = `
+  if (bottomTips) {
+    bottomTips.innerHTML = `
       <div class="sidebar-empty">
         No tips yet. Be the first to share something useful about this product.
       </div>
     `;
   }
 
-  if (communityQuestions) {
-    communityQuestions.innerHTML = `
+  if (bottomQuestions) {
+    bottomQuestions.innerHTML = `
       <div class="sidebar-empty">
         No questions yet.
       </div>
     `;
   }
 
-  if (communityReviews) {
-    communityReviews.innerHTML = `
-      <div class="sidebar-empty">
-        No reviews yet. Share your experience to help the next person.
-      </div>
+  if (bottomReviews) {
+    bottomReviews.innerHTML = `
+      <section class="pc-review-section">
+        <p class="note">No reviews yet. Be the first to share your experience with this product.</p>
+      </section>
     `;
   }
-
-  if (communityTipsCount) communityTipsCount.textContent = '(0)';
-  if (communityQuestionsCount) communityQuestionsCount.textContent = '(0)';
-  if (communityReviewsCount) communityReviewsCount.textContent = '(0)';
 
   syncDashboardShortlistButton();
   scheduleDashboardTocRefresh();
@@ -3437,12 +3637,6 @@ function initDashboardShortlistUi() {
     if (pIdsEl) {
       pIdsEl.innerHTML = '';
       pIdsEl.hidden = true;
-    }
-
-    renderCodeButtonState();
-
-    if (_codePanelOpen) {
-      _renderCodePanel();
     }
 
     const img = $('#pImg');
@@ -3879,10 +4073,7 @@ async function wireLabelTrigger(entityKey, title, imageUrl, brand) {
 
 async function wireProductActions(entityKey, title, imageUrl, brand) {
   if (!entityKey) return;
-  await Promise.all([
-    wireLabelTrigger(entityKey, title, imageUrl, brand),
-    wireFavoriteButton(entityKey, title, imageUrl, brand)
-  ]);
+  await wireLabelTrigger(entityKey, title, imageUrl, brand);
 }
 
 function wireBrandFollowButton() {
@@ -5176,8 +5367,10 @@ function getSidebarAvailableHeight() {
   const mainRect = main.getBoundingClientRect();
   const panelRect = panel.getBoundingClientRect();
 
-  const available = Math.floor(mainRect.bottom - panelRect.top);
-  return Math.max(0, available);
+  const available = Math.round(mainRect.bottom - panelRect.top);
+
+  // small trim so the bottoms visually finish on the same line
+  return Math.max(0, available - 4);
 }
 
 function similarProductCardHtml(p) {
@@ -5220,9 +5413,13 @@ function fitSimilarProductsToSidebar(items) {
 
   if (!availableHeight) {
     panel.innerHTML = `<div class="sidebar-empty">No similar products found.</div>`;
+    panel.style.height = '';
+    panel.style.maxHeight = '';
     return;
   }
 
+  panel.style.boxSizing = 'border-box';
+  panel.style.height = `${availableHeight}px`;
   panel.style.maxHeight = `${availableHeight}px`;
   panel.innerHTML = `<div class="pc-similar-list"></div>`;
 
@@ -5307,138 +5504,6 @@ async function copyText(text){
   } catch {}
 
   return false;
-}
-
-function codeItemsFromState() {
-  const id = state.identity || {};
-
-  const pci = String(id.selected_pci || '').trim();
-  const upc = cleanUpc(id.selected_upc || '');
-  const asin = up(id.asin || '');
-
-  const out = [];
-  if (pci) out.push({ kind: 'PCI', value: pci });
-  if (upc) out.push({ kind: 'UPC', value: upc });
-  if (asin) out.push({ kind: 'ASIN', value: asin });
-
-  return out;
-}
-
-function renderCodeButtonState() {
-  const btn = document.getElementById('phCodeBtn');
-  if (!btn) return;
-
-  const hasCodes = codeItemsFromState().length > 0;
-
-  btn.disabled = !hasCodes;
-  btn.setAttribute('aria-disabled', hasCodes ? 'false' : 'true');
-  btn.title = hasCodes ? 'View product codes' : 'No product codes available';
-}
-
-function _ensureCodePanel() {
-  if (_codePanelEl) return _codePanelEl;
-
-  _codePanelEl = document.createElement('div');
-  _codePanelEl.id = 'pcCodePanel';
-  _codePanelEl.className = 'pc-code-panel';
-  _codePanelEl.hidden = true;
-  document.body.appendChild(_codePanelEl);
-
-  document.addEventListener('click', (e) => {
-    if (
-      _codePanelOpen &&
-      !_codePanelEl.contains(e.target) &&
-      !e.target.closest("[data-pc-code-trigger='1']")
-    ) {
-      _closeCodePanel();
-    }
-  }, true);
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && _codePanelOpen) _closeCodePanel();
-  });
-
-  return _codePanelEl;
-}
-
-function _closeCodePanel() {
-  if (!_codePanelEl) return;
-  _codePanelEl.hidden = true;
-  _codePanelOpen = false;
-}
-
-function _renderCodePanel() {
-  const panel = _ensureCodePanel();
-  const items = codeItemsFromState();
-
-  if (!items.length) {
-    panel.innerHTML = `
-      <div class="pc-code-panel__head">Codes</div>
-      <div class="pc-code-panel__empty">No product codes available.</div>
-    `;
-    return;
-  }
-
-  panel.innerHTML = `
-    <div class="pc-code-panel__head">Codes</div>
-    <div class="pc-code-panel__list">
-      ${items.map(item => `
-        <button
-          type="button"
-          class="pc-code-pill"
-          data-code-copy="${escapeHtml(item.value)}"
-        >
-          <span class="pc-code-pill__kind">${escapeHtml(item.kind)}</span>
-          <span class="pc-code-pill__value">${escapeHtml(item.value)}</span>
-        </button>
-      `).join('')}
-    </div>
-    <div class="pc-code-panel__hint">Click a code to copy it.</div>
-  `;
-
-  panel.querySelectorAll('[data-code-copy]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const value = String(btn.getAttribute('data-code-copy') || '').trim();
-      if (!value) return;
-
-      const ok = await copyText(value);
-      if (!ok) return;
-
-      const valueEl = btn.querySelector('.pc-code-pill__value');
-      if (!valueEl) return;
-
-      const original = valueEl.textContent;
-      valueEl.textContent = 'Copied';
-
-      clearTimeout(btn._pcCodeCopyT);
-      btn._pcCodeCopyT = setTimeout(() => {
-        valueEl.textContent = original;
-      }, 900);
-    });
-  });
-}
-
-function wireCodeButton() {
-  const btn = document.getElementById('phCodeBtn');
-  if (!btn || btn._pcBound) return;
-
-  btn._pcBound = true;
-
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (btn.disabled) return;
-
-    if (_codePanelOpen) {
-      _closeCodePanel();
-      return;
-    }
-
-    _renderCodePanel();
-    _codePanelEl.hidden = false;
-    _codePanelOpen = true;
-  });
 }
 
   function specValueToText(v){
@@ -5718,65 +5783,6 @@ function safeUrl(raw){
   } catch {
     return null;
   }
-}
-
-function parseMediaItem(input){
-  const obj = (typeof input === 'string')
-    ? { url: input }
-    : (input && typeof input === 'object' ? input : null);
-
-  if (!obj) return null;
-
-  const rawUrl = String(obj.url || '').trim();
-  if (!rawUrl) return null;
-
-  const url = safeUrl(rawUrl);
-  if (!url) return null;
-
-  const host = url.hostname.toLowerCase().replace(/^www\./, '');
-  const path = url.pathname || '';
-
-  let provider = 'Media';
-  let kind = 'Media';
-  let embedUrl = null;
-  let frameClass = 'pc-media-frame pc-media-frame--wide';
-
-  // TikTok only
-  if (host.endsWith('tiktok.com')) {
-    provider = 'TikTok';
-    kind = 'Short form content';
-    frameClass = 'pc-media-frame pc-media-frame--vertical';
-
-    const m = path.match(/\/video\/(\d+)/i);
-    if (m && m[1]) {
-      embedUrl = `https://www.tiktok.com/player/v1/${m[1]}`;
-    }
-  }
-
-  // Instagram only
-  else if (host.endsWith('instagram.com')) {
-    const m = path.match(/^\/(reel|p)\/([^/?#]+)/i);
-    if (m) {
-      provider = 'Instagram';
-      kind = 'Short form content';
-      frameClass = 'pc-media-frame pc-media-frame--vertical';
-      embedUrl = `https://www.instagram.com/${m[1]}/${m[2]}/embed`;
-    }
-  }
-
-  // Ignore YouTube and everything else
-  else {
-    return null;
-  }
-
-  return {
-    url: rawUrl,
-    provider,
-    kind,
-    title: '',
-    embedUrl,
-    frameClass
-  };
 }
 
 function mediaSource(){

@@ -654,7 +654,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
     const r = await client.query(
       `
       select id, upc, pci, model_name, model_number, brand, category, image_url,
-        version, color, variant, dimensions, specs, media, timeline, files, contents, about, created_at,
+        version, color, variant, dimensions, specs, media, marketing_images, timeline, files, contents, about, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
       where pci is not null and btrim(pci) <> ''
@@ -673,7 +673,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
     const r = await client.query(
       `
       select id, upc, pci, model_name, model_number, brand, category, image_url,
-        version, color, variant, dimensions, specs, media, timeline, files, contents, about, created_at,
+        version, color, variant, dimensions, specs, media, marketing_images, timeline, files, contents, about, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
       where norm_upc(upc) = norm_upc($1)
@@ -720,6 +720,11 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
       specs: (row.specs && typeof row.specs === 'object' && !Array.isArray(row.specs)) ? row.specs : null,
       timeline: Array.isArray(row.timeline) ? row.timeline : null,
       media: Array.isArray(row.media) ? row.media : null,
+      marketing_images: Array.isArray(row.marketing_images)
+      ? row.marketing_images
+          .map(v => String(v || '').trim())
+          .filter(Boolean)
+      : null,
       files: (
         row.files &&
         typeof row.files === 'object' &&
@@ -793,7 +798,8 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
           (Array.isArray(row.files) || Array.isArray(row.files.items))
         ) ? row.files : null,
         contents: Array.isArray(row.contents) ? row.contents : null,
-        about: (row.about && typeof row.about === 'object' && !Array.isArray(row.about)) ? row.about : null
+        about: (row.about && typeof row.about === 'object' && !Array.isArray(row.about)) ? row.about : null,
+        marketing_images: Array.isArray(row.marketing_images) ? row.marketing_images : null
       };
     })
     .filter(Boolean);
@@ -1462,6 +1468,9 @@ const lineup = meta ? await getLineupData(client, meta) : null;
         dimensions: (meta?.dimensions && typeof meta.dimensions === 'object' && !Array.isArray(meta.dimensions)) ? meta.dimensions : null,
         specs: (meta?.specs && typeof meta.specs === 'object' && !Array.isArray(meta.specs)) ? meta.specs : null,
         media: Array.isArray(meta?.media) ? meta.media : null,
+        marketing_images: Array.isArray(meta?.marketing_images)
+          ? meta.marketing_images.map(v => String(v || '').trim()).filter(Boolean)
+          : null,
         files: (
           meta?.files &&
           typeof meta.files === 'object' &&
