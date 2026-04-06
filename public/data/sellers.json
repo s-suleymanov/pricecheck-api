@@ -1,7 +1,7 @@
 {
   "bestbuy": {
     "name": "Best Buy",
-    "logo": "/logo/seller/bestbuy.jpg",
+    "logo": "/logo/seller/bestbuy.svg",
     "website": "https://www.bestbuy.com",
     "owned_by": "",
     "type": "Authorized Retailer",
@@ -21,7 +21,7 @@
   },
   "dell": {
     "name": "Dell",
-    "logo": "/logo/seller/dell.png",
+    "logo": "/logo/seller/dell.webp",
     "website": "https://www.dell.com",
     "owned_by": "",
     "type": "Manufacturer & Direct Retailer",
@@ -41,7 +41,7 @@
   },
   "microcenter": {
     "name": "Micro Center",
-    "logo": "/logo/seller/microcenter.jpg",
+    "logo": "/logo/seller/microcenter.webp",
     "website": "https://www.microcenter.com",
     "owned_by": "Micro Electronics, Inc.",
     "type": "Computer & Electronics Retailer",
@@ -61,7 +61,7 @@
   },
   "alibaba": {
     "name": "Alibaba.com",
-    "logo": "/logo/seller/alibaba.jpg",
+    "logo": "/logo/seller/alibaba.webp",
     "website": "https://www.alibaba.com",
     "owned_by": "Alibaba Group",
     "type": "B2B Wholesale Marketplace",
@@ -81,7 +81,7 @@
   },
     "nvidia": {
     "name": "NVIDIA",
-    "logo": "/logo/seller/nvidia.png",
+    "logo": "/logo/seller/nvidia.webp",
     "website": "https://www.nvidia.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -121,7 +121,7 @@
 },
   "aliexpress": {
     "name": "AliExpress",
-    "logo": "/logo/seller/aliexpress.png",
+    "logo": "/logo/seller/aliexpress.webp",
     "website": "https://www.aliexpress.com",
     "owned_by": "Alibaba Group",
     "type": "Online Marketplace",
@@ -141,7 +141,7 @@
   },
   "bjs": {
     "name": "BJ's Wholesale Club",
-    "logo": "/logo/seller/bjs.png",
+    "logo": "/logo/seller/bjs.webp",
     "website": "https://www.bjs.com",
     "owned_by": "BJ's Wholesale Club Holdings, Inc.",
     "type": "Warehouse Club",
@@ -161,7 +161,7 @@
   },
   "abt": {
     "name": "Abt Electronics",
-    "logo": "/logo/seller/abt.jpg",
+    "logo": "/logo/seller/abt.webp",
     "website": "https://www.abt.com",
     "owned_by": "Abt Family",
     "type": "Consumer Electronics & Appliances",
@@ -181,7 +181,7 @@
   },
   "staples": {
     "name": "Staples",
-    "logo": "/logo/seller/staples.png",
+    "logo": "/logo/seller/staples.webp",
     "website": "https://www.staples.com",
     "owned_by": "Sycamore Partners",
     "type": "Office Supply Retailer",
@@ -201,7 +201,7 @@
   },
   "5thwheel": {
     "name": "5th Wheel",
-    "logo": "/logo/seller/5th.jpg",
+    "logo": "/logo/seller/5th.webp",
     "website": "https://ride5thwheel.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -241,7 +241,7 @@
   },
   "anker": {
     "name": "Anker",
-    "logo": "/logo/seller/anker.png",
+    "logo": "/logo/seller/anker.webp",
     "website": "https://www.anker.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -281,7 +281,7 @@
   },
   "apple": {
     "name": "Apple",
-    "logo": "/logo/seller/apple.jpg",
+    "logo": "/logo/seller/apple.svg",
     "website": "https://www.apple.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -301,7 +301,7 @@
   },
   "arlo": {
     "name": "Arlo",
-    "logo": "/logo/seller/arlo.png",
+    "logo": "/logo/seller/arlo.webp",
     "website": "https://www.arlo.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -321,7 +321,7 @@
   },
   "audio-technica": {
     "name": "Audio-Technica",
-    "logo": "/logo/seller/audio.png",
+    "logo": "/logo/seller/audio.webp",
     "website": "https://www.audio-technica.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -381,7 +381,7 @@
   },
   "belkin": {
     "name": "Belkin",
-    "logo": "/logo/seller/belkin.png",
+    "logo": "/logo/seller/belkin.webp",
     "website": "https://www.belkin.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -461,7 +461,7 @@
   },
   "corsair": {
     "name": "Corsair",
-    "logo": "/logo/seller/corsair.jpeg",
+    "logo": "/logo/seller/corsair.webp",
     "website": "https://www.corsair.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -501,7 +501,7 @@
   },
   "dji": {
     "name": "DJI",
-    "logo": "/logo/seller/dji.jpg",
+    "logo": "/logo/seller/dji.webp",
     "website": "https://www.dji.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -641,7 +641,7 @@
 },
   "tesla": {
   "name": "Tesla",
-  "logo": "/logo/seller/tesla.png",
+  "logo": "/logo/seller/tesla.webp",
   "website": "https://www.tesla.com",
   "owned_by": "",
   "type": "Proprietary",
@@ -661,7 +661,7 @@
 },
   "garmin": {
     "name": "Garmin",
-    "logo": "/logo/seller/garmin.png",
+    "logo": "/logo/seller/garmin.webp",
     "website": "https://www.garmin.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -681,7 +681,7 @@
   },
   "gopro": {
     "name": "GoPro",
-    "logo": "/logo/seller/gopro.png",
+    "logo": "/logo/seller/gopro.webp",
     "website": "https://gopro.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -701,7 +701,7 @@
   },
   "google": {
     "name": "Google",
-    "logo": "/logo/seller/google.png",
+    "logo": "/logo/seller/google.webp",
     "website": "https://about.google",
     "owned_by": "Alphabet",
     "type": "Proprietary",
@@ -721,7 +721,7 @@
   },
   "hiboy": {
     "name": "Hiboy",
-    "logo": "/logo/seller/hiboy.png",
+    "logo": "/logo/seller/hiboy.webp",
     "website": "https://hiboy.com",
     "owned_by": "",
     "type": "Private Label",
@@ -761,7 +761,7 @@
   },
   "hyperx": {
     "name": "HyperX",
-    "logo": "/logo/seller/hyperx.jpg",
+    "logo": "/logo/seller/hyperx.webp",
     "website": "https://hyperx.com",
     "owned_by": "HP",
     "type": "Proprietary",
@@ -781,7 +781,7 @@
   },
   "jbl": {
     "name": "JBL",
-    "logo": "/logo/seller/jbl.jpg",
+    "logo": "/logo/seller/jbl.webp",
     "website": "https://www.jbl.com",
     "owned_by": "Samsung",
     "type": "Proprietary",
@@ -821,7 +821,7 @@
   },
   "lg": {
     "name": "LG",
-    "logo": "/logo/seller/lg.png",
+    "logo": "/logo/seller/lg.webp",
     "website": "https://www.lg.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -841,7 +841,7 @@
   },
   "logitech": {
     "name": "Logitech",
-    "logo": "/logo/seller/logi.png",
+    "logo": "/logo/seller/logi.webp",
     "website": "https://www.logitech.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -883,26 +883,6 @@
     "name": "Meta",
     "logo": "",
     "website": "https://about.meta.com",
-    "owned_by": "",
-    "type": "Proprietary",
-    "location": "United States",
-    "founded": null,
-    "policies": {
-      "return_period": "See Website",
-      "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
-      "price_match": "Unknown"
-    },
-    "contact": {
-      "phone": null,
-      "chat_available": false,
-      "support_page": null
-    }
-  },
-  "microsoft": {
-    "name": "Microsoft",
-    "logo": "",
-    "website": "https://www.microsoft.com",
     "owned_by": "",
     "type": "Proprietary",
     "location": "United States",
@@ -1021,7 +1001,7 @@
   },
   "oneplus": {
     "name": "OnePlus",
-    "logo": "/logo/seller/oneplus.png",
+    "logo": "/logo/seller/oneplus.webp",
     "website": "https://www.oneplus.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1041,7 +1021,7 @@
   },
   "oura": {
     "name": "Oura",
-    "logo": "/logo/seller/oura.png",
+    "logo": "/logo/seller/oura.webp",
     "website": "https://ouraring.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1061,7 +1041,7 @@
   },
   "zeiss": {
   "name": "ZEISS",
-  "logo": "/logo/seller/zeiss.png",
+  "logo": "/logo/seller/zeiss.webp",
   "website": "https://www.zeiss.com",
   "owned_by": "Carl Zeiss Foundation",
   "type": "Proprietary",
@@ -1161,7 +1141,7 @@
   },
   "ring": {
     "name": "Ring",
-    "logo": "/logo/seller/ring.jpg",
+    "logo": "/logo/seller/ring.webp",
     "website": "https://ring.com",
     "owned_by": "Amazon",
     "type": "Proprietary",
@@ -1181,7 +1161,7 @@
   },
   "roku": {
     "name": "Roku",
-    "logo": "/logo/seller/roku.png",
+    "logo": "/logo/seller/roku.webp",
     "website": "https://www.roku.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1201,7 +1181,7 @@
   },
   "infomir": {
   "name": "Infomir",
-  "logo": "/logo/seller/infomir.png",
+  "logo": "/logo/seller/infomir.webp",
   "website": "https://www.infomir.eu",
   "owned_by": "",
   "type": "Proprietary",
@@ -1221,7 +1201,7 @@
 },
   "samsung": {
     "name": "Samsung",
-    "logo": "/logo/seller/samsung.png",
+    "logo": "/logo/seller/samsung.webp",
     "website": "https://www.samsung.com",
     "owned_by": "",
     "type": "Manufacturer Direct / Consumer Electronics",
@@ -1261,7 +1241,7 @@
 },
   "segway": {
     "name": "Segway",
-    "logo": "/logo/seller/segway.png",
+    "logo": "/logo/seller/segway.webp",
     "website": "https://www.segway.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1321,7 +1301,7 @@
   },
   "shokz": {
     "name": "Shokz",
-    "logo": "/logo/seller/shokz.png",
+    "logo": "/logo/seller/shokz.webp",
     "website": "https://shokz.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1341,7 +1321,7 @@
   },
   "blackmagic design": {
   "name": "Blackmagic-Design",
-  "logo": "/logo/seller/bmd.jpg",
+  "logo": "/logo/seller/bmd.webp",
   "website": "https://www.blackmagicdesign.com",
   "owned_by": "",
   "type": "Proprietary",
@@ -1361,7 +1341,7 @@
 },
 "polaroid": {
   "name": "Polaroid",
-  "logo": "/logo/seller/polaroid.jpg",
+  "logo": "/logo/seller/polaroid.webp",
   "website": "https://www.polaroid.com",
   "owned_by": "",
   "type": "Proprietary",
@@ -1401,7 +1381,7 @@
 },
   "panasonic": {
   "name": "Panasonic",
-  "logo": "/logo/seller/panasonic.jpg",
+  "logo": "/logo/seller/panasonic.webp",
   "website": "https://www.panasonic.com",
   "owned_by": "",
   "type": "Proprietary",
@@ -1421,7 +1401,7 @@
 },
   "fujifilm": {
   "name": "Fujifilm",
-  "logo": "/logo/seller/fujifilm.png",
+  "logo": "/logo/seller/fujifilm.webp",
   "website": "https://www.fujifilm.com",
   "owned_by": "",
   "type": "Proprietary",
@@ -1461,7 +1441,7 @@
 },
   "kodak": {
   "name": "Kodak",
-  "logo": "/logo/seller/kodak.jpg",
+  "logo": "/logo/seller/kodak.webp",
   "website": "https://www.kodak.com",
   "owned_by": "",
   "type": "Proprietary",
@@ -1521,7 +1501,7 @@
 },
   "skullcandy": {
     "name": "Skullcandy",
-    "logo": "/logo/seller/skull.png",
+    "logo": "/logo/seller/skull.webp",
     "website": "https://www.skullcandy.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1561,7 +1541,7 @@
   },
   "sony": {
     "name": "Sony",
-    "logo": "/logo/seller/sony.png",
+    "logo": "/logo/seller/sony.webp",
     "website": "https://www.sony.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1581,7 +1561,7 @@
   },
   "nikon": {
   "name": "Nikon",
-  "logo": "/logo/seller/nikon.png",
+  "logo": "/logo/seller/nikon.webp",
   "website": "https://www.nikonusa.com",
   "owned_by": "",
   "type": "Proprietary",
@@ -1601,7 +1581,7 @@
 },
   "steelseries": {
     "name": "SteelSeries",
-    "logo": "/logo/seller/steelseries.png",
+    "logo": "/logo/seller/steelseries.webp",
     "website": "https://steelseries.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1621,7 +1601,7 @@
   },
   "tcl": {
     "name": "TCL",
-    "logo": "/logo/seller/tcl.png",
+    "logo": "/logo/seller/tcl.webp",
     "website": "https://www.tcl.com",
     "owned_by": "",
     "type": "Proprietary",
@@ -1881,7 +1861,7 @@
   },
   "soundcore": {
     "name": "Soundcore",
-    "logo": "/logo/seller/soundcore.png",
+    "logo": "/logo/seller/soundcore.webp",
     "website": "https://www.soundcore.com",
     "owned_by": "Anker",
     "type": "Proprietary",
@@ -1901,7 +1881,7 @@
   },
   "amazon": {
     "name": "Amazon",
-    "logo": "/logo/seller/amazon.jpg",
+    "logo": "/logo/seller/amazon.svg",
     "website": "https://www.amazon.com",
     "owned_by": "",
     "type": "Marketplace",
@@ -1921,7 +1901,7 @@
   },
   "walmart": {
     "name": "Walmart",
-    "logo": "/logo/seller/walmart.png",
+    "logo": "/logo/seller/walmart.svg",
     "website": "https://www.walmart.com",
     "owned_by": "",
     "type": "Big Box Retailer",
@@ -1941,7 +1921,7 @@
   },
   "target": {
     "name": "Target",
-    "logo": "/logo/seller/target.png",
+    "logo": "/logo/seller/target.svg",
     "website": "https://www.target.com",
     "owned_by": "",
     "type": "Big Box Retailer",
@@ -2041,7 +2021,7 @@
   },
   "msi": {
   "name": "MSI",
-  "logo": "/logo/seller/msi.jpg",
+  "logo": "/logo/seller/msi.webp",
   "website": "https://www.msi.com",
   "owned_by": "",
   "type": "Proprietary",
@@ -2081,7 +2061,7 @@
 },
 "asus": {
   "name": "ASUS",
-  "logo": "/logo/seller/asus.png",
+  "logo": "/logo/seller/asus.webp",
   "website": "https://www.asus.com",
   "owned_by": "",
   "type": "Proprietary",
@@ -2101,7 +2081,7 @@
 },
 "philips": {
   "name": "Philips",
-  "logo": "/logo/seller/philips.jpg",
+  "logo": "/logo/seller/philips.webp",
   "website": "https://www.philips.com",
   "owned_by": "",
   "type": "Proprietary",
@@ -2121,7 +2101,7 @@
 },
 "alienware": {
   "name": "Alienware",
-  "logo": "/logo/seller/alienware.jpg",
+  "logo": "/logo/seller/alienware.webp",
   "website": "https://www.dell.com/en-us/gaming/alienware",
   "owned_by": "Dell",
   "type": "Proprietary",
@@ -2141,7 +2121,7 @@
 },
 "benq": {
   "name": "BenQ",
-  "logo": "/logo/seller/benq.jpg",
+  "logo": "/logo/seller/benq.webp",
   "website": "https://www.benq.com",
   "owned_by": "Qisda",
   "type": "Proprietary",
@@ -2181,7 +2161,7 @@
 },
 "z-edge": {
   "name": "Z-EDGE",
-  "logo": "/logo/seller/zedge.png",
+  "logo": "/logo/seller/zedge.webp",
   "website": "https://www.z-edge.com",
   "owned_by": "Zero Edge Technology LLC",
   "type": "Proprietary",
