@@ -6201,8 +6201,17 @@ function hostedFileHref(raw){
 
   try {
     const u = new URL(s, location.origin);
-    if (u.origin !== location.origin) return '';
-    return `${u.pathname}${u.search}${u.hash}`;
+    const proto = String(u.protocol || '').toLowerCase();
+
+    if (proto !== 'http:' && proto !== 'https:') return '';
+
+    // Local files stay relative on your own site.
+    if (u.origin === location.origin) {
+      return `${u.pathname}${u.search}${u.hash}`;
+    }
+
+    // Third-party files are allowed as full URLs.
+    return u.href;
   } catch {
     return '';
   }
