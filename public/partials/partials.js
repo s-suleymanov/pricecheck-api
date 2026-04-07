@@ -931,17 +931,9 @@
   wireAuthGatedProductActions();
   wireAuthRequiredLinks();
   wireSidebarFollowingToggle();
-
-  // Initial sidebar following load (uses cached user, fast)
   loadSidebarFollowing();
-
-  // Whenever auth state changes (sign in / sign out / sync), refresh the sidebar.
-  // Using a debounce so rapid back-to-back calls collapse into one fetch.
   window.addEventListener("pc:auth_changed", scheduleSidebarFollowingLoad);
-
-  // Sync with server (confirms real session) then re-run gates
   syncAuthUi().finally(() => {
-    maybeOpenAuthRequiredPage();
-    // loadSidebarFollowing will fire via pc:auth_changed dispatched by syncAuthUi → applyAuthUi
+  maybeOpenAuthRequiredPage();
   });
 })();

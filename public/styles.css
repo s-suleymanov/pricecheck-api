@@ -1223,23 +1223,24 @@ body.has-shortlist .shortlist-rail{
 
 .home-side{
   width: var(--pc-side-w);
-  justify-self: end;
+  min-width: var(--pc-side-w);
+  justify-self: start;
   align-self: start;
-
-  position: sticky;
-  top: calc(var(--pc-nav-h) + 8px);
-  height: calc(100vh - var(--pc-nav-h) - 16px);
   min-height: 240px;
 }
 
 .home-side__inner{
-  height: 100%;
+  position: fixed;
+  top: 67px;
+  left: 18px;
+  width: var(--pc-side-w);
+  height: calc(100vh - 76px);
   display: flex;
   flex-direction: column;
   overflow: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+  scrollbar-width: none;
   -ms-overflow-style: none;
   background: #fff;
   border-radius: 16px;
@@ -1375,6 +1376,12 @@ body.has-shortlist .shortlist-rail{
 
   .home-side{
     display: none;
+  }
+
+  .home-side__inner{
+    position: static;
+    width: auto;
+    height: auto;
   }
 
   .home-pills{
@@ -1551,16 +1558,9 @@ body.has-shortlist .shortlist-rail{
 }
 
 .pc-home .home-side__inner{
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.pc-home.pc-home-ready .home-side__inner{
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transition: none;
 }
 
 /* Small toast for "A PriceCheck+ Feature" */
