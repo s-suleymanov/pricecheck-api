@@ -201,6 +201,66 @@ async function normalizeToPci(raw) {
   throw new Error(`Unsupported key prefix: ${kind}`);
 }
 
+async function getCatalogIdentityByPci(pci) {
+  const value = clean(pci);
+  if (!value) return null;
+
+  const result = await db.query(
+    `
+      SELECT
+        brand,
+        model_number,
+        version,
+        variant
+      FROM public.catalog
+      WHERE NULLIF(btrim(pci), '') IS NOT NULL
+        AND upper(btrim(pci)) = upper(btrim($1))
+      ORDER BY created_at DESC
+      LIMIT 1
+    `,
+    [value]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function getColorGroupPcis(pci) {
+  const value = clean(pci);
+  if (!value) return [];
+
+  const identity = await getCatalogIdentityByPci(value);
+
+  if (!identity?.brand || !identity?.model_number) {
+    return [value.toUpperCase()];
+  }
+
+  const result = await db.query(
+    `
+      SELECT DISTINCT upper(btrim(pci)) AS pci
+      FROM public.catalog
+      WHERE NULLIF(btrim(pci), '') IS NOT NULL
+        AND brand IS NOT NULL
+        AND btrim(brand) <> ''
+        AND lower(btrim(brand)) = lower(btrim($1))
+        AND model_number IS NOT NULL
+        AND btrim(model_number) <> ''
+        AND upper(btrim(model_number)) = upper(btrim($2))
+        AND COALESCE(NULLIF(btrim(version), ''), '') = COALESCE(NULLIF(btrim($3), ''), '')
+        AND COALESCE(NULLIF(btrim(variant), ''), '') = COALESCE(NULLIF(btrim($4), ''), '')
+      ORDER BY upper(btrim(pci))
+    `,
+    [
+      clean(identity.brand),
+      clean(identity.model_number),
+      clean(identity.version),
+      clean(identity.variant)
+    ]
+  );
+
+  const pcis = result.rows.map(r => clean(r.pci).toUpperCase()).filter(Boolean);
+  return pcis.length ? pcis : [value.toUpperCase()];
+}
+
 router.get('/:key', async (req, res) => {
   let pci;
 
@@ -213,6 +273,8 @@ router.get('/:key', async (req, res) => {
   if (!pci) {
     return res.status(404).json({ error: 'Product not found.' });
   }
+
+  const groupPcis = await getColorGroupPcis(pci);
 
   try {
     const [
@@ -228,21 +290,23 @@ router.get('/:key', async (req, res) => {
             review_count,
             source_url
           FROM public.review_source_stats
-          WHERE upper(btrim(product_pci)) = upper(btrim($1))
+          WHERE coalesce(array_length($1::text[], 1), 0) > 0
+  AND upper(btrim(product_pci)) = ANY($1::text[])
             AND review_count > 0
           ORDER BY review_count DESC, rating DESC
         `,
-        [pci]
+        [groupPcis]
       ),
 
       db.query(
         `
           SELECT star, count
           FROM public.review_distribution
-          WHERE upper(btrim(product_pci)) = upper(btrim($1))
+          WHERE coalesce(array_length($1::text[], 1), 0) > 0
+  AND upper(btrim(product_pci)) = ANY($1::text[])
           ORDER BY star DESC
         `,
-        [pci]
+        [groupPcis]
       ),
 
       db.query(
@@ -258,10 +322,11 @@ router.get('/:key', async (req, res) => {
             article_url,
             reviewed_at
           FROM public.expert_reviews
-          WHERE upper(btrim(product_pci)) = upper(btrim($1))
+          WHERE coalesce(array_length($1::text[], 1), 0) > 0
+  AND upper(btrim(product_pci)) = ANY($1::text[])
           ORDER BY reviewed_at DESC NULLS LAST, updated_at DESC, id DESC
         `,
-        [pci]
+        [groupPcis]
       )
     ]);
 

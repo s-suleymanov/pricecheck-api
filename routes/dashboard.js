@@ -518,11 +518,6 @@ function normSkuLocal(v) {
   return s || null;
 }
 
-function normSkuLocal(v) {
-  const s = String(v || '').trim().toUpperCase().replace(/[^0-9A-Z]/g, '');
-  return s || null;
-}
-
 function hashSessionToken(token) {
   return crypto
     .createHash('sha256')
@@ -687,6 +682,58 @@ async function resolveCatalogIdentity(client, seedKeys) {
   }
 
   return null;
+}
+
+async function getColorGroupKeysFromCatalog(client, catalogIdentity, fallbackKeys = null) {
+  const brand = String(catalogIdentity?.brand || '').trim();
+  const modelNumber = String(catalogIdentity?.model_number || '').trim();
+  const version = String(catalogIdentity?.version || '').trim();
+  const variant = String(catalogIdentity?.variant || '').trim();
+
+  const fallbackPci = String(fallbackKeys?.pci || '').trim();
+  const fallbackUpc = String(fallbackKeys?.upc || '').trim();
+
+  if (!brand || !modelNumber) {
+    return {
+      pcis: fallbackPci ? [fallbackPci] : [],
+      upcs: fallbackUpc ? [fallbackUpc] : []
+    };
+  }
+
+  const r = await client.query(
+    `
+    SELECT pci, upc
+    FROM public.catalog
+    WHERE brand IS NOT NULL
+      AND btrim(brand) <> ''
+      AND lower(btrim(brand)) = lower(btrim($1))
+      AND model_number IS NOT NULL
+      AND btrim(model_number) <> ''
+      AND upper(btrim(model_number)) = upper(btrim($2))
+      AND COALESCE(NULLIF(btrim(version), ''), '') = COALESCE(NULLIF(btrim($3), ''), '')
+      AND COALESCE(NULLIF(btrim(variant), ''), '') = COALESCE(NULLIF(btrim($4), ''), '')
+    `,
+    [brand, modelNumber, version, variant]
+  );
+
+  const pciSet = new Set();
+  const upcSet = new Set();
+
+  for (const row of r.rows || []) {
+    const pci = String(row?.pci || '').trim();
+    const upc = String(row?.upc || '').trim();
+
+    if (pci) pciSet.add(pci);
+    if (upc) upcSet.add(upc);
+  }
+
+  if (!pciSet.size && fallbackPci) pciSet.add(fallbackPci);
+  if (!upcSet.size && fallbackUpc) upcSet.add(fallbackUpc);
+
+  return {
+    pcis: [...pciSet],
+    upcs: [...upcSet]
+  };
 }
 
 async function getVariantsFromCatalog(client, catalogIdentity) {
@@ -1526,6 +1573,20 @@ router.get('/api/community/:key', async (req, res) => {
     const pci = String(selectedKeys.pci || '').trim();
     const upc = String(selectedKeys.upc || '').trim();
 
+    const colorGroupKeys = await getColorGroupKeysFromCatalog(
+      client,
+      selectedCatalog || null,
+      selectedKeys
+    );
+
+    const groupPcisUpper = (Array.isArray(colorGroupKeys?.pcis) ? colorGroupKeys.pcis : [])
+      .map(v => String(v || '').trim().toUpperCase())
+      .filter(Boolean);
+
+    const groupUpcsRaw = (Array.isArray(colorGroupKeys?.upcs) ? colorGroupKeys.upcs : [])
+      .map(v => String(v || '').trim())
+      .filter(Boolean);
+
     if (!pci && !upc) {
       return res.json({
         ok: true,
@@ -1552,13 +1613,28 @@ router.get('/api/community/:key', async (req, res) => {
       FROM public.community_posts
       WHERE is_public = true
         AND (
-          ($1 <> '' AND product_pci IS NOT NULL AND btrim(product_pci) <> '' AND upper(btrim(product_pci)) = upper(btrim($1)))
+          (
+            coalesce(array_length($1::text[], 1), 0) > 0
+            AND product_pci IS NOT NULL
+            AND btrim(product_pci) <> ''
+            AND upper(btrim(product_pci)) = ANY($1::text[])
+          )
           OR
-          ($2 <> '' AND product_upc IS NOT NULL AND btrim(product_upc) <> '' AND norm_upc(product_upc) = norm_upc($2))
+          (
+            coalesce(array_length($2::text[], 1), 0) > 0
+            AND product_upc IS NOT NULL
+            AND btrim(product_upc) <> ''
+            AND norm_upc(product_upc) = ANY(
+              ARRAY(
+                SELECT norm_upc(x)
+                FROM unnest($2::text[]) AS x
+              )
+            )
+          )
         )
       GROUP BY post_type
       `,
-      [pci, upc]
+      [groupPcisUpper, groupUpcsRaw]
     );
 
     const counts = {
@@ -1590,15 +1666,31 @@ router.get('/api/community/:key', async (req, res) => {
         ON u.id = p.user_id
       WHERE p.is_public = true
         AND p.post_type = 'tip'
-        AND (
-          ($1 <> '' AND p.product_pci IS NOT NULL AND btrim(p.product_pci) <> '' AND upper(btrim(p.product_pci)) = upper(btrim($1)))
+        AND 
+        (
+          (
+            coalesce(array_length($1::text[], 1), 0) > 0
+            AND p.product_pci IS NOT NULL
+            AND btrim(p.product_pci) <> ''
+            AND upper(btrim(p.product_pci)) = ANY($1::text[])
+          )
           OR
-          ($2 <> '' AND p.product_upc IS NOT NULL AND btrim(p.product_upc) <> '' AND norm_upc(p.product_upc) = norm_upc($2))
+          (
+            coalesce(array_length($2::text[], 1), 0) > 0
+            AND p.product_upc IS NOT NULL
+            AND btrim(p.product_upc) <> ''
+            AND norm_upc(p.product_upc) = ANY(
+              ARRAY(
+                SELECT norm_upc(x)
+                FROM unnest($2::text[]) AS x
+              )
+            )
+          )
         )
       ORDER BY coalesce(p.visited_at::timestamp, p.created_at) DESC, p.created_at DESC
       LIMIT 12
       `,
-      [pci, upc]
+      [groupPcisUpper, groupUpcsRaw]
     );
 
     const questionsRes = await client.query(
@@ -1620,10 +1712,26 @@ router.get('/api/community/:key', async (req, res) => {
    AND a.is_public = true
   WHERE p.is_public = true
     AND p.post_type = 'question'
-    AND (
-      ($1 <> '' AND p.product_pci IS NOT NULL AND btrim(p.product_pci) <> '' AND upper(btrim(p.product_pci)) = upper(btrim($1)))
+    AND 
+    (
+      (
+        coalesce(array_length($1::text[], 1), 0) > 0
+        AND p.product_pci IS NOT NULL
+        AND btrim(p.product_pci) <> ''
+        AND upper(btrim(p.product_pci)) = ANY($1::text[])
+      )
       OR
-      ($2 <> '' AND p.product_upc IS NOT NULL AND btrim(p.product_upc) <> '' AND norm_upc(p.product_upc) = norm_upc($2))
+      (
+        coalesce(array_length($2::text[], 1), 0) > 0
+        AND p.product_upc IS NOT NULL
+        AND btrim(p.product_upc) <> ''
+        AND norm_upc(p.product_upc) = ANY(
+          ARRAY(
+            SELECT norm_upc(x)
+            FROM unnest($2::text[]) AS x
+          )
+        )
+      )
     )
   GROUP BY
     p.id,
@@ -1638,7 +1746,7 @@ router.get('/api/community/:key', async (req, res) => {
     p.created_at DESC
   LIMIT 20
   `,
-  [pci, upc]
+  [groupPcisUpper, groupUpcsRaw]
 );
 
     const reviewsRes = await client.query(
@@ -1656,15 +1764,31 @@ router.get('/api/community/:key', async (req, res) => {
         ON u.id = p.user_id
       WHERE p.is_public = true
         AND p.post_type = 'review'
-        AND (
-          ($1 <> '' AND p.product_pci IS NOT NULL AND btrim(p.product_pci) <> '' AND upper(btrim(p.product_pci)) = upper(btrim($1)))
+        AND 
+        (
+          (
+            coalesce(array_length($1::text[], 1), 0) > 0
+            AND p.product_pci IS NOT NULL
+            AND btrim(p.product_pci) <> ''
+            AND upper(btrim(p.product_pci)) = ANY($1::text[])
+          )
           OR
-          ($2 <> '' AND p.product_upc IS NOT NULL AND btrim(p.product_upc) <> '' AND norm_upc(p.product_upc) = norm_upc($2))
+          (
+            coalesce(array_length($2::text[], 1), 0) > 0
+            AND p.product_upc IS NOT NULL
+            AND btrim(p.product_upc) <> ''
+            AND norm_upc(p.product_upc) = ANY(
+              ARRAY(
+                SELECT norm_upc(x)
+                FROM unnest($2::text[]) AS x
+              )
+            )
+          )
         )
       ORDER BY p.created_at DESC
       LIMIT 12
       `,
-      [pci, upc]
+      [groupPcisUpper, groupUpcsRaw]
     );
 
     return res.json({
@@ -1947,6 +2071,20 @@ router.post('/api/community/:key/post', async (req, res) => {
     const pci = cleanText(selectedKeys.pci);
     const upc = cleanText(selectedKeys.upc);
 
+    const colorGroupKeys = await getColorGroupKeysFromCatalog(
+      client,
+      selectedCatalog || null,
+      selectedKeys
+    );
+
+    const groupPcisUpper = (Array.isArray(colorGroupKeys?.pcis) ? colorGroupKeys.pcis : [])
+      .map(v => String(v).trim().toUpperCase())
+      .filter(Boolean);
+
+    const groupUpcsRaw = (Array.isArray(colorGroupKeys?.upcs) ? colorGroupKeys.upcs : [])
+      .map(v => String(v).trim())
+      .filter(Boolean);
+
     if (!pci && !upc) {
       return res.status(400).json({
         ok: false,
@@ -2005,9 +2143,24 @@ router.post('/api/community/:key/post', async (req, res) => {
       WHERE user_id = $1
         AND post_type = $2
         AND (
-          ($3 <> '' AND product_pci IS NOT NULL AND btrim(product_pci) <> '' AND upper(btrim(product_pci)) = upper(btrim($3)))
+          (
+            coalesce(array_length($3::text[], 1), 0) > 0
+            AND product_pci IS NOT NULL
+            AND btrim(product_pci) <> ''
+            AND upper(btrim(product_pci)) = ANY($3::text[])
+          )
           OR
-          ($4 <> '' AND product_upc IS NOT NULL AND btrim(product_upc) <> '' AND norm_upc(product_upc) = norm_upc($4))
+          (
+            coalesce(array_length($4::text[], 1), 0) > 0
+            AND product_upc IS NOT NULL
+            AND btrim(product_upc) <> ''
+            AND norm_upc(product_upc) = ANY(
+              ARRAY(
+                SELECT norm_upc(x)
+                FROM unnest($4::text[]) AS x
+              )
+            )
+          )
         )
         AND lower(
           regexp_replace(
@@ -2020,7 +2173,7 @@ router.post('/api/community/:key/post', async (req, res) => {
         AND created_at >= now() - interval '7 days'
       LIMIT 1
       `,
-      [userId, payload.post_type, pci, upc, spamKey]
+      [userId, payload.post_type, groupPcisUpper, groupUpcsRaw, spamKey]
     );
 
     if (duplicateRes.rowCount) {
