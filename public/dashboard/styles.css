@@ -1878,6 +1878,10 @@ aside{
   display:none !important;
 }
 
+#marketingImagesContent {
+  margin-top: 14px;
+}
+
 .sidebar-empty{
   color:var(--muted);
   font-size:16px;
@@ -2737,7 +2741,6 @@ button.pc-lineup-model{
 
 .pc-marketing-tile{
   margin:0;
-  border:1px solid var(--line);
   border-radius:16px;
   overflow:hidden;
   background:var(--surface);
@@ -2746,7 +2749,6 @@ button.pc-lineup-model{
 .pc-marketing-tile img{
   width:100%;
   display:block;
-  aspect-ratio:16 / 9;
   object-fit:cover;
   background:#fff;
 }
@@ -2884,7 +2886,7 @@ button.pc-lineup-model{
 }
 
 .pc-rv-expert-verdict{
-  padding-top: 4px;
+  padding-top: 8px;
   display:block;
   font-size:16px;
   line-height:1.55;
