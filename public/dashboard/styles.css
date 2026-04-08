@@ -853,7 +853,7 @@ aside{
 
 .sidebar-panel{
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   margin-top: 0;
   flex: 1 1 auto;
