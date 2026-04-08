@@ -917,7 +917,6 @@
 
   // ─── Boot ─────────────────────────────────────────────────────────────────
   await Promise.all([
-    loadPartial("site-header", "/partials/header.html"),
     loadPartial("site-footer", "/partials/footer.html"),
   ]);
 
