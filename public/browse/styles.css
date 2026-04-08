@@ -290,12 +290,11 @@ body{
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid var(--spec-pill-border, rgba(0,0,0,0.12));
   background: var(--spec-pill-bg, #f3f4f6);
   color: var(--spec-pill-text, #111);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
