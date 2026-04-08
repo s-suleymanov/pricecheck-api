@@ -308,16 +308,12 @@
         try { aborter.abort(); } catch {}
       }
       aborter = null;
-
-      input.removeAttribute("aria-activedescendant");
-      input.setAttribute("aria-expanded", "false");
       clearInlineOnly();
     }
 
     function openIfAny() {
       parent.classList.toggle("is-open", items.length > 0);
       box.hidden = items.length === 0;
-      input.setAttribute("aria-expanded", items.length ? "true" : "false");
     }
 
     function render() {
@@ -350,10 +346,6 @@
         .join("");
 
       openIfAny();
-
-      if (active >= 0) {
-        input.setAttribute("aria-activedescendant", `${box.id}-opt-${active}`);
-      }
     }
 
     function setActive(idx) {
@@ -482,7 +474,6 @@
 
     input.setAttribute("autocomplete", "off");
     input.setAttribute("aria-controls", box.id);
-    input.setAttribute("aria-expanded", "false");
 
     restoreInputValue(input, { force: false });
 
