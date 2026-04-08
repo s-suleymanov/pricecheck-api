@@ -322,7 +322,6 @@
       box.innerHTML = items
         .map((it, idx) => {
           const id = `${box.id}-opt-${idx}`;
-          const isPage = it.kind === "page";
           const pill =
             it.kind === "brand" ? "Brand" :
             it.kind === "category" ? "Category" :
