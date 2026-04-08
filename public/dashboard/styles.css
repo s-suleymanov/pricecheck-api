@@ -2969,12 +2969,19 @@ button.pc-lineup-model{
 
 .pc-rv-expert-title-row{
   display:flex;  
-  margin-top:4px;
-  font-size: 20px;
+  font-size: 22px;
   align-items:center;
   gap:8px;
   min-width:0;
 }
+
+.pc-rv-expert-score {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+}
+
 
 .pc-rv-expert-title{
   line-height:1.4;

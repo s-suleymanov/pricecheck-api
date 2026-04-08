@@ -21,6 +21,7 @@ const SOURCE_META = {
   google: { name: 'Google' },
   rtings: { name: 'RTINGS' },
   pcmag: { name: 'PCMag' },
+  wired: { name: 'Wired' },
   verge: { name: 'The Verge' },
   wirecutter: { name: 'Wirecutter' },
   tomsguide: { name: "Tom's Guide" },
