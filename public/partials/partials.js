@@ -663,7 +663,6 @@
     }
   }
 
-  // ─── Auth-gated product actions ───────────────────────────────────────────
   function wireAuthGatedProductActions() {
     if (document._pcAuthGatedProductActionsBound) return;
     document._pcAuthGatedProductActionsBound = true;
@@ -671,11 +670,14 @@
     document.addEventListener("click", e => {
       const target = e.target?.closest?.(".ph-tool");
       if (!target) return;
+      if (target.id === "phShortlistBtn") return;
       if (clean(target.getAttribute("data-pc-plus")) === "1") return;
       if (!!(pcAuthUser && pcAuthUser.email)) return;
 
       e.preventDefault(); e.stopPropagation();
-      if (typeof e.stopImmediatePropagation === "function") e.stopImmediatePropagation();
+      if (typeof e.stopImmediatePropagation === "function") {
+        e.stopImmediatePropagation();
+      }
       try { window.pcCloseAccountMenu?.(); } catch (_e) {}
       window.pcOpenSignIn?.();
     }, true);
