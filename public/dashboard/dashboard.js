@@ -3650,6 +3650,11 @@ function initDashboardShortlistUi() {
 
     $('#pTitle').textContent = title;
 
+    const verifiedDot = document.getElementById('pVerifiedDot');
+    if (verifiedDot) {
+      verifiedDot.hidden = !title || title === 'Product' || /^loading\.{0,3}$/i.test(String(title).trim());
+    }
+
     const pIdsEl = $('#pIds');
     if (pIdsEl) {
       pIdsEl.innerHTML = '';
