@@ -3722,6 +3722,8 @@ button.pc-lineup-model{
   .ph-topbar__side{
     width:100%;
     align-items:center;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .ph-rating-summary{
