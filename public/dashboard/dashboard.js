@@ -5787,9 +5787,23 @@ function renderSidebarSpecs(){
 }
 
 function normalizeMediaInput(raw){
-  if (Array.isArray(raw)) return raw;
-  if (raw && typeof raw === 'object' && Array.isArray(raw.items)) return raw.items;
-  return [];
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((item) => {
+      if (typeof item === 'string') {
+        return item.trim();
+      }
+
+      if (item && typeof item === 'object') {
+        const url = String(item.url || item.src || '').trim();
+        return url || '';
+      }
+
+      return '';
+    })
+    .filter(Boolean)
+    .filter((url, index, arr) => arr.indexOf(url) === index);
 }
 
 function safeUrl(raw){
@@ -5819,23 +5833,6 @@ function mediaSource(){
   return [];
 }
 
-function detectImageUrl(raw){
-  const url = safeUrl(raw);
-  if (!url) return null;
-
-  const host = String(url.hostname || '').toLowerCase();
-  const pathname = String(url.pathname || '').toLowerCase();
-
-  if (/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(pathname)) return url.href;
-
-  // Target Scene7 image URLs
-  if (host.endsWith('target.scene7.com') && pathname.includes('/is/image/')) {
-    return url.href;
-  }
-
-  return null;
-}
-
 function detectDirectVideoUrl(raw){
   const url = safeUrl(raw);
   if (!url) return null;
@@ -5847,119 +5844,15 @@ function detectDirectVideoUrl(raw){
 }
 
 function parseHeroMediaItem(input){
-  const obj = (typeof input === 'string')
-    ? { url: input }
-    : (input && typeof input === 'object' ? input : null);
-
-  if (!obj) return null;
-
-  const rawUrl = String(obj.url || obj.src || '').trim();
+  const rawUrl = String(input || '').trim();
   if (!rawUrl) return null;
-
-  const explicitType = String(obj.type || obj.kind || '').trim().toLowerCase();
-  const title = String(obj.title || '').trim();
 
   const url = safeUrl(rawUrl);
   if (!url) return null;
 
   const host = url.hostname.toLowerCase().replace(/^www\./, '');
   const path = url.pathname || '';
-
-  // explicit image always wins
-  if (explicitType === 'image') {
-    return {
-      group: 'images',
-      title,
-      imageUrl: rawUrl
-    };
-  }
-
-  // explicit short always wins
-  if (explicitType === 'short') {
-    if (host.endsWith('tiktok.com')) {
-      const m = path.match(/\/video\/(\d+)/i);
-      if (m && m[1]) {
-        return {
-          group: 'shorts',
-          title,
-          embedUrl: `https://www.tiktok.com/player/v1/${m[1]}`,
-          frameClass: 'ph-media-embed ph-media-embed--vertical'
-        };
-      }
-    }
-
-    if (host.endsWith('instagram.com')) {
-      const m = path.match(/^\/(reel|p)\/([^/?#]+)/i);
-      if (m) {
-        return {
-          group: 'shorts',
-          title,
-          embedUrl: `https://www.instagram.com/${m[1]}/${m[2]}/embed`,
-          frameClass: 'ph-media-embed ph-media-embed--vertical'
-        };
-      }
-    }
-  }
-
-  // explicit video supports youtube embeds
-  if (explicitType === 'video') {
-    if (host.endsWith('youtube.com')) {
-      const videoId = url.searchParams.get('v');
-      if (videoId) {
-        return {
-          group: 'videos',
-          title,
-          embedUrl: `https://www.youtube.com/embed/${videoId}`,
-          frameClass: 'ph-media-embed'
-        };
-      }
-    }
-
-    if (host === 'youtu.be') {
-      const videoId = path.replace(/^\/+/, '').split('/')[0];
-      if (videoId) {
-        return {
-          group: 'videos',
-          title,
-          embedUrl: `https://www.youtube.com/embed/${videoId}`,
-          frameClass: 'ph-media-embed'
-        };
-      }
-    }
-
-    const directVideoUrl = detectDirectVideoUrl(rawUrl);
-    if (directVideoUrl) {
-      return {
-        group: 'videos',
-        title,
-        videoUrl: directVideoUrl
-      };
-    }
-
-    return null;
-  }
-
-  // auto-detect normal image files
-  const imageUrl = detectImageUrl(rawUrl);
-  if (imageUrl) {
-    return {
-      group: 'images',
-      title,
-      imageUrl
-    };
-  }
-
-  // auto-detect direct video files
-  const directVideoUrl = detectDirectVideoUrl(rawUrl);
-  if (directVideoUrl) {
-    return {
-      group: 'videos',
-      title,
-      videoUrl: directVideoUrl
-    };
-  }
-
-  // auto-detect TikTok
+  const title = '';
   if (host.endsWith('tiktok.com')) {
     const m = path.match(/\/video\/(\d+)/i);
     if (m && m[1]) {
@@ -5972,20 +5865,40 @@ function parseHeroMediaItem(input){
     }
   }
 
-  // auto-detect Instagram
   if (host.endsWith('instagram.com')) {
-    const m = path.match(/^\/(reel|p)\/([^/?#]+)/i);
-    if (m) {
+    const reelMatch = path.match(/^\/reel\/([^/?#]+)/i);
+    if (reelMatch) {
       return {
         group: 'shorts',
         title,
-        embedUrl: `https://www.instagram.com/${m[1]}/${m[2]}/embed`,
+        embedUrl: `https://www.instagram.com/reel/${reelMatch[1]}/embed`,
+        frameClass: 'ph-media-embed ph-media-embed--vertical'
+      };
+    }
+
+    const postMatch = path.match(/^\/p\/([^/?#]+)/i);
+    if (postMatch) {
+      return {
+        group: 'shorts',
+        title,
+        embedUrl: `https://www.instagram.com/p/${postMatch[1]}/embed`,
+        frameClass: 'ph-media-embed ph-media-embed--vertical'
+      };
+    }
+  }
+  if (host.endsWith('youtube.com')) {
+    const shortsMatch = path.match(/^\/shorts\/([^/?#]+)/i);
+    if (shortsMatch && shortsMatch[1]) {
+      return {
+        group: 'shorts',
+        title,
+        embedUrl: `https://www.youtube.com/embed/${shortsMatch[1]}`,
         frameClass: 'ph-media-embed ph-media-embed--vertical'
       };
     }
   }
 
-  // auto-detect YouTube
+
   if (host.endsWith('youtube.com')) {
     const videoId = url.searchParams.get('v');
     if (videoId) {
@@ -6010,7 +5923,20 @@ function parseHeroMediaItem(input){
     }
   }
 
-  return null;
+  const directVideoUrl = detectDirectVideoUrl(rawUrl);
+  if (directVideoUrl) {
+    return {
+      group: 'videos',
+      title,
+      videoUrl: directVideoUrl
+    };
+  }
+
+  return {
+    group: 'images',
+    title,
+    imageUrl: url.href
+  };
 }
 
 function getActiveHeroMediaList(){
