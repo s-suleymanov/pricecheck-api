@@ -51,8 +51,7 @@
     followingBrand: false,
     followStateKnown: false,
     followBusy: false,
-    mediaGroups: { images: [], videos: [], shorts: [] },
-    activeMediaGroup: 'images',
+    mediaItems: [],
     activeMediaIndex: 0,
     mediaBound: false,
     community: {
@@ -223,6 +222,20 @@ function mediaSource(){
   return [];
 }
 
+function parseImageMediaItem(input){
+  const rawUrl = String(input || '').trim();
+  if (!rawUrl) return null;
+
+  const url = safeMediaUrl(rawUrl);
+  if (!url) return null;
+
+  return {
+    imageUrl: url.href,
+    thumb: url.href,
+    title: ''
+  };
+}
+
 function safeMediaUrl(raw){
   const s = String(raw || '').trim();
   if (!s) return null;
@@ -237,129 +250,8 @@ function safeMediaUrl(raw){
   }
 }
 
-function detectDirectVideoUrl(raw){
-  const url = safeMediaUrl(raw);
-  if (!url) return null;
-
-  const pathname = String(url.pathname || '').toLowerCase();
-  if (/\.(mp4|webm|ogg|mov)$/i.test(pathname)) return url.href;
-
-  return null;
-}
-
-function parseMediaItem(input){
-  const rawUrl = String(input || '').trim();
-  if (!rawUrl) return null;
-
-  const url = safeMediaUrl(rawUrl);
-  if (!url) return null;
-
-  const host = url.hostname.toLowerCase().replace(/^www\./, '');
-  const path = String(url.pathname || '');
-  const title = '';
-
-  if (host.endsWith('tiktok.com')) {
-    const m = path.match(/\/video\/(\d+)/i);
-    if (m && m[1]) {
-      return {
-        group: 'shorts',
-        title,
-        embedUrl: `https://www.tiktok.com/player/v1/${m[1]}`,
-        thumb: '',
-        sourceUrl: url.href
-      };
-    }
-  }
-
-  if (host.endsWith('instagram.com')) {
-    const reelMatch = path.match(/^\/reel\/([^/?#]+)/i);
-    if (reelMatch && reelMatch[1]) {
-      return {
-        group: 'shorts',
-        title,
-        embedUrl: `https://www.instagram.com/reel/${reelMatch[1]}/embed`,
-        thumb: '',
-        sourceUrl: url.href
-      };
-    }
-
-    const postMatch = path.match(/^\/p\/([^/?#]+)/i);
-    if (postMatch && postMatch[1]) {
-      return {
-        group: 'shorts',
-        title,
-        embedUrl: `https://www.instagram.com/p/${postMatch[1]}/embed`,
-        thumb: '',
-        sourceUrl: url.href
-      };
-    }
-  }
-
-  if (host.endsWith('youtube.com')) {
-    const shortsMatch = path.match(/^\/shorts\/([^/?#]+)/i);
-    if (shortsMatch && shortsMatch[1]) {
-      return {
-        group: 'shorts',
-        title,
-        embedUrl: `https://www.youtube.com/embed/${shortsMatch[1]}`,
-        thumb: `https://img.youtube.com/vi/${shortsMatch[1]}/hqdefault.jpg`,
-        sourceUrl: url.href
-      };
-    }
-
-    const videoId = url.searchParams.get('v');
-    if (videoId) {
-      return {
-        group: 'videos',
-        title,
-        embedUrl: `https://www.youtube.com/embed/${videoId}`,
-        thumb: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-        sourceUrl: url.href
-      };
-    }
-  }
-
-  if (host === 'youtu.be') {
-    const videoId = path.replace(/^\/+/, '').split('/')[0];
-    if (videoId) {
-      return {
-        group: 'videos',
-        title,
-        embedUrl: `https://www.youtube.com/embed/${videoId}`,
-        thumb: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-        sourceUrl: url.href
-      };
-    }
-  }
-
-  const directVideo = detectDirectVideoUrl(rawUrl);
-  if (directVideo) {
-    return {
-      group: 'videos',
-      title,
-      videoUrl: directVideo,
-      thumb: '',
-      sourceUrl: url.href
-    };
-  }
-
-  return {
-    group: 'images',
-    title,
-    imageUrl: url.href,
-    thumb: url.href,
-    sourceUrl: url.href
-  };
-}
-
-function getActiveHeroMediaList(){
-  const group = String(state.activeMediaGroup || 'images');
-  const groups = state.mediaGroups || {};
-  return Array.isArray(groups[group]) ? groups[group] : [];
-}
-
 function clampHeroMediaIndex(){
-  const list = getActiveHeroMediaList();
+  const list = Array.isArray(state.mediaItems) ? state.mediaItems : [];
 
   if (!list.length) {
     state.activeMediaIndex = 0;
@@ -371,7 +263,7 @@ function clampHeroMediaIndex(){
 }
 
 function heroMediaMarkup(item){
-  if (!item) {
+  if (!item || !item.imageUrl) {
     return `
       <div class="ph-media-stage__placeholder">
         <div class="ph-media-stage__title">No media yet</div>
@@ -380,136 +272,58 @@ function heroMediaMarkup(item){
     `;
   }
 
-  if (item.group === 'images' && item.imageUrl) {
-    return `
-      <div class="ph-media-asset ph-media-asset--image">
-        <img
-          src="${escapeHtml(item.imageUrl)}"
-          alt="${escapeHtml(item.title || 'Product media')}"
-          loading="lazy"
-          decoding="async"
-        >
-      </div>
-    `;
-  }
-
-  if (item.group === 'videos' && item.videoUrl) {
-    return `
-      <div class="ph-media-asset ph-media-asset--video">
-        <video controls playsinline preload="metadata" src="${escapeHtml(item.videoUrl)}"></video>
-      </div>
-    `;
-  }
-
-  if (item.embedUrl) {
-    return `
-      <div class="ph-media-embed">
-        <iframe
-          src="${escapeHtml(item.embedUrl)}"
-          title="${escapeHtml(item.title || item.group || 'Media')}"
-          loading="lazy"
-          referrerpolicy="strict-origin-when-cross-origin"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen
-        ></iframe>
-      </div>
-    `;
-  }
-
   return `
-    <div class="ph-media-stage__placeholder">
-      <div class="ph-media-stage__title">Unsupported media</div>
-      <div class="ph-media-stage__sub">This media item could not be displayed.</div>
+    <div class="ph-media-asset ph-media-asset--image">
+      <img
+        src="${escapeHtml(item.imageUrl)}"
+        alt="${escapeHtml(item.title || 'Product media')}"
+        loading="lazy"
+        decoding="async"
+      >
     </div>
   `;
 }
 
 function renderHeroMediaStage(){
   const inner = document.getElementById('phMediaInner');
-  const counter = document.getElementById('phMediaCounter');
-  const prev = document.getElementById('phMediaPrev');
-  const next = document.getElementById('phMediaNext');
   const stage = document.getElementById('phMediaStage');
 
-  if (!inner || !counter || !prev || !next || !stage) return;
+  if (!inner || !stage) return;
 
-  const list = getActiveHeroMediaList();
+  const list = Array.isArray(state.mediaItems) ? state.mediaItems : [];
   clampHeroMediaIndex();
 
   const item = list[state.activeMediaIndex] || null;
   inner.innerHTML = heroMediaMarkup(item);
 
-  if (list.length) {
-    counter.hidden = false;
-    counter.textContent = `${state.activeMediaIndex + 1} / ${list.length}`;
-  } else {
-    counter.hidden = true;
-    counter.textContent = '';
-  }
-  prev.disabled = list.length <= 1;
-  next.disabled = list.length <= 1;
-
   stage.classList.toggle('is-empty', !list.length);
   stage.classList.remove('is-vertical');
 }
 
-function bindHeroMediaEventsOnce(){
-  if (state.mediaBound) return;
-  state.mediaBound = true;
-
-  const prev = document.getElementById('phMediaPrev');
-  const next = document.getElementById('phMediaNext');
-
-  if (prev) {
-    prev.addEventListener('click', () => {
-      const list = getActiveHeroMediaList();
-      if (list.length <= 1) return;
-
-      state.activeMediaIndex = (state.activeMediaIndex - 1 + list.length) % list.length;
-      renderHeroMediaStage();
-      updateMediaStripActiveState();
-    });
-  }
-
-  if (next) {
-    next.addEventListener('click', () => {
-      const list = getActiveHeroMediaList();
-      if (list.length <= 1) return;
-
-      state.activeMediaIndex = (state.activeMediaIndex + 1) % list.length;
-      renderHeroMediaStage();
-      updateMediaStripActiveState();
-    });
-  }
-}
-
-function mediaJumpCardMarkup(kind, count){
-  const isLeft = kind === 'videos';
-  const label = isLeft ? 'Videos' : 'Short-form';
+function mediaChevronCardMarkup(direction){
+  const isLeft = direction === 'left';
 
   const icon = isLeft
     ? `
       <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-        <path d="M120-160q-17 0-28.5-11.5T80-200v-560q0-17 11.5-28.5T120-800q8 0 35.5 9.5T229-770q46 11 108.5 20.5T480-740q80 0 142.5-9.5T731-770q46-11 73.5-20.5T840-800q17 0 28.5 11.5T880-760v560q0 17-11.5 28.5T840-160q-8 0-35.5-9.5T731-190q-46-11-108.5-20.5T480-220q-80 0-142.5 9.5T229-190q-46 11-73.5 20.5T120-160Zm40-94q78-23 158.5-34.5T480-300q81 0 161.5 11.5T800-254v-451q-78 23-158.5 34T480-660q-81 0-161.5-11T160-705v451Zm320-226Z"></path>
+        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z"></path>
       </svg>
     `
     : `
       <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-        <path d="M200-80q-17 0-28.5-11.5T160-120q0-8 9.5-35.5T190-229q11-46 20.5-108.5T220-480q0-80-9.5-142.5T190-731q-11-46-20.5-73.5T160-840q0-17 11.5-28.5T200-880h560q17 0 28.5 11.5T800-840q0 8-9.5 35.5T770-731q-11 46-20.5 108.5T740-480q0 80 9.5 142.5T770-229q11 46 20.5 73.5T800-120q0 17-11.5 28.5T760-80H200Zm100-400q0 81-11.5 161.5T254-160h451q-23-78-34-158.5T660-480q0-81 11-161.5T705-800H254q23 78 34.5 158.5T300-480Zm180 0Z"></path>
+        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"></path>
       </svg>
     `;
 
   return `
     <button
       type="button"
-      class="pc-media-strip__jump${state.activeMediaGroup === kind ? ' is-active' : ''}"
-      data-media-jump="${escapeHtml(kind)}"
-      aria-label="${escapeHtml(label)}"
-      title="${escapeHtml(label)}"
+      class="pc-media-strip__chevron"
+      data-media-chevron="${escapeHtml(direction)}"
+      aria-label="${isLeft ? 'Previous media' : 'Next media'}"
+      title="${isLeft ? 'Previous media' : 'Next media'}"
     >
-      <span class="pc-media-strip__jump-icon">${icon}</span>
-      <span class="pc-media-strip__jump-label">${escapeHtml(label)}</span>
-      <span class="pc-media-strip__jump-count">${escapeHtml(String(count))}</span>
+      <span class="pc-media-strip__chevron-icon">${icon}</span>
     </button>
   `;
 }
@@ -541,17 +355,7 @@ function updateMediaStripActiveState(){
 
   host.querySelectorAll('[data-media-image-index]').forEach((btn) => {
     const index = Number(btn.getAttribute('data-media-image-index'));
-    const isActive =
-      state.activeMediaGroup === 'images' &&
-      index === state.activeMediaIndex;
-
-    btn.classList.toggle('is-active', isActive);
-    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-  });
-
-  host.querySelectorAll('[data-media-jump]').forEach((btn) => {
-    const kind = String(btn.getAttribute('data-media-jump') || '').trim();
-    const isActive = state.activeMediaGroup === kind;
+    const isActive = index === state.activeMediaIndex;
 
     btn.classList.toggle('is-active', isActive);
     btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
@@ -563,17 +367,15 @@ function renderMediaStrip(){
   const section = document.getElementById('mediaStripSection');
   if (!host || !section) return;
 
-  const images = Array.isArray(state.mediaGroups?.images) ? state.mediaGroups.images : [];
-  const videos = Array.isArray(state.mediaGroups?.videos) ? state.mediaGroups.videos : [];
-  const shorts = Array.isArray(state.mediaGroups?.shorts) ? state.mediaGroups.shorts : [];
+  const images = Array.isArray(state.mediaItems) ? state.mediaItems : [];
 
- if (!images.length && !videos.length && !shorts.length) {
+  if (!images.length) {
     section.hidden = true;
     host.innerHTML = '';
     return;
   }
 
-  if (images.length <= 1 && !videos.length && !shorts.length) {
+  if (images.length <= 1) {
     section.hidden = true;
     host.innerHTML = '';
     return;
@@ -581,40 +383,29 @@ function renderMediaStrip(){
 
   section.hidden = false;
 
-  const existingRow = host.querySelector('.pc-media-strip-row');
-  const existingThumbCount = host.querySelectorAll('[data-media-image-index]').length;
-  const existingJumpCount = host.querySelectorAll('[data-media-jump]').length;
-  const expectedJumpCount = (videos.length ? 1 : 0) + (shorts.length ? 1 : 0);
-
-  if (existingRow && existingThumbCount === images.length && existingJumpCount === expectedJumpCount) {
-    updateMediaStripActiveState();
-    return;
-  }
-
-  const hasVideos = videos.length > 0;
-  const hasShorts = shorts.length > 0;
+  const showSideChevrons = images.length > 1;
 
   host.innerHTML = `
-    <div class="pc-media-strip-row${hasVideos ? ' has-videos' : ''}${hasShorts ? ' has-shorts' : ''}">
+      <div class="pc-media-strip-row">
       ${
-        hasVideos ? `
+        showSideChevrons ? `
           <div class="pc-media-strip-row__side pc-media-strip-row__side--left">
-            ${mediaJumpCardMarkup('videos', videos.length)}
+            ${mediaChevronCardMarkup('left')}
           </div>
         ` : ''
       }
 
       <div class="pc-media-strip-row__center">
         ${images.map((item, index) => {
-          const isActive = state.activeMediaGroup === 'images' && state.activeMediaIndex === index;
+          const isActive = state.activeMediaIndex === index;
           return imageStripCardMarkup(item, index, isActive);
         }).join('')}
       </div>
 
       ${
-        hasShorts ? `
+        showSideChevrons ? `
           <div class="pc-media-strip-row__side pc-media-strip-row__side--right">
-            ${mediaJumpCardMarkup('shorts', shorts.length)}
+            ${mediaChevronCardMarkup('right')}
           </div>
         ` : ''
       }
@@ -626,59 +417,38 @@ function renderMediaStrip(){
       const index = Number(btn.getAttribute('data-media-image-index'));
       if (!Number.isInteger(index) || index < 0 || index >= images.length) return;
 
-      state.activeMediaGroup = 'images';
       state.activeMediaIndex = index;
       renderHeroMediaStage();
       updateMediaStripActiveState();
     });
   });
 
-  host.querySelectorAll('[data-media-jump]').forEach((btn) => {
+  host.querySelectorAll('[data-media-chevron]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const kind = String(btn.getAttribute('data-media-jump') || '').trim();
+      const direction = String(btn.getAttribute('data-media-chevron') || '').trim();
 
-      if (kind === 'videos' && videos.length) {
-        state.activeMediaGroup = 'videos';
-        state.activeMediaIndex = 0;
-        renderHeroMediaStage();
-        updateMediaStripActiveState();
-        return;
+      if (!images.length) return;
+
+      if (direction === 'left') {
+        state.activeMediaIndex = (state.activeMediaIndex - 1 + images.length) % images.length;
+      } else {
+        state.activeMediaIndex = (state.activeMediaIndex + 1) % images.length;
       }
 
-      if (kind === 'shorts' && shorts.length) {
-        state.activeMediaGroup = 'shorts';
-        state.activeMediaIndex = 0;
-        renderHeroMediaStage();
-        updateMediaStripActiveState();
-      }
+      renderHeroMediaStage();
+      updateMediaStripActiveState();
     });
   });
 }
 
 function renderHeroMediaCarousel(){
   const items = normalizeMediaInput(mediaSource())
-    .map(parseMediaItem)
+    .map(parseImageMediaItem)
     .filter(Boolean);
 
-  state.mediaGroups = {
-    images: items.filter(item => item.group === 'images'),
-    videos: items.filter(item => item.group === 'videos'),
-    shorts: items.filter(item => item.group === 'shorts')
-  };
-
-  if (state.mediaGroups.images.length) {
-    state.activeMediaGroup = 'images';
-  } else if (state.mediaGroups.videos.length) {
-    state.activeMediaGroup = 'videos';
-  } else if (state.mediaGroups.shorts.length) {
-    state.activeMediaGroup = 'shorts';
-  } else {
-    state.activeMediaGroup = 'images';
-  }
-
+  state.mediaItems = items;
   state.activeMediaIndex = 0;
 
-  bindHeroMediaEventsOnce();
   renderHeroMediaStage();
   renderMediaStrip();
 }
@@ -3874,12 +3644,10 @@ async function run(raw){
   if (specsCard) specsCard.hidden = true;
   if (specsContent) specsContent.innerHTML = '';
 
-  state.mediaGroups = { images: [], videos: [], shorts: [] };
-state.activeMediaGroup = 'images';
+state.mediaItems = [];
 state.activeMediaIndex = 0;
 
 const mediaInner = document.getElementById('phMediaInner');
-const mediaCounter = document.getElementById('phMediaCounter');
 const mediaStage = document.getElementById('phMediaStage');
 const mediaStripSection = document.getElementById('mediaStripSection');
 const mediaStripPills = document.getElementById('mediaStripPills');
@@ -3893,10 +3661,6 @@ if (mediaInner) {
   `;
 }
 
-  if (mediaCounter) {
-    mediaCounter.hidden = true;
-    mediaCounter.textContent = '';
-  }
   if (mediaStage) mediaStage.classList.remove('is-vertical');
   if (mediaStripSection) mediaStripSection.hidden = true;
   if (mediaStripPills) mediaStripPills.innerHTML = '';
