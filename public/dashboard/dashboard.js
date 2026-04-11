@@ -190,6 +190,499 @@ function normalizeMarketingImagesInput(raw){
     .filter((url, index, arr) => arr.indexOf(url) === index);
 }
 
+function normalizeMediaInput(raw){
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((item) => {
+      if (typeof item === 'string') return item.trim();
+
+      if (item && typeof item === 'object') {
+        return String(item.url || item.src || '').trim();
+      }
+
+      return '';
+    })
+    .filter(Boolean)
+    .filter((url, index, arr) => arr.indexOf(url) === index);
+}
+
+function mediaSource(){
+  const cur = getCurrentVariant() || null;
+
+  if (Array.isArray(cur?.media)) return cur.media;
+  if (cur?.media && typeof cur.media === 'object' && Array.isArray(cur.media.items)) {
+    return cur.media.items;
+  }
+
+  if (Array.isArray(state.identity?.media)) return state.identity.media;
+  if (state.identity?.media && typeof state.identity.media === 'object' && Array.isArray(state.identity.media.items)) {
+    return state.identity.media.items;
+  }
+
+  return [];
+}
+
+function safeMediaUrl(raw){
+  const s = String(raw || '').trim();
+  if (!s) return null;
+
+  try {
+    const u = new URL(s, location.origin);
+    const proto = String(u.protocol || '').toLowerCase();
+    if (proto !== 'http:' && proto !== 'https:') return null;
+    return u;
+  } catch {
+    return null;
+  }
+}
+
+function detectDirectVideoUrl(raw){
+  const url = safeMediaUrl(raw);
+  if (!url) return null;
+
+  const pathname = String(url.pathname || '').toLowerCase();
+  if (/\.(mp4|webm|ogg|mov)$/i.test(pathname)) return url.href;
+
+  return null;
+}
+
+function parseMediaItem(input){
+  const rawUrl = String(input || '').trim();
+  if (!rawUrl) return null;
+
+  const url = safeMediaUrl(rawUrl);
+  if (!url) return null;
+
+  const host = url.hostname.toLowerCase().replace(/^www\./, '');
+  const path = String(url.pathname || '');
+  const title = '';
+
+  if (host.endsWith('tiktok.com')) {
+    const m = path.match(/\/video\/(\d+)/i);
+    if (m && m[1]) {
+      return {
+        group: 'shorts',
+        title,
+        embedUrl: `https://www.tiktok.com/player/v1/${m[1]}`,
+        thumb: '',
+        sourceUrl: url.href
+      };
+    }
+  }
+
+  if (host.endsWith('instagram.com')) {
+    const reelMatch = path.match(/^\/reel\/([^/?#]+)/i);
+    if (reelMatch && reelMatch[1]) {
+      return {
+        group: 'shorts',
+        title,
+        embedUrl: `https://www.instagram.com/reel/${reelMatch[1]}/embed`,
+        thumb: '',
+        sourceUrl: url.href
+      };
+    }
+
+    const postMatch = path.match(/^\/p\/([^/?#]+)/i);
+    if (postMatch && postMatch[1]) {
+      return {
+        group: 'shorts',
+        title,
+        embedUrl: `https://www.instagram.com/p/${postMatch[1]}/embed`,
+        thumb: '',
+        sourceUrl: url.href
+      };
+    }
+  }
+
+  if (host.endsWith('youtube.com')) {
+    const shortsMatch = path.match(/^\/shorts\/([^/?#]+)/i);
+    if (shortsMatch && shortsMatch[1]) {
+      return {
+        group: 'shorts',
+        title,
+        embedUrl: `https://www.youtube.com/embed/${shortsMatch[1]}`,
+        thumb: `https://img.youtube.com/vi/${shortsMatch[1]}/hqdefault.jpg`,
+        sourceUrl: url.href
+      };
+    }
+
+    const videoId = url.searchParams.get('v');
+    if (videoId) {
+      return {
+        group: 'videos',
+        title,
+        embedUrl: `https://www.youtube.com/embed/${videoId}`,
+        thumb: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+        sourceUrl: url.href
+      };
+    }
+  }
+
+  if (host === 'youtu.be') {
+    const videoId = path.replace(/^\/+/, '').split('/')[0];
+    if (videoId) {
+      return {
+        group: 'videos',
+        title,
+        embedUrl: `https://www.youtube.com/embed/${videoId}`,
+        thumb: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+        sourceUrl: url.href
+      };
+    }
+  }
+
+  const directVideo = detectDirectVideoUrl(rawUrl);
+  if (directVideo) {
+    return {
+      group: 'videos',
+      title,
+      videoUrl: directVideo,
+      thumb: '',
+      sourceUrl: url.href
+    };
+  }
+
+  return {
+    group: 'images',
+    title,
+    imageUrl: url.href,
+    thumb: url.href,
+    sourceUrl: url.href
+  };
+}
+
+function getActiveHeroMediaList(){
+  const group = String(state.activeMediaGroup || 'images');
+  const groups = state.mediaGroups || {};
+  return Array.isArray(groups[group]) ? groups[group] : [];
+}
+
+function clampHeroMediaIndex(){
+  const list = getActiveHeroMediaList();
+
+  if (!list.length) {
+    state.activeMediaIndex = 0;
+    return;
+  }
+
+  if (state.activeMediaIndex < 0) state.activeMediaIndex = 0;
+  if (state.activeMediaIndex >= list.length) state.activeMediaIndex = list.length - 1;
+}
+
+function heroMediaMarkup(item){
+  if (!item) {
+    return `
+      <div class="ph-media-stage__placeholder">
+        <div class="ph-media-stage__title">No media yet</div>
+        <div class="ph-media-stage__sub">Media for this product has not been added yet.</div>
+      </div>
+    `;
+  }
+
+  if (item.group === 'images' && item.imageUrl) {
+    return `
+      <div class="ph-media-asset ph-media-asset--image">
+        <img
+          src="${escapeHtml(item.imageUrl)}"
+          alt="${escapeHtml(item.title || 'Product media')}"
+          loading="lazy"
+          decoding="async"
+        >
+      </div>
+    `;
+  }
+
+  if (item.group === 'videos' && item.videoUrl) {
+    return `
+      <div class="ph-media-asset ph-media-asset--video">
+        <video controls playsinline preload="metadata" src="${escapeHtml(item.videoUrl)}"></video>
+      </div>
+    `;
+  }
+
+  if (item.embedUrl) {
+    return `
+      <div class="ph-media-embed">
+        <iframe
+          src="${escapeHtml(item.embedUrl)}"
+          title="${escapeHtml(item.title || item.group || 'Media')}"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        ></iframe>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="ph-media-stage__placeholder">
+      <div class="ph-media-stage__title">Unsupported media</div>
+      <div class="ph-media-stage__sub">This media item could not be displayed.</div>
+    </div>
+  `;
+}
+
+function renderHeroMediaStage(){
+  const inner = document.getElementById('phMediaInner');
+  const counter = document.getElementById('phMediaCounter');
+  const prev = document.getElementById('phMediaPrev');
+  const next = document.getElementById('phMediaNext');
+  const stage = document.getElementById('phMediaStage');
+
+  if (!inner || !counter || !prev || !next || !stage) return;
+
+  const list = getActiveHeroMediaList();
+  clampHeroMediaIndex();
+
+  const item = list[state.activeMediaIndex] || null;
+  inner.innerHTML = heroMediaMarkup(item);
+
+  if (list.length) {
+    counter.hidden = false;
+    counter.textContent = `${state.activeMediaIndex + 1} / ${list.length}`;
+  } else {
+    counter.hidden = true;
+    counter.textContent = '';
+  }
+  prev.disabled = list.length <= 1;
+  next.disabled = list.length <= 1;
+
+  stage.classList.toggle('is-empty', !list.length);
+  stage.classList.remove('is-vertical');
+}
+
+function bindHeroMediaEventsOnce(){
+  if (state.mediaBound) return;
+  state.mediaBound = true;
+
+  const prev = document.getElementById('phMediaPrev');
+  const next = document.getElementById('phMediaNext');
+
+  if (prev) {
+    prev.addEventListener('click', () => {
+      const list = getActiveHeroMediaList();
+      if (list.length <= 1) return;
+
+      state.activeMediaIndex = (state.activeMediaIndex - 1 + list.length) % list.length;
+      renderHeroMediaStage();
+      updateMediaStripActiveState();
+    });
+  }
+
+  if (next) {
+    next.addEventListener('click', () => {
+      const list = getActiveHeroMediaList();
+      if (list.length <= 1) return;
+
+      state.activeMediaIndex = (state.activeMediaIndex + 1) % list.length;
+      renderHeroMediaStage();
+      updateMediaStripActiveState();
+    });
+  }
+}
+
+function mediaJumpCardMarkup(kind, count){
+  const isLeft = kind === 'videos';
+  const label = isLeft ? 'Videos' : 'Short-form';
+
+  const icon = isLeft
+    ? `
+      <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+        <path d="M120-160q-17 0-28.5-11.5T80-200v-560q0-17 11.5-28.5T120-800q8 0 35.5 9.5T229-770q46 11 108.5 20.5T480-740q80 0 142.5-9.5T731-770q46-11 73.5-20.5T840-800q17 0 28.5 11.5T880-760v560q0 17-11.5 28.5T840-160q-8 0-35.5-9.5T731-190q-46-11-108.5-20.5T480-220q-80 0-142.5 9.5T229-190q-46 11-73.5 20.5T120-160Zm40-94q78-23 158.5-34.5T480-300q81 0 161.5 11.5T800-254v-451q-78 23-158.5 34T480-660q-81 0-161.5-11T160-705v451Zm320-226Z"></path>
+      </svg>
+    `
+    : `
+      <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+        <path d="M200-80q-17 0-28.5-11.5T160-120q0-8 9.5-35.5T190-229q11-46 20.5-108.5T220-480q0-80-9.5-142.5T190-731q-11-46-20.5-73.5T160-840q0-17 11.5-28.5T200-880h560q17 0 28.5 11.5T800-840q0 8-9.5 35.5T770-731q-11 46-20.5 108.5T740-480q0 80 9.5 142.5T770-229q11 46 20.5 73.5T800-120q0 17-11.5 28.5T760-80H200Zm100-400q0 81-11.5 161.5T254-160h451q-23-78-34-158.5T660-480q0-81 11-161.5T705-800H254q23 78 34.5 158.5T300-480Zm180 0Z"></path>
+      </svg>
+    `;
+
+  return `
+    <button
+      type="button"
+      class="pc-media-strip__jump${state.activeMediaGroup === kind ? ' is-active' : ''}"
+      data-media-jump="${escapeHtml(kind)}"
+      aria-label="${escapeHtml(label)}"
+      title="${escapeHtml(label)}"
+    >
+      <span class="pc-media-strip__jump-icon">${icon}</span>
+      <span class="pc-media-strip__jump-label">${escapeHtml(label)}</span>
+      <span class="pc-media-strip__jump-count">${escapeHtml(String(count))}</span>
+    </button>
+  `;
+}
+
+function imageStripCardMarkup(item, index, isActive){
+  const thumb = String(item?.thumb || item?.imageUrl || '').trim();
+  if (!thumb) return '';
+
+  return `
+    <button
+      type="button"
+      class="pc-media-strip__thumb${isActive ? ' is-active' : ''}"
+      data-media-image-index="${index}"
+      aria-label="Show image ${index + 1}"
+      aria-pressed="${isActive ? 'true' : 'false'}"
+    >
+      <img
+        src="${escapeHtml(thumb)}"
+        alt="${escapeHtml(item?.title || `Image ${index + 1}`)}"
+        onerror="this.style.visibility='hidden';"
+      >
+    </button>
+  `;
+}
+
+function updateMediaStripActiveState(){
+  const host = document.getElementById('mediaStripPills');
+  if (!host) return;
+
+  host.querySelectorAll('[data-media-image-index]').forEach((btn) => {
+    const index = Number(btn.getAttribute('data-media-image-index'));
+    const isActive =
+      state.activeMediaGroup === 'images' &&
+      index === state.activeMediaIndex;
+
+    btn.classList.toggle('is-active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+
+  host.querySelectorAll('[data-media-jump]').forEach((btn) => {
+    const kind = String(btn.getAttribute('data-media-jump') || '').trim();
+    const isActive = state.activeMediaGroup === kind;
+
+    btn.classList.toggle('is-active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
+
+function renderMediaStrip(){
+  const host = document.getElementById('mediaStripPills');
+  const section = document.getElementById('mediaStripSection');
+  if (!host || !section) return;
+
+  const images = Array.isArray(state.mediaGroups?.images) ? state.mediaGroups.images : [];
+  const videos = Array.isArray(state.mediaGroups?.videos) ? state.mediaGroups.videos : [];
+  const shorts = Array.isArray(state.mediaGroups?.shorts) ? state.mediaGroups.shorts : [];
+
+ if (!images.length && !videos.length && !shorts.length) {
+    section.hidden = true;
+    host.innerHTML = '';
+    return;
+  }
+
+  if (images.length <= 1 && !videos.length && !shorts.length) {
+    section.hidden = true;
+    host.innerHTML = '';
+    return;
+  }
+
+  section.hidden = false;
+
+  const existingRow = host.querySelector('.pc-media-strip-row');
+  const existingThumbCount = host.querySelectorAll('[data-media-image-index]').length;
+  const existingJumpCount = host.querySelectorAll('[data-media-jump]').length;
+  const expectedJumpCount = (videos.length ? 1 : 0) + (shorts.length ? 1 : 0);
+
+  if (existingRow && existingThumbCount === images.length && existingJumpCount === expectedJumpCount) {
+    updateMediaStripActiveState();
+    return;
+  }
+
+  const hasVideos = videos.length > 0;
+  const hasShorts = shorts.length > 0;
+
+  host.innerHTML = `
+    <div class="pc-media-strip-row${hasVideos ? ' has-videos' : ''}${hasShorts ? ' has-shorts' : ''}">
+      ${
+        hasVideos ? `
+          <div class="pc-media-strip-row__side pc-media-strip-row__side--left">
+            ${mediaJumpCardMarkup('videos', videos.length)}
+          </div>
+        ` : ''
+      }
+
+      <div class="pc-media-strip-row__center">
+        ${images.map((item, index) => {
+          const isActive = state.activeMediaGroup === 'images' && state.activeMediaIndex === index;
+          return imageStripCardMarkup(item, index, isActive);
+        }).join('')}
+      </div>
+
+      ${
+        hasShorts ? `
+          <div class="pc-media-strip-row__side pc-media-strip-row__side--right">
+            ${mediaJumpCardMarkup('shorts', shorts.length)}
+          </div>
+        ` : ''
+      }
+    </div>
+  `;
+
+  host.querySelectorAll('[data-media-image-index]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const index = Number(btn.getAttribute('data-media-image-index'));
+      if (!Number.isInteger(index) || index < 0 || index >= images.length) return;
+
+      state.activeMediaGroup = 'images';
+      state.activeMediaIndex = index;
+      renderHeroMediaStage();
+      updateMediaStripActiveState();
+    });
+  });
+
+  host.querySelectorAll('[data-media-jump]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const kind = String(btn.getAttribute('data-media-jump') || '').trim();
+
+      if (kind === 'videos' && videos.length) {
+        state.activeMediaGroup = 'videos';
+        state.activeMediaIndex = 0;
+        renderHeroMediaStage();
+        updateMediaStripActiveState();
+        return;
+      }
+
+      if (kind === 'shorts' && shorts.length) {
+        state.activeMediaGroup = 'shorts';
+        state.activeMediaIndex = 0;
+        renderHeroMediaStage();
+        updateMediaStripActiveState();
+      }
+    });
+  });
+}
+
+function renderHeroMediaCarousel(){
+  const items = normalizeMediaInput(mediaSource())
+    .map(parseMediaItem)
+    .filter(Boolean);
+
+  state.mediaGroups = {
+    images: items.filter(item => item.group === 'images'),
+    videos: items.filter(item => item.group === 'videos'),
+    shorts: items.filter(item => item.group === 'shorts')
+  };
+
+  if (state.mediaGroups.images.length) {
+    state.activeMediaGroup = 'images';
+  } else if (state.mediaGroups.videos.length) {
+    state.activeMediaGroup = 'videos';
+  } else if (state.mediaGroups.shorts.length) {
+    state.activeMediaGroup = 'shorts';
+  } else {
+    state.activeMediaGroup = 'images';
+  }
+
+  state.activeMediaIndex = 0;
+
+  bindHeroMediaEventsOnce();
+  renderHeroMediaStage();
+  renderMediaStrip();
+}
+
 function marketingImagesSource(){
   const cur = getCurrentVariant() || null;
 
@@ -3353,14 +3846,11 @@ async function run(raw){
 
   syncVariantColorSectionVisibility();
 
-  const couponCard = document.getElementById('couponCard');
-  if (couponCard) couponCard.hidden = true;
+  const reviewsCard = document.getElementById('pcReviewsMainCard');
+  const reviewsContent = document.getElementById('pcReviewsMainContent');
 
-  const reviewsCard = document.getElementById('pc-reviews-card');
-  if (reviewsCard) {
-    reviewsCard.hidden = true;
-    reviewsCard.innerHTML = '';
-  }
+  if (reviewsCard) reviewsCard.hidden = true;
+  if (reviewsContent) reviewsContent.innerHTML = '';
 
   $('#offers').innerHTML = '';
   $('#offersNote').textContent = '';
@@ -3384,30 +3874,32 @@ async function run(raw){
   if (specsCard) specsCard.hidden = true;
   if (specsContent) specsContent.innerHTML = '';
 
-  const mediaCard = document.getElementById('mediaCard');
-  if (mediaCard) mediaCard.hidden = true;
-  const mediaContent = document.getElementById('mediaContent');
-  if (mediaContent) mediaContent.innerHTML = '';
-
   state.mediaGroups = { images: [], videos: [], shorts: [] };
-  state.activeMediaGroup = 'images';
-  state.activeMediaIndex = 0;
+state.activeMediaGroup = 'images';
+state.activeMediaIndex = 0;
 
-  const mediaInner = document.getElementById('phMediaInner');
-  const mediaCounter = document.getElementById('phMediaCounter');
-  const mediaStage = document.getElementById('phMediaStage');
+const mediaInner = document.getElementById('phMediaInner');
+const mediaCounter = document.getElementById('phMediaCounter');
+const mediaStage = document.getElementById('phMediaStage');
+const mediaStripSection = document.getElementById('mediaStripSection');
+const mediaStripPills = document.getElementById('mediaStripPills');
 
-  if (mediaInner) {
-    mediaInner.innerHTML = `
-      <div class="ph-media-stage__placeholder">
-        <div class="ph-media-stage__title">No media yet</div>
-        <div class="ph-media-stage__sub">Media for this product has not been added yet.</div>
-      </div>
-    `;
+if (mediaInner) {
+  mediaInner.innerHTML = `
+    <div class="ph-media-stage__placeholder">
+      <div class="ph-media-stage__title">No media yet</div>
+      <div class="ph-media-stage__sub">Media for this product has not been added yet.</div>
+    </div>
+  `;
+}
+
+  if (mediaCounter) {
+    mediaCounter.hidden = true;
+    mediaCounter.textContent = '';
   }
-
-  if (mediaCounter) mediaCounter.textContent = '0 / 0';
   if (mediaStage) mediaStage.classList.remove('is-vertical');
+  if (mediaStripSection) mediaStripSection.hidden = true;
+  if (mediaStripPills) mediaStripPills.innerHTML = '';
 
   const timelineCard = document.getElementById('year');
   const timelineContent = document.getElementById('timelineContent');
@@ -5784,328 +6276,6 @@ function renderSidebarSpecs(){
       `).join('')}
     </div>
   `;
-}
-
-function normalizeMediaInput(raw){
-  if (!Array.isArray(raw)) return [];
-
-  return raw
-    .map((item) => {
-      if (typeof item === 'string') {
-        return item.trim();
-      }
-
-      if (item && typeof item === 'object') {
-        const url = String(item.url || item.src || '').trim();
-        return url || '';
-      }
-
-      return '';
-    })
-    .filter(Boolean)
-    .filter((url, index, arr) => arr.indexOf(url) === index);
-}
-
-function safeUrl(raw){
-  const s = String(raw || '').trim();
-  if (!s) return null;
-
-  try {
-    const u = new URL(s, location.origin);
-    const proto = String(u.protocol || '').toLowerCase();
-
-    if (proto !== 'http:' && proto !== 'https:') return null;
-    return u;
-  } catch {
-    return null;
-  }
-}
-
-function mediaSource(){
-  const cur = getCurrentVariant() || null;
-
-  if (Array.isArray(cur?.media)) return cur.media;
-  if (cur?.media && typeof cur.media === 'object' && Array.isArray(cur.media.items)) return cur.media.items;
-
-  if (Array.isArray(state.identity?.media)) return state.identity.media;
-  if (state.identity?.media && typeof state.identity.media === 'object' && Array.isArray(state.identity.media.items)) return state.identity.media.items;
-
-  return [];
-}
-
-function detectDirectVideoUrl(raw){
-  const url = safeUrl(raw);
-  if (!url) return null;
-
-  const pathname = String(url.pathname || '').toLowerCase();
-  if (/\.(mp4|webm|ogg|mov)$/i.test(pathname)) return url.href;
-
-  return null;
-}
-
-function parseHeroMediaItem(input){
-  const rawUrl = String(input || '').trim();
-  if (!rawUrl) return null;
-
-  const url = safeUrl(rawUrl);
-  if (!url) return null;
-
-  const host = url.hostname.toLowerCase().replace(/^www\./, '');
-  const path = url.pathname || '';
-  const title = '';
-  if (host.endsWith('tiktok.com')) {
-    const m = path.match(/\/video\/(\d+)/i);
-    if (m && m[1]) {
-      return {
-        group: 'shorts',
-        title,
-        embedUrl: `https://www.tiktok.com/player/v1/${m[1]}`,
-        frameClass: 'ph-media-embed ph-media-embed--vertical'
-      };
-    }
-  }
-
-  if (host.endsWith('instagram.com')) {
-    const reelMatch = path.match(/^\/reel\/([^/?#]+)/i);
-    if (reelMatch) {
-      return {
-        group: 'shorts',
-        title,
-        embedUrl: `https://www.instagram.com/reel/${reelMatch[1]}/embed`,
-        frameClass: 'ph-media-embed ph-media-embed--vertical'
-      };
-    }
-
-    const postMatch = path.match(/^\/p\/([^/?#]+)/i);
-    if (postMatch) {
-      return {
-        group: 'shorts',
-        title,
-        embedUrl: `https://www.instagram.com/p/${postMatch[1]}/embed`,
-        frameClass: 'ph-media-embed ph-media-embed--vertical'
-      };
-    }
-  }
-  if (host.endsWith('youtube.com')) {
-    const shortsMatch = path.match(/^\/shorts\/([^/?#]+)/i);
-    if (shortsMatch && shortsMatch[1]) {
-      return {
-        group: 'shorts',
-        title,
-        embedUrl: `https://www.youtube.com/embed/${shortsMatch[1]}`,
-        frameClass: 'ph-media-embed ph-media-embed--vertical'
-      };
-    }
-  }
-
-
-  if (host.endsWith('youtube.com')) {
-    const videoId = url.searchParams.get('v');
-    if (videoId) {
-      return {
-        group: 'videos',
-        title,
-        embedUrl: `https://www.youtube.com/embed/${videoId}`,
-        frameClass: 'ph-media-embed'
-      };
-    }
-  }
-
-  if (host === 'youtu.be') {
-    const videoId = path.replace(/^\/+/, '').split('/')[0];
-    if (videoId) {
-      return {
-        group: 'videos',
-        title,
-        embedUrl: `https://www.youtube.com/embed/${videoId}`,
-        frameClass: 'ph-media-embed'
-      };
-    }
-  }
-
-  const directVideoUrl = detectDirectVideoUrl(rawUrl);
-  if (directVideoUrl) {
-    return {
-      group: 'videos',
-      title,
-      videoUrl: directVideoUrl
-    };
-  }
-
-  return {
-    group: 'images',
-    title,
-    imageUrl: url.href
-  };
-}
-
-function getActiveHeroMediaList(){
-  const group = String(state.activeMediaGroup || 'images');
-  const groups = state.mediaGroups || {};
-  return Array.isArray(groups[group]) ? groups[group] : [];
-}
-
-function clampHeroMediaIndex(){
-  const list = getActiveHeroMediaList();
-  if (!list.length) {
-    state.activeMediaIndex = 0;
-    return;
-  }
-  if (state.activeMediaIndex < 0) state.activeMediaIndex = 0;
-  if (state.activeMediaIndex >= list.length) state.activeMediaIndex = list.length - 1;
-}
-
-function heroMediaMarkup(item){
-  if (!item) {
-    return `
-      <div class="ph-media-stage__placeholder">
-        <div class="ph-media-stage__title">No media yet</div>
-        <div class="ph-media-stage__sub">Media for this product has not been added yet.</div>
-      </div>
-    `;
-  }
-
-  if (item.group === 'images' && item.imageUrl) {
-    return `
-      <div class="ph-media-asset ph-media-asset--image">
-        <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.title || 'Product media')}" loading="lazy" decoding="async">
-      </div>
-    `;
-  }
-
-  if (item.group === 'videos' && item.videoUrl) {
-    return `
-      <div class="ph-media-asset ph-media-asset--video">
-        <video controls playsinline preload="metadata" src="${escapeHtml(item.videoUrl)}"></video>
-      </div>
-    `;
-  }
-
-  if (item.embedUrl) {
-    return `
-      <div class="${escapeHtml(item.frameClass || 'ph-media-embed')}">
-        <iframe
-          src="${escapeHtml(item.embedUrl)}"
-          title="${escapeHtml(item.title || item.group || 'Media')}"
-          loading="lazy"
-          referrerpolicy="strict-origin-when-cross-origin"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen
-        ></iframe>
-      </div>
-    `;
-  }
-
-  return `
-    <div class="ph-media-stage__placeholder">
-      <div class="ph-media-stage__title">Unsupported media</div>
-      <div class="ph-media-stage__sub">This media item could not be displayed.</div>
-    </div>
-  `;
-}
-
-function updateHeroMediaTabs(){
-  document.querySelectorAll('.ph-media-tab[data-media-group]').forEach((btn) => {
-    const group = String(btn.getAttribute('data-media-group') || '');
-    const count = Array.isArray(state.mediaGroups?.[group]) ? state.mediaGroups[group].length : 0;
-    const active = group === state.activeMediaGroup;
-
-    btn.classList.toggle('is-active', active);
-    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-    btn.hidden = count === 0;
-  });
-}
-
-function renderHeroMediaStage(){
-  const inner = document.getElementById('phMediaInner');
-  const counter = document.getElementById('phMediaCounter');
-  const prev = document.getElementById('phMediaPrev');
-  const next = document.getElementById('phMediaNext');
-  const stage = document.getElementById('phMediaStage');
-
-  if (!inner || !counter || !prev || !next || !stage) return;
-
-  const list = getActiveHeroMediaList();
-  clampHeroMediaIndex();
-
-  const item = list[state.activeMediaIndex] || null;
-  inner.innerHTML = heroMediaMarkup(item);
-
-  counter.textContent = list.length ? `${state.activeMediaIndex + 1} / ${list.length}` : '0 / 0';
-  prev.disabled = list.length <= 1;
-  next.disabled = list.length <= 1;
-
-  stage.classList.toggle('is-empty', !list.length);
-  stage.classList.toggle('is-vertical', !!item && item.group === 'shorts');
-}
-
-function bindHeroMediaEventsOnce(){
-  if (state.mediaBound) return;
-  state.mediaBound = true;
-
-  const prev = document.getElementById('phMediaPrev');
-  const next = document.getElementById('phMediaNext');
-
-  if (prev) {
-    prev.addEventListener('click', () => {
-      const list = getActiveHeroMediaList();
-      if (list.length <= 1) return;
-      state.activeMediaIndex = (state.activeMediaIndex - 1 + list.length) % list.length;
-      renderHeroMediaStage();
-    });
-  }
-
-  if (next) {
-    next.addEventListener('click', () => {
-      const list = getActiveHeroMediaList();
-      if (list.length <= 1) return;
-      state.activeMediaIndex = (state.activeMediaIndex + 1) % list.length;
-      renderHeroMediaStage();
-    });
-  }
-
-  document.querySelectorAll('.ph-media-tab[data-media-group]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const group = String(btn.getAttribute('data-media-group') || '');
-      const list = Array.isArray(state.mediaGroups?.[group]) ? state.mediaGroups[group] : [];
-      if (!list.length) return;
-
-      state.activeMediaGroup = group;
-      state.activeMediaIndex = 0;
-      updateHeroMediaTabs();
-      renderHeroMediaStage();
-    });
-  });
-}
-
-function renderHeroMediaCarousel(){
-  const card = document.getElementById('mediaCard');
-  if (card) {
-    card.hidden = true;
-    const panel = document.getElementById('mediaContent');
-    if (panel) panel.innerHTML = '';
-  }
-
-  const items = normalizeMediaInput(mediaSource())
-    .map(parseHeroMediaItem)
-    .filter(Boolean);
-
-  state.mediaGroups = {
-    images: items.filter(x => x.group === 'images'),
-    videos: items.filter(x => x.group === 'videos'),
-    shorts: items.filter(x => x.group === 'shorts')
-  };
-
-  if (state.mediaGroups.images.length) state.activeMediaGroup = 'images';
-  else if (state.mediaGroups.videos.length) state.activeMediaGroup = 'videos';
-  else if (state.mediaGroups.shorts.length) state.activeMediaGroup = 'shorts';
-  else state.activeMediaGroup = 'images';
-
-  state.activeMediaIndex = 0;
-
-  bindHeroMediaEventsOnce();
-  updateHeroMediaTabs();
-  renderHeroMediaStage();
 }
 
 function normalizeFilesInput(raw){

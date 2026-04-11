@@ -378,14 +378,9 @@
 
   <div class="ph-media-hero__viewer">
   <div class="ph-media-stage" id="phMediaStage">
-  <div class="ph-media-overlay ph-media-overlay--top-left" role="tablist" aria-label="Media type">
-    <button class="ph-media-tab is-active" type="button" data-media-group="images" aria-pressed="true">Images</button>
-    <button class="ph-media-tab" type="button" data-media-group="videos" aria-pressed="false">Videos</button>
-    <button class="ph-media-tab" type="button" data-media-group="shorts" aria-pressed="false">Shorts</button>
-  </div>
 
   <div class="ph-media-overlay ph-media-overlay--top-right">
-    <span class="ph-media-counter" id="phMediaCounter">0 / 0</span>
+    <span class="ph-media-counter" id="phMediaCounter" hidden></span>
   </div>
 
   <button class="ph-media-arrow ph-media-arrow--left" id="phMediaPrev" type="button" aria-label="Previous media">
@@ -412,6 +407,10 @@
   </div>
 </div>
             </section>
+
+              <section class="card" id="mediaStripSection" hidden>
+                <div id="mediaStripPills"></div>
+              </section>
 
               <section class="card" id="variantColorSection" hidden>
                 <div class="variant-color-grid">
@@ -570,7 +569,7 @@
 
     <section class="card" id="marketingImagesCard" hidden>
       <div class="spaced" style="margin: 0;">
-        <h2 data-icon-path="M120-160q-17 0-28.5-11.5T80-200v-560q0-17 11.5-28.5T120-800q8 0 35.5 9.5T229-770q46 11 108.5 20.5T480-740q80 0 142.5-9.5T731-770q46-11 73.5-20.5T840-800q17 0 28.5 11.5T880-760v560q0 17-11.5 28.5T840-160q-8 0-35.5-9.5T731-190q-46-11-108.5-20.5T480-220q-80 0-142.5 9.5T229-190q-46 11-73.5 20.5T120-160Zm40-94q78-23 158.5-34.5T480-300q81 0 161.5 11.5T800-254v-451q-78 23-158.5 34T480-660q-81 0-161.5-11T160-705v451Zm320-226Z">
+        <h2 data-icon-path="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm80-80h480L570-520 450-360l-90-120-120 160Zm-80 80v-480 480Z">
           Banners
         </h2>
       </div>
