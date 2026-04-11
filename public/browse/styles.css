@@ -29,7 +29,6 @@ body{
   margin: 0 auto; padding-bottom: 40px;
 }
 
-/* ===== Desktop layout with right sidebar ===== */
 .layout{
   display: grid;
   grid-template-columns: minmax(0, 1fr) 31%;
@@ -918,20 +917,18 @@ h1{
 }
 
 .price-row{
-  display: inline-flex;          /* keep the whole price + logos as one tight unit */
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-start;   /* no pushing away */
-  gap: 8px;                      /* small space between price and logos */
+  justify-content: flex-start;
+  gap: 8px;
   margin-top: auto;
-  padding-top: 10px;              /* keep your existing spacing where .price had it */
+  padding-top: 10px;
 }
 
-/* remove top margin from .price because the row owns spacing now */
 .price{
   margin-top: 0;
 }
 
-/* circles */
 .store-badge{
   width: 28px;
   height: 28px;
@@ -942,7 +939,6 @@ h1{
   display: block;
 }
 
-/* store badges: vertical stack (top to bottom, no overlap, no z-index) */
 .store-stack{
   margin-left: 10px;
   display: inline-flex;
@@ -950,7 +946,6 @@ h1{
   align-items: center;
 }
 
-/* make sure each badge is its own row */
 .store-stack > *{
   display: block;
 }
@@ -959,7 +954,6 @@ h1{
   margin-left: -6px;
 }
 
-/* make the +N badge match circle sizing */
 .store-badge-more,
 .store-badge-fallback{
   width: 28px;
@@ -989,21 +983,21 @@ h1{
 
 .card-variants{
   display: flex;
-  flex-wrap: nowrap;      /* never allow a second row */
+  flex-wrap: nowrap; 
   gap: 8px;
   padding: 8px 1px 1px 1px;
-  overflow: hidden;       /* hide anything that would overflow */
-  min-width: 0;           /* critical for grid items */
+  overflow: hidden;      
+  min-width: 0;  
 }
 
 .btn--outline { white-space: nowrap; }
 
 .card-variants .pillbtn{
-  flex: 0 0 auto;          /* critical: prevents shrinking */
-  white-space: nowrap;     /* keep it one line */
-  overflow: visible;       /* no clipping inside the pill */
-  text-overflow: clip;     /* no ellipsis */
-  max-width: none;         /* in case you added one */
+  flex: 0 0 auto; 
+  white-space: nowrap;
+  overflow: visible; 
+  text-overflow: clip;
+  max-width: none; 
 }
 
 .pillbtn{
@@ -1027,7 +1021,6 @@ h1{
   transform: translateY(1px);
 }
 
-/* Detail panel spacing */
 #detailPanel .detail-variants{
   margin-top: 6px;
 }
@@ -1547,10 +1540,8 @@ h1{
   color: #6b7280;
 }
 
-/* side-specs-promo-card: the button is a grid passthrough so icon + body
-   land directly in the parent .side-specs-promo grid columns */
 .side-specs-promo-card {
-  display: contents;   /* invisible to layout; children join parent grid */
+  display: contents;
   background: none;
   border: none;
   padding: 0;
@@ -1561,7 +1552,6 @@ h1{
   color: inherit;
 }
 
-/* Ensure the icon and body are block-level so grid places them cleanly */
 .side-specs-promo-card > .side-specs-promo__icon,
 .side-specs-promo-card > .side-specs-promo__body {
   display: block;
