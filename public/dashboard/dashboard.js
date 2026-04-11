@@ -300,6 +300,46 @@ function renderHeroMediaStage(){
   stage.classList.remove('is-vertical');
 }
 
+function getCurrentHeroMediaItem(){
+  const list = Array.isArray(state.mediaItems) ? state.mediaItems : [];
+  clampHeroMediaIndex();
+  return list[state.activeMediaIndex] || null;
+}
+
+function previewHeroMediaItem(item){
+  const inner = document.getElementById('phMediaInner');
+  const stage = document.getElementById('phMediaStage');
+  if (!inner || !stage) return;
+
+  inner.innerHTML = heroMediaMarkup(item || null);
+  stage.classList.toggle('is-empty', !item);
+  stage.classList.remove('is-vertical');
+}
+
+function restoreHeroMediaPreview(){
+  renderHeroMediaStage();
+}
+
+function previewItemFromChoice(option){
+  if (!option) return null;
+
+  const direct = safeMediaUrl(
+    option.image ||
+    option.imageUrl ||
+    option.thumb ||
+    option.url ||
+    ''
+  );
+
+  if (!direct) return null;
+
+  return {
+    imageUrl: direct.href,
+    thumb: direct.href,
+    title: String(option.label || '')
+  };
+}
+
 function mediaChevronCardMarkup(direction){
   const isLeft = direction === 'left';
 
@@ -546,7 +586,7 @@ function scheduleDashboardTocActiveSync() {
   function scrollToDashboardCard(card) {
     if (!card) return;
 
-    const offset = getDashboardHeaderOffset() + 6;
+    const offset = getDashboardHeaderOffset() - 12;
     const y = Math.max(
       0,
       Math.round(window.scrollY + card.getBoundingClientRect().top - offset)
@@ -3178,6 +3218,26 @@ function renderImageChoiceGroup(hostEl, options, selectedValue, onPick, typeLabe
 
     b.addEventListener('click', () => {
       onPick(label);
+    });
+
+    b.addEventListener('mouseenter', () => {
+      const previewItem = previewItemFromChoice(opt);
+      if (!previewItem) return;
+      previewHeroMediaItem(previewItem);
+    });
+
+    b.addEventListener('mouseleave', () => {
+      restoreHeroMediaPreview();
+    });
+
+    b.addEventListener('focus', () => {
+      const previewItem = previewItemFromChoice(opt);
+      if (!previewItem) return;
+      previewHeroMediaItem(previewItem);
+    });
+
+    b.addEventListener('blur', () => {
+      restoreHeroMediaPreview();
     });
 
     const img = b.querySelector('img');

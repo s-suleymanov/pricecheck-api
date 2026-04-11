@@ -22,7 +22,7 @@
     "variant variant"
     "main side";
   column-gap:28px;
-  row-gap:16px;
+  row-gap:20px;
   align-items:stretch;
 }
 
@@ -690,7 +690,7 @@ aside .note{
 /* Cards */
 .card{
   background:#fff; border-radius:var(--radius-card);
-  padding:16px 18px; margin-top: 16px; border: none;
+  padding:16px 18px; margin-top: 20px; border: none;
 }
 
 .ph-grid{
