@@ -5021,75 +5021,86 @@ function renderCouponsCard(){
   }
 
   function parseTimelineItem(input){
-    if (!input || typeof input !== 'object') return null;
+  if (!input || typeof input !== 'object') return null;
 
-    const title = String(input.title || input.label || input.name || '').trim();
-    const note = String(input.note || input.subtitle || input.description || '').trim();
-    const kind = String(input.kind || input.type || '').trim();
-    const rawDate = String(input.date || input.when || input.release_date || input.expected_date || '').trim();
-    const rawYear = Number(input.year);
+  const title = String(input.title || input.label || input.name || '').trim();
+  const note = String(input.note || input.subtitle || input.description || '').trim();
+  const kind = String(input.kind || input.type || '').trim();
+  const rawDate = String(input.date || input.when || input.release_date || input.expected_date || '').trim();
+  const rawYear = Number(input.year);
 
-    const rawUrl = String(input.url || '').trim();
-    const rawKey = String(input.key || '').trim();
-    const rawPci = String(input.pci || '').trim();
+  const rawUrl = String(input.url || '').trim();
+  const rawKey = String(input.key || '').trim();
+  const rawPci = String(input.pci || '').trim();
 
-    let stamp = null;
-    let dateLabel = '';
+  let stamp = null;
+  let dateLabel = '';
 
-    if (rawDate) {
-      const d = new Date(rawDate);
-      if (!Number.isNaN(d.getTime())) {
-        stamp = d.getTime();
-        dateLabel = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(d);
+  if (rawDate) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      const [y, m, d] = rawDate.split('-').map(Number);
+      const localDate = new Date(y, m - 1, d);
+
+      if (!Number.isNaN(localDate.getTime())) {
+        stamp = localDate.getTime();
+        dateLabel = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(localDate);
+      }
+    } else {
+      const parsed = new Date(rawDate);
+
+      if (!Number.isNaN(parsed.getTime())) {
+        stamp = parsed.getTime();
+        dateLabel = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(parsed);
       } else if (/^\d{4}$/.test(rawDate)) {
         stamp = Date.UTC(Number(rawDate), 0, 1);
         dateLabel = rawDate;
       }
-    } else if (Number.isFinite(rawYear) && rawYear >= 1900 && rawYear <= 3000) {
-      stamp = Date.UTC(rawYear, 0, 1);
-      dateLabel = String(rawYear);
     }
-
-    if (!title) return null;
-
-    const explicitFuture =
-      input.future === true ||
-      /^(upcoming|future|expected)$/i.test(String(input.group || input.phase || ''));
-
-    let future = explicitFuture;
-
-    if (!future && stamp != null) {
-      const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(rawDate);
-      if (isDateOnly) {
-        const now = new Date();
-        const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-        future = stamp >= todayUtc;
-      } else {
-        future = stamp > Date.now();
-      }
-    }
-
-    let href = '';
-
-    if (rawUrl) {
-      href = safeHttpHref(rawUrl);
-    } else if (rawKey) {
-      const normalizedKey = normalizeKey(rawKey);
-      if (normalizedKey) href = prettyDashboardUrl(normalizedKey, title).pathname;
-    } else if (rawPci && isLikelyPci(rawPci)) {
-      href = prettyDashboardUrl(`pci:${rawPci.toUpperCase()}`, title).pathname;
-    }
-
-    return {
-      title,
-      note,
-      kind,
-      dateLabel,
-      stamp,
-      future,
-      href
-    };
+  } else if (Number.isFinite(rawYear) && rawYear >= 1900 && rawYear <= 3000) {
+    stamp = Date.UTC(rawYear, 0, 1);
+    dateLabel = String(rawYear);
   }
+
+  if (!title) return null;
+
+  const explicitFuture =
+    input.future === true ||
+    /^(upcoming|future|expected)$/i.test(String(input.group || input.phase || ''));
+
+  let future = explicitFuture;
+
+  if (!future && stamp != null) {
+    const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(rawDate);
+    if (isDateOnly) {
+      const now = new Date();
+      const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+      future = stamp >= todayUtc;
+    } else {
+      future = stamp > Date.now();
+    }
+  }
+
+  let href = '';
+
+  if (rawUrl) {
+    href = safeHttpHref(rawUrl);
+  } else if (rawKey) {
+    const normalizedKey = normalizeKey(rawKey);
+    if (normalizedKey) href = prettyDashboardUrl(normalizedKey, title).pathname;
+  } else if (rawPci && isLikelyPci(rawPci)) {
+    href = prettyDashboardUrl(`pci:${rawPci.toUpperCase()}`, title).pathname;
+  }
+
+  return {
+    title,
+    note,
+    kind,
+    dateLabel,
+    stamp,
+    future,
+    href
+  };
+}
 
     function cleanTimelineKind(raw, future){
     const k = String(raw || '').trim();
@@ -5209,57 +5220,77 @@ function renderCouponsCard(){
   }
 
   function timelineThreeSlots(items){
-    const currentKey = normalizeKey(state.lastKey || '');
-    const released = items.filter(item => !item.future);
-    const upcoming = items.filter(item => item.future);
+  const currentKey = normalizeKey(state.lastKey || '');
 
-    let current = null;
-    let past = null;
-    let future = null;
+  let current = null;
+  let past = null;
+  let future = null;
+  let currentIndex = -1;
 
-    // Best case: one timeline item explicitly matches the current page
-    if (currentKey) {
-      current = items.find(item => dashboardKeyFromHref(item.href) === currentKey) || null;
+  if (currentKey) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (dashboardKeyFromHref(items[i]?.href) === currentKey) {
+        currentIndex = i;
+        break;
+      }
     }
-
-    // If current was found, use the most recent earlier released item as "Previous"
-    if (current) {
-      const earlier = released.filter(item => item !== current);
-      past = earlier.length ? earlier[earlier.length - 1] : null;
-    } else if (released.length) {
-      // Fallback: treat the latest released item as the current model
-      current = released[released.length - 1];
-      past = released.length > 1 ? released[released.length - 2] : null;
-    }
-
-    // Earliest future item becomes "Next"
-    future = upcoming.find(item => item !== current) || null;
-
-    // Hard fallback if the source only has future data
-    if (!current) {
-      const cur = getCurrentVariant() || null;
-      const id = state.identity || {};
-      const title =
-        String(
-          cur?.model_name ||
-          id.model_name ||
-          id.model_number ||
-          document.getElementById('pTitle')?.textContent ||
-          'Current model'
-        ).trim() || 'Current model';
-
-      current = {
-        title,
-        note: '',
-        dateLabel: '',
-        yearLabel: '',
-        kindLabel: '',
-        href: currentKey ? prettyDashboardUrl(currentKey, title).pathname : ''
-      };
-    }
-
-    return { past, current, future };
   }
+
+  if (currentIndex === -1) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (!items[i]?.future) {
+        currentIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (currentIndex >= 0) {
+    current = items[currentIndex] || null;
+    past = currentIndex > 0 ? items[currentIndex - 1] : null;
+
+    for (let i = currentIndex + 1; i < items.length; i++) {
+      const candidate = items[i];
+      const candidateKey = dashboardKeyFromHref(candidate?.href);
+
+      if (currentKey) {
+        if (candidateKey && candidateKey !== currentKey) {
+          future = candidate;
+          break;
+        }
+      } else {
+        if (candidate?.href !== current?.href || candidate?.title !== current?.title) {
+          future = candidate;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!current) {
+    const cur = getCurrentVariant() || null;
+    const id = state.identity || {};
+    const title =
+      String(
+        cur?.model_name ||
+        id.model_name ||
+        id.model_number ||
+        document.getElementById('pTitle')?.textContent ||
+        'Current model'
+      ).trim() || 'Current model';
+
+    current = {
+      title,
+      note: '',
+      dateLabel: '',
+      yearLabel: '',
+      kindLabel: '',
+      href: currentKey ? prettyDashboardUrl(currentKey, title).pathname : ''
+    };
+  }
+
+  return { past, current, future };
+}
 
   function renderTimelineBubble(item, slot){
     const label =
