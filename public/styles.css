@@ -156,6 +156,7 @@
   align-self: stretch;
   display: flex;
   flex-direction: column;
+  margin-top: 8px;
 }
 
 .home-deal__icon img{
