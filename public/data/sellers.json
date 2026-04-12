@@ -1639,9 +1639,9 @@
       "support_page": null
     }
   },
-  "turtle_beach": {
+  "turtlebeach": {
     "name": "Turtle Beach",
-    "logo": "",
+    "logo": "/logo/seller/turtlebeach.svg",
     "website": "https://www.turtlebeach.com",
     "owned_by": "",
     "type": "Proprietary",
