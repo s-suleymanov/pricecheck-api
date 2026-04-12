@@ -2099,6 +2099,26 @@
     "support_page": "https://www.usa.philips.com/c-w/support-home.html"
   }
 },
+"homedepot": {
+  "name": "The Home Depot",
+  "logo": "/logo/seller/homedepot.svg",
+  "website": "https://www.homedepot.com",
+  "owned_by": "",
+  "type": "Home Improvement Retailer",
+  "location": "United States",
+  "founded": 1978,
+  "policies": {
+    "return_period": "90 Days",
+    "restocking_fee": "15% on some special order returns/cancellations",
+    "free_shipping_threshold": "Varies",
+    "price_match": "Yes"
+  },
+  "contact": {
+    "phone": "1-800-430-3376",
+    "chat_available": true,
+    "support_page": "https://www.homedepot.com/c/customer-service"
+  }
+},
 "alienware": {
   "name": "Alienware",
   "logo": "/logo/seller/alienware.webp",

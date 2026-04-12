@@ -452,15 +452,20 @@ function renderMediaStrip(){
     </div>
   `;
 
-  host.querySelectorAll('[data-media-image-index]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    host.querySelectorAll('[data-media-image-index]').forEach((btn) => {
+    const activateFromThumb = () => {
       const index = Number(btn.getAttribute('data-media-image-index'));
       if (!Number.isInteger(index) || index < 0 || index >= images.length) return;
+      if (state.activeMediaIndex === index) return;
 
       state.activeMediaIndex = index;
       renderHeroMediaStage();
       updateMediaStripActiveState();
-    });
+    };
+
+    btn.addEventListener('mouseenter', activateFromThumb);
+    btn.addEventListener('focus', activateFromThumb);
+    btn.addEventListener('click', activateFromThumb);
   });
 
   host.querySelectorAll('[data-media-chevron]').forEach((btn) => {
