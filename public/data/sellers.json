@@ -10,7 +10,7 @@
     "policies": {
       "return_period": "15 Days",
       "restocking_fee": "No",
-      "free_shipping_threshold": "$35+",
+      "free_shipping_threshold": "Free",
       "price_match": "Yes"
     },
     "contact": {
@@ -188,9 +188,9 @@
     "location": "United States",
     "founded": 1986,
     "policies": {
-      "return_period": "30 Days (14 days for Tech)",
+      "return_period": "14 Days",
       "restocking_fee": "No",
-      "free_shipping_threshold": "$59.99+",
+      "free_shipping_threshold": "Free",
       "price_match": "Yes"
     },
     "contact": {
@@ -1208,9 +1208,9 @@
     "location": "South Korea",
     "founded": 1969,
     "policies": {
-      "return_period": "15 Days (Standard)",
+      "return_period": "15 Days",
       "restocking_fee": "Yes (5% on select items)",
-      "free_shipping_threshold": "Free (Most items)",
+      "free_shipping_threshold": "Free",
       "price_match": "Yes (Valid within 7 days)"
     },
     "contact": {
@@ -1890,7 +1890,7 @@
     "policies": {
       "return_period": "30 Days",
       "restocking_fee": "No (mostly)",
-      "free_shipping_threshold": "$35+ (Free w/ Prime)",
+      "free_shipping_threshold": "Free",
       "price_match": "No"
     },
     "contact": {
@@ -1908,9 +1908,9 @@
     "location": "United States",
     "founded": 1962,
     "policies": {
-      "return_period": "90 Days (30 for Electronics)",
+      "return_period": "30 Days",
       "restocking_fee": "No",
-      "free_shipping_threshold": "$35+",
+      "free_shipping_threshold": "Free",
       "price_match": "No (Online vs Store varies)"
     },
     "contact": {

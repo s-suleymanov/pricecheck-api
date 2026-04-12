@@ -5429,7 +5429,7 @@ function renderCouponsCard(){
   function sellerHrefFromStore(store){
     const slug = sellerSlugFromStore(store);
     if (!slug) return '';
-    return `/seller/${encodeURIComponent(slug)}/`; // if your real route is /sellers/, change /seller/ to /sellers/
+    return `/seller/${encodeURIComponent(slug)}/`;
   }
 
   async function getSellerInfo(store){
@@ -5514,17 +5514,22 @@ function renderCouponsCard(){
   }
 
   function returnsTextForOffer(offer, seller){
-    if (norm(offer?.return_policy)) return norm(offer.return_policy);
-
     if (offer?.return_days != null) {
       const n = Number(offer.return_days);
       if (Number.isFinite(n) && n > 0) {
-        return `${n}-day returns`;
+        return `${n}-day`;
       }
     }
 
     if (norm(seller?.policies?.return_period)) {
-      return `${norm(seller.policies.return_period)} returns`;
+      return norm(seller.policies.return_period);
+    }
+
+    if (norm(offer?.return_policy)) {
+      return norm(offer.return_policy)
+        .replace(/\breturns?\b/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
     }
 
     return '';
