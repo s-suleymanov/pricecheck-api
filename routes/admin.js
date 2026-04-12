@@ -368,51 +368,49 @@ router.post("/admin/api/bulk", requireAdminApi, async (req, res) => {
         if (!store || !store_sku) {
           errors.push({ line, error: "missing_store_or_store_sku" });
         } else {
-          const title = normalizeEmpty(r.title);
           const url = normalizeEmpty(r.url);
-          const status = normalizeEmpty(r.status) || "active";
-          const offer_tag = normalizeEmpty(r.offer_tag);
+const status = normalizeEmpty(r.status) || "active";
+const offer_tag = normalizeEmpty(r.offer_tag);
 
-          const rawPrice = r.current_price_cents;
-          const current_price_cents =
-            rawPrice == null || String(rawPrice).trim() === ""
-              ? null
-              : Number.isFinite(Number(rawPrice))
-                ? Math.trunc(Number(rawPrice))
-                : null;
+const rawPrice = r.current_price_cents;
+const current_price_cents =
+  rawPrice == null || String(rawPrice).trim() === ""
+    ? null
+    : Number.isFinite(Number(rawPrice))
+      ? Math.trunc(Number(rawPrice))
+      : null;
 
-          try {
-            const now = new Date().toISOString();
+try {
+  const now = new Date().toISOString();
 
-            await client.query(
-              `
-              insert into public.listings
-                (store, store_sku, pci, upc, title, url, status, offer_tag, current_price_cents, current_price_observed_at)
-              values
-                ($1,$2,$3,$4,$5,$6,$7,$8,$9::int4, case when $9::int4 is null then null else $10::timestamptz end)
-              on conflict (store, store_sku)
-              do update set
-                pci = coalesce(excluded.pci, public.listings.pci),
-                upc = coalesce(excluded.upc, public.listings.upc),
-                title = coalesce(excluded.title, public.listings.title),
-                url = coalesce(excluded.url, public.listings.url),
-                status = coalesce(excluded.status, public.listings.status),
-                offer_tag = coalesce(excluded.offer_tag, public.listings.offer_tag),
-                current_price_cents = coalesce(excluded.current_price_cents, public.listings.current_price_cents),
-                current_price_observed_at =
-                  case
-                    when excluded.current_price_cents is null then public.listings.current_price_observed_at
-                    else greatest(
-                      coalesce(public.listings.current_price_observed_at, 'epoch'::timestamptz),
-                      excluded.current_price_observed_at
-                    )
-                  end
-              `,
-              [store, store_sku, pci, upc, title, url, status, offer_tag, current_price_cents, now]
-            );
+  await client.query(
+    `
+    insert into public.listings
+      (store, store_sku, pci, upc, url, status, offer_tag, current_price_cents, current_price_observed_at)
+    values
+      ($1,$2,$3,$4,$5,$6,$7,$8::int4, case when $8::int4 is null then null else $9::timestamptz end)
+    on conflict (store, store_sku)
+    do update set
+      pci = coalesce(excluded.pci, public.listings.pci),
+      upc = coalesce(excluded.upc, public.listings.upc),
+      url = coalesce(excluded.url, public.listings.url),
+      status = coalesce(excluded.status, public.listings.status),
+      offer_tag = coalesce(excluded.offer_tag, public.listings.offer_tag),
+      current_price_cents = coalesce(excluded.current_price_cents, public.listings.current_price_cents),
+      current_price_observed_at =
+        case
+          when excluded.current_price_cents is null then public.listings.current_price_observed_at
+          else greatest(
+            coalesce(public.listings.current_price_observed_at, 'epoch'::timestamptz),
+            excluded.current_price_observed_at
+          )
+        end
+    `,
+    [store, store_sku, pci, upc, url, status, offer_tag, current_price_cents, now]
+  );
 
-            listing_upserts++;
-          } catch (e) {
+  listing_upserts++;
+} catch (e) {
             errors.push({
               line,
               error: "listing_failed",
@@ -573,6 +571,7 @@ router.patch("/admin/api/catalog/:id", requireAdminApi, async (req, res) => {
     "image_url",
     "recall_url",
     "dropship_warning",
+    "coverage_warning",
   ];
 
   for (const k of allowed) {
@@ -658,7 +657,6 @@ router.get("/admin/api/db/items", requireAdminApi, async (req, res) => {
         where
           ($6::text is not null and upper(regexp_replace(coalesce(l.store_sku,''), '[^0-9A-Za-z]', '', 'g')) = upper(regexp_replace(coalesce($6::text,''), '[^0-9A-Za-z]', '', 'g')))
           or (coalesce(l.store_sku,'') ilike '%' || $3 || '%')
-          or (coalesce(l.title,'') ilike '%' || $3 || '%')
           or (coalesce(l.store,'') ilike '%' || $3 || '%')
           or ($1::text is not null and upper(btrim(l.pci)) = upper(btrim($1)))
           or ($2::text is not null and norm_upc(l.upc) = norm_upc($2))
@@ -689,7 +687,7 @@ router.get("/admin/api/db/items", requireAdminApi, async (req, res) => {
     if (pcis.length || upcs.length) {
       const offersSql = `
         select
-          id, store, store_sku, pci, upc, title, url, status, offer_tag,
+          id, store, store_sku, pci, upc, url, status, offer_tag,
           current_price_cents, current_price_observed_at,
           coupon_text, coupon_type, coupon_value_cents, coupon_value_pct,
           coupon_requires_clip, coupon_code, coupon_expires_at,
@@ -833,50 +831,204 @@ router.patch("/admin/api/listing/:id", requireAdminApi, async (req, res) => {
   if (!Number.isFinite(id)) return res.status(400).json({ error: "bad_id" });
 
   const body = req.body || {};
-  const allowed = [
-    "pci",
-    "upc",
-    "title",
-    "url",
-    "status",
-    "offer_tag",
 
-    // price fields
-    "current_price_cents",
-    "current_price_observed_at",
-
-    // coupon fields
-    "coupon_text",
-    "coupon_type",
-    "coupon_value_cents",
-    "coupon_value_pct",
-    "coupon_requires_clip",
-    "coupon_code",
-    "coupon_expires_at",
-    "effective_price_cents",
-    "coupon_observed_at",
-  ];
-
-  for (const k of allowed) {
-    if (k in body) body[k] = normalizeEmpty(body[k]);
+  function parseIntOrNull(v) {
+    if (v === undefined) return undefined;
+    if (v === null) return null;
+    const s = String(v).trim();
+    if (!s) return null;
+    const n = Number(s);
+    if (!Number.isFinite(n)) return undefined;
+    return Math.trunc(n);
   }
 
-  const built = buildUpdate({
-    table: "public.listings",
-    idCol: "id",
-    id,
-    allowed,
-    body,
-  });
+  function parseNumOrNull(v) {
+    if (v === undefined) return undefined;
+    if (v === null) return null;
+    const s = String(v).trim();
+    if (!s) return null;
+    const n = Number(s);
+    if (!Number.isFinite(n)) return undefined;
+    return n;
+  }
 
-  if (!built) return res.status(400).json({ error: "no_fields" });
+  function parseTsOrNull(v) {
+    if (v === undefined) return undefined;
+    const s = String(v == null ? "" : v).trim();
+    if (!s) return null;
+    const d = new Date(s);
+    if (!Number.isFinite(d.getTime())) return undefined;
+    return d.toISOString();
+  }
+
+  const patch = {};
+
+  if ("pci" in body) patch.pci = normalizeEmpty(body.pci);
+  if ("upc" in body) patch.upc = normalizeEmpty(body.upc);
+  if ("url" in body) patch.url = normalizeEmpty(body.url);
+  if ("status" in body) patch.status = normalizeEmpty(body.status);
+  if ("offer_tag" in body) patch.offer_tag = normalizeEmpty(body.offer_tag);
+
+  if ("current_price_cents" in body) {
+    patch.current_price_cents = parseIntOrNull(body.current_price_cents);
+    if (patch.current_price_cents === undefined) {
+      return res.status(400).json({ error: "bad_current_price_cents" });
+    }
+  }
+
+  if ("effective_price_cents" in body) {
+    patch.effective_price_cents = parseIntOrNull(body.effective_price_cents);
+    if (patch.effective_price_cents === undefined) {
+      return res.status(400).json({ error: "bad_effective_price_cents" });
+    }
+  }
+
+  if ("coupon_value_cents" in body) {
+    patch.coupon_value_cents = parseIntOrNull(body.coupon_value_cents);
+    if (patch.coupon_value_cents === undefined) {
+      return res.status(400).json({ error: "bad_coupon_value_cents" });
+    }
+  }
+
+  if ("coupon_value_pct" in body) {
+    patch.coupon_value_pct = parseNumOrNull(body.coupon_value_pct);
+    if (patch.coupon_value_pct === undefined) {
+      return res.status(400).json({ error: "bad_coupon_value_pct" });
+    }
+  }
+
+  if ("coupon_text" in body) patch.coupon_text = normalizeEmpty(body.coupon_text);
+  if ("coupon_type" in body) patch.coupon_type = normalizeEmpty(body.coupon_type);
+  if ("coupon_requires_clip" in body) patch.coupon_requires_clip = parseBoolLoose(body.coupon_requires_clip);
+  if ("coupon_code" in body) patch.coupon_code = normalizeEmpty(body.coupon_code);
+  if ("coupon_expires_at" in body) {
+    patch.coupon_expires_at = parseTsOrNull(body.coupon_expires_at);
+    if (patch.coupon_expires_at === undefined) {
+      return res.status(400).json({ error: "bad_coupon_expires_at" });
+    }
+  }
+
+  if ("current_price_observed_at" in body) {
+    patch.current_price_observed_at = parseTsOrNull(body.current_price_observed_at);
+    if (patch.current_price_observed_at === undefined) {
+      return res.status(400).json({ error: "bad_current_price_observed_at" });
+    }
+  }
+
+  if ("coupon_observed_at" in body) {
+    patch.coupon_observed_at = parseTsOrNull(body.coupon_observed_at);
+    if (patch.coupon_observed_at === undefined) {
+      return res.status(400).json({ error: "bad_coupon_observed_at" });
+    }
+  }
 
   const client = await pool.connect();
   try {
-    const r = await client.query(built.sql, built.vals);
-    if (!r.rows[0]) return res.status(404).json({ error: "not_found" });
-    res.json({ ok: true, row: r.rows[0] });
+    await client.query("begin");
+
+    const existing = await client.query(
+      `select * from public.listings where id = $1 for update`,
+      [id]
+    );
+
+    const current = existing.rows[0];
+    if (!current) {
+      await client.query("rollback");
+      return res.status(404).json({ error: "not_found" });
+    }
+
+    const priceTouched = Object.prototype.hasOwnProperty.call(patch, "current_price_cents");
+    const couponTouched = [
+      "coupon_text",
+      "coupon_type",
+      "coupon_value_cents",
+      "coupon_value_pct",
+      "coupon_requires_clip",
+      "coupon_code",
+      "coupon_expires_at",
+      "effective_price_cents",
+    ].some((k) => Object.prototype.hasOwnProperty.call(patch, k));
+
+    if (priceTouched && !Object.prototype.hasOwnProperty.call(patch, "current_price_observed_at")) {
+      patch.current_price_observed_at = new Date().toISOString();
+    }
+
+    if (couponTouched && !Object.prototype.hasOwnProperty.call(patch, "coupon_observed_at")) {
+      patch.coupon_observed_at = new Date().toISOString();
+    }
+
+    const allowed = [
+      "pci",
+      "upc",
+      "url",
+      "status",
+      "offer_tag",
+      "current_price_cents",
+      "current_price_observed_at",
+      "coupon_text",
+      "coupon_type",
+      "coupon_value_cents",
+      "coupon_value_pct",
+      "coupon_requires_clip",
+      "coupon_code",
+      "coupon_expires_at",
+      "effective_price_cents",
+      "coupon_observed_at",
+    ];
+
+    const built = buildUpdate({
+      table: "public.listings",
+      idCol: "id",
+      id,
+      allowed,
+      body: patch,
+    });
+
+    if (!built) {
+      await client.query("rollback");
+      return res.status(400).json({ error: "no_fields" });
+    }
+
+    const updatedResult = await client.query(built.sql, built.vals);
+    const updated = updatedResult.rows[0];
+
+    let historyRecorded = false;
+
+    const priceChanged =
+      priceTouched &&
+      updated.current_price_cents != null &&
+      updated.current_price_cents !== current.current_price_cents;
+
+    if (priceChanged && updated.store && updated.store_sku) {
+      const hist = await client.query(
+        `
+        insert into public.price_history
+          (store, store_sku, price_cents, observed_at, pci, upc, coupon_text, coupon_value_cents, coupon_value_pct, effective_price_cents)
+        values
+          ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        returning id
+        `,
+        [
+          updated.store,
+          updated.store_sku,
+          updated.current_price_cents,
+          updated.current_price_observed_at || new Date().toISOString(),
+          updated.pci,
+          updated.upc,
+          updated.coupon_text,
+          updated.coupon_value_cents,
+          updated.coupon_value_pct,
+          updated.effective_price_cents,
+        ]
+      );
+
+      historyRecorded = hist.rowCount > 0;
+    }
+
+    await client.query("commit");
+    res.json({ ok: true, row: updated, history_recorded: historyRecorded });
   } catch (err) {
+    try { await client.query("rollback"); } catch {}
     console.error("admin listing patch error", err);
     res.status(500).json({ error: "listing_patch_failed" });
   } finally {
@@ -904,7 +1056,7 @@ router.get("/admin/api/search", requireAdminApi, async (req, res) => {
   try {
     const listingsSql = `
       select
-        id, store, store_sku, pci, upc, title, url, status, offer_tag,
+        id, store, store_sku, pci, upc, url, status, offer_tag,
         current_price_cents, current_price_observed_at,
         coupon_text, coupon_type, coupon_value_cents, coupon_value_pct,
         coupon_requires_clip, coupon_code, coupon_expires_at,
@@ -916,7 +1068,6 @@ router.get("/admin/api/search", requireAdminApi, async (req, res) => {
         or ($2::text is not null and regexp_replace(coalesce(upc,''), '[^0-9]', '', 'g') = regexp_replace(coalesce($2::text,''), '[^0-9]', '', 'g'))
         or ($5::text is not null and upper(regexp_replace(coalesce(store_sku,''), '[^0-9A-Za-z]', '', 'g')) = upper(regexp_replace(coalesce($5::text,''), '[^0-9A-Za-z]', '', 'g')))
         or (store_sku ilike '%' || $3 || '%')
-        or (title ilike '%' || $3 || '%')
         or (store ilike '%' || $3 || '%')
       order by greatest(coalesce(current_price_observed_at, created_at), coalesce(coupon_observed_at, created_at)) desc nulls last
       limit $4
@@ -1096,7 +1247,7 @@ router.get("/admin/api/item", requireAdminApi, async (req, res) => {
     const offers = await client.query(
       `
       select
-        id, store, store_sku, pci, upc, title, url, status, offer_tag,
+        id, store, store_sku, pci, upc, url, status, offer_tag,
         current_price_cents, current_price_observed_at,
         coupon_text, coupon_type, coupon_value_cents, coupon_value_pct,
         coupon_requires_clip, coupon_code, coupon_expires_at,

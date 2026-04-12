@@ -115,7 +115,6 @@ function renderOfferCard(offer){
       </div>
 
       <div class="offerGrid">
-        ${inputField("Title", "title", offer.title, "Offer title")}
         ${inputField("URL", "url", offer.url, "https://...")}
 
         ${inputField("Status", "status", offer.status, "active / dead / ...")}
@@ -232,16 +231,21 @@ function render(items){
       const payload = {
         pci: normalizeEmpty(raw.pci),
         upc: normalizeEmpty(raw.upc),
-        brand: normalizeEmpty(raw.brand),
-        category: normalizeEmpty(raw.category),
-        model_number: normalizeEmpty(raw.model_number),
-        model_name: normalizeEmpty(raw.model_name),
-        version: normalizeEmpty(raw.version),
-        color: normalizeEmpty(raw.color),
-        image_url: normalizeEmpty(raw.image_url),
-        recall_url: normalizeEmpty(raw.recall_url),
-        dropship_warning: raw.dropship_warning == null ? null : normalizeEmpty(raw.dropship_warning),
-        coverage_warning: raw.coverage_warning == null ? null : normalizeEmpty(raw.coverage_warning),
+        status: normalizeEmpty(raw.status),
+        offer_tag: normalizeEmpty(raw.offer_tag),
+        url: normalizeEmpty(raw.url),
+
+        current_price_cents: toIntOrNull(raw.current_price_cents),
+        effective_price_cents: toIntOrNull(raw.effective_price_cents),
+
+        coupon_text: normalizeEmpty(raw.coupon_text),
+        coupon_type: normalizeEmpty(raw.coupon_type),
+        coupon_value_cents: toIntOrNull(raw.coupon_value_cents),
+        coupon_value_pct: toNumOrNull(raw.coupon_value_pct),
+
+        coupon_requires_clip: normalizeEmpty(raw.coupon_requires_clip),
+        coupon_code: normalizeEmpty(raw.coupon_code),
+        coupon_expires_at: normalizeEmpty(raw.coupon_expires_at),
       };
 
       lockForm(form, true);

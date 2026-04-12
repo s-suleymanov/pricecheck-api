@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex,nofollow" />
   <link rel="stylesheet" href="admin.css" />
   <link rel="icon" type="image/svg+xml" href="/logo/logo.svg">
+  <link rel="stylesheet" href="/public/styles.css">
 
   <style>
     /* DB manager layout: left catalog, right offers. Horizontal scroll is expected. */
@@ -156,6 +157,15 @@
       padding: 10px;
       background: rgba(0,0,0,0.01);
     }
+    .nav-ai {
+      width: 20px;
+    }
+    .logo {
+      width: 20px;
+    }
+    .nav-ai__icon {
+      width: 20px;
+    }
     .storeHead {
       display:flex;
       justify-content: space-between;
@@ -218,104 +228,6 @@
 
 <body>
   <div class="page">
-    <header class="nav">
-  <a class="logo-head" href="/" aria-label="Go to PriceCheck home">
-    <img src="/logo/logo.svg" alt="PriceCheck Logo" class="logo">
-    <div class="brand">
-      <span class="wordmark" data-pc-wordmark="1">PriceCheck</span>
-      <span class="edition" data-pc-edition="1">Beta</span>
-    </div>
-  </a>
-
-  <div class="nav-searchwrap" role="search" aria-label="Search PriceCheck">
-  <form class="nav-search" action="#" method="GET">
-    <input
-      class="nav-search__input"
-      type="search"
-      name="q"
-      placeholder="Search or paste URL, UPC, PCI, ASIN, SKU"
-      autocomplete="off"
-      spellcheck="false"
-    />
-  </form>
-
-    <button
-      class="nav-ai"
-      type="button"
-      title="PriceAI"
-      data-pc-plus="1"
-      aria-label="AI"
-    >
-      <img class="nav-ai__icon" src="/logo/ai.svg" alt="PriceAI" loading="lazy" decoding="async">
-    </button> 
-  </div>
-
-  <div class="nav-actions">
-  <button
-    class="btn btn--outline"
-    type="button"
-    data-signin-open="1"
-    data-auth-signedout-only="1"
-    aria-haspopup="dialog"
-    aria-controls="pcSignInModal"
-    hidden
-  >
-    Sign in
-  </button>
-
-  <button
-    class="pc-account-trigger"
-    type="button"
-    aria-label="Open account menu"
-    aria-haspopup="menu"
-    aria-expanded="false"
-    aria-controls="pcAccountMenu"
-    data-account-menu-toggle="1"
-    data-auth-signedin-only="1"
-    hidden
-  >
-    <img
-      id="pcAccountTriggerImg"
-      class="pc-account-trigger__img"
-      alt=""
-      hidden
-    >
-    <span
-      id="pcAccountTriggerFallback"
-      class="pc-account-trigger__fallback"
-      aria-hidden="true"
-    >
-      S
-    </span>
-    <span class="sr-only">Account</span>
-  </button>
-
-  <div id="pcAccountMenu" class="pc-account-menu" hidden>
-    <a class="pc-account-menu__item" href="/accounts/">Account</a>
-    <a class="pc-account-menu__item" href="/settings/">Settings</a>
-    <a class="pc-account-menu__item" href="/support/">Support</a>
-    <a class="pc-account-menu__item" href="/upgrade/">Upgrade</a>
-        <a
-      class="pc-account-menu__item"
-      href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Extension
-    </a>
-
-    <div class="pc-account-menu__sep"></div>
-
-    <button
-      class="pc-account-menu__item pc-account-menu__item--danger"
-      type="button"
-      data-account-signout="1"
-    >
-      Sign Out
-    </button>
-  </div>
-</div>
-</header>
 
 <div id="pcPlusToast" class="pc-plus-toast" hidden aria-live="polite"></div>
 
