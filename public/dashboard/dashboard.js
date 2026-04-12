@@ -3226,18 +3226,10 @@ function renderImageChoiceGroup(hostEl, options, selectedValue, onPick, typeLabe
       previewHeroMediaItem(previewItem);
     });
 
-    b.addEventListener('mouseleave', () => {
-      restoreHeroMediaPreview();
-    });
-
     b.addEventListener('focus', () => {
       const previewItem = previewItemFromChoice(opt);
       if (!previewItem) return;
       previewHeroMediaItem(previewItem);
-    });
-
-    b.addEventListener('blur', () => {
-      restoreHeroMediaPreview();
     });
 
     const img = b.querySelector('img');
