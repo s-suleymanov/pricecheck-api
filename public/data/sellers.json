@@ -1324,7 +1324,7 @@
   },
   "sennheiser": {
     "name": "Sennheiser",
-    "logo": "",
+    "logo": "/logo/seller/senn.png",
     "website": "https://www.sennheiser.com",
     "owned_by": "",
     "type": "Proprietary",
