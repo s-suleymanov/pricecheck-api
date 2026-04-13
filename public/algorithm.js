@@ -605,6 +605,20 @@ _skelResizeTimer = setTimeout(() => {
     });
   }
 
+  async function getHomeViewerSignedIn() {
+  try {
+    const r = await fetch("/api/auth/me", {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" }
+    });
+
+    const json = await r.json().catch(() => null);
+    return !!json?.user?.id;
+  } catch (_) {
+    return false;
+  }
+}
+
   // ── API call ──────────────────────────────────────────────────────────────
   async function apiFeed(sig, off, lim) {
     const r = await fetch("/api/home_feed", {
@@ -756,46 +770,49 @@ _skelResizeTimer = setTimeout(() => {
   }
 
   async function boot() {
-    const cold = { brands: [], categories: [], keywords: [], seenKeys: [] };
+  const cold = { brands: [], categories: [], keywords: [], seenKeys: [] };
 
-    initHomeShortlistUi();
-    _sig = cold;
+  initHomeShortlistUi();
 
-    renderPills(cold);
-    const firstPaintPromise = loadFirst(cold);
-    wireScroll();
-
-    try {
-      const r = await fetch("/api/history", {
-        headers: { Accept: "application/json" },
-        cache: "no-cache"
-      });
-
-      const json = r.ok ? await r.json() : null;
-
-      if (json?.signed_in && Array.isArray(json.results) && json.results.length) {
-        const sig = extractSignals(json.results);
-        if (sig.brands.length || sig.categories.length || sig.keywords.length) {
-          await firstPaintPromise;
-
-          _sig = sig;
-          _rows = [];
-          _seen.clear();
-          _off = 0;
-
-          const j = await apiFeed(sig, 0, PAGE);
-          const rows = Array.isArray(j?.results) ? j.results : [];
-
-          if (rows.length) {
-            _rows = rows;
-            _off = rows.length;
-            swap(rows);
-            setTimeout(() => renderPills(sig), 0);
-          }
-        }
-      }
-    } catch (_) {}
+  let signedIn = false;
+  try {
+    signedIn = await getHomeViewerSignedIn();
+  } catch (_) {
+    signedIn = false;
   }
+
+  if (!signedIn) {
+    _sig = cold;
+    renderPills(cold);
+    await loadFirst(cold);
+    wireScroll();
+    return;
+  }
+
+  let sig = cold;
+
+  try {
+    const r = await fetch("/api/history", {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" }
+    });
+
+    const json = r.ok ? await r.json() : null;
+
+    if (json?.signed_in && Array.isArray(json.results) && json.results.length) {
+      const nextSig = extractSignals(json.results);
+
+      if (nextSig.brands.length || nextSig.categories.length || nextSig.keywords.length) {
+        sig = nextSig;
+      }
+    }
+  } catch (_) {}
+
+  _sig = sig;
+  renderPills(sig);
+  await loadFirst(sig);
+  wireScroll();
+}
 
   boot();
 })();
