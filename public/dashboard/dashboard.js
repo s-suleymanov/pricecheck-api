@@ -3246,6 +3246,18 @@ function renderImageChoiceGroup(hostEl, options, selectedValue, onPick, typeLabe
 
     hostEl.appendChild(b);
   }
+
+  hostEl.onmouseleave = () => {
+    restoreHeroMediaPreview();
+  };
+
+  hostEl.onfocusout = () => {
+    requestAnimationFrame(() => {
+      if (!hostEl.contains(document.activeElement)) {
+        restoreHeroMediaPreview();
+      }
+    });
+  };
 }
 
 function pushVariantSelectionAndRun(){
