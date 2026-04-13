@@ -61,14 +61,19 @@
 .pc-media-strip-row__center{
   flex:1 1 auto;
   min-width:0;
-  display:flex;
-  align-items:center;
-  justify-content: center;
-  gap:12px;
   overflow-x:auto;
   overflow-y:hidden;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:thin;
+}
+
+.pc-media-strip-row__track{
+  width:max-content;
+  min-width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
 }
 
 .pc-media-strip-row__center::-webkit-scrollbar{

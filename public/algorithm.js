@@ -375,11 +375,9 @@
       });
     }
 
-    // brand/manufacturer first
     if (brand) pushIcon(brand, brand);
 
-    // then stores, but never duplicate the brand/store already shown
-    for (const st of uniq(stores || []).slice(0, 2)) {
+    for (const st of uniq(stores || [])) {
       pushIcon(st, st);
     }
 

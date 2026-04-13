@@ -436,10 +436,12 @@ function renderMediaStrip(){
       }
 
       <div class="pc-media-strip-row__center">
-        ${images.map((item, index) => {
-          const isActive = state.activeMediaIndex === index;
-          return imageStripCardMarkup(item, index, isActive);
-        }).join('')}
+        <div class="pc-media-strip-row__track">
+          ${images.map((item, index) => {
+            const isActive = state.activeMediaIndex === index;
+            return imageStripCardMarkup(item, index, isActive);
+          }).join('')}
+        </div>
       </div>
 
       ${
