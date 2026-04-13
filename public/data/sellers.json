@@ -39,6 +39,27 @@
       "support_page": "https://www.dell.com/support"
     }
   },
+  "verizon": {
+  "name": "Verizon",
+  "logo": "/logo/seller/verizon.svg",
+  "website": "https://www.verizon.com",
+  "owned_by": "",
+  "type": "Carrier & Direct Retailer",
+  "location": "United States",
+  "founded": 2000,
+  "policies": {
+    "return_period": "30 Days",
+    "delivery": "2 Days",
+    "restocking_fee": "$50 on wireless device returns/exchanges",
+    "free_shipping_threshold": "Free",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-800-922-0204",
+    "chat_available": true,
+    "support_page": "https://www.verizon.com/support/contact-us/"
+  }
+},
   "microcenter": {
     "name": "Micro Center",
     "logo": "/logo/seller/microcenter.webp",

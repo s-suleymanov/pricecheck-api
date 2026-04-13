@@ -108,6 +108,7 @@ router.get("/api/seller", (req, res) => {
   const policiesRaw = raw.policies && typeof raw.policies === "object" ? raw.policies : {};
   const policies = pickDefined({
     return_period: normText(policiesRaw.return_period || ""),
+    delivery: normText(policiesRaw.delivery || ""),
     restocking_fee: normText(policiesRaw.restocking_fee || ""),
     free_shipping_threshold: normText(policiesRaw.free_shipping_threshold || ""),
     price_match: normText(policiesRaw.price_match || ""),
