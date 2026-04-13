@@ -1939,9 +1939,9 @@
       "support_page": "https://contactus.target.com"
     }
   },
-  "bh_photo": {
+  "bhphotovideo": {
     "name": "B&H Photo Video",
-    "logo": "",
+    "logo": "/logo/seller/bhphoto.jpg",
     "website": "https://www.bhphotovideo.com",
     "owned_by": "",
     "type": "Specialty Retailer",
