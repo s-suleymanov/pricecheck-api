@@ -19,6 +19,48 @@
       "support_page": "https://www.bestbuy.com/support"
     }
   },
+    "lowes": {
+    "name": "Lowe's",
+    "logo": "/logo/seller/lowes.svg",
+    "website": "https://www.lowes.com",
+    "owned_by": "",
+    "type": "Home Improvement Retailer",
+    "location": "United States",
+    "founded": 1921,
+    "policies": {
+      "return_period": "90 Days",
+      "delivery": "Varies",
+      "restocking_fee": "No",
+      "free_shipping_threshold": "$45+",
+      "price_match": "Yes"
+    },
+    "contact": {
+      "phone": "1-800-445-6937",
+      "chat_available": true,
+      "support_page": "https://www.lowes.com/l/help"
+    }
+  },
+    "macys": {
+    "name": "Macy's",
+    "logo": "/logo/seller/macys.svg",
+    "website": "https://www.macys.com",
+    "owned_by": "",
+    "type": "Department Store",
+    "location": "United States",
+    "founded": 1858,
+    "policies": {
+      "return_period": "30 Days",
+      "delivery": "Varies",
+      "restocking_fee": "No",
+      "free_shipping_threshold": "$49+",
+      "price_match": "Yes (10-day price adjustment; select furniture)"
+    },
+    "contact": {
+      "phone": "1-800-289-6229",
+      "chat_available": true,
+      "support_page": "https://www.macys.com/customer-service/articles/contact-us"
+    }
+  },
   "dell": {
     "name": "Dell",
     "logo": "/logo/seller/dell.webp",
