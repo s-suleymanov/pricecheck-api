@@ -283,21 +283,28 @@ router.get('/:key', async (req, res) => {
       distResult,
       expertReviewsResult
     ] = await Promise.all([
-      db.query(
-        `
-          SELECT
-            lower(btrim(source_slug)) AS source_slug,
-            rating,
-            review_count,
-            source_url
-          FROM public.review_source_stats
-          WHERE coalesce(array_length($1::text[], 1), 0) > 0
-  AND upper(btrim(product_pci)) = ANY($1::text[])
-            AND review_count > 0
-          ORDER BY review_count DESC, rating DESC
-        `,
-        [groupPcis]
-      ),
+          db.query(
+      `
+        SELECT DISTINCT ON (lower(btrim(l.store)))
+          lower(btrim(l.store)) AS source_slug,
+          l.rating,
+          l.review_count,
+          l.url AS source_url
+        FROM public.listings l
+        WHERE coalesce(array_length($1::text[], 1), 0) > 0
+          AND upper(btrim(l.pci)) = ANY($1::text[])
+          AND l.review_count > 0
+          AND l.rating IS NOT NULL
+        ORDER BY
+          lower(btrim(l.store)),
+          l.review_count DESC,
+          l.rating DESC,
+          l.current_price_observed_at DESC NULLS LAST,
+          l.created_at DESC,
+          l.id DESC
+      `,
+      [groupPcis]
+    ),
 
       db.query(
         `
