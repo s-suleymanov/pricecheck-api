@@ -1322,6 +1322,26 @@
       "support_page": null
     }
   },
+  "shi": {
+  "name": "SHI",
+  "logo": "/logo/seller/shi.png",
+  "website": "https://www.shi.com",
+  "owned_by": "",
+  "type": "IT Solutions Provider",
+  "location": "United States",
+  "founded": 1989,
+  "policies": {
+    "return_period": "30-75 Days (Most items; manufacturer dependent)",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Unknown",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-888-764-8888",
+    "chat_available": true,
+    "support_page": "https://www.shi.com/us/customerservice/contact-us"
+  }
+},
   "sennheiser": {
     "name": "Sennheiser",
     "logo": "/logo/seller/senn.png",

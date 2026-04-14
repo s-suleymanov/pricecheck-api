@@ -6251,7 +6251,7 @@ function renderFilePreview(item){
       <div class="pc-file-frame-wrap">
         <iframe
           class="pc-file-frame"
-          src="${escapeHtml(item.href)}#view=FitH"
+          src="${escapeHtml(item.href)}#view=Fit"
           title="${escapeHtml(item.title)}"
           loading="lazy"
         ></iframe>
