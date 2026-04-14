@@ -863,7 +863,9 @@ const OFFER_COLS = `
   coupon_code,
   coupon_expires_at,
   effective_price_cents,
-  coupon_observed_at
+  coupon_observed_at,
+  rating,
+  review_count
 `;
 
 function rowToOfferCandidate(row) {
@@ -887,6 +889,9 @@ function rowToOfferCandidate(row) {
     coupon_code: row.coupon_code || null,
     coupon_expires_at: row.coupon_expires_at || null,
     coupon_observed_at: row.coupon_observed_at || null,
+
+    rating: row.rating != null ? Number(row.rating) : null,
+    review_count: row.review_count != null ? Number(row.review_count) : null,
 
     // Use coalesce for ordering and UI
     observed_at: row.current_price_observed_at ?? row.created_at ?? null,

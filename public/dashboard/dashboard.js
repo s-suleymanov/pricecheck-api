@@ -23,7 +23,7 @@
   <svg xmlns="http://www.w3.org/2000/svg"
         height="18" viewBox="0 -960 960 960" width="18"
         fill="currentColor" aria-hidden="true" focusable="false">
-      <path d="m233-120 93-304L80-600h304l96-320 96 320h304L634-424l93 304-247-188-247 188Z"></path>
+      <path d="m233-120 65-281L80-590l288-25 112-265 112 265 288 25-218 189 65 281-247-149-247 149Z"></path>
     </svg>
   `;
 
@@ -2935,44 +2935,6 @@ if (hasCustomer) {
     })
     .sort((a, b) => b._count - a._count);
 
-  const sourceCards = sortedSources.map((source) => {
-    const sourceName = String(source?.name || source?.store || 'Source').trim() || 'Source';
-    const sourceUrl = safeHttpHref(source?.url || '');
-    const sourceCount = Number(source?._count || 0);
-    const sourceRatingNum = Number(source?.rating || source?.average_rating || 0);
-
-    const sourceRatingText =
-      Number.isFinite(sourceRatingNum) && sourceRatingNum > 0
-        ? `${sourceRatingNum.toFixed(1)} / 5`
-        : 'No rating';
-
-    return `
-      <article class="pc-rv-source-card">
-        <div class="pc-rv-source-card__top">
-          <div class="pc-rv-source-card__name">${escapeHtml(sourceName)}</div>
-          ${
-            sourceUrl
-              ? `
-                <a
-                  class="pc-rv-source-card__link"
-                  href="${escapeHtml(sourceUrl)}"
-                  target="_blank"
-                  rel="noopener"
-                  aria-label="Open ${escapeHtml(sourceName)} reviews"
-                >
-                  ${REVIEW_EXTERNAL_SVG}
-                </a>
-              `
-              : ''
-          }
-        </div>
-
-        <div class="pc-rv-source-card__rating">${escapeHtml(sourceRatingText)}</div>
-        <div class="pc-rv-source-card__count">${fmtCompact(sourceCount)} reviews</div>
-      </article>
-    `;
-  }).join('');
-
   const confidence =
     total < 50 ? 'low' :
     total < 500 ? 'med' :
@@ -3009,18 +2971,6 @@ if (hasCustomer) {
             ${breakdownRows}
           </div>
         </div>
-
-        ${
-          sortedSources.length
-            ? `
-              <div class="pc-rv-sources-side">
-                <div class="pc-rv-source-grid">
-                  ${sourceCards}
-                </div>
-              </div>
-            `
-            : ''
-        }
       </div>
     </section>
   `;
@@ -5567,6 +5517,27 @@ function renderCouponsCard(){
     return sellerFallbackHtml(sellerHref, hasSeller);
   }
 
+  function offerRatingMetaHtml(offer){
+  const ratingNum = Number(offer?.rating);
+  const reviewCountNum = Number(offer?.review_count);
+
+  if (!Number.isFinite(ratingNum) || ratingNum <= 0) return '';
+  if (!Number.isFinite(reviewCountNum) || reviewCountNum <= 0) return '';
+
+  const countText = new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1
+  }).format(reviewCountNum);
+
+  return `
+    <div class="offer-rating-meta" aria-label="${escapeHtml(`${ratingNum.toFixed(1)} stars from ${reviewCountNum} reviews`)}">
+      <span class="offer-rating-meta__star" aria-hidden="true">${REVIEW_STAR_SVG}</span>
+      <span class="offer-rating-meta__value">${escapeHtml(ratingNum.toFixed(1))}</span>
+      <span class="offer-rating-meta__count">(${escapeHtml(countText)})</span>
+    </div>
+  `;
+}
+
   async function renderOffers(sortByPrice, runToken){
   if (runToken != null && isStaleRun(runToken)) return;
 
@@ -5615,6 +5586,7 @@ function renderCouponsCard(){
     const storeDisplay = titleCase(seller?.name || o.store || '');
     const tag = (o.offer_tag || '').trim();
     const priceText = (o._price != null) ? `${fmt.format(o._price)}` : 'No price';
+    const ratingMetaHtml = offerRatingMetaHtml(o);
 
     const logoHtml = sellerLogoHtml(seller, storeDisplay);
 
@@ -5665,7 +5637,10 @@ function renderCouponsCard(){
         </div>
       </div>
 
-      <div class="offer-tag-col muted">${tag ? escapeHtml(tag) : ''}</div>
+      <div class="offer-tag-col">
+        ${tag ? `<div class="offer-tag-col__tag">${escapeHtml(tag)}</div>` : ''}
+        ${ratingMetaHtml ? `<div class="offer-tag-col__rating">${ratingMetaHtml}</div>` : ''}
+      </div>
 
       <button class="offer-expand-btn" type="button" aria-expanded="false" aria-label="Show seller details">
         <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
