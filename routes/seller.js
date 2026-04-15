@@ -101,6 +101,7 @@ router.get("/api/seller", (req, res) => {
 
   seller.owned_by = normText(raw.owned_by || raw.ownedBy || raw.owned || "");
   seller.type = normText(raw.type || "");
+  seller.rating = normText(raw.rating || "");
   seller.location = normText(raw.location || raw.origin || "");
   seller.founded =
     raw.founded === 0 ? 0 : (Number.isFinite(Number(raw.founded)) ? Number(raw.founded) : "");
@@ -127,6 +128,7 @@ router.get("/api/seller", (req, res) => {
     website: seller.website,
     owned_by: seller.owned_by,
     type: seller.type,
+    rating: seller.rating,
     location: seller.location,
     founded: seller.founded,
   });

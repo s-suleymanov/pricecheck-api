@@ -8,9 +8,9 @@
     "location": "United States",
     "founded": 1966,
     "policies": {
-      "return_period": "15 Days",
+      "return_period": "15d",
       "restocking_fee": "No",
-      "free_shipping_threshold": "Free",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes"
     },
     "contact": {
@@ -28,7 +28,7 @@
     "location": "United States",
     "founded": 1921,
     "policies": {
-      "return_period": "90 Days",
+      "return_period": "90d",
       "delivery": "Varies",
       "restocking_fee": "No",
       "free_shipping_threshold": "$45+",
@@ -49,8 +49,7 @@
     "location": "United States",
     "founded": 1858,
     "policies": {
-      "return_period": "30 Days",
-      "delivery": "Varies",
+      "return_period": "30d",
       "restocking_fee": "No",
       "free_shipping_threshold": "$49+",
       "price_match": "Yes (10-day price adjustment; select furniture)"
@@ -70,9 +69,9 @@
     "location": "United States",
     "founded": 1984,
     "policies": {
-      "return_period": "30 Days",
+      "return_period": "30d",
       "restocking_fee": "15% (unless defective)",
-      "free_shipping_threshold": "No Minimum (Free Standard Shipping)",
+      "free_shipping_threshold": "No Minimum (Free Shipping Standard Shipping)",
       "price_match": "Yes"
     },
     "contact": {
@@ -90,10 +89,10 @@
   "location": "United States",
   "founded": 2000,
   "policies": {
-    "return_period": "30 Days",
-    "delivery": "2 Days",
+    "return_period": "30d",
+    "delivery": "2d",
     "restocking_fee": "$50 on wireless device returns/exchanges",
-    "free_shipping_threshold": "Free",
+    "free_shipping_threshold": "Free Shipping",
     "price_match": "Unknown"
   },
   "contact": {
@@ -111,9 +110,9 @@
     "location": "United States",
     "founded": 1979,
     "policies": {
-      "return_period": "15-30 Days (Category dependent)",
+      "return_period": "15-30d (Category dependent)",
       "restocking_fee": "No (Unless parts missing/damaged)",
-      "free_shipping_threshold": "Varies (Many items in-store only)",
+      "free_shipping_threshold": "Unknown",
       "price_match": "Yes"
     },
     "contact": {
@@ -188,12 +187,13 @@
     "website": "https://www.aliexpress.com",
     "owned_by": "Alibaba Group",
     "type": "Online Marketplace",
+    "rating": 4.5,
     "location": "China",
     "founded": 2010,
     "policies": {
-      "return_period": "15 Days",
+      "return_period": "15d",
       "restocking_fee": "Varies by seller",
-      "free_shipping_threshold": "Varies (often $10+ for Choice items)",
+      "free_shipping_threshold": "Varies",
       "price_match": "Yes (Select items)"
     },
     "contact": {
@@ -231,7 +231,7 @@
     "location": "Glenview, Illinois",
     "founded": 1936,
     "policies": {
-      "return_period": "30 Days",
+      "return_period": "30d",
       "restocking_fee": "Yes (on select opened items)",
       "free_shipping_threshold": "$35+",
       "price_match": "Yes"
@@ -251,9 +251,9 @@
     "location": "United States",
     "founded": 1986,
     "policies": {
-      "return_period": "14 Days",
+      "return_period": "14d",
       "restocking_fee": "No",
-      "free_shipping_threshold": "Free",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes"
     },
     "contact": {
@@ -271,7 +271,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -291,7 +291,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -311,7 +311,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -331,7 +331,7 @@
     "location": "Canada",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -371,7 +371,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -411,7 +411,7 @@
     "location": "Denmark",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -491,7 +491,7 @@
     "location": "United Kingdom",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -511,7 +511,7 @@
     "location": "France",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -531,7 +531,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -551,7 +551,7 @@
     "location": "Singapore",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -571,7 +571,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -591,7 +591,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -611,7 +611,7 @@
     "location": "United Kingdom",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -631,7 +631,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -651,7 +651,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -671,7 +671,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -731,7 +731,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -751,7 +751,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -771,7 +771,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -791,7 +791,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -811,7 +811,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -831,7 +831,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -851,7 +851,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -871,7 +871,7 @@
     "location": "Denmark",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -891,7 +891,7 @@
     "location": "South Korea",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -911,7 +911,7 @@
     "location": "Switzerland",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -931,7 +931,7 @@
     "location": "China, United Kingdom",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -951,7 +951,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -971,7 +971,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -991,7 +991,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1011,7 +1011,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1031,7 +1031,7 @@
     "location": "Japan",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1051,7 +1051,7 @@
     "location": "United Kingdom",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1071,7 +1071,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1131,7 +1131,7 @@
     "location": "Japan",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1151,7 +1151,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1171,7 +1171,7 @@
     "location": "United States, Singapore",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1191,7 +1191,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1211,7 +1211,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1231,7 +1231,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1271,9 +1271,9 @@
     "location": "South Korea",
     "founded": 1969,
     "policies": {
-      "return_period": "15 Days",
+      "return_period": "15d",
       "restocking_fee": "Yes (5% on select items)",
-      "free_shipping_threshold": "Free",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes (Valid within 7 days)"
     },
     "contact": {
@@ -1291,7 +1291,7 @@
   "location": "United States",
   "founded": null,
   "policies": {
-    "return_period": "See Website",
+    "return_period": "",
     "restocking_fee": "Unknown",
     "free_shipping_threshold": "Unknown",
     "price_match": "Unknown"
@@ -1311,7 +1311,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1331,7 +1331,7 @@
   "location": "United States",
   "founded": 1989,
   "policies": {
-    "return_period": "30-75 Days (Most items; manufacturer dependent)",
+    "return_period": "30-75d (Most items; manufacturer dependent)",
     "restocking_fee": "Unknown",
     "free_shipping_threshold": "Unknown",
     "price_match": "Unknown"
@@ -1351,7 +1351,7 @@
     "location": "Germany",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1371,7 +1371,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1391,7 +1391,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1551,7 +1551,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1591,7 +1591,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1611,7 +1611,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1631,7 +1631,7 @@
     "location": "Japan",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1671,7 +1671,7 @@
     "location": "Denmark",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1691,7 +1691,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1711,7 +1711,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1731,7 +1731,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1751,7 +1751,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1771,7 +1771,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1791,7 +1791,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1811,7 +1811,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1831,7 +1831,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1851,7 +1851,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1871,7 +1871,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1891,7 +1891,7 @@
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1911,7 +1911,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1931,7 +1931,7 @@
     "location": "China",
     "founded": null,
     "policies": {
-      "return_period": "See Website",
+      "return_period": "",
       "restocking_fee": "Unknown",
       "free_shipping_threshold": "Unknown",
       "price_match": "Unknown"
@@ -1951,9 +1951,9 @@
     "location": "United States",
     "founded": 1994,
     "policies": {
-      "return_period": "30 Days",
+      "return_period": "30d",
       "restocking_fee": "No (mostly)",
-      "free_shipping_threshold": "Free",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "No"
     },
     "contact": {
@@ -1971,9 +1971,9 @@
     "location": "United States",
     "founded": 1962,
     "policies": {
-      "return_period": "30 Days",
+      "return_period": "30d",
       "restocking_fee": "No",
-      "free_shipping_threshold": "Free",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "No (Online vs Store varies)"
     },
     "contact": {
@@ -1991,9 +1991,9 @@
     "location": "United States",
     "founded": 1902,
     "policies": {
-      "return_period": "90 Days (30 for Electronics)",
+      "return_period": "30d",
       "restocking_fee": "No",
-      "free_shipping_threshold": "$35+",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes"
     },
     "contact": {
@@ -2011,9 +2011,9 @@
     "location": "United States",
     "founded": 1973,
     "policies": {
-      "return_period": "30 Days",
+      "return_period": "30d",
       "restocking_fee": "No (15% if opened/missing parts)",
-      "free_shipping_threshold": "Free",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes"
     },
     "contact": {
@@ -2031,8 +2031,8 @@
     "location": "United States",
     "founded": 2001,
     "policies": {
-      "return_period": "30 Days",
-      "restocking_fee": "Varies (often 15% on opened items)",
+      "return_period": "30d",
+      "restocking_fee": "Unknown",
       "free_shipping_threshold": "Varies per item",
       "price_match": "Yes (on select items)"
     },
@@ -2051,7 +2051,7 @@
     "location": "United States",
     "founded": 1983,
     "policies": {
-      "return_period": "90 Days (Electronics)",
+      "return_period": "90d (Electronics)",
       "restocking_fee": "No",
       "free_shipping_threshold": "included in price (often)",
       "price_match": "No"
@@ -2171,7 +2171,7 @@
   "location": "United States",
   "founded": 1978,
   "policies": {
-    "return_period": "90 Days",
+    "return_period": "90d",
     "restocking_fee": "15% on some special order returns/cancellations",
     "free_shipping_threshold": "Varies",
     "price_match": "Yes"

@@ -27,6 +27,14 @@
     </svg>
   `;
 
+    const RETURNS_PILL_SVG = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+         height="16" viewBox="0 -960 960 960" width="16"
+         fill="currentColor" aria-hidden="true" focusable="false">
+      <path d="M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z"></path>
+    </svg>
+  `;
+
   const DASHBOARD_BOTTOM_EXPAND_ICON_PATH = 'M200-120q-33 0-56.5-23.5T120-200v-160h80v160h160v80H200Zm400 0v-80h160v-160h80v160q0 33-23.5 56.5T760-120H600ZM120-600v-160q0-33 23.5-56.5T200-840h160v80H200v160h-80Zm640 0v-160H600v-80h160q33 0 56.5 23.5T840-760v160h-80Z';
 
   const state = {
@@ -5432,23 +5440,24 @@ function renderCouponsCard(){
     return '';
   }
 
-  function returnsTextForOffer(offer, seller){
+    function returnsTextForOffer(offer, seller){
     if (offer?.return_days != null) {
       const n = Number(offer.return_days);
       if (Number.isFinite(n) && n > 0) {
-        return `${n}-day`;
+        return `${n}d`;
       }
     }
 
-    if (norm(seller?.policies?.return_period)) {
-      return norm(seller.policies.return_period);
+    const sellerPeriod = String(seller?.policies?.return_period || '').trim();
+    if (sellerPeriod) {
+      const m = sellerPeriod.match(/(\d+)\s*(?:day|days|d)\b/i);
+      if (m && m[1]) return `${m[1]}d`;
     }
 
-    if (norm(offer?.return_policy)) {
-      return norm(offer.return_policy)
-        .replace(/\breturns?\b/gi, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
+    const offerPolicy = String(offer?.return_policy || '').trim();
+    if (offerPolicy) {
+      const m = offerPolicy.match(/(\d+)\s*(?:day|days|d)\b/i);
+      if (m && m[1]) return `${m[1]}d`;
     }
 
     return '';
@@ -5488,11 +5497,13 @@ function renderCouponsCard(){
   `;
 }
 
-  async function renderOffers(sortByPrice, runToken){
+async function renderOffers(sortByPrice, runToken){
   if (runToken != null && isStaleRun(runToken)) return;
 
   const wrap = $('#offers');
   const note = $('#offersNote');
+
+  if (!wrap || !note) return;
 
   wrap.innerHTML = '';
 
@@ -5501,7 +5512,70 @@ function renderCouponsCard(){
     return;
   }
 
-  let arr = state.offers.map(o => {
+  function formatShippingLine(offer, seller){
+    const rawCost = offer?.shipping_cost;
+
+    if (rawCost != null && rawCost !== '') {
+      const cents = Number(rawCost);
+
+      if (Number.isFinite(cents)) {
+        if (cents === 0) return 'Free shipping';
+        if (cents > 0) return `+ ${fmt.format(cents / 100)} shipping`;
+      }
+    }
+
+    const text = String(shippingTextForOffer(offer, seller) || '').trim();
+    if (!text) return '';
+
+    if (/^free\b/i.test(text)) return text;
+    if (/^\$/.test(text)) return `+ ${text} shipping`;
+
+    return text;
+  }
+
+  function returnsPillHtml(offer, seller){
+  const text = String(returnsTextForOffer(offer, seller) || '').trim();
+  if (!text) return '';
+
+  return `
+    <span
+      class="offer-meta-pill offer-meta-pill--returns"
+      data-tooltip="Return Policy"
+      aria-label="Return Policy"
+      tabindex="0"
+    >
+      <span class="offer-meta-pill__icon" aria-hidden="true">${RETURNS_PILL_SVG}</span>
+      <span class="offer-meta-pill__text">${escapeHtml(text)}</span>
+    </span>
+  `;
+}
+
+  function sellerRatingPillHtml(seller){
+  const raw = seller?.rating;
+
+  if (raw == null || raw === '') return '';
+
+  const num = Number(raw);
+  const text =
+    Number.isFinite(num) && num > 0
+      ? num.toFixed(1)
+      : String(raw).trim();
+
+  if (!text) return '';
+
+  return `
+    <span
+      class="offer-meta-pill offer-meta-pill--store-rating"
+      data-tooltip="Store Rating"
+      aria-label="Store Rating"
+      tabindex="0"
+    >
+      <span class="offer-meta-pill__text">${escapeHtml(text)}</span>
+    </span>
+  `;
+}
+
+  let arr = state.offers.map((o) => {
     const cents = bestComparableCents(o);
     const price = (typeof cents === 'number') ? cents / 100 : null;
     return { ...o, _price: price, _price_cents: cents };
@@ -5531,11 +5605,25 @@ function renderCouponsCard(){
 
   if (runToken != null && isStaleRun(runToken)) return;
 
+  wrap.innerHTML = `
+    <div class="offer-grid-head" role="presentation">
+      <div class="offer-grid-head__cell offer-grid-head__cell--store">Store</div>
+      <div class="offer-grid-head__cell">Cost</div>
+      <div class="offer-grid-head__cell">Delivery</div>
+      <div class="offer-grid-head__cell">Rating</div>
+    </div>
+  `;
+
   sellerRows.forEach(({ offer: o, seller, hasSeller, sellerHref }) => {
     const bestLink = safeHttpHref(o.url || canonicalLink(o.store, o) || '');
     const storeDisplay = titleCase(seller?.name || o.store || '');
-    const tag = (o.offer_tag || '').trim();
-    const priceText = (o._price != null) ? `${fmt.format(o._price)}` : 'No price';
+    const hasPrice = o._price != null;
+    const priceText = hasPrice ? fmt.format(o._price) : '';
+    const deliveryText = String(deliveryTextForOffer(o, seller) || '').trim();
+    const shippingText = hasPrice ? formatShippingLine(o, seller) : '';
+    const storeReturnsPillHtml = returnsPillHtml(o, seller);
+    const storeRatingPill = sellerRatingPillHtml(seller);
+    const storeMetaHtml = [storeRatingPill, storeReturnsPillHtml].filter(Boolean).join('');
     const ratingMetaHtml = offerRatingMetaHtml(o);
 
     const logoHtml = sellerLogoHtml(seller, storeDisplay);
@@ -5548,32 +5636,14 @@ function renderCouponsCard(){
         )
       : `<span class="offer-logo-spacer" aria-hidden="true"></span>`;
 
-    const deliveryHtml = sellerValueOrFallback(
-      deliveryTextForOffer(o, seller),
-      sellerHref,
-      hasSeller
-    );
-
-    const shippingHtml = sellerValueOrFallback(
-      shippingTextForOffer(o, seller),
-      sellerHref,
-      hasSeller
-    );
-
-    const returnsHtml = sellerValueOrFallback(
-      returnsTextForOffer(o, seller),
-      sellerHref,
-      hasSeller
-    );
-
     const row = document.createElement('div');
     row.className = 'offer';
 
     row.innerHTML = `
-      <div class="offer-left">
+      <div class="offer-store-cell" data-label="Store">
         ${logoSlotHtml}
 
-        <div class="offer-left-main">
+        <div class="offer-store-copy">
           <div class="offer-store-row">
             <span class="offer-store">${escapeHtml(storeDisplay)}</span>
             ${
@@ -5583,56 +5653,31 @@ function renderCouponsCard(){
             }
           </div>
 
-          <div class="muted-price offer-price">${escapeHtml(priceText)}</div>
+          ${
+            storeMetaHtml
+              ? `<div class="offer-store-meta">${storeMetaHtml}</div>`
+              : ''
+          }
         </div>
       </div>
 
-      <div class="offer-tag-col">
-        ${tag ? `<div class="offer-tag-col__tag">${escapeHtml(tag)}</div>` : ''}
-        ${ratingMetaHtml ? `<div class="offer-tag-col__rating">${ratingMetaHtml}</div>` : ''}
+      <div class="offer-price-col" data-label="Cost">
+        <div class="muted-price offer-price">${priceText ? escapeHtml(priceText) : ''}</div>
+        <div class="offer-cell-sub">${shippingText ? escapeHtml(shippingText) : ''}</div>
       </div>
 
-      <button class="offer-expand-btn" type="button" aria-expanded="false" aria-label="Show seller details">
-        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="9 6 15 12 9 18"/>
-        </svg>
-      </button>
-    `;
+      <div class="offer-delivery-col" data-label="Delivery">
+        <div class="offer-cell-main">${deliveryText ? escapeHtml(deliveryText) : ''}</div>
+      </div>
 
-    const details = document.createElement('div');
-    details.className = 'offer-details';
-    details.hidden = true;
-
-    details.innerHTML = `
-      <div class="offer-details-grid">
-        <div class="offer-detail-cell">
-          <div class="offer-detail-label">Delivery</div>
-          <div class="offer-detail-value">${deliveryHtml}</div>
-        </div>
-
-        <div class="offer-detail-cell">
-          <div class="offer-detail-label">Shipping</div>
-          <div class="offer-detail-value">${shippingHtml}</div>
-        </div>
-
-        <div class="offer-detail-cell">
-          <div class="offer-detail-label">Returns</div>
-          <div class="offer-detail-value">${returnsHtml}</div>
-        </div>
+      <div class="offer-rating-col" data-label="Rating">
+        ${ratingMetaHtml || ''}
       </div>
     `;
-
-    row.querySelector('.offer-expand-btn').addEventListener('click', () => {
-      const open = details.hidden;
-      details.hidden = !open;
-      row.querySelector('.offer-expand-btn').setAttribute('aria-expanded', String(open));
-      row.querySelector('.offer-expand-btn').classList.toggle('is-open', open);
-    });
 
     const wrapper = document.createElement('div');
     wrapper.className = 'offer-wrapper';
     wrapper.appendChild(row);
-    wrapper.appendChild(details);
     wrap.appendChild(wrapper);
   });
 
