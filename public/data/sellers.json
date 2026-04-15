@@ -1842,26 +1842,6 @@
       "support_page": null
     }
   },
-  "acer": {
-    "name": "Acer",
-    "logo": "",
-    "website": "https://www.acer.com",
-    "owned_by": "",
-    "type": "Proprietary",
-    "location": "Taiwan",
-    "founded": null,
-    "policies": {
-      "return_period": "See Website",
-      "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
-      "price_match": "Unknown"
-    },
-    "contact": {
-      "phone": null,
-      "chat_available": false,
-      "support_page": null
-    }
-  },
   "ecobee": {
     "name": "Ecobee",
     "logo": "",
