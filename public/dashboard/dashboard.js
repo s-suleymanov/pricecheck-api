@@ -3517,7 +3517,6 @@ async function run(raw){
     if (isStaleRun(runToken)) return;
 
     hydrateHeader();
-    hydrateKpis();
     drawChart();
     renderCouponsCard();
     renderAboutCard();
@@ -3651,14 +3650,6 @@ async function run(raw){
   state.followStateKnown = false;
   state.followBusy = false;
   setFollowButtonUi();
-
-  $('#kCurrent').textContent = 'NA';
-  $('#kStore').textContent = '';
-  $('#kTypical').textContent = 'NA';
-  $('#kTypicalNote').textContent = '';
-  $('#kLow30').textContent = 'NA';
-  $('#kLow30Date').textContent = '';
-  $('#kIntegrity').textContent = 'NA';
 
   const specsCard = document.getElementById('specsCard');
   const specsContent = document.getElementById('specsContent');
@@ -4404,47 +4395,6 @@ function recordHistory(key, title, imageUrl, brand) {
     })
   }).catch(() => {}); // silent fail — history is non-critical
 }
-
-  function hydrateKpis(){
-  const offers = Array.isArray(state.offers) ? state.offers : [];
-  const priced = offers
-    .map(o => ({ o, c: bestComparableCents(o) }))
-    .filter(x => typeof x.c === 'number' && x.c > 0);
-
-  if (!priced.length){
-    $('#kCurrent').textContent = 'NA';
-    $('#kStore').textContent = '';
-    $('#kTypical').textContent = 'NA';
-    $('#kTypicalNote').textContent = '';
-    $('#kLow30').textContent = 'NA';
-    $('#kLow30Date').textContent = '';
-    $('#kIntegrity').textContent = 'NA';
-    return;
-  }
-
-  priced.sort((a,b)=>a.c-b.c);
-  const best = priced[0].o;
-  const bestCents = priced[0].c;
-
-  $('#kCurrent').textContent = fmt.format(bestCents/100);
-  $('#kStore').textContent = `at ${titleCase(best.store || 'Retailer')}`;
-
-    const hs = state.historyStats || {};
-    const tl90 = (typeof hs.typical_low_90_cents === 'number') ? hs.typical_low_90_cents : null;
-    const tl30 = (typeof hs.typical_low_30_cents === 'number') ? hs.typical_low_30_cents : null;
-
-    $('#kTypical').textContent = tl90 != null ? fmt.format(tl90/100) : 'NA';
-    $('#kTypicalNote').textContent = tl90 != null ? 'based on daily lows' : '';
-
-    $('#kLow30').textContent = tl30 != null ? fmt.format(tl30/100) : 'NA';
-
-    const low30Date = hs.low_30_date ? new Date(hs.low_30_date) : null;
-    const ok = low30Date && !Number.isNaN(low30Date.getTime());
-    $('#kLow30Date').textContent = ok ? `lowest day: ${new Intl.DateTimeFormat(undefined,{dateStyle:'medium'}).format(low30Date)}` : '';
-
-    // Keep your current “Pass” placeholder until you wire real integrity logic
-    $('#kIntegrity').textContent = 'Pass';
-  }
 
   function drawChart(){
   const svg = $('#chart');

@@ -1183,15 +1183,6 @@ aside{
 }
 .btn-das:hover, .btn:hover{color:white;background-color: black ;box-shadow:0 0 0 2px rgba(99,102,241,.05),0px 8px 16px rgba(15,23,42,.06)}
 
-
-/* KPI tiles */
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.kpi{
-  background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-height:92px
-}
-.kpi .big{font-size:clamp(22px,4.6vw,32px);font-weight:700;line-height:1.1}
-.kpi .small{color:#6b7280;font-size:.95rem}
-
 /* Product image block */
 #pImg{
   width:100%;
@@ -1731,31 +1722,11 @@ aside{
   .pc-warn--recall{
     margin: 0 16px;
   }
-  .kpis{
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
   #pImg, .pimg-wrap{
     max-width: none;
   }
   #pIds{
     justify-content: center;
-  }
-
-}
-
-@media (max-width:700px){
-  .kpis{
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  /* hide "Typical low 90d" (2nd KPI) */
-  .kpis .kpi:nth-child(2){
-    display: none !important;
-  }
-  .kpis .kpi:nth-child(3){
-    display: none !important;
   }
 }
 
