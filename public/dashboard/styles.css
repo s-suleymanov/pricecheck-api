@@ -3108,7 +3108,7 @@ button.pc-lineup-model{
 }
 
 .pc-review-section{
-  padding-top: 38px;
+  padding-top: 18px;
 }
 
 #marketingImagesCard{
@@ -3370,7 +3370,7 @@ button.pc-lineup-model{
 
 .pc-rv-expert-score {
   display: flex;
-  flex-direction: row;
+  flex-direction: row-reverse;
   align-items: baseline;
   gap: 10px;
 }
@@ -4660,7 +4660,7 @@ button.pc-lineup-model{
 
 .offer-rating-meta{
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: flex-start;
   gap: 6px;
 
@@ -4680,18 +4680,20 @@ button.pc-lineup-model{
   justify-content: center;
   color: #f59e0b;
   flex: 0 0 auto;
+  transform: translate(4px,4px);
 }
 
 .offer-rating-meta__star svg{
-  width: 15px;
-  height: 15px;
+  width: 28px;
+  height: 28px;
   display: block;
   fill: currentColor;
 }
 
 .offer-rating-meta__value{
   color: #334155;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 26px;
   flex: 0 0 auto;
 }
 

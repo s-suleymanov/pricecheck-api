@@ -3012,7 +3012,7 @@ if (hasCustomer) {
       const scoreNum = Number(r.score);
       const scoreScaleNum = Number(r.score_scale);
 
-      const normalizedLabel = scoreOutOf5 != null ? `${scoreOutOf5.toFixed(1)}/5` : '';
+      const normalizedLabel = scoreOutOf5 != null ? `${scoreOutOf5.toFixed(1)}` : '';
       const rawLabel =
         Number.isFinite(scoreNum) &&
         Number.isFinite(scoreScaleNum) &&
