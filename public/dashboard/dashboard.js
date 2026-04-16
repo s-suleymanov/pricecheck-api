@@ -215,7 +215,7 @@ function prettySpecPill(label, value){
 
   if (/^(yes|true)$/i.test(rawValue)) {
     return {
-      text: rawLabel.toLowerCase(),
+      text: rawLabel,
       label: rawLabel
     };
   }
