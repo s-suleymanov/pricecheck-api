@@ -2,20 +2,11 @@
 const path = require("path");
 const express = require("express");
 const crypto = require("crypto");
-const { Pool } = require("pg");
-
+const pool = require("../db");
 const router = express.Router();
 
 // JSON for login + API
 router.use(express.json({ limit: "1mb" }));
-
-// -------------------------
-// DB
-// -------------------------
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PGSSLMODE === "disable" ? false : { rejectUnauthorized: false },
-});
 
 // -------------------------
 // Admin session cookie auth

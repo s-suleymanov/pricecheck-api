@@ -6,4 +6,8 @@ const pool = new Pool({
   ssl: process.env.PGSSLMODE === "disable" ? false : { rejectUnauthorized: false },
 });
 
+pool.on("error", (err) => {
+  console.error("PG pool error:", err);
+});
+
 module.exports = pool;

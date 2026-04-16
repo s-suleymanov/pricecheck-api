@@ -2,15 +2,8 @@
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
-const { Pool } = require('pg');
-
+const pool = require("../db");
 const router = express.Router();
-
-// Postgres connection for live metrics
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
 
 // Snapshot file
 const DATA_DIR = path.join(__dirname, '..', 'data');

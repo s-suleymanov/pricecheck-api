@@ -3,9 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const crypto = require('crypto');
-const { Pool } = require('pg');
-
 const router = express.Router();
+const pool = require('../db');
 
 // -------------------------
 // dashboard HTML template + SEO injection
@@ -118,12 +117,6 @@ function canonicalPathFromKey(key, title) {
   if (kind && value) return `/dashboard/${slug}/${kind}/${encodeURIComponent(value)}/`;
   return `/dashboard/${slug}/`;
 }
-
-// Create pool here (matches your "router exports directly" server.js mount style)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PGSSLMODE === 'disable' ? false : { rejectUnauthorized: false }
-});
 
 // -------------------------
 // small helpers

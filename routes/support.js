@@ -2,17 +2,12 @@
 const path = require("path");
 const express = require("express");
 const crypto = require("crypto");
-const { Pool } = require("pg");
+const pool = require("../db");
 
 const router = express.Router();
 
 // Make this router self-contained (so you do not depend on app-level json())
 router.use(express.json({ limit: "1mb" }));
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PGSSLMODE === "disable" ? false : { rejectUnauthorized: false }
-});
 
 const ADMIN_TOKEN = String(process.env.SUPPORT_ADMIN_TOKEN || "").trim();
 const VOTE_SALT = String(process.env.SUPPORT_VOTE_SALT || ADMIN_TOKEN || "dev-salt").trim();

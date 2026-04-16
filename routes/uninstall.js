@@ -1,13 +1,8 @@
 // routes/uninstall.js
 const express = require("express");
-const { Pool } = require("pg");
+const pool = require("../db");
 
 const router = express.Router();
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PGSSLMODE === "disable" ? false : { rejectUnauthorized: false },
-});
 
 // POST /api/uninstall_feedback
 router.post("/api/uninstall_feedback", async (req, res) => {

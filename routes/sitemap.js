@@ -1,13 +1,8 @@
 // routes/sitemap.js
 const express = require("express");
-const { Pool } = require("pg");
+const pool = require("../db");
 
 const router = express.Router();
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PGSSLMODE === "disable" ? false : { rejectUnauthorized: false },
-});
 
 function slugify(s) {
   return String(s ?? "")
