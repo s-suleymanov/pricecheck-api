@@ -211,12 +211,21 @@ function prettySpecPill(label, value){
   const rawLabel = String(label ?? '').trim();
   const rawValue = String(value ?? '').trim();
 
-  if (!rawLabel || !rawValue) return '';
+  if (!rawLabel || !rawValue) return null;
 
-  if (/^(yes|true)$/i.test(rawValue)) return rawLabel.toLowerCase();
-  if (/^(no|false)$/i.test(rawValue)) return '';
+  if (/^(yes|true)$/i.test(rawValue)) {
+    return {
+      text: rawLabel.toLowerCase(),
+      label: rawLabel
+    };
+  }
 
-  return `${rawValue} ${rawLabel.toLowerCase()}`;
+  if (/^(no|false)$/i.test(rawValue)) return null;
+
+  return {
+    text: rawValue,
+    label: rawLabel
+  };
 }
 
 async function loadSpecPillConfigOnce(){
@@ -295,18 +304,18 @@ function buildTopSpecPills(specs, configList){
     const hit = byNormalizedKey.get(normalizeSpecKey(wanted));
     if (!hit) continue;
 
-    const pillText = prettySpecPill(hit.label, hit.value);
-    if (!pillText) continue;
+    const pill = prettySpecPill(hit.label, hit.value);
+    if (!pill) continue;
 
-    out.push(pillText);
+    out.push(pill);
     used.add(normalizeSpecKey(wanted));
   }
 
-  if (out.length < 5 && fallback) {
+  if (out.length < 7 && fallback) {
     const fallbackHit = byNormalizedKey.get(normalizeSpecKey(fallback));
     if (fallbackHit && !used.has(normalizeSpecKey(fallback))) {
-      const pillText = prettySpecPill(fallbackHit.label, fallbackHit.value);
-      if (pillText) out.push(pillText);
+      const pill = prettySpecPill(fallbackHit.label, fallbackHit.value);
+      if (pill) out.push(pill);
     }
   }
 
@@ -334,7 +343,14 @@ function renderTopSpecPills(){
 
   host.hidden = false;
   host.innerHTML = pills
-    .map(text => `<span class="ph-spec-pill">${escapeHtml(text)}</span>`)
+    .map(pill => `
+      <span
+        class="ph-spec-pill"
+        data-tooltip="${escapeHtml(pill.label)}"
+        aria-label="${escapeHtml(pill.label)}"
+        tabindex="0"
+      >${escapeHtml(pill.text)}</span>
+    `)
     .join('');
 }
 

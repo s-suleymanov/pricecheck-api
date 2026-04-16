@@ -711,7 +711,7 @@ aside .note{
   display:flex;
   align-items:center;
   gap:12px;
-  margin-bottom:10px;
+  margin-bottom:6px;
 }
 
 .ph-brand-row #pBrandLine{
@@ -4850,7 +4850,7 @@ button.pc-lineup-model{
 
 .ph-top-price-card__main{
   display:grid;
-  gap:10px;
+  gap:6px;
   justify-items:end;
   text-align:right;
 }
