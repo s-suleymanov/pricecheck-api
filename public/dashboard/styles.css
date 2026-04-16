@@ -22,10 +22,22 @@
   grid-template-areas:
     "header header"
     "variant variant"
+    "offers offers"
     "main side";
   column-gap:28px;
   row-gap:20px;
   align-items:stretch;
+}
+
+#offersCard{
+  grid-area: offers;
+  width: 100%;
+  margin-top: 0;
+}
+
+#offersNote{
+  color: var(--muted);
+  margin-top: 20px;
 }
 
 #mediaStripSection{
