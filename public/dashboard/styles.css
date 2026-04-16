@@ -951,15 +951,6 @@ aside .note{
   min-height:0;
 }
 
-.ph-rating-row{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:10px;
-  flex-wrap:wrap;
-  min-height:38px;
-}
-
 .ph-comment-btn{
   height:38px;
   padding:0 14px;
@@ -994,12 +985,6 @@ aside .note{
   display:block;
   flex:0 0 auto;
   fill:currentColor;
-}
-
-@media (max-width:900px){
-  .ph-rating-row{
-    justify-content:center;
-  }
 }
 
 .ph-tool{
@@ -1725,14 +1710,91 @@ aside{
 }
 
 .ph-verify-dot{
+  display: none;
   position:relative;
   width:10px;
   height:10px;
   border-radius:999px;
   flex:0 0 auto;
-  display:inline-block;
+  /* display:inline-block; */
   cursor:default;
   background:#9ca3af;
+}
+
+.ph-title-rating{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:28px;
+  padding:0 8px;
+  border-radius:9px;
+  font-size:17px;
+  line-height:1;
+  font-weight:700;
+  white-space:nowrap;
+  border:1px solid transparent;
+}
+
+.ph-title-block{
+  display:grid;
+  gap:20px;
+  min-width:0;
+}
+
+.ph-spec-pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.ph-spec-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:32px;
+  padding:0 12px;
+  border-radius:999px;
+  background:#f5f7fb;
+  border:1px solid #e2e8f0;
+  color:#334155;
+  font-size:14px;
+  font-weight:500;
+  line-height:1;
+  white-space:nowrap;
+}
+
+@media (max-width:530px){
+  .ph-spec-pills{
+    justify-content:center;
+  }
+
+  .ph-spec-pill{
+    font-size:13px;
+    min-height:30px;
+    padding:0 10px;
+  }
+}
+
+.ph-title-rating--great{
+  color: #34A853;
+  background: #E6F4EA;
+}
+
+.ph-title-rating--good{
+  background:#fefce8;
+  color:#a16207;
+  border-color:#fde68a;
+}
+
+.ph-title-rating--mixed{
+  background:#fff7ed;
+  color:#c2410c;
+  border-color:#fdba74;
+}
+
+.ph-title-rating--low{
+  background:#f8fafc;
+  color:#64748b;
+  border-color:#e2e8f0;
 }
 
 .ph-verify-dot.is-active{
@@ -3708,6 +3770,7 @@ button.pc-lineup-model{
 
 .ph-topbar .ph-tools{
   margin:0;
+  padding-bottom: 8px;
   justify-content:flex-end;
   flex:0 0 auto;
 }
@@ -3721,14 +3784,6 @@ button.pc-lineup-model{
   .ph-topbar .ph-tools{
     justify-content:flex-start;
   }
-}
-
-.ph-topbar__side{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  gap:10px;
-  flex:0 0 auto;
 }
 
 .ph-rating-summary{
@@ -4763,4 +4818,298 @@ button.pc-lineup-model{
 
 .offer-meta-pill__text{
   display:inline-block;
+}
+
+.ph-topbar{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:24px;
+}
+
+.ph-topbar__main{
+  min-width:0;
+  flex:1 1 auto;
+}
+
+.ph-topbar__side{
+  flex:0 0 auto;
+  min-width:260px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+}
+
+.ph-top-price-card{
+  display:block;
+  margin:0;
+  padding:0;
+  border:0;
+  width:auto;
+}
+
+.ph-top-price-card__main{
+  display:grid;
+  gap:10px;
+  justify-items:end;
+  text-align:right;
+}
+
+.ph-top-price__currency{
+  font-size:28px;
+  line-height:1;
+  font-weight:700;
+  letter-spacing:-.03em;
+  transform:translateY(6px);
+}
+
+.ph-top-price__whole{
+  font-size:56px;
+  line-height:.9;
+  font-weight:700;
+  letter-spacing:-.05em;
+}
+
+.ph-top-price__cents{
+  font-size:22px;
+  line-height:1;
+  font-weight:700;
+  transform:translateY(8px);
+}
+
+.ph-top-price__coins{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.ph-top-price__coins-icon{
+  width:18px;
+  height:18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+
+.ph-top-price__coins-icon svg{
+  width:18px;
+  height:18px;
+  display:block;
+  fill:currentColor;
+}
+
+.ph-top-price__coins-note{
+  font-size:15px;
+  line-height:1.2;
+  font-weight:500;
+  color:#4f46e5;
+}
+
+@media (max-width:900px){
+  .ph-topbar{
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .ph-topbar__side{
+    width:100%;
+    min-width:0;
+    align-items:flex-start;
+  }
+
+  .ph-top-price-card__main{
+    justify-items:start;
+    text-align:left;
+  }
+
+  .ph-top-price{
+    justify-content:flex-start;
+  }
+
+  .ph-top-price__coins{
+    justify-content:flex-start;
+  }
+
+  .ph-top-price__whole{
+    font-size:48px;
+  }
+
+  .ph-top-price__currency{
+    font-size:24px;
+    transform:translateY(5px);
+  }
+
+  .ph-top-price__cents{
+    font-size:20px;
+    transform:translateY(7px);
+  }
+}
+
+@media (max-width:530px){
+  .ph-top-price__from{
+    font-size:16px;
+  }
+
+  .ph-top-price__whole{
+    font-size:42px;
+  }
+
+  .ph-top-price__currency{
+    font-size:22px;
+    transform:translateY(4px);
+  }
+
+  .ph-top-price__cents{
+    font-size:18px;
+    transform:translateY(6px);
+  }
+
+  .ph-top-price__coins-pill{
+    font-size:15px;
+  }
+
+  .ph-top-price__coins-note{
+    font-size:15px;
+  }
+}
+
+.ph-top-price-card{
+  margin-top:0;
+}
+
+.ph-top-price{
+  display:flex;
+  align-items:flex-start;
+  flex-wrap:wrap;
+  gap:2px;
+  color:var(--ink);
+  line-height:.9;
+}
+
+.ph-top-price__from{
+  font-size:18px;
+  display: flex;
+  line-height:1.1;
+  font-weight:500;
+  color:var(--muted);
+  margin-right:10px;
+  align-self:self-start;
+  padding-top: 5px;
+}
+
+.ph-top-price__currency{
+  font-size:28px;
+  line-height:1;
+  font-weight:700;
+  letter-spacing:-.03em;
+  transform:translateY(6px);
+}
+
+.ph-top-price__whole{
+  font-size:56px;
+  line-height:.9;
+  font-weight:700;
+  letter-spacing:-.05em;
+}
+
+.ph-top-price__cents{
+  font-size:22px;
+  line-height:1;
+  font-weight:700;
+  transform:translateY(8px);
+}
+
+.ph-top-price__coins{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.ph-top-price__coins-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:20px;
+  padding:7px 11px;
+  border-radius:12px;
+  background:#eef2ff;
+  color:#4338ca;
+  font-size:15px;
+  line-height:1;
+  font-weight:700;
+}
+
+.ph-top-price__coins-icon{
+  width:18px;
+  height:18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+
+.ph-top-price__coins-icon svg{
+  width:18px;
+  height:18px;
+  display:block;
+  fill:currentColor;
+}
+
+@media (max-width:900px){
+  .ph-product-price-band{
+    align-items:flex-start;
+    margin-bottom:16px;
+    padding-bottom:16px;
+  }
+
+  .ph-top-price__whole{
+    font-size:48px;
+  }
+
+  .ph-top-price__currency{
+    font-size:24px;
+    transform:translateY(5px);
+  }
+
+  .ph-top-price__cents{
+    font-size:20px;
+    transform:translateY(7px);
+  }
+}
+
+@media (max-width:530px){
+  .ph-product-price-band{
+    margin-bottom:14px;
+    padding-bottom:14px;
+  }
+
+  .ph-top-price__from{
+    font-size:16px;
+  }
+
+  .ph-top-price__whole{
+    font-size:42px;
+  }
+
+  .ph-top-price__currency{
+    font-size:22px;
+    transform:translateY(4px);
+  }
+
+  .ph-top-price__cents{
+    font-size:18px;
+    transform:translateY(6px);
+  }
+
+  .ph-top-price__coins-pill{
+    font-size:15px;
+  }
+
+  .ph-top-price__coins-note{
+    font-size:15px;
+  }
 }

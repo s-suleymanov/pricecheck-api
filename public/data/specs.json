@@ -1,0 +1,34 @@
+{
+  "earbuds": [
+    "Noise Cancelling",
+    "Battery Life",
+    "Wireless Charging",
+    "Multipoint",
+    "Water Resistance",
+    "Bluetooth"
+  ],
+  "headphones": [
+    "Noise Cancelling",
+    "Battery Life",
+    "Wireless",
+    "Multipoint",
+    "Weight",
+    "Wired"
+  ],
+  "monitors": [
+    "Screen Size",
+    "Resolution",
+    "Refresh Rate",
+    "Panel Type",
+    "HDR",
+    "Response Time"
+  ],
+  "electric scooter": [
+    "Range",
+    "Battery",
+    "Max Load",
+    "Motor",
+    "Top Speed",
+    "Foldable"
+  ]
+}

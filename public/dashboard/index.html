@@ -222,99 +222,117 @@
         <li>Note: PriceCheck is built and maintained by one person, so some prices may be missing or delayed as coverage expands. Thank you for your patience.</li>
       </ul>
     </section>
-    <div class="ph-topbar">
-      <div class="ph-topbar__main">
-        <div id="pBrandRow" class="ph-brand-row" hidden>
-          <a id="pBrandLine" class="muted" style="font-size: 20px;" href="" hidden></a>
+      <div class="ph-topbar">
+  <div class="ph-topbar__main">
+    <div id="pBrandRow" class="ph-brand-row" hidden>
+      <a id="pBrandLine" class="muted" style="font-size: 20px;" href="" hidden></a>
 
-          <div class="ph-brand-actions">
-            <button class="ph-follow" type="button">Follow</button>
-          </div>
-        </div>
+      <div class="ph-brand-actions">
+        <button class="ph-follow" type="button">Follow</button>
+      </div>
+    </div>
 
-        <div class="ph-title-row">
-          <h1 id="pTitle">Loading...</h1>
+    <div class="ph-title-block">
+      <div class="ph-title-row">
+        <h1 id="pTitle">Loading...</h1>
 
-          <span
-            id="pVerifiedDot"
-            class="ph-verify-dot is-active"
-            aria-label="Verified Listing"
-            data-tooltip="Verified Listing"
-            tabindex="0"
-            hidden
-          ></span>
-        </div>
+        <span
+          id="pVerifiedDot"
+          class="ph-verify-dot is-active"
+          aria-label="Verified Listing"
+          data-tooltip="Verified Listing"
+          tabindex="0"
+          hidden
+        ></span>
+
+        <span id="phTitleRating" class="ph-title-rating" hidden></span>
       </div>
 
-      <div class="ph-topbar__side">
-        <div class="ph-tools" aria-label="Product actions">
-          
-          <button
-            class="ph-tool"
-            id="phShortlistBtn"
-            type="button"
-            aria-label="Save to shortlist"
-            title="Save to shortlist"
-            hidden
-          >
-            <span data-shortlist-icon="off">
-              <svg viewBox="0 -960 960 960" width="22" height="22" focusable="false" aria-hidden="true">
-                <path fill="currentColor" d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z"/>
+      <div id="phSpecPills" class="ph-spec-pills" hidden></div>
+    </div>
+  </div>
+
+  <div class="ph-topbar__side">
+    <div class="ph-tools" aria-label="Product actions">
+
+      <button
+        class="ph-comment-btn"
+        id="phCommentBtn"
+        type="button"
+        aria-label="Add Comment"
+        title="Add Comment"
+      >
+        <svg viewBox="0 -960 960 960" width="22" height="22" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M440-400h80v-120h120v-80H520v-120h-80v120H320v80h120v120ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z"></path>
+        </svg>
+        <span>Comment</span>
+      </button>
+
+      <button
+        class="ph-tool"
+        id="phShortlistBtn"
+        type="button"
+        aria-label="Save to shortlist"
+        title="Save to shortlist"
+        hidden
+      >
+        <span data-shortlist-icon="off">
+          <svg viewBox="0 -960 960 960" width="22" height="22" focusable="false" aria-hidden="true">
+            <path fill="currentColor" d="M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z"/>
+          </svg>
+        </span>
+        <span data-shortlist-icon="on" hidden>
+          <svg viewBox="0 -960 960 960" width="22" height="22" focusable="false" aria-hidden="true">
+            <path fill="currentColor" d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
+          </svg>
+        </span>
+      </button>
+
+      <button
+        class="ph-tool"
+        data-pc-label-trigger="1"
+        type="button"
+        aria-label="Save to label"
+        title="Save to label"
+      >
+        <svg viewBox="0 -960 960 960" width="22" height="22">
+          <path fill="currentColor" d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/>
+        </svg>
+      </button>
+
+      <button
+        class="ph-tool"
+        type="button"
+        aria-label="Compare"
+        data-pc-plus="1"
+        data-pc-plus-toast-only="1"
+      >
+        <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
+          <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div id="phTopPriceCard" class="ph-top-price-card" hidden>
+      <div class="ph-top-price-card__main">
+        <div id="phTopPriceValue" class="ph-top-price" aria-live="polite"></div>
+
+        <div class="ph-top-price__coins">
+          <div class="ph-top-price__coins-pill">
+            <span class="ph-top-price__coins-icon" aria-hidden="true">
+              <svg viewBox="0 -960 960 960" focusable="false">
+                <path d="m363-310 117-71 117 71-31-133 104-90-137-11-53-126-53 126-137 11 104 90-31 133ZM480-28 346-160H160v-186L28-480l132-134v-186h186l134-132 134 132h186v186l132 134-132 134v186H614L480-28Zm0-112 100-100h140v-140l100-100-100-100v-140H580L480-820 380-720H240v140L140-480l100 100v140h140l100 100Zm0-340Z"></path>
               </svg>
             </span>
-            <span data-shortlist-icon="on" hidden>
-              <svg viewBox="0 -960 960 960" width="22" height="22" focusable="false" aria-hidden="true">
-                <path fill="currentColor" d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
-              </svg>
-            </span>
-          </button>
-
-          <button
-            class="ph-tool"
-            data-pc-label-trigger="1"
-            type="button"
-            aria-label="Save to label"
-            title="Save to label"
-          >
-            <svg viewBox="0 -960 960 960" width="22" height="22">
-              <path fill="currentColor" d="M200-120v-640q0-33 23.5-56.5T280-840h400q33 0 56.5 23.5T760-760v640L480-240 200-120Zm80-122 200-86 200 86v-518H280v518Zm0-518h400-400Z"/>
-            </svg>
-          </button>
-
-          <button
-            class="ph-tool"
-            type="button"
-            aria-label="Compare"
-            data-pc-plus="1"
-            data-pc-plus-toast-only="1"
-          >
-            <svg viewBox="0 -960 960 960" focusable="false" aria-hidden="true">
-              <path d="M160-200v-80h80v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h80v80H160Zm320-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z"></path>
-            </svg>
-          </button>
-        </div>
-
-        <div class="ph-rating-row">
-          <div id="phRatingSummary" class="ph-rating-summary" hidden>
-            <span class="ph-rating-summary__score" id="phRatingScore"></span>
-            <span class="ph-rating-summary__count" id="phRatingCount"></span>
+            <span id="phTopCoinsValue">0 Coins</span>
           </div>
 
-          <button
-            class="ph-comment-btn"
-            id="phCommentBtn"
-            type="button"
-            aria-label="Add Comment"
-            title="Add Comment"
-          >
-            <svg viewBox="0 -960 960 960" width="22" height="22" aria-hidden="true" focusable="false">
-              <path fill="currentColor" d="M440-400h80v-120h120v-80H520v-120h-80v120H320v80h120v120ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z"></path>
-            </svg>
-            <span>Add Comment</span>
-          </button>
+          <div class="ph-top-price__coins-note">with PriceCheck Plus</div>
         </div>
       </div>
     </div>
+  </div>
+</div>
     <div class="ph-top-alerts">
     <div class="pc-warn pc-warn--recall" id="ps-recall" hidden>
       <span class="pc-warn__icon" aria-hidden="true">
@@ -356,7 +374,8 @@
   </div>
     <section class="grid-shell">
         <section class="card" id="productHeader" style="margin-top: 10px;">
-          <div class="ph-media-hero">
+
+  <div class="ph-media-hero">
   <div class="ph-media-hero__primary">
     <div class="pimg-wrap">
       <img id="pImg" src="" alt="Product image" loading="lazy" decoding="async" style="display:none">

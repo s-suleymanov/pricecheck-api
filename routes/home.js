@@ -1,8 +1,6 @@
 // routes/home.js
 const express = require("express");
 const pool = require("../db");
-const fs = require("fs");
-const path = require("path");
 
 const router = express.Router();
 
@@ -10,16 +8,6 @@ function clampInt(v, lo, hi, fallback) {
   const n = Number.parseInt(String(v ?? ""), 10);
   if (!Number.isFinite(n)) return fallback;
   return Math.max(lo, Math.min(hi, n));
-}
-
-async function readJsonSafe(filePath) {
-  try {
-    const raw = await fs.promises.readFile(filePath, "utf8");
-    const json = JSON.parse(raw);
-    return json && typeof json === "object" ? json : null;
-  } catch (_e) {
-    return null;
-  }
 }
 
 router.get("/api/home_deals", async (req, res) => {
@@ -138,20 +126,6 @@ router.get("/api/home_deals", async (req, res) => {
   } finally {
     client.release();
   }
-});
-
-// Trend pills are backed by data/trends.json for now
-router.get("/api/home_trends", async (_req, res) => {
-  const fp = path.join(__dirname, "..", "data", "trends.json");
-  const json = await readJsonSafe(fp);
-
-  const results = Array.isArray(json?.results)
-    ? json.results
-    : Array.isArray(json?.trends)
-      ? json.trends
-      : [];
-
-  return res.json({ ok: true, results });
 });
 
 // Sidebar lists: pull top categories + brands from catalog

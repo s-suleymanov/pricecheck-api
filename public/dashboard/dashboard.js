@@ -47,6 +47,7 @@
     lineup: null,
     selectedTimelineIndex: -1,
     rangeDays: 30,
+    reviewCustomerSources: [],
     selectedVariantKey:null,
     selectedVersion: null,
     selectedVariant2: null,
@@ -71,6 +72,7 @@
   };
 
   let _runToken = 0;
+  let _specPillConfig = null;
   const marketingImagesCard = document.getElementById('marketingImagesCard');
   const marketingImagesContent = document.getElementById('marketingImagesContent');
   const tocEl = document.getElementById('dashboardToc');
@@ -186,6 +188,154 @@
       };
     })
     .filter(Boolean);
+}
+
+function normalizeCategoryKey(v){
+  return String(v || '')
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeSpecKey(v){
+  return String(v || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[\/]+/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function prettySpecPill(label, value){
+  const rawLabel = String(label ?? '').trim();
+  const rawValue = String(value ?? '').trim();
+
+  if (!rawLabel || !rawValue) return '';
+
+  if (/^(yes|true)$/i.test(rawValue)) return rawLabel.toLowerCase();
+  if (/^(no|false)$/i.test(rawValue)) return '';
+
+  return `${rawValue} ${rawLabel.toLowerCase()}`;
+}
+
+async function loadSpecPillConfigOnce(){
+  if (_specPillConfig) return _specPillConfig;
+
+  try {
+    const res = await fetch('/data/specs.json', {
+      headers: { Accept: 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    _specPillConfig = (data && typeof data === 'object') ? data : {};
+  } catch {
+    _specPillConfig = {};
+  }
+
+  return _specPillConfig;
+}
+
+function getCurrentSpecsObject(){
+  const cur = getCurrentVariant() || null;
+
+  if (cur && cur.specs && typeof cur.specs === 'object' && !Array.isArray(cur.specs)) {
+    return cur.specs;
+  }
+
+  if (state.identity && state.identity.specs && typeof state.identity.specs === 'object' && !Array.isArray(state.identity.specs)) {
+    return state.identity.specs;
+  }
+
+  return {};
+}
+
+function getCurrentCategoryForSpecPills(){
+  const cur = getCurrentVariant() || null;
+
+  return normalizeCategoryKey(
+    cur?.category ||
+    state.identity?.category ||
+    ''
+  );
+}
+
+function buildTopSpecPills(specs, configList){
+  const specEntries = Object.entries(specs || {});
+  if (!specEntries.length || !Array.isArray(configList) || !configList.length) return [];
+
+  const byNormalizedKey = new Map();
+
+  for (const [rawKey, rawValue] of specEntries) {
+    const normKey = normalizeSpecKey(rawKey);
+    if (!normKey) continue;
+    if (rawValue == null) continue;
+
+    const textValue =
+      typeof rawValue === 'boolean'
+        ? (rawValue ? 'Yes' : 'No')
+        : String(rawValue).trim();
+
+    if (!textValue) continue;
+
+    byNormalizedKey.set(normKey, {
+      label: String(rawKey).trim(),
+      value: textValue
+    });
+  }
+
+  const primary = configList.slice(0, 5);
+  const fallback = configList[5] || null;
+
+  const out = [];
+  const used = new Set();
+
+  for (const wanted of primary) {
+    const hit = byNormalizedKey.get(normalizeSpecKey(wanted));
+    if (!hit) continue;
+
+    const pillText = prettySpecPill(hit.label, hit.value);
+    if (!pillText) continue;
+
+    out.push(pillText);
+    used.add(normalizeSpecKey(wanted));
+  }
+
+  if (out.length < 5 && fallback) {
+    const fallbackHit = byNormalizedKey.get(normalizeSpecKey(fallback));
+    if (fallbackHit && !used.has(normalizeSpecKey(fallback))) {
+      const pillText = prettySpecPill(fallbackHit.label, fallbackHit.value);
+      if (pillText) out.push(pillText);
+    }
+  }
+
+  return out.slice(0, 5);
+}
+
+function renderTopSpecPills(){
+  const host = document.getElementById('phSpecPills');
+  if (!host) return;
+
+  const categoryKey = getCurrentCategoryForSpecPills();
+  const config = _specPillConfig && typeof _specPillConfig === 'object'
+    ? _specPillConfig
+    : {};
+
+  const configList = Array.isArray(config[categoryKey]) ? config[categoryKey] : [];
+  const specs = getCurrentSpecsObject();
+  const pills = buildTopSpecPills(specs, configList);
+
+  if (!pills.length) {
+    host.hidden = true;
+    host.innerHTML = '';
+    return;
+  }
+
+  host.hidden = false;
+  host.innerHTML = pills
+    .map(text => `<span class="ph-spec-pill">${escapeHtml(text)}</span>`)
+    .join('');
 }
 
 function normalizeMarketingImagesInput(raw){
@@ -1757,26 +1907,70 @@ function syncSelectorsFromSelectedKey(){
   state.selectedColor   = hit ? (colorOf(hit) || null) : null;
 }
 
-function setTopbarRatingSummary(overall, count){
-  const wrap = document.getElementById('phRatingSummary');
-  const scoreEl = document.getElementById('phRatingScore');
-  const countEl = document.getElementById('phRatingCount');
+function computeWeightedTitleRating(){
+  const customerSources = Array.isArray(state.reviewCustomerSources)
+    ? state.reviewCustomerSources
+    : [];
 
-  if (!wrap || !scoreEl || !countEl) return;
+  let weightedSum = 0;
+  let totalCount = 0;
 
-  const scoreNum = Number(overall);
-  const countNum = Number(count);
+  for (const source of customerSources) {
+    const rating = Number(source?.rating ?? source?.score ?? source?.overall);
+    const count = Number(source?.review_count ?? source?.count);
 
-  if (!Number.isFinite(scoreNum) || scoreNum <= 0 || !Number.isFinite(countNum) || countNum <= 0) {
-    wrap.hidden = true;
-    scoreEl.textContent = '';
-    countEl.textContent = '';
-    return;
+    if (!Number.isFinite(rating) || rating <= 0) continue;
+    if (!Number.isFinite(count) || count <= 0) continue;
+
+    weightedSum += rating * count;
+    totalCount += count;
   }
 
-  wrap.hidden = false;
-  scoreEl.textContent = `★ ${scoreNum.toFixed(1)}`;
-  countEl.textContent = `(${new Intl.NumberFormat('en-US').format(countNum)})`;
+  if (totalCount <= 0) return null;
+
+  return {
+    score: weightedSum / totalCount,
+    count: totalCount
+  };
+}
+
+function titleRatingTone(score){
+  const n = Number(score);
+
+  if (!Number.isFinite(n) || n <= 0) return 'low';
+  if (n >= 4.6) return 'great';
+  if (n >= 4.0) return 'good';
+  if (n >= 3.0) return 'mixed';
+  return 'low';
+}
+
+function renderTitleRatingBadge(){
+  const el = document.getElementById('phTitleRating');
+  if (!el) return;
+
+  const data = computeWeightedTitleRating();
+
+  el.className = 'ph-title-rating';
+  el.hidden = true;
+  el.textContent = '';
+
+  if (!data) return;
+
+  const score = Number(data.score);
+  const tone = titleRatingTone(score);
+
+  el.textContent = `★ ${score.toFixed(1)}`;
+  el.classList.add(`ph-title-rating--${tone}`);
+  el.hidden = false;
+}
+
+function clearTitleRatingBadge(){
+  const el = document.getElementById('phTitleRating');
+  if (!el) return;
+
+  el.className = 'ph-title-rating';
+  el.hidden = true;
+  el.textContent = '';
 }
 
 function clearTopbarRatingSummary(){
@@ -2736,7 +2930,7 @@ async function renderReviewsCard(productKey, runToken) {
       </section>
     `);
 
-    clearTopbarRatingSummary();
+    clearTitleRatingBadge();
     wireCardIcons();
     return;
   }
@@ -2774,7 +2968,7 @@ async function renderReviewsCard(productKey, runToken) {
     if (runToken != null && isStaleRun(runToken)) return;
 
     mountCustomerReviews('');
-    clearTopbarRatingSummary();
+    clearTitleRatingBadge();
 
     mountUserReviews(`
       <section class="pc-review-section">
@@ -2790,6 +2984,7 @@ async function renderReviewsCard(productKey, runToken) {
   const customerSources = Array.isArray(data?.customer_sources)
     ? data.customer_sources
     : (Array.isArray(data?.sources) ? data.sources : []);
+  state.reviewCustomerSources = customerSources;
   const expertReviews = Array.isArray(data?.expert_reviews) ? data.expert_reviews : [];
   let communityReviews = Array.isArray(state.community?.reviews) ? state.community.reviews : [];
 
@@ -2831,7 +3026,7 @@ async function renderReviewsCard(productKey, runToken) {
   const total = Number(aggregate.count || 0);
   const overallNum = Number(aggregate.overall);
   const overall = Number.isFinite(overallNum) ? overallNum : 0;
-  setTopbarRatingSummary(overall, total);
+  renderTitleRatingBadge();
 
   const verifiedPctNum = Number(aggregate.verified_pct);
   const verifiedPct = Number.isFinite(verifiedPctNum)
@@ -2851,7 +3046,7 @@ async function renderReviewsCard(productKey, runToken) {
     </section>
   `);
 
-  clearTopbarRatingSummary();
+  clearTitleRatingBadge();
   wireCardIcons();
   return;
 }
@@ -3382,6 +3577,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   wireCardIcons();
   wireBrandFollowButton();
   await loadNameOverridesOnce();
+  await loadSpecPillConfigOnce();
   initDashboardShortlistUi();
   initDashboardTocObservers();
   scheduleDashboardTocRefresh();
@@ -3527,6 +3723,7 @@ async function run(raw){
     hydrateHeader();
     drawChart();
     renderCouponsCard();
+    renderTopSpecPills();
     renderAboutCard();
     renderTimeline();
     renderVariants();
@@ -3598,7 +3795,8 @@ async function run(raw){
 
   const brandRow = $('#pBrandRow');
   const brandLine = $('#pBrandLine');
-  clearTopbarRatingSummary();
+  state.reviewCustomerSources = [];
+  clearTitleRatingBadge();
 
   state.identity = null;
   state.variants = [];
@@ -3621,6 +3819,14 @@ async function run(raw){
 
   if (brandRow) brandRow.hidden = true;
   if (brandLine) brandLine.textContent = '';
+
+  const topPriceCard = document.getElementById('phTopPriceCard');
+  const topPriceValue = document.getElementById('phTopPriceValue');
+  const topCoinsValue = document.getElementById('phTopCoinsValue');
+
+  if (topPriceCard) topPriceCard.hidden = true;
+  if (topPriceValue) topPriceValue.innerHTML = '';
+  if (topCoinsValue) topCoinsValue.textContent = '';
 
   const recallWrap = document.getElementById('ps-recall');
   const recallLink = document.getElementById('ps-recall-link');
@@ -3925,6 +4131,8 @@ function initDashboardShortlistUi() {
       'Product';
 
     $('#pTitle').textContent = title;
+
+    renderHeaderPriceCard();
 
     const verifiedDot = document.getElementById('pVerifiedDot');
     if (verifiedDot) {
@@ -4700,6 +4908,46 @@ function recordHistory(key, title, imageUrl, brand) {
     }
     return best;
   }
+
+  function splitHeaderPriceParts(cents){
+  const n = Number(cents);
+  if (!Number.isFinite(n) || n <= 0) return null;
+
+  const whole = String(Math.floor(n / 100));
+  const frac = String(n % 100).padStart(2, '0');
+
+  return { whole, frac };
+}
+
+function renderHeaderPriceCard(){
+  const card = document.getElementById('phTopPriceCard');
+  const priceEl = document.getElementById('phTopPriceValue');
+  const coinsEl = document.getElementById('phTopCoinsValue');
+
+  if (!card || !priceEl || !coinsEl) return;
+
+  const bestCents = bestOfferCentsToday();
+  const parts = splitHeaderPriceParts(bestCents);
+
+  if (!parts) {
+    card.hidden = true;
+    priceEl.innerHTML = '';
+    coinsEl.textContent = '';
+    return;
+  }
+
+  const coinCount = Math.ceil(bestCents / 100);
+
+  priceEl.innerHTML = `
+    <span class="ph-top-price__from">from</span>
+    <span class="ph-top-price__currency">$</span>
+    <span class="ph-top-price__whole">${escapeHtml(parts.whole)}</span>
+    <span class="ph-top-price__cents">.${escapeHtml(parts.frac)}</span>
+  `;
+
+  coinsEl.textContent = `${coinCount} Points`;
+  card.hidden = false;
+}
 
   function couponCandidates(){
     const offers = Array.isArray(state.offers) ? state.offers : [];
@@ -5608,7 +5856,7 @@ async function renderOffers(sortByPrice, runToken){
   wrap.innerHTML = `
     <div class="offer-grid-head" role="presentation">
       <div class="offer-grid-head__cell offer-grid-head__cell--store">Store</div>
-      <div class="offer-grid-head__cell">Cost</div>
+      <div class="offer-grid-head__cell">Price</div>
       <div class="offer-grid-head__cell">Delivery</div>
       <div class="offer-grid-head__cell">Rating</div>
     </div>
