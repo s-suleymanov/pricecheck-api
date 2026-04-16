@@ -8,11 +8,13 @@
   --accent-a:#14b8a6;
   --accent-b:#6366f1;
   --accent-c:#94a3b8;
-
+  --pc-dashboard-header-offset: 92px;
   --radius-card:16px;
 }
 
-.wrap{max-width:1480px;margin:0 auto;padding:0px 24px 90px}
+.wrap{
+  max-width:1480px;margin:0 auto;padding:0px 24px 90px
+}
 
 .grid-shell{
   display:grid;
@@ -1619,10 +1621,6 @@ aside{
   html {
     overflow-x: hidden;
   }
-  .card {
-    border-radius: 0;
-    border: 0;
-  }
   .wrap{padding: 0 0 24px 0;}
   .pc-warn{
     margin-left: 18px;
@@ -1931,10 +1929,6 @@ aside{
 .pc-code-panel__empty{
   font-size:13px;
   color:#6b7280;
-}
-
-.sidebar-panel {
-  margin-top: 0;
 }
 
 .sidebar-tab{
@@ -2898,33 +2892,6 @@ button.pc-lineup-model{
   opacity: 0.55;
 }
 
-.pc-rv-header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* ── Pills ──────────────────────────────────────────────────────────────────── */
-.pc-rv-pill {
-  font-size: 16px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 20px;
-}
-
-.pc-rv-confidence--high {
-  background: rgba(34, 197, 94, 0.12);
-  color: #4ade80;
-}
-.pc-rv-confidence--med {
-  background: rgba(234, 179, 8, 0.12);
-  color: #facc15;
-}
-.pc-rv-confidence--low {
-  background: rgba(239, 68, 68, 0.10);
-  color: #f87171;
-}
-
 .pc-reviews-stack{
   display:grid;
   gap:18px;
@@ -3055,16 +3022,12 @@ button.pc-lineup-model{
   
   .grid-shell{
     gap:0;
+    display: block;
   }
 
   .pc-media-strip-row__center {
     justify-content: flex-start
   }
-}
-
-.pc-rv-summary-card{
-  grid-column:1;
-  grid-row:1;
 }
 
 @media (max-width:1100px){
@@ -3393,18 +3356,6 @@ button.pc-lineup-model{
   letter-spacing:.04em;
 }
 
-.pc-rv-breakdown-list{
-  display:grid;
-  gap:10px;
-}
-
-.pc-rv-breakdown-row{
-  display:grid;
-  grid-template-columns:84px minmax(0, 1fr) 64px;
-  gap:10px;
-  align-items:center;
-}
-
 .pc-rv-source-card__rating{
   font-size:14px;
 }
@@ -3422,37 +3373,6 @@ button.pc-lineup-model{
   font-size:16px;
   font-weight:600;
   color:#334155;
-}
-
-.pc-rv-breakdown-bar{
-  height:12px;
-  border-radius:999px;
-  background:#e5e7eb;
-  overflow:hidden;
-}
-
-.pc-rv-breakdown-fill{
-  height:100%;
-  border-radius:999px;
-}
-
-.pc-rv-breakdown-fill--5{ background:#eab308; }
-.pc-rv-breakdown-fill--4{ background:#84cc16; }
-.pc-rv-breakdown-fill--3{ background:#f59e0b; }
-.pc-rv-breakdown-fill--2{ background:#fb7185; }
-.pc-rv-breakdown-fill--1{ background:#ef4444; }
-
-.pc-rv-breakdown-right{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-
-.pc-rv-breakdown-count{
-  font-size:15px;
-  font-weight:600;
-  color:#0f172a;
 }
 
 .pc-rv-breakdown-pct{
@@ -3576,11 +3496,6 @@ button.pc-lineup-model{
   color:#0f172a;
 }
 
-.pc-rv-breakdown-pct{
-  font-size:14px;
-  color:#64748b;
-}
-
 @media (max-width:900px){
   .pc-rv-customer-layout{
     grid-template-columns:1fr;
@@ -3627,10 +3542,6 @@ button.pc-lineup-model{
   line-height:1.3;
   font-weight:600;
   color:var(--ink);
-}
-
-:root {
-  --pc-dashboard-header-offset: 92px;
 }
 
 .dashboard-page .dashboard-toc[hidden] {
@@ -3763,11 +3674,6 @@ button.pc-lineup-model{
   margin: 74px 0 0;
 }
 
-.ph-topbar__main{
-  min-width:0;
-  flex:1 1 auto;
-}
-
 .ph-topbar .ph-tools{
   margin:0;
   padding-bottom: 8px;
@@ -3783,6 +3689,11 @@ button.pc-lineup-model{
 
   .ph-topbar .ph-tools{
     justify-content:flex-start;
+    display: none;
+  }
+
+  .ph-top-price__coins{
+    display: none;
   }
 }
 
@@ -4237,29 +4148,6 @@ button.pc-lineup-model{
   gap:16px;
 }
 
-.ph-media-tab{
-  border:0;
-  background:transparent;
-  color:var(--muted);
-  border-radius:999px;
-  padding:8px 14px;
-  font:inherit;
-  font-size:14px;
-  font-weight:600;
-  line-height:1;
-  cursor:pointer;
-}
-
-.ph-media-tab:hover{
-  background:#eef2f7;
-  color:var(--ink);
-}
-
-.ph-media-tab.is-active{
-  background:var(--ink);
-  color:#fff;
-}
-
 .ph-media-stage{
   position:relative;
   aspect-ratio:16 / 9;
@@ -4300,30 +4188,6 @@ button.pc-lineup-model{
 .ph-media-overlay--top-right{
   top:14px;
   right:14px;
-}
-
-.ph-media-tab{
-  border:0;
-  background:rgba(15,23,42,.58);
-  color:rgba(255,255,255,.88);
-  border-radius:999px;
-  padding:9px 14px;
-  font:inherit;
-  font-size:14px;
-  font-weight:600;
-  line-height:1;
-  cursor:pointer;
-  backdrop-filter:blur(4px);
-}
-
-.ph-media-tab:hover{
-  background:rgba(15,23,42,.72);
-  color:#fff;
-}
-
-.ph-media-tab.is-active{
-  background:#fff;
-  color:var(--ink);
 }
 
 .ph-media-stage__title{
@@ -4400,7 +4264,6 @@ button.pc-lineup-model{
     right:10px;
   }
 
-  .ph-media-tab,
   .ph-media-counter{
     min-height:32px;
     font-size:13px;
@@ -4447,10 +4310,6 @@ button.pc-lineup-model{
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.ph-media-tab[hidden] {
-  display: none !important;
 }
 
 .offer-rating-meta{
@@ -4820,13 +4679,6 @@ button.pc-lineup-model{
   display:inline-block;
 }
 
-.ph-topbar{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:24px;
-}
-
 .ph-topbar__main{
   min-width:0;
   flex:1 1 auto;
@@ -4863,26 +4715,11 @@ button.pc-lineup-model{
   transform:translateY(6px);
 }
 
-.ph-top-price__whole{
-  font-size:56px;
-  line-height:.9;
-  font-weight:700;
-  letter-spacing:-.05em;
-}
-
 .ph-top-price__cents{
   font-size:22px;
   line-height:1;
   font-weight:700;
   transform:translateY(8px);
-}
-
-.ph-top-price__coins{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  gap:10px;
-  flex-wrap:wrap;
 }
 
 .ph-top-price__coins-icon{
@@ -4921,8 +4758,12 @@ button.pc-lineup-model{
   }
 
   .ph-top-price-card__main{
-    justify-items:start;
-    text-align:left;
+    justify-items:center;
+    text-align:center;
+  }
+
+  .ph-top-price-card{
+    width: 100%;
   }
 
   .ph-top-price{
@@ -4976,10 +4817,6 @@ button.pc-lineup-model{
   }
 }
 
-.ph-top-price-card{
-  margin-top:0;
-}
-
 .ph-top-price{
   display:flex;
   align-items:flex-start;
@@ -5000,31 +4837,17 @@ button.pc-lineup-model{
   padding-top: 5px;
 }
 
-.ph-top-price__currency{
-  font-size:28px;
-  line-height:1;
-  font-weight:700;
-  letter-spacing:-.03em;
-  transform:translateY(6px);
-}
-
 .ph-top-price__whole{
   font-size:56px;
   line-height:.9;
-  font-weight:700;
+  font-weight:600;
   letter-spacing:-.05em;
-}
-
-.ph-top-price__cents{
-  font-size:22px;
-  line-height:1;
-  font-weight:700;
-  transform:translateY(8px);
 }
 
 .ph-top-price__coins{
   display:flex;
   align-items:center;
+  justify-content: flex-end;
   gap:10px;
   flex-wrap:wrap;
 }
@@ -5041,22 +4864,6 @@ button.pc-lineup-model{
   font-size:15px;
   line-height:1;
   font-weight:700;
-}
-
-.ph-top-price__coins-icon{
-  width:18px;
-  height:18px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  flex:0 0 auto;
-}
-
-.ph-top-price__coins-icon svg{
-  width:18px;
-  height:18px;
-  display:block;
-  fill:currentColor;
 }
 
 @media (max-width:900px){
