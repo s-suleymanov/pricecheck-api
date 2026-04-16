@@ -5814,8 +5814,8 @@ async function renderOffers(sortByPrice, runToken){
   return `
     <span
       class="offer-meta-pill offer-meta-pill--store-rating"
-      data-tooltip="Store Rating"
-      aria-label="Store Rating"
+      data-tooltip="Google Rating"
+      aria-label="Google Rating"
       tabindex="0"
     >
       <span class="offer-meta-pill__text">${escapeHtml(text)}</span>
