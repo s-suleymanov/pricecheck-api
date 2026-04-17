@@ -1806,6 +1806,10 @@ aside{
   min-width:0;
 }
 
+.pc-rv-breakdown-star-label {
+  margin-left: 5px;
+}
+
 .ph-spec-pills{
   display:flex;
   flex-wrap:wrap;
