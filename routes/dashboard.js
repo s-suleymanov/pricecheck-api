@@ -163,11 +163,19 @@ function storeForKind(kind) {
   return null;
 }
 
-async function getRecommendationForSelectedVariant(client, selectedKeys) {
+async function getRecommendationForSelectedVariant(client, selectedKeys, colorGroupKeys = null) {
   const pci = String(selectedKeys?.pci || '').trim();
   const upc = String(selectedKeys?.upc || '').trim();
 
-  if (!pci && !upc) return null;
+  const groupPcis = (Array.isArray(colorGroupKeys?.pcis) ? colorGroupKeys.pcis : [])
+    .map(v => String(v || '').trim().toUpperCase())
+    .filter(Boolean);
+
+  const groupUpcs = (Array.isArray(colorGroupKeys?.upcs) ? colorGroupKeys.upcs : [])
+    .map(v => String(v || '').trim())
+    .filter(Boolean);
+
+  if (!pci && !upc && !groupPcis.length && !groupUpcs.length) return null;
 
   const r = await client.query(
     `
@@ -182,14 +190,33 @@ async function getRecommendationForSelectedVariant(client, selectedKeys) {
     from public.product_recommendations
     where
       (
-        ($1 <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($1)))
+        (
+          coalesce(array_length($1::text[], 1), 0) > 0
+          and pci is not null
+          and btrim(pci) <> ''
+          and upper(btrim(pci)) = any($1::text[])
+        )
         or
-        ($2 <> '' and upc is not null and btrim(upc) <> '' and public.norm_upc(upc) = public.norm_upc($2))
+        (
+          coalesce(array_length($2::text[], 1), 0) > 0
+          and upc is not null
+          and btrim(upc) <> ''
+          and public.norm_upc(upc) = any(
+            array(
+              select public.norm_upc(x)
+              from unnest($2::text[]) as x
+            )
+          )
+        )
+        or
+        ($3 <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($3)))
+        or
+        ($4 <> '' and upc is not null and btrim(upc) <> '' and public.norm_upc(upc) = public.norm_upc($4))
       )
     order by updated_at desc, id desc
     limit 1
     `,
-    [pci, upc]
+    [groupPcis, groupUpcs, pci, upc]
   );
 
   if (!r.rowCount) return null;
@@ -942,7 +969,7 @@ function rowToOfferCandidate(row) {
  * Offers: match by PCI/UPC. If PCI/UPC missing, still return the exact seed listing.
  * Multi-offer rule: Amazon can have multiple rows. Non-Amazon is newest per store.
  */
-async function getOffersForSelectedVariant(client, selectedKeys, seed) {
+async function getOffersForSelectedVariant(client, selectedKeys, seed, colorGroupKeys = null) {
   const pci = selectedKeys?.pci ? String(selectedKeys.pci).trim() : '';
   const upc = selectedKeys?.upc ? String(selectedKeys.upc).trim() : '';
 
@@ -1006,6 +1033,92 @@ async function getOffersForSelectedVariant(client, selectedKeys, seed) {
     const tb = b.observed_at ? new Date(b.observed_at).getTime() : 0;
     return tb - ta;
   });
+
+    // Backfill rating + review_count across colors of the same variant.
+  // This uses the same color-group keys logic already used elsewhere,
+  // so it stays within the same variant family across colors only.
+  const ratingGroupPcis = (Array.isArray(colorGroupKeys?.pcis) ? colorGroupKeys.pcis : [])
+    .map(v => String(v || '').trim().toUpperCase())
+    .filter(Boolean);
+
+  const ratingGroupUpcs = (Array.isArray(colorGroupKeys?.upcs) ? colorGroupKeys.upcs : [])
+    .map(v => String(v || '').trim())
+    .filter(Boolean);
+
+  const needsRatingBackfill = candidates.some(
+    c => c.rating == null || c.review_count == null
+  );
+
+  let ratingByStore = new Map();
+
+  if (needsRatingBackfill && (ratingGroupPcis.length || ratingGroupUpcs.length)) {
+    const ratingRes = await client.query(
+      `
+      select ${OFFER_COLS}
+      from public.listings
+      where
+        coalesce(nullif(lower(btrim(status)), ''), 'active') <> 'hidden'
+        and
+        (
+          (
+            coalesce(array_length($1::text[], 1), 0) > 0
+            and pci is not null
+            and btrim(pci) <> ''
+            and upper(btrim(pci)) = any($1::text[])
+          )
+          or
+          (
+            coalesce(array_length($2::text[], 1), 0) > 0
+            and upc is not null
+            and btrim(upc) <> ''
+            and norm_upc(upc) = any(
+              array(
+                select norm_upc(x)
+                from unnest($2::text[]) as x
+              )
+            )
+          )
+        )
+      order by coalesce(current_price_observed_at, created_at) desc nulls last
+      limit 4000
+      `,
+      [ratingGroupPcis, ratingGroupUpcs]
+    );
+
+    for (const row of ratingRes.rows || []) {
+      const storeKey = normStoreKey(row.store);
+      if (!storeKey) continue;
+      if (ratingByStore.has(storeKey)) continue;
+
+      const rating =
+        row.rating != null && Number.isFinite(Number(row.rating))
+          ? Number(row.rating)
+          : null;
+
+      const review_count =
+        row.review_count != null && Number.isFinite(Number(row.review_count))
+          ? Number(row.review_count)
+          : null;
+
+      if (rating == null && review_count == null) continue;
+
+      ratingByStore.set(storeKey, { rating, review_count });
+    }
+  }
+
+  for (const c of candidates) {
+    const storeKey = normStoreKey(c.store);
+    const fallback = ratingByStore.get(storeKey);
+    if (!fallback) continue;
+
+    if (c.rating == null && fallback.rating != null) {
+      c.rating = fallback.rating;
+    }
+
+    if (c.review_count == null && fallback.review_count != null) {
+      c.review_count = fallback.review_count;
+    }
+  }
 
   const amazon = [];
   const nonAmazonBestByStore = new Map(); // newest per store
@@ -1502,12 +1615,27 @@ router.get('/api/compare/:key', async (req, res) => {
       upc: (selectedCatalog?.upc || selectedBase.upc || seed.upc || null)
     };
 
+    const colorGroupKeys = await getColorGroupKeysFromCatalog(
+      client,
+      selectedCatalog || catalogIdentity || null,
+      selectedKeys
+    );
+
     // 5) offers for selected variant (PCI/UPC only, but always include seed listing)
-    const offers = await getOffersForSelectedVariant(client, selectedKeys, seed);
+    const offers = await getOffersForSelectedVariant(
+      client,
+      selectedKeys,
+      seed,
+      colorGroupKeys
+    );
 
     // 7) price history (only if PCI/UPC exists)
     const history = await getPriceHistoryDailyAndStats(client, selectedKeys, 90);
-    const recommendation = await getRecommendationForSelectedVariant(client, selectedKeys);
+    const recommendation = await getRecommendationForSelectedVariant(
+      client,
+      selectedKeys,
+      colorGroupKeys
+    );
     const meta = selectedCatalog || catalogIdentity || null;
     const listingTitle = seed?.seed_listing?.title ? String(seed.seed_listing.title).trim() : '';
 

@@ -3696,7 +3696,7 @@ button.pc-lineup-model{
   .dashboard-page .dashboard-toc__bottom {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 15px;
     flex: 0 0 auto;
   }
 
@@ -4531,6 +4531,7 @@ button.pc-lineup-model{
   display:grid;
   grid-template-columns:repeat(2, minmax(0, 1fr));
   gap:16px;
+  align-items:start;
 }
 
 .pc-rec-list-card{
@@ -4538,14 +4539,45 @@ button.pc-lineup-model{
   border-radius:16px;
   background:#fff;
   padding:18px;
-  display:grid;
+  display:flex;
+  flex-direction:column;
   gap:14px;
+  height:100%;
+  justify-content:flex-start;
+  align-items:stretch;
 }
 
 .pc-rec-list-card__title{
   font-size:22px;
   line-height:1.2;
   font-weight:600;
+}
+
+.dashboard-page .dashboard-toc__btn--score{
+  border-radius:14px;
+  color:#fff;
+}
+
+.dashboard-page .dashboard-toc__score{
+  font-size:16px;
+  line-height:1;
+  font-weight:700;
+}
+
+.dashboard-page .dashboard-toc__btn--score-great{
+  background:#67c27d;
+}
+
+.dashboard-page .dashboard-toc__btn--score-good{
+  background:#84cc16;
+}
+
+.dashboard-page .dashboard-toc__btn--score-mixed{
+  background:#f59e0b;
+}
+
+.dashboard-page .dashboard-toc__btn--score-low{
+  background:#ef4444;
 }
 
 .pc-rec-list-card__title--pro{ color:#166534; }

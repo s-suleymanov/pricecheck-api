@@ -1265,6 +1265,27 @@ function startDashboardBottomPanelResize(event) {
   _dashboardBottomPanelDragCleanup = onUp;
 }
 
+function buildSidebarRecommendationTocButton() {
+  const rec = state.recommendation;
+  if (!rec) return '';
+
+  const score = clampRecommendationScore(rec.overall_score);
+  const tone = recommendationTone(score);
+  const label = recommendationLabel(score);
+
+  return `
+    <button
+      type="button"
+      class="dashboard-toc__btn dashboard-toc__btn--score dashboard-toc__btn--score-${tone}"
+      id="dashboardTocRecommendationBtn"
+      aria-label="Recommendation score ${score}"
+      data-tooltip="Score"
+    >
+      <span class="dashboard-toc__score">${score}</span>
+    </button>
+  `;
+}
+
 function buildDashboardToc() {
   if (!tocEl) return;
 
@@ -1322,17 +1343,7 @@ function buildDashboardToc() {
           </svg>
         </button>
 
-        <button
-          type="button"
-          class="dashboard-toc__btn dashboard-toc__btn--bottom"
-          id="dashboardTocMoreBtn"
-          aria-label="More tools"
-          title="More tools"
-        >
-          <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-            <path d="M183.5-183.5Q160-207 160-240t23.5-56.5Q207-320 240-320t56.5 23.5Q320-273 320-240t-23.5 56.5Q273-160 240-160t-56.5-23.5Zm240 0Q400-207 400-240t23.5-56.5Q447-320 480-320t56.5 23.5Q560-273 560-240t-23.5 56.5Q513-160 480-160t-56.5-23.5Zm240 0Q640-207 640-240t23.5-56.5Q687-320 720-320t56.5 23.5Q800-273 800-240t-23.5 56.5Q753-160 720-160t-56.5-23.5Zm-480-240Q160-447 160-480t23.5-56.5Q207-560 240-560t56.5 23.5Q320-513 320-480t-23.5 56.5Q273-400 240-400t-56.5-23.5Zm240 0Q400-447 400-480t23.5-56.5Q447-560 480-560t56.5 23.5Q560-513 560-480t-23.5 56.5Q513-400 480-400t-56.5-23.5Zm240 0Q640-447 640-480t23.5-56.5Q687-560 720-560t56.5 23.5Q800-513 800-480t-23.5 56.5Q753-400 720-400t-56.5-23.5Zm-480-240Q160-687 160-720t23.5-56.5Q207-800 240-800t56.5 23.5Q320-753 320-720t-23.5 56.5Q273-640 240-640t-56.5-23.5Zm240 0Q400-687 400-720t23.5-56.5Q447-800 480-800t56.5 23.5Q560-753 560-720t-23.5 56.5Q513-640 480-640t-56.5-23.5Zm240 0Q640-687 640-720t23.5-56.5Q687-800 720-800t56.5 23.5Q800-753 800-720t-23.5 56.5Q753-640 720-640t-56.5-23.5Z"></path>
-          </svg>
-        </button>
+        ${buildSidebarRecommendationTocButton()}
       </div>
     </div>
   `;
@@ -1361,9 +1372,14 @@ function buildDashboardToc() {
     });
   }
 
-  const moreBtn = document.getElementById('dashboardTocMoreBtn');
-  if (moreBtn) {
-    moreBtn.hidden = true;
+  const recommendationBtn = document.getElementById('dashboardTocRecommendationBtn');
+  if (recommendationBtn) {
+    recommendationBtn.addEventListener('click', () => {
+      const target = document.getElementById('recommendationCard');
+      if (!target || target.hidden) return;
+
+      scrollToDashboardCard(target);
+    });
   }
 
   syncDashboardReviewsTocButton();
@@ -2146,6 +2162,9 @@ function renderTitleRatingBadge(){
 
   el.textContent = `★ ${score.toFixed(1)}`;
   el.classList.add(`ph-title-rating--${tone}`);
+  el.setAttribute('data-tooltip', 'Rating');
+  el.setAttribute('aria-label', 'Rating');
+  el.setAttribute('tabindex', '0');
   el.hidden = false;
 }
 
