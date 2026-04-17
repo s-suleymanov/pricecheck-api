@@ -163,6 +163,50 @@ function storeForKind(kind) {
   return null;
 }
 
+async function getRecommendationForSelectedVariant(client, selectedKeys) {
+  const pci = String(selectedKeys?.pci || '').trim();
+  const upc = String(selectedKeys?.upc || '').trim();
+
+  if (!pci && !upc) return null;
+
+  const r = await client.query(
+    `
+    select
+      overall_score,
+      verdict,
+      summary,
+      strengths,
+      weaknesses,
+      score_breakdown,
+      updated_at
+    from public.product_recommendations
+    where
+      (
+        ($1 <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($1)))
+        or
+        ($2 <> '' and upc is not null and btrim(upc) <> '' and public.norm_upc(upc) = public.norm_upc($2))
+      )
+    order by updated_at desc, id desc
+    limit 1
+    `,
+    [pci, upc]
+  );
+
+  if (!r.rowCount) return null;
+
+  const row = r.rows[0];
+
+  return {
+    overall_score: Number(row.overall_score || 0),
+    verdict: row.verdict || null,
+    summary: row.summary || null,
+    strengths: Array.isArray(row.strengths) ? row.strengths : [],
+    weaknesses: Array.isArray(row.weaknesses) ? row.weaknesses : [],
+    score_breakdown: Array.isArray(row.score_breakdown) ? row.score_breakdown : [],
+    updated_at: row.updated_at || null
+  };
+}
+
 async function getFamiliesForBrand(client, brandRaw) {
   const brand = String(brandRaw || '').trim();
   if (!brand) return [];
@@ -1463,7 +1507,7 @@ router.get('/api/compare/:key', async (req, res) => {
 
     // 7) price history (only if PCI/UPC exists)
     const history = await getPriceHistoryDailyAndStats(client, selectedKeys, 90);
-
+    const recommendation = await getRecommendationForSelectedVariant(client, selectedKeys);
     const meta = selectedCatalog || catalogIdentity || null;
     const listingTitle = seed?.seed_listing?.title ? String(seed.seed_listing.title).trim() : '';
 
@@ -1532,6 +1576,7 @@ const lineup = meta ? await getLineupData(client, meta) : null;
         selected_upc: selectedKeys.upc || null,
         selected_asin: null
       },
+      recommendation,
       variants,
       families,
       similar,
