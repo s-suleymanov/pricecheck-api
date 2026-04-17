@@ -1847,19 +1847,16 @@ aside{
 .ph-title-rating--good{
   background:#fefce8;
   color:#a16207;
-  border-color:#fde68a;
 }
 
 .ph-title-rating--mixed{
   background:#fff7ed;
   color:#c2410c;
-  border-color:#fdba74;
 }
 
 .ph-title-rating--low{
   background:#f8fafc;
   color:#64748b;
-  border-color:#e2e8f0;
 }
 
 .ph-verify-dot.is-active{
