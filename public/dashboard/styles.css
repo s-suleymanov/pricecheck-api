@@ -350,10 +350,6 @@
 }
 
 @media (max-width:1100px){
-  .grid-shell{
-    display: block;
-  }
-
   #mediaStripSection {
     margin-top: 14px;
     padding-left: 0;
@@ -722,6 +718,11 @@ p{margin:0 0 8px}
   .dashboard-page .dashboard-bottom-community__row{
     grid-template-columns:1fr;
   }
+
+  .grid-shell{
+    display: block;
+  }
+
 }
 
 /* Notes: spacing + size, scoped by layout area */
@@ -777,6 +778,12 @@ aside .note{
   display: block;
 }
 
+  .colorHeader, .variantHeader{
+    margin-bottom: 9px; 
+    margin-top: 0; 
+    display: none;
+  }
+
 .pc-specs-grid{
   display:grid;
   gap:12px;
@@ -817,8 +824,13 @@ aside .note{
     grid-template-columns:1fr;
   }
 
+  .colorHeader, .variantHeader{
+    display: block;
+    margin-bottom: 18px;
+  }
+
   .pc-marketing-tile{
-    border-radius: 0;
+    border-radius: 0 !important;
   }
 
   .pc-spec-tile__value{
@@ -1693,7 +1705,13 @@ aside{
     margin: 0 16px;
   }
   #pImg, .pimg-wrap{
-    max-width: none;
+    display: none;
+  }
+  .ph-media-hero{
+    gap: 0 !important;
+  }
+  #panelSimilar{
+    display: none;
   }
   #pIds{
     justify-content: center;
@@ -4790,6 +4808,10 @@ button.pc-lineup-model{
   transition:color .15s ease;
 }
 
+ .seller-h2 {
+    margin-bottom: 26px;
+ }
+
 .offer-go-inline:hover{
   color:var(--ink);
 }
@@ -4820,33 +4842,82 @@ button.pc-lineup-model{
     display:none;
   }
 
+  .seller-h2 {
+    margin-left: 20px;
+    margin-bottom: 0;
+  }
+
+  .pc-h2-icon{
+    display: none;
+  }
+
+  #offersNote{
+    padding-left: 18px;
+    padding-bottom: 18px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+
   .offer{
-    grid-template-columns:1fr;
-    gap:14px;
+    grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr);
+    gap:12px;
+    align-items:center;
+  }
+
+  .media-choice__thumb{
+    display: none;
+  }
+
+  .offer-delivery-col,
+  .offer-rating-col{
+    display:none;
   }
 
   .offer-store-cell,
-  .offer-price-col,
-  .offer-delivery-col,
-  .offer-rating-col{
+  .offer-price-col{
     position:relative;
-    padding-top:18px;
+    padding-top:0;
+    min-width:0;
+  }
+
+  .offer-store-cell{
+    display:grid;
+    grid-template-columns:44px minmax(0, 1fr);
+    gap:12px;
+    align-items:center;
+  }
+
+  #offersCard{
+    padding: 0;
+  }
+
+  .offer-wrapper{
+    border: none;
   }
 
   .offer-store-cell::before,
-  .offer-price-col::before,
-  .offer-delivery-col::before,
-  .offer-rating-col::before{
-    content:attr(data-label);
-    position:absolute;
-    top:0;
-    left:0;
-    font-size:12px;
-    line-height:1.2;
-    font-weight:700;
-    letter-spacing:.03em;
-    text-transform:uppercase;
-    color:#64748b;
+  .offer-price-col::before{
+    display:none;
+    content:none;
+  }
+
+  .offer-logo-link,
+  .offer-logo-spacer{
+    width:44px;
+    height:44px;
+  }
+
+  .offer-store{
+    font-size:18px;
+  }
+
+  .offer-price-col{
+    align-items:flex-start;
+    justify-content:center;
+  }
+
+  .offer-price-col .offer-price{
+    font-size:18px;
   }
 
   .offer-cell-sub{

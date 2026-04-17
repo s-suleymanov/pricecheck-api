@@ -493,6 +493,14 @@
     const input = document.querySelector("header.nav input.nav-search__input");
     const logo  = document.querySelector("header.nav a.logo-head");
 
+    function syncHeaderSearchPlaceholder() {
+      if (!input) return;
+
+      input.placeholder = window.innerWidth <= 500
+      ? "Search PriceCheck"
+        : "Search or paste URL, UPC, PCI, ASIN, SKU";
+    }
+
     if (logo) {
       logo.addEventListener("click", e => {
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
@@ -500,8 +508,10 @@
       });
     }
 
+    syncHeaderSearchPlaceholder();
     if (!form || !input || form._pcHeaderSearchBound) return;
     form._pcHeaderSearchBound = true;
+    window.addEventListener("resize", syncHeaderSearchPlaceholder, { passive: true });
 
     function browseValueFromUrl() {
       const sp       = new URLSearchParams(location.search);
