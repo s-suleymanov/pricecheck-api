@@ -822,6 +822,19 @@ function clampDashboardBottomPanelHeight(value) {
   return Math.max(42, Math.min(max, Math.round(Number(value) || 320)));
 }
 
+const nextStepsSearchBtn = document.getElementById('nextStepsSearchBtn');
+
+if (nextStepsSearchBtn && !nextStepsSearchBtn._pcBound) {
+  nextStepsSearchBtn._pcBound = true;
+  nextStepsSearchBtn.addEventListener('click', () => {
+    const input = document.querySelector('.nav-search__input');
+    if (!input) return;
+    input.focus();
+    input.select?.();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  });
+}
+
 function ensureDashboardBottomPanel() {
   if (_dashboardBottomPanelEl) return _dashboardBottomPanelEl;
 
