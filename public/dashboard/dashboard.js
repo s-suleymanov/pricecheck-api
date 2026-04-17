@@ -3518,11 +3518,7 @@ if (hasCustomer) {
       </section>
     `;
   } else {
-    expertHtml = `
-      <section class="pc-review-section">
-        <p class="note">No expert reviews found yet.</p>
-      </section>
-    `;
+    expertHtml = '';
   }
 
   if (runToken != null && isStaleRun(runToken)) return;
@@ -3530,14 +3526,7 @@ if (hasCustomer) {
   mountCustomerReviews(`
     <div class="pc-reviews-wrap">
       ${customerHtml}
-      ${expertHtml || `
-        <section class="pc-review-section">
-          <div class="pc-rv-section-head">
-            <div class="pc-rv-section-title">Expert Reviews</div>
-          </div>
-          <p class="note">No expert reviews found yet.</p>
-        </section>
-      `}
+      ${expertHtml}
     </div>
   `);
 
