@@ -4554,14 +4554,13 @@ button.pc-lineup-model{
 }
 
 .dashboard-page .dashboard-toc__btn--score{
-  border-radius:14px;
   color:#fff;
 }
 
 .dashboard-page .dashboard-toc__score{
-  font-size:16px;
+  font-size:18px;
   line-height:1;
-  font-weight:700;
+  font-weight:600;
 }
 
 .dashboard-page .dashboard-toc__btn--score-great{
