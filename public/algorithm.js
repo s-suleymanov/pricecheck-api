@@ -572,6 +572,95 @@ _skelResizeTimer = setTimeout(() => {
   let _busy  = false;
   const PAGE = 24;
 
+  const HOME_FEED_CACHE_KEY = "pc_home_feed_cache_v1";
+  const HOME_FEED_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+  function normSig(sig) {
+    return {
+      brands: Array.isArray(sig?.brands) ? sig.brands : [],
+      categories: Array.isArray(sig?.categories) ? sig.categories : [],
+      keywords: Array.isArray(sig?.keywords) ? sig.keywords : [],
+      seenKeys: Array.isArray(sig?.seenKeys) ? sig.seenKeys : [],
+    };
+  }
+
+  function readHomeFeedCache() {
+    try {
+      const raw = localStorage.getItem(HOME_FEED_CACHE_KEY);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+
+      const age = Date.now() - Number(parsed.savedAt || 0);
+      if (!Number.isFinite(age) || age < 0 || age > HOME_FEED_CACHE_TTL) {
+        localStorage.removeItem(HOME_FEED_CACHE_KEY);
+        return null;
+      }
+
+      if (!Array.isArray(parsed.rows) || !parsed.rows.length) return null;
+
+      return {
+        rows: parsed.rows,
+        sig: normSig(parsed.sig),
+        off: Number.isFinite(Number(parsed.off)) ? Number(parsed.off) : parsed.rows.length
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function writeHomeFeedCache(payload) {
+    try {
+      localStorage.setItem(HOME_FEED_CACHE_KEY, JSON.stringify({
+        savedAt: Date.now(),
+        rows: Array.isArray(payload?.rows) ? payload.rows : [],
+        sig: normSig(payload?.sig),
+        off: Number.isFinite(Number(payload?.off)) ? Number(payload.off) : 0
+      }));
+    } catch (_) {}
+  }
+
+  function clearHomeFeedCache() {
+    try {
+      localStorage.removeItem(HOME_FEED_CACHE_KEY);
+    } catch (_) {}
+  }
+
+  function hydrateFromCache(cache) {
+    const rows = Array.isArray(cache?.rows) ? cache.rows : [];
+    if (!rows.length) return 0;
+
+    _sig  = normSig(cache.sig);
+    _rows = rows;
+    _off  = Number.isFinite(Number(cache.off)) ? Number(cache.off) : rows.length;
+    _seen = new Set(rows.map(r => r?.key).filter(Boolean));
+
+    scaffold();
+    stopSkeletonGrid();
+    feedEl._g.innerHTML = "";
+    paint(rows);
+
+    if (pillsEl) {
+      paintPills(mkPills(_sig));
+    }
+
+    document.body.classList.add("pc-home-ready");
+
+    getSellers()
+      .then(() => {
+        if (_rows.length) repaint();
+      })
+      .catch(() => {});
+
+    return rows.length;
+  }
+
+  window.pcRefreshHomeFeed = function pcRefreshHomeFeed() {
+    clearHomeFeedCache();
+    window.location.reload();
+  };
+
   
     function scaffold(skel=false) {
         if (!feedEl._rdy) {
@@ -661,37 +750,53 @@ _skelResizeTimer = setTimeout(() => {
     return r.json();
   }
 
-  async function loadFirst(sig) {
-    _bootLoading = true;
-    scaffold(true);
+async function loadFirst(sig, opts = {}) {
+  const forceRefresh = !!opts.forceRefresh;
 
-    const sellersPromise = getSellers().catch(() => (window.__pcSellersMap || {}));
-
-    try {
-      const j = await apiFeed(sig, 0, PAGE);
-
-      const rows = Array.isArray(j?.results) ? j.results : [];
-      _rows = rows;
-      _off = rows.length;
-
-      stopSkeletonGrid();
-      feedEl._g.innerHTML = "";
-      paint(rows);
-
-      sellersPromise.then(() => {
-        if (_rows.length) repaint();
-      });
-
-      return rows.length;
-    } catch (e) {
-      console.error("[PC] first page:", e);
-      stopSkeletonGrid();
-      feedEl._g.innerHTML = "";
-      return 0;
-    } finally {
-      document.body.classList.add("pc-home-ready");
+  if (!forceRefresh) {
+    const cached = readHomeFeedCache();
+    if (cached?.rows?.length) {
+      return hydrateFromCache(cached);
     }
   }
+
+  _bootLoading = true;
+  scaffold(true);
+
+  const sellersPromise = getSellers().catch(() => (window.__pcSellersMap || {}));
+
+  try {
+    const j = await apiFeed(sig, 0, PAGE);
+    const rows = Array.isArray(j?.results) ? j.results : [];
+
+    _rows = rows;
+    _off = rows.length;
+    _seen = new Set(rows.map(r => r?.key).filter(Boolean));
+
+    stopSkeletonGrid();
+    feedEl._g.innerHTML = "";
+    paint(rows);
+
+    writeHomeFeedCache({
+      rows,
+      sig,
+      off: rows.length
+    });
+
+    sellersPromise.then(() => {
+      if (_rows.length) repaint();
+    });
+
+    return rows.length;
+  } catch (e) {
+    console.error("[PC] first page:", e);
+    stopSkeletonGrid();
+    feedEl._g.innerHTML = "";
+    return 0;
+  } finally {
+    document.body.classList.add("pc-home-ready");
+  }
+}
 
   async function loadMore() {
     if (_busy) return;
@@ -800,6 +905,13 @@ _skelResizeTimer = setTimeout(() => {
 
   initHomeShortlistUi();
 
+  const cached = readHomeFeedCache();
+  if (cached?.rows?.length) {
+    hydrateFromCache(cached);
+    wireScroll();
+    return;
+  }
+
   let signedIn = false;
   try {
     signedIn = await getHomeViewerSignedIn();
@@ -808,36 +920,36 @@ _skelResizeTimer = setTimeout(() => {
   }
 
   if (!signedIn) {
-    _sig = cold;
-    renderPills(cold);
-    await loadFirst(cold);
-    wireScroll();
-    return;
-  }
-
-  let sig = cold;
-
-  try {
-    const r = await fetch("/api/history", {
-      credentials: "same-origin",
-      headers: { Accept: "application/json" }
-    });
-
-    const json = r.ok ? await r.json() : null;
-
-    if (json?.signed_in && Array.isArray(json.results) && json.results.length) {
-      const nextSig = extractSignals(json.results);
-
-      if (nextSig.brands.length || nextSig.categories.length || nextSig.keywords.length) {
-        sig = nextSig;
-      }
-    }
-  } catch (_) {}
-
-  _sig = sig;
-  renderPills(sig);
-  await loadFirst(sig);
+  _sig = cold;
+  renderPills(cold);
+  await loadFirst(cold);
   wireScroll();
+  return;
+}
+
+let sig = cold;
+
+try {
+  const r = await fetch("/api/history", {
+    credentials: "same-origin",
+    headers: { Accept: "application/json" }
+  });
+
+  const json = r.ok ? await r.json() : null;
+
+  if (json?.signed_in && Array.isArray(json.results) && json.results.length) {
+    const nextSig = extractSignals(json.results);
+
+    if (nextSig.brands.length || nextSig.categories.length || nextSig.keywords.length) {
+      sig = nextSig;
+    }
+  }
+} catch (_) {}
+
+_sig = sig;
+renderPills(sig);
+await loadFirst(sig);
+wireScroll();
 }
 
   boot();
