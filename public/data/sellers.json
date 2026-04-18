@@ -385,6 +385,26 @@
       "support_page": null
     }
   },
+  "technics": {
+  "name": "Technics",
+  "logo": "/logo/seller/technics.svg",
+  "website": "https://us.technics.com",
+  "owned_by": "Panasonic",
+  "type": "Proprietary",
+  "location": "Japan",
+  "founded": 1965,
+  "policies": {
+    "return_period": "30 days full refund or exchange; 30-60 days merchandise credit",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Free ground shipping",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": null,
+    "chat_available": true,
+    "support_page": "https://us.technics.com/pages/contact-us"
+  }
+},
   "audio-technica": {
     "name": "Audio-Technica",
     "logo": "/logo/seller/audio.webp",
