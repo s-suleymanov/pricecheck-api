@@ -115,7 +115,7 @@
     "policies": {
       "return_period": "15-30d (Category dependent)",
       "restocking_fee": "No (Unless parts missing/damaged)",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Yes"
     },
     "contact": {
@@ -155,7 +155,7 @@
     "policies": {
       "return_period": "30 days",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -175,7 +175,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Minimum 15% if return conditions are not met",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -195,7 +195,7 @@
     "policies": {
       "return_period": "15d",
       "restocking_fee": "Varies by seller",
-      "free_shipping_threshold": "Varies",
+      
       "price_match": "Yes (Select items)"
     },
     "contact": {
@@ -276,7 +276,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -296,7 +296,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -316,7 +316,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -336,7 +336,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -376,7 +376,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -416,7 +416,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -496,7 +496,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -516,7 +516,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -536,7 +536,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -556,7 +556,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -576,7 +576,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -596,7 +596,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -616,7 +616,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -636,7 +636,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -656,7 +656,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -676,7 +676,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -696,7 +696,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -716,7 +716,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "15% on opened and unused Tesla Shop products",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -736,7 +736,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -756,7 +756,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -776,7 +776,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -796,7 +796,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -816,7 +816,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -836,7 +836,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -856,7 +856,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -876,7 +876,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -896,7 +896,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -916,7 +916,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -936,7 +936,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -956,7 +956,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -976,7 +976,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -996,7 +996,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1016,7 +1016,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1036,7 +1036,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1056,7 +1056,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1076,7 +1076,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1116,7 +1116,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "10% on products showing signs of use/wear",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1136,7 +1136,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1156,7 +1156,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1176,7 +1176,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1196,7 +1196,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1216,7 +1216,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1236,7 +1236,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1256,7 +1256,7 @@
   "policies": {
     "return_period": "Option of return or exchange in accordance with applicable law",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1297,7 +1297,7 @@
   "policies": {
     "return_period": "",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1317,7 +1317,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1337,7 +1337,7 @@
   "policies": {
     "return_period": "30-75d (Most items; manufacturer dependent)",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1357,7 +1357,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1377,7 +1377,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1397,7 +1397,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1417,7 +1417,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1437,7 +1437,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1457,7 +1457,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1477,7 +1477,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1497,7 +1497,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1517,7 +1517,7 @@
   "policies": {
     "return_period": "14 days",
     "restocking_fee": "15% on opened returns",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1537,7 +1537,7 @@
   "policies": {
     "return_period": "Unknown",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1557,7 +1557,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1577,7 +1577,7 @@
   "policies": {
     "return_period": "14 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1597,7 +1597,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1617,7 +1617,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1637,7 +1637,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1657,7 +1657,7 @@
   "policies": {
     "return_period": "14 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -1677,7 +1677,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1697,7 +1697,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1717,7 +1717,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1737,7 +1737,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1757,7 +1757,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1777,7 +1777,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1797,7 +1797,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1817,7 +1817,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1837,7 +1837,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1857,7 +1857,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1877,7 +1877,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1897,7 +1897,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1917,7 +1917,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -1937,7 +1937,7 @@
     "policies": {
       "return_period": "",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -2081,7 +2081,7 @@
     "policies": {
       "return_period": "30 days",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Unknown",
+      
       "price_match": "Unknown"
     },
     "contact": {
@@ -2101,7 +2101,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -2121,7 +2121,7 @@
   "policies": {
     "return_period": "15 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -2161,7 +2161,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "No",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -2181,7 +2181,7 @@
   "policies": {
     "return_period": "90d",
     "restocking_fee": "15% on some special order returns/cancellations",
-    "free_shipping_threshold": "Varies",
+    
     "price_match": "Yes"
   },
   "contact": {
@@ -2241,7 +2241,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Up to 15% on select returns",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
@@ -2261,7 +2261,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "Unknown",
+    
     "price_match": "Unknown"
   },
   "contact": {
