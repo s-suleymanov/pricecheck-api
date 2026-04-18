@@ -4102,6 +4102,7 @@ if (mediaInner) {
   if (forensicsList) forensicsList.innerHTML = '';
 
   $('#chart').innerHTML = '';
+  $('#chartNote').className = 'muted';
   $('#chartNote').textContent = 'No history yet';
 
   state.similar = [];
@@ -4871,13 +4872,12 @@ function recordHistory(key, title, imageUrl, brand) {
     }
   }
 
-  if (!workingPts.length) {
+    if (!workingPts.length) {
     const offers = Array.isArray(state.offers) ? state.offers : [];
     const priced = offers
       .map(o => {
         const p = (typeof o.price_cents === 'number' && o.price_cents > 0) ? o.price_cents : null;
         const e = (typeof o.effective_price_cents === 'number' && o.effective_price_cents > 0) ? o.effective_price_cents : null;
-        // prefer effective if present and valid
         const use = (e != null && p != null && e <= p) ? e : p;
         return use;
       })
@@ -4885,16 +4885,14 @@ function recordHistory(key, title, imageUrl, brand) {
       .sort((a,b)=>a-b);
 
     if (priced.length) {
-      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const today = new Date().toISOString().slice(0, 10);
       workingPts = [{ d: today, price_cents: priced[0] }];
-      note.textContent = ''; // we are rendering something useful
     } else {
+      note.className = 'muted';
       note.textContent = 'No history yet';
       return;
     }
-  }  
-
-  note.textContent = '';
+  }
 
     // Apply range filter
   const days = Number(state.rangeDays || 30);
@@ -4912,9 +4910,12 @@ function recordHistory(key, title, imageUrl, brand) {
     .sort((a,b)=>a.t - b.t);
 
     if (!filtered.length) {
+    note.className = 'muted';
     note.textContent = 'No history yet';
     return;
   }
+
+  renderHistoryVerdict(filtered);
 
   if (filtered.length === 1) {
     const W = 700, H = 200;
@@ -4961,7 +4962,7 @@ function recordHistory(key, title, imageUrl, brand) {
     });
     dot.addEventListener('pointerleave', hideTip);
 
-    note.textContent = '';
+    renderHistoryVerdict(filtered);
     return;
   }
 
@@ -5060,7 +5061,76 @@ function recordHistory(key, title, imageUrl, brand) {
   dot.setAttribute('fill', '#6366f1');
   dot.setAttribute('class', 'chart-dot');
   svg.appendChild(dot);
-}
+  }
+
+  function getHistoryTrendVerdict(points){
+    const rows = Array.isArray(points) ? points : [];
+    if (rows.length < 2) {
+      return {
+        key: 'stable',
+        label: 'Stable',
+        detail: 'Not enough recent history to call a clear trend.'
+      };
+    }
+
+    const first = Number(rows[0]?.price_cents);
+    const last  = Number(rows[rows.length - 1]?.price_cents);
+
+    if (!Number.isFinite(first) || !Number.isFinite(last) || first <= 0 || last <= 0) {
+      return {
+        key: 'stable',
+        label: 'Stable',
+        detail: 'Not enough recent history to call a clear trend.'
+      };
+    }
+
+    const delta = last - first;
+    const pct = Math.abs(delta) / first;
+
+    // Treat very small movement as flat so the verdict does not feel noisy.
+    if (Math.abs(delta) < 300 || pct < 0.02) {
+      return {
+        key: 'stable',
+        label: 'Stable',
+        detail: 'Price has been mostly flat over this range.'
+      };
+    }
+
+    if (delta > 0) {
+      return {
+        key: 'wait',
+        label: 'Wait',
+        detail: 'Price is trending upward in this range.'
+      };
+    }
+
+    return {
+      key: 'lower',
+      label: 'Tracking Lower',
+      detail: 'Price is trending downward in this range.'
+    };
+  }
+
+  function renderHistoryVerdict(filtered){
+    const note = $('#chartNote');
+    if (!note) return;
+
+    if (!Array.isArray(filtered) || !filtered.length) {
+      note.className = 'muted';
+      note.textContent = 'No history yet';
+      return;
+    }
+
+    const verdict = getHistoryTrendVerdict(filtered);
+
+    note.className = `history-verdict history-verdict--${verdict.key}`;
+    note.innerHTML = `
+      <span class="history-verdict__pill">${escapeHtml(verdict.label)}</span>
+      <span class="history-verdict__text">${escapeHtml(verdict.detail)}</span>
+    `;
+  }
+
+
 
   // Important: Amazon link should use offer.store_sku (ASIN), not a single selected ASIN
   function canonicalLink(store, offer){
