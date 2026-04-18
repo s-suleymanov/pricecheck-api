@@ -1195,7 +1195,7 @@ const img = rawImg
       : "";
 
     const inner = `
-      <div class="thumb">${img}</div>
+      <div class="thumb">${img}${recScoreBadgeHtml(r.overall_score)}</div>
       <div class="body">
         <div class="subtitle">${escapeHtml(brandLine)}</div>
         <div class="name ${hasAbout ? "name--with-about" : "name--no-about"}">${escapeHtml(displayName)}</div>
@@ -1233,6 +1233,27 @@ const img = rawImg
         data-img="${escapeHtml(String(r.image_url || ""))}">
         ${inner}
       </a>
+    `;
+  }
+
+  function recScoreTone(score) {
+    const n = Number(score);
+    if (!Number.isFinite(n)) return "";
+    if (n >= 85) return "great";
+    if (n >= 70) return "good";
+    if (n >= 55) return "mixed";
+    return "low";
+  }
+
+  function recScoreBadgeHtml(score) {
+    const n = Number(score);
+    if (!Number.isFinite(n) || n <= 0) return "";
+
+    const tone = recScoreTone(n);
+    return `
+      <div class="browse-card-score browse-card-score--${tone}" aria-label="Overall score ${Math.round(n)}">
+        ${Math.round(n)}
+      </div>
     `;
   }
 
@@ -1294,7 +1315,7 @@ const img = rawImg
     : "";
 
   const inner = `
-  <div class="thumb">${img}</div>
+  <div class="thumb">${img}${recScoreBadgeHtml(r.overall_score)}</div>
   <div class="body spec-card-body">
     <div class="spec-card-main">
       <div class="spec-card-head">
