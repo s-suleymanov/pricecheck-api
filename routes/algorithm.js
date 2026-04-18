@@ -328,28 +328,76 @@ router.post("/api/home_feed", async (req, res) => {
           )
       ),
 
+      coupon_group AS (
+        SELECT
+          wc.key,
+          BOOL_OR(
+            (
+              NULLIF(btrim(l.coupon_text), '') IS NOT NULL
+              OR NULLIF(btrim(l.coupon_code), '') IS NOT NULL
+              OR COALESCE(l.coupon_value_cents, 0) > 0
+              OR COALESCE(l.coupon_value_pct, 0) > 0
+              OR (
+                l.effective_price_cents IS NOT NULL
+                AND l.current_price_cents IS NOT NULL
+                AND l.effective_price_cents > 0
+                AND l.effective_price_cents < l.current_price_cents
+              )
+            )
+          ) AS has_coupon
+        FROM with_cat wc
+        LEFT JOIN public.catalog c_same
+          ON wc.model_number_norm IS NOT NULL
+         AND c_same.model_number IS NOT NULL
+         AND upper(btrim(c_same.model_number)) = wc.model_number_norm
+         AND COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') = COALESCE(wc.version_norm, '')
+        LEFT JOIN public.listings l
+          ON (
+            (
+              c_same.pci IS NOT NULL
+              AND btrim(c_same.pci) <> ''
+              AND l.pci IS NOT NULL
+              AND btrim(l.pci) <> ''
+              AND upper(btrim(l.pci)) = upper(btrim(c_same.pci))
+            )
+            OR
+            (
+              c_same.upc IS NOT NULL
+              AND btrim(c_same.upc) <> ''
+              AND l.upc IS NOT NULL
+              AND btrim(l.upc) <> ''
+              AND public.norm_upc(l.upc) = public.norm_upc(c_same.upc)
+            )
+          )
+         AND coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
+        GROUP BY wc.key
+      ),
+
       grouped AS (
         SELECT DISTINCT ON (
-          COALESCE(NULLIF(btrim(model_number), ''), key),
-          lower(btrim(COALESCE(brand, '')))
+          COALESCE(NULLIF(btrim(wc.model_number), ''), wc.key),
+          lower(btrim(COALESCE(wc.brand, '')))
         )
-          key,
-          min_price_cents,
-          max_price_cents,
-          store_count,
-          last_seen,
-          COALESCE(NULLIF(btrim(model_name), ''), 'Product') AS title,
-          brand,
-          category,
-          image_url,
-          model_number_norm,
-          version_norm
-        FROM with_cat
+          wc.key,
+          wc.min_price_cents,
+          wc.max_price_cents,
+          wc.store_count,
+          wc.last_seen,
+          COALESCE(NULLIF(btrim(wc.model_name), ''), 'Product') AS title,
+          wc.brand,
+          wc.category,
+          wc.image_url,
+          wc.model_number_norm,
+          wc.version_norm,
+          COALESCE(cg.has_coupon, false) AS has_coupon
+        FROM with_cat wc
+        LEFT JOIN coupon_group cg
+          ON cg.key = wc.key
         ORDER BY
-          COALESCE(NULLIF(btrim(model_number), ''), key),
-          lower(btrim(COALESCE(brand, ''))),
-          store_count DESC,
-          last_seen DESC NULLS LAST
+          COALESCE(NULLIF(btrim(wc.model_number), ''), wc.key),
+          lower(btrim(COALESCE(wc.brand, ''))),
+          wc.store_count DESC,
+          wc.last_seen DESC NULLS LAST
       ),
 
       scored AS (
@@ -455,6 +503,7 @@ router.post("/api/home_feed", async (req, res) => {
         store_count,
         score,
         overall_score,
+        COALESCE(has_coupon, false) AS has_coupon,
         COALESCE(stores, ARRAY[]::text[]) AS stores
       FROM scored
       ORDER BY score DESC, store_count DESC, last_seen DESC NULLS LAST
@@ -539,20 +588,22 @@ router.post("/api/home_feed", async (req, res) => {
             GROUP BY key
           ),
 
-          wc AS (
-            SELECT
-              a.key,
-              a.min_price_cents,
-              a.max_price_cents,
-              a.store_count,
-              a.last_seen,
-              c.matched_new,
-              c.model_name,
-              c.model_number,
-              c.brand,
-              c.category,
-              c.image_url
-            FROM agg a
+        wc AS (
+          SELECT
+            a.key,
+            a.min_price_cents,
+            a.max_price_cents,
+            a.store_count,
+            a.last_seen,
+            c.matched_new,
+            c.model_name,
+            c.model_number,
+            c.brand,
+            c.category,
+            c.image_url,
+            c.model_number_norm,
+            c.version_norm
+          FROM agg a
             LEFT JOIN LATERAL (
               SELECT
                 1 AS matched_new,
@@ -560,7 +611,9 @@ router.post("/api/home_feed", async (req, res) => {
                 c2.model_number,
                 c2.brand,
                 c2.category,
-                c2.image_url
+                c2.image_url,
+                upper(btrim(c2.model_number)) AS model_number_norm,
+                COALESCE(NULLIF(lower(btrim(c2.version)), ''), '') AS version_norm
               FROM public.catalog c2
               WHERE (
                 (a.key LIKE 'pci:%'
@@ -598,28 +651,76 @@ router.post("/api/home_feed", async (req, res) => {
                   )
                 )
               )
+                    ),
+
+          coupon_group AS (
+            SELECT
+              wc.key,
+              BOOL_OR(
+                (
+                  NULLIF(btrim(l.coupon_text), '') IS NOT NULL
+                  OR NULLIF(btrim(l.coupon_code), '') IS NOT NULL
+                  OR COALESCE(l.coupon_value_cents, 0) > 0
+                  OR COALESCE(l.coupon_value_pct, 0) > 0
+                  OR (
+                    l.effective_price_cents IS NOT NULL
+                    AND l.current_price_cents IS NOT NULL
+                    AND l.effective_price_cents > 0
+                    AND l.effective_price_cents < l.current_price_cents
+                  )
+                )
+              ) AS has_coupon
+            FROM wc
+            LEFT JOIN public.catalog c_same
+              ON wc.model_number_norm IS NOT NULL
+             AND c_same.model_number IS NOT NULL
+             AND upper(btrim(c_same.model_number)) = wc.model_number_norm
+             AND COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') = COALESCE(wc.version_norm, '')
+            LEFT JOIN public.listings l
+              ON (
+                (
+                  c_same.pci IS NOT NULL
+                  AND btrim(c_same.pci) <> ''
+                  AND l.pci IS NOT NULL
+                  AND btrim(l.pci) <> ''
+                  AND upper(btrim(l.pci)) = upper(btrim(c_same.pci))
+                )
+                OR
+                (
+                  c_same.upc IS NOT NULL
+                  AND btrim(c_same.upc) <> ''
+                  AND l.upc IS NOT NULL
+                  AND btrim(l.upc) <> ''
+                  AND public.norm_upc(l.upc) = public.norm_upc(c_same.upc)
+                )
+              )
+             AND coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
+            GROUP BY wc.key
           ),
 
           g AS (
             SELECT DISTINCT ON (
-              COALESCE(NULLIF(btrim(model_number), ''), key),
-              lower(btrim(COALESCE(brand, '')))
+              COALESCE(NULLIF(btrim(wc.model_number), ''), wc.key),
+              lower(btrim(COALESCE(wc.brand, '')))
             )
-              key,
-              min_price_cents,
-              max_price_cents,
-              store_count,
-              last_seen,
-              COALESCE(NULLIF(btrim(model_name), ''), 'Product') AS title,
-              brand,
-              category,
-              image_url
+              wc.key,
+              wc.min_price_cents,
+              wc.max_price_cents,
+              wc.store_count,
+              wc.last_seen,
+              COALESCE(NULLIF(btrim(wc.model_name), ''), 'Product') AS title,
+              wc.brand,
+              wc.category,
+              wc.image_url,
+              COALESCE(cg.has_coupon, false) AS has_coupon
             FROM wc
+            LEFT JOIN coupon_group cg
+              ON cg.key = wc.key
             ORDER BY
-              COALESCE(NULLIF(btrim(model_number), ''), key),
-              lower(btrim(COALESCE(brand, ''))),
-              store_count DESC,
-              last_seen DESC NULLS LAST
+              COALESCE(NULLIF(btrim(wc.model_number), ''), wc.key),
+              lower(btrim(COALESCE(wc.brand, ''))),
+              wc.store_count DESC,
+              wc.last_seen DESC NULLS LAST
           )
 
           SELECT

@@ -419,6 +419,7 @@
     const href = esc(dashHref(item.key));
     const key = esc(item.key || "");
     const priceCents = Number.isFinite(Number(item.min_price_cents)) ? Number(item.min_price_cents) : "";
+    const hasCoupon = !!item.has_coupon;
 
     const imgTag = img
   ? `<img
@@ -459,6 +460,7 @@
               <div class="home-deal__title">${title}</div>
               <div class="home-deal__meta">
                 <span class="home-deal__price">${c2u(item.min_price_cents)}</span>
+                ${hasCoupon ? `<span class="home-deal__coupon">Coupon</span>` : ``}
               </div>
             </div>
           </div>
