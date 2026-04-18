@@ -5276,7 +5276,8 @@ button.pc-lineup-model{
 }
 
 .ph-top-price__coins{
-  display:flex;
+  display: none;
+  /* display:flex; */
   align-items:center;
   justify-content: flex-end;
   gap:10px;
