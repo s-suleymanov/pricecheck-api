@@ -1591,13 +1591,14 @@
     "logo": "/logo/seller/skull.webp",
     "website": "https://www.skullcandy.com",
     "owned_by": "",
+    "rating": 4.0,
     "type": "Proprietary",
     "location": "United States",
     "founded": null,
     "policies": {
-      "return_period": "",
       "restocking_fee": "Unknown",
-      
+      "return_period": "14d",
+      "free_shipping_threshold": "$15",
       "price_match": "Unknown"
     },
     "contact": {
