@@ -41,6 +41,9 @@ const PRODUCT_KEY_SQL =
   "id::text" +
   ")";
 
+const BRAND_MODEL_NAME_SQL =
+  "lower(trim(concat_ws(' ', coalesce(c.brand,''), coalesce(c.model_name,''))))";
+
 async function didYouMeanForQuery(client, qLower) {
   const q = normLower(qLower);
   if (!q || q.length < 2) return null;
@@ -366,11 +369,13 @@ router.get("/api/suggest", async (req, res) => {
       c.created_at,
       c.id
     FROM public.catalog c
-    WHERE c.model_number IS NOT NULL AND btrim(c.model_number) <> ''
+    WHERE c.model_number IS NOT NULL
+      AND btrim(c.model_number) <> ''
       AND (
         lower(coalesce(c.model_name,'')) LIKE $1
         OR lower(coalesce(c.model_number,'')) LIKE $1
         OR lower(coalesce(c.version,'')) LIKE $1
+        OR ${BRAND_MODEL_NAME_SQL} LIKE $1
       )
     ORDER BY
       upper(btrim(c.model_number)),
@@ -379,6 +384,7 @@ router.get("/api/suggest", async (req, res) => {
       c.id DESC
   )
   SELECT
+    btrim(model_name) AS model_name,
     btrim(model_number) AS value,
     pci,
     upc,
@@ -612,22 +618,31 @@ router.get("/api/suggest", async (req, res) => {
     const rows = Array.isArray(mr.rows) ? mr.rows : [];
 
     modelResults = rows
-      .filter((r) => r && r.value)
-      .map((r) => {
-        const pci = String(r.pci || "").trim();
-        const upc = String(r.upc || "").trim();
+  .filter((r) => r && (r.model_name || r.value))
+  .map((r) => {
+    const pci = String(r.pci || "").trim();
+    const upc = String(r.upc || "").trim();
 
-        let href = null;
-        if (pci) href = `/dashboard/pci/${encodeURIComponent(pci)}/`;
-        else if (upc) href = `/dashboard/upc/${encodeURIComponent(upc.replace(/\D/g, ""))}/`;
+    let href = null;
+    if (pci) href = `/dashboard/pci/${encodeURIComponent(pci)}/`;
+    else if (upc) href = `/dashboard/upc/${encodeURIComponent(upc.replace(/\D/g, ""))}/`;
 
-        return {
-          kind: "family",
-          value: String(r.value || "").trim(),
-          products: 0,
-          href,
-        };
-      });
+    const brand = String(r.brand || "").trim();
+    const modelName = String(r.model_name || "").trim();
+    const modelNumber = String(r.value || "").trim();
+
+    const label =
+      modelName && brand
+        ? `${brand} ${modelName}`
+        : (modelName || modelNumber);
+
+    return {
+      kind: "family",
+      value: label,
+      products: 0,
+      href,
+    };
+  });
   }
 
     const merged = [];
@@ -938,14 +953,16 @@ router.get("/api/search", async (req, res) => {
         SELECT DISTINCT
           upper(btrim(model_number)) AS model_number_norm,
           COALESCE(NULLIF(lower(btrim(version)), ''), '') AS version_norm
-        FROM public.catalog
-        WHERE model_number IS NOT NULL AND btrim(model_number) <> ''
+        FROM public.catalog c
+        WHERE c.model_number IS NOT NULL
+          AND btrim(c.model_number) <> ''
           AND (
-            lower(coalesce(model_name,'')) LIKE $1
-            OR lower(coalesce(model_number,'')) LIKE $1
-            OR lower(coalesce(version,'')) LIKE $1
-            OR lower(coalesce(brand,'')) LIKE $1
-            OR lower(coalesce(category,'')) LIKE $1
+            lower(coalesce(c.model_name,'')) LIKE $1
+            OR lower(coalesce(c.model_number,'')) LIKE $1
+            OR lower(coalesce(c.version,'')) LIKE $1
+            OR lower(coalesce(c.brand,'')) LIKE $1
+            OR lower(coalesce(c.category,'')) LIKE $1
+            OR ${BRAND_MODEL_NAME_SQL} LIKE $1
           )
       )
       SELECT COUNT(*)::int AS total
@@ -972,151 +989,153 @@ router.get("/api/search", async (req, res) => {
     }
 
     const listSql = `
-  WITH picked AS (
-    SELECT DISTINCT ON (
-      upper(btrim(c.model_number)),
-      ${VERSION_NORM_SQL}
-    )
-      btrim(c.model_number) AS model_number,
-      upper(btrim(c.model_number)) AS model_number_norm,
-      COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
-      c.version,
-      c.model_name,
-      c.brand,
-      c.category,
-      c.image_url,
-      COALESCE(c.dropship_warning, false) AS dropship_warning,
-      c.about,
-      COALESCE(c.is_refurbished, false) AS is_refurbished,
-      COALESCE(c.is_bundle, false) AS is_bundle,
-      c.pci,
-      c.upc,
-      c.created_at,
-      c.id
-    FROM public.catalog c
-    WHERE c.model_number IS NOT NULL AND btrim(c.model_number) <> ''
-      AND (
-        lower(coalesce(c.model_name,'')) LIKE $1
-        OR lower(coalesce(c.model_number,'')) LIKE $1
-        OR lower(coalesce(c.version,'')) LIKE $1
-        OR lower(coalesce(c.brand,'')) LIKE $1
-        OR lower(coalesce(c.category,'')) LIKE $1
+   WITH picked AS (
+      SELECT DISTINCT ON (
+        upper(btrim(c.model_number)),
+        ${VERSION_NORM_SQL}
       )
-    ORDER BY
-      upper(btrim(c.model_number)),
-      ${VERSION_NORM_SQL},
-      c.created_at DESC NULLS LAST,
-      c.id DESC
-  ),
-  page_rows AS (
-    SELECT *
-    FROM picked
-    ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number_norm, version_norm
-    LIMIT $2 OFFSET $3
-  ),
-  anchors AS (
-    SELECT
-      p.*,
-      CASE
-        WHEN p.pci IS NOT NULL AND btrim(p.pci) <> '' THEN ('pci:' || btrim(p.pci))
-        WHEN p.upc IS NOT NULL AND btrim(p.upc) <> '' THEN ('upc:' || btrim(p.upc))
-        ELSE NULL
-      END AS dashboard_key
-    FROM page_rows p
-  ),
-  cheapest AS (
-    SELECT
-      a.model_number_norm,
-      a.version_norm,
-      MIN(l.current_price_cents) FILTER (WHERE l.current_price_cents IS NOT NULL) AS best_price_cents
-    FROM anchors a
-    LEFT JOIN public.catalog c
-      ON upper(btrim(c.model_number)) = a.model_number_norm
-     AND COALESCE(NULLIF(lower(btrim(c.version)), ''), '') = a.version_norm
-    LEFT JOIN public.listings l
-      ON (
-        (c.pci IS NOT NULL AND btrim(c.pci) <> '' AND l.pci IS NOT NULL AND btrim(l.pci) <> '' AND upper(btrim(l.pci)) = upper(btrim(c.pci)))
-        OR
-        (c.upc IS NOT NULL AND btrim(c.upc) <> '' AND l.upc IS NOT NULL AND btrim(l.upc) <> '' AND public.norm_upc(l.upc) = public.norm_upc(c.upc))
-      )
-    GROUP BY a.model_number_norm, a.version_norm
-  ),
-  scored AS (
-    SELECT
-      a.*,
-      ch.best_price_cents,
-      pr.overall_score
-    FROM anchors a
-    LEFT JOIN cheapest ch
-      ON ch.model_number_norm = a.model_number_norm
-     AND ch.version_norm = a.version_norm
-    LEFT JOIN LATERAL (
-      SELECT picked_score.overall_score
-      FROM (
-        SELECT
-          pr2.overall_score,
-          0 AS priority,
-          pr2.updated_at,
-          pr2.id
-        FROM public.product_recommendations pr2
-        WHERE
-          (
-            a.pci IS NOT NULL
-            AND btrim(a.pci) <> ''
-            AND pr2.pci IS NOT NULL
-            AND btrim(pr2.pci) <> ''
-            AND upper(btrim(pr2.pci)) = upper(btrim(a.pci))
-          )
+        btrim(c.model_number) AS model_number,
+        upper(btrim(c.model_number)) AS model_number_norm,
+        COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+        c.version,
+        c.model_name,
+        c.brand,
+        c.category,
+        c.image_url,
+        COALESCE(c.dropship_warning, false) AS dropship_warning,
+        c.about,
+        COALESCE(c.is_refurbished, false) AS is_refurbished,
+        COALESCE(c.is_bundle, false) AS is_bundle,
+        c.pci,
+        c.upc,
+        c.created_at,
+        c.id
+      FROM public.catalog c
+      WHERE c.model_number IS NOT NULL
+        AND btrim(c.model_number) <> ''
+        AND (
+          lower(coalesce(c.model_name,'')) LIKE $1
+          OR lower(coalesce(c.model_number,'')) LIKE $1
+          OR lower(coalesce(c.version,'')) LIKE $1
+          OR lower(coalesce(c.brand,'')) LIKE $1
+          OR lower(coalesce(c.category,'')) LIKE $1
+          OR ${BRAND_MODEL_NAME_SQL} LIKE $1
+        )
+      ORDER BY
+        upper(btrim(c.model_number)),
+        ${VERSION_NORM_SQL},
+        c.created_at DESC NULLS LAST,
+        c.id DESC
+    ),
+    page_rows AS (
+      SELECT *
+      FROM picked
+      ORDER BY brand NULLS LAST, category NULLS LAST, model_name NULLS LAST, model_number_norm, version_norm
+      LIMIT $2 OFFSET $3
+    ),
+    anchors AS (
+      SELECT
+        p.*,
+        CASE
+          WHEN p.pci IS NOT NULL AND btrim(p.pci) <> '' THEN ('pci:' || btrim(p.pci))
+          WHEN p.upc IS NOT NULL AND btrim(p.upc) <> '' THEN ('upc:' || btrim(p.upc))
+          ELSE NULL
+        END AS dashboard_key
+      FROM page_rows p
+    ),
+    cheapest AS (
+      SELECT
+        a.model_number_norm,
+        a.version_norm,
+        MIN(l.current_price_cents) FILTER (WHERE l.current_price_cents IS NOT NULL) AS best_price_cents
+      FROM anchors a
+      LEFT JOIN public.catalog c
+        ON upper(btrim(c.model_number)) = a.model_number_norm
+      AND COALESCE(NULLIF(lower(btrim(c.version)), ''), '') = a.version_norm
+      LEFT JOIN public.listings l
+        ON (
+          (c.pci IS NOT NULL AND btrim(c.pci) <> '' AND l.pci IS NOT NULL AND btrim(l.pci) <> '' AND upper(btrim(l.pci)) = upper(btrim(c.pci)))
           OR
-          (
-            a.upc IS NOT NULL
-            AND btrim(a.upc) <> ''
-            AND pr2.upc IS NOT NULL
-            AND btrim(pr2.upc) <> ''
-            AND public.norm_upc(pr2.upc) = public.norm_upc(a.upc)
-          )
-
-        UNION ALL
-
-        SELECT
-          pr3.overall_score,
-          1 AS priority,
-          pr3.updated_at,
-          pr3.id
-        FROM public.catalog c_same
-        JOIN public.product_recommendations pr3
-          ON (
-            (pr3.pci IS NOT NULL AND btrim(pr3.pci) <> '' AND c_same.pci IS NOT NULL AND btrim(c_same.pci) <> '' AND upper(btrim(pr3.pci)) = upper(btrim(c_same.pci)))
+          (c.upc IS NOT NULL AND btrim(c.upc) <> '' AND l.upc IS NOT NULL AND btrim(l.upc) <> '' AND public.norm_upc(l.upc) = public.norm_upc(c.upc))
+        )
+      GROUP BY a.model_number_norm, a.version_norm
+    ),
+    scored AS (
+      SELECT
+        a.*,
+        ch.best_price_cents,
+        pr.overall_score
+      FROM anchors a
+      LEFT JOIN cheapest ch
+        ON ch.model_number_norm = a.model_number_norm
+      AND ch.version_norm = a.version_norm
+      LEFT JOIN LATERAL (
+        SELECT picked_score.overall_score
+        FROM (
+          SELECT
+            pr2.overall_score,
+            0 AS priority,
+            pr2.updated_at,
+            pr2.id
+          FROM public.product_recommendations pr2
+          WHERE
+            (
+              a.pci IS NOT NULL
+              AND btrim(a.pci) <> ''
+              AND pr2.pci IS NOT NULL
+              AND btrim(pr2.pci) <> ''
+              AND upper(btrim(pr2.pci)) = upper(btrim(a.pci))
+            )
             OR
-            (pr3.upc IS NOT NULL AND btrim(pr3.upc) <> '' AND c_same.upc IS NOT NULL AND btrim(c_same.upc) <> '' AND public.norm_upc(pr3.upc) = public.norm_upc(c_same.upc))
-          )
-        WHERE
-          a.model_number_norm IS NOT NULL
-          AND a.model_number_norm <> ''
-          AND upper(btrim(c_same.model_number)) = a.model_number_norm
-          AND COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') = a.version_norm
-      ) picked_score
-      ORDER BY picked_score.priority ASC, picked_score.updated_at DESC NULLS LAST, picked_score.id DESC
-      LIMIT 1
-    ) pr ON true
-  )
-  SELECT
-    s.model_number,
-    s.version,
-    s.model_name,
-    s.brand,
-    s.category,
-    s.image_url,
-    s.dropship_warning,
-    s.about,
-    s.is_refurbished,
-    s.is_bundle,
-    s.dashboard_key,
-    s.best_price_cents,
-    s.overall_score
-  FROM scored s
-  ORDER BY s.brand NULLS LAST, s.category NULLS LAST, s.model_name NULLS LAST, s.model_number_norm, s.version_norm
-`;
+            (
+              a.upc IS NOT NULL
+              AND btrim(a.upc) <> ''
+              AND pr2.upc IS NOT NULL
+              AND btrim(pr2.upc) <> ''
+              AND public.norm_upc(pr2.upc) = public.norm_upc(a.upc)
+            )
+
+          UNION ALL
+
+          SELECT
+            pr3.overall_score,
+            1 AS priority,
+            pr3.updated_at,
+            pr3.id
+          FROM public.catalog c_same
+          JOIN public.product_recommendations pr3
+            ON (
+              (pr3.pci IS NOT NULL AND btrim(pr3.pci) <> '' AND c_same.pci IS NOT NULL AND btrim(c_same.pci) <> '' AND upper(btrim(pr3.pci)) = upper(btrim(c_same.pci)))
+              OR
+              (pr3.upc IS NOT NULL AND btrim(pr3.upc) <> '' AND c_same.upc IS NOT NULL AND btrim(c_same.upc) <> '' AND public.norm_upc(pr3.upc) = public.norm_upc(c_same.upc))
+            )
+          WHERE
+            a.model_number_norm IS NOT NULL
+            AND a.model_number_norm <> ''
+            AND upper(btrim(c_same.model_number)) = a.model_number_norm
+            AND COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') = a.version_norm
+        ) picked_score
+        ORDER BY picked_score.priority ASC, picked_score.updated_at DESC NULLS LAST, picked_score.id DESC
+        LIMIT 1
+      ) pr ON true
+    )
+    SELECT
+      s.model_number,
+      s.version,
+      s.model_name,
+      s.brand,
+      s.category,
+      s.image_url,
+      s.dropship_warning,
+      s.about,
+      s.is_refurbished,
+      s.is_bundle,
+      s.dashboard_key,
+      s.best_price_cents,
+      s.overall_score
+    FROM scored s
+    ORDER BY s.brand NULLS LAST, s.category NULLS LAST, s.model_name NULLS LAST, s.model_number_norm, s.version_norm
+  `;
 
     const { rows } = await client.query(listSql, [likeLoose, limit, offset]);
 
