@@ -683,6 +683,7 @@ router.get("/admin/api/db/items", requireAdminApi, async (req, res) => {
           coupon_text, coupon_type, coupon_value_cents, coupon_value_pct,
           coupon_requires_clip, coupon_code, coupon_expires_at,
           effective_price_cents, coupon_observed_at,
+          rating, review_count,
           created_at
         from public.listings
         where
@@ -874,6 +875,20 @@ router.patch("/admin/api/listing/:id", requireAdminApi, async (req, res) => {
     }
   }
 
+  if ("rating" in body) {
+    patch.rating = parseNumOrNull(body.rating);
+    if (patch.rating === undefined) {
+      return res.status(400).json({ error: "bad_rating" });
+    }
+  }
+
+  if ("review_count" in body) {
+    patch.review_count = parseIntOrNull(body.review_count);
+    if (patch.review_count === undefined) {
+      return res.status(400).json({ error: "bad_review_count" });
+    }
+  }
+
   if ("coupon_value_cents" in body) {
     patch.coupon_value_cents = parseIntOrNull(body.coupon_value_cents);
     if (patch.coupon_value_cents === undefined) {
@@ -962,6 +977,8 @@ router.patch("/admin/api/listing/:id", requireAdminApi, async (req, res) => {
       "coupon_value_pct",
       "coupon_requires_clip",
       "coupon_code",
+      "rating",
+      "review_count",
       "coupon_expires_at",
       "effective_price_cents",
       "coupon_observed_at",
