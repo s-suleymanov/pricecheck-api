@@ -2111,6 +2111,26 @@
     "support_page": "https://www.instacart.com/help"
   }
 },
+"jlab": {
+  "name": "JLab",
+  "logo": "/logo/seller/jlab.png",
+  "website": "https://www.jlab.com",
+  "owned_by": "",
+  "type": "Proprietary",
+  "location": "United States",
+  "founded": 2005,
+  "policies": {
+    "return_period": "30 days",
+    "restocking_fee": "No",
+    "free_shipping_threshold": "Free shipping on full-priced US orders",
+    "price_match": "Unknown"
+  },
+  "contact": {
+    "phone": "1-405-445-7219",
+    "chat_available": true,
+    "support_page": "https://www.jlab.com/pages/contact"
+  }
+},
     "viewsonic": {
     "name": "ViewSonic",
     "logo": "/logo/seller/viewsonic.webp",
