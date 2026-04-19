@@ -235,7 +235,7 @@
     "policies": {
       "return_period": "30d",
       "restocking_fee": "Yes (on select opened items)",
-      "free_shipping_threshold": "$35+",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes"
     },
     "contact": {
