@@ -1,12 +1,14 @@
 console.log("BOOT: server.js starting");
 
 process.on("uncaughtException", (e) => {
-  console.error("BOOT: uncaughtException", e);
+  console.error("BOOT: uncaughtException");
+  console.error(e && e.stack ? e.stack : e);
   process.exit(1);
 });
 
 process.on("unhandledRejection", (e) => {
-  console.error("BOOT: unhandledRejection", e);
+  console.error("BOOT: unhandledRejection");
+  console.error(e && e.stack ? e.stack : e);
   process.exit(1);
 });
 
