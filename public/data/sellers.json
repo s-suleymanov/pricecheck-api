@@ -2091,6 +2091,26 @@
       "support_page": "https://customerservice.costco.com"
     }
   },
+  "instacart": {
+  "name": "Instacart",
+  "logo": "/logo/seller/instacart.png",
+  "website": "https://www.instacart.com",
+  "owned_by": "",
+  "type": "Grocery Delivery Marketplace",
+  "location": "United States",
+  "founded": 2012,
+  "policies": {
+    "return_period": "Report issues within 3 days of pickup or delivery",
+    "restocking_fee": "No",
+    "free_shipping_threshold": "Delivery fees start at $3.99 for same-day orders over $35",
+    "price_match": "No"
+  },
+  "contact": {
+    "phone": "1-888-246-7822",
+    "chat_available": true,
+    "support_page": "https://www.instacart.com/help"
+  }
+},
     "viewsonic": {
     "name": "ViewSonic",
     "logo": "/logo/seller/viewsonic.webp",
