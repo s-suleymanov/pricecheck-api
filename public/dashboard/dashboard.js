@@ -3091,6 +3091,107 @@ async function renderCommunityCard(productKey, runToken){
   wireQuestionReplyUi(signedIn);
 }
 
+function wireExpertReviewFollowButtons() {
+  document.querySelectorAll('[data-expert-follow]').forEach((btn) => {
+    if (btn._pcBound) return;
+    btn._pcBound = true;
+
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          credentials: 'same-origin',
+          headers: { Accept: 'application/json' }
+        });
+
+        const data = await res.json().catch(() => null);
+        const signedIn = !!data?.user?.id;
+
+        if (!signedIn) {
+          if (typeof window.pcOpenSignIn === 'function') {
+            window.pcOpenSignIn();
+            return;
+          }
+
+          alert('Please sign in first.');
+          return;
+        }
+
+        alert('Following expert review sources is not live yet.');
+        return;
+
+        // Follow save logic can be added next.
+      } catch {
+        if (typeof window.pcOpenSignIn === 'function') {
+          window.pcOpenSignIn();
+          return;
+        }
+
+        alert('Please sign in first.');
+      }
+    });
+  });
+}
+
+function ratingLogoSlug(raw){
+  return String(raw || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+function renderExpertReviewSource(source, url, title){
+  const name = String(source || 'Source').trim() || 'Source';
+  const logoSrc = `/logo/ratings/${ratingLogoSlug(name)}.webp`;
+
+  if (url) {
+    return `
+      <a
+        class="pc-rv-expert-title-row pc-rv-expert-title-row--link"
+        href="${escapeHtml(url)}"
+        target="_blank"
+        rel="noopener"
+        aria-label="Open ${escapeHtml(title || name)}"
+      >
+        <span style="display:inline-flex;align-items:center;min-height:40px;">
+          <img
+            src="${escapeHtml(logoSrc)}"
+            alt="${escapeHtml(name)}"
+            loading="lazy"
+            decoding="async"
+            style="height:auto;width:180px;display:block;"
+            onerror="this.style.display='none';this.nextElementSibling.hidden=false;"
+          >
+          <span class="pc-rv-expert-title" hidden>${escapeHtml(name)}</span>
+        </span>
+
+        <span class="pc-rv-expert-title-link" aria-hidden="true" style="display:none;">
+          ${REVIEW_EXTERNAL_SVG}
+        </span>
+      </a>
+    `;
+  }
+
+  return `
+    <div class="pc-rv-expert-title-row">
+      <span style="display:inline-flex;align-items:center;min-height:40px;">
+        <img
+          src="${escapeHtml(logoSrc)}"
+          alt="${escapeHtml(name)}"
+          loading="lazy"
+          decoding="async"
+          style="height:auto;width:170px;display:block;"
+          onerror="this.style.display='none';this.nextElementSibling.hidden=false;"
+        >
+        <span class="pc-rv-expert-title" hidden>${escapeHtml(name)}</span>
+      </span>
+    </div>
+  `;
+}
+
 async function renderReviewsCard(productKey, runToken) {
 
   ensureDashboardBottomPanel();
@@ -3317,7 +3418,7 @@ if (hasCustomer) {
       <div class="pc-rv-breakdown-row">
         <div class="pc-rv-breakdown-left">
           <span class="pc-rv-breakdown-star-icon">${REVIEW_STAR_SVG}</span>
-          <span>${star} star</span>
+          <span class="pc-rv-breakdown-star-label">${star} star</span>
         </div>
 
         <div class="pc-rv-breakdown-bar">
@@ -3435,28 +3536,22 @@ if (hasCustomer) {
         <article class="pc-rv-expert-card">
           <div class="pc-rv-expert-top">
             <div class="pc-rv-expert-main">
-              ${
-                url
-                  ? `
-                    <a
-                      class="pc-rv-expert-title-row pc-rv-expert-title-row--link"
-                      href="${escapeHtml(url)}"
-                      target="_blank"
-                      rel="noopener"
-                      aria-label="Open ${escapeHtml(title)}"
-                    >
-                      <div class="pc-rv-expert-title">${escapeHtml(source)}</div>
-                      <span class="pc-rv-expert-title-link" aria-hidden="true">
-                        ${REVIEW_EXTERNAL_SVG}
-                      </span>
-                    </a>
-                  `
-                  : `
-                    <div class="pc-rv-expert-title-row">
-                      <div class="pc-rv-expert-title">${escapeHtml(source)}</div>
-                    </div>
-                  `
-              }
+             <div
+                class="pc-rv-expert-title-row"
+                style="gap:15px; justify-content:space-between;flex-wrap:wrap;"
+              >
+                ${renderExpertReviewSource(source, url, title)}
+
+                <button
+                  type="button"
+                  class="ph-follow pc-rv-expert-follow"
+                  data-expert-follow="${escapeHtml(source)}"
+                  aria-label="Follow ${escapeHtml(source)}"
+                  style="border:1px solid lightgray"
+                >
+                  Follow
+                </button>
+              </div>
             </div>
 
             ${
@@ -3545,12 +3640,13 @@ if (hasCustomer) {
   `);
 
   mountUserReviews(`
-    <div class="pc-reviews-wrap">
-      ${userReviewsHtml}
-    </div>
-  `);
+  <div class="pc-reviews-wrap">
+    ${userReviewsHtml}
+  </div>
+`);
 
-  wireCardIcons();
+wireExpertReviewFollowButtons();
+wireCardIcons();
 }
 
 function renderImageChoiceGroup(hostEl, options, selectedValue, onPick, typeLabel){
@@ -4411,8 +4507,8 @@ function initDashboardShortlistUi() {
     }
   }
 
-  function getFollowButton() {
-  return document.querySelector('.ph-follow');
+function getFollowButton() {
+  return document.querySelector('.ph-follow:not([data-expert-follow])');
 }
 
 function setFollowButtonUi() {

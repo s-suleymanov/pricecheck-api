@@ -1771,6 +1771,10 @@ aside{
   }
 }
 
+.pc-rv-breakdown-star-label{
+  margin-left: 8px;
+}
+
 /* Chart tooltip */
 .chart-tip{
   position:absolute;
@@ -3164,7 +3168,7 @@ button.pc-lineup-model{
 }
 
 .pc-rv-expert-score-main{
-  font-size:22px;
+  font-size:28px;
   font-weight:600;
   color:#0f172a;
 }
@@ -3176,7 +3180,7 @@ button.pc-lineup-model{
 }
 
 .pc-rv-expert-verdict{
-  padding-top: 8px;
+  padding-top: 15px;
   display:block;
   font-size:16px;
   line-height:1.55;
@@ -3184,7 +3188,7 @@ button.pc-lineup-model{
 }
 
 .pc-rv-expert-meta{
-  margin-top:10px;
+  margin-top:14px;
   display:flex;
   flex-wrap:wrap;
   gap:8px;
