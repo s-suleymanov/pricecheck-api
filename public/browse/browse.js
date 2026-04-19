@@ -433,20 +433,34 @@ function renderSpecsTopbar() {
     </div>
   `;
 
-  el.querySelectorAll("[data-spec-top-key]").forEach((btn) => {
+    el.querySelectorAll("[data-spec-top-key]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const key = String(btn.getAttribute("data-spec-top-key") || "").trim();
       if (!key) return;
 
-      const cur = new Set(state.selectedSpecsTopKeys || []);
-      if (cur.has(key)) cur.delete(key);
-      else cur.add(key);
+      const current = Array.isArray(state.selectedSpecsTopKeys)
+        ? [...state.selectedSpecsTopKeys]
+        : [];
 
-      state.selectedSpecsTopKeys = state.specsTopKeys.filter((k) => cur.has(k)).slice(0, 4);
+      const alreadySelected = current.includes(key);
 
-      if (!state.selectedSpecsTopKeys.length) {
-        state.selectedSpecsTopKeys = state.specsTopKeys.slice(0, 4);
+      if (alreadySelected) {
+        state.selectedSpecsTopKeys = current.filter((k) => k !== key);
+
+        if (!state.selectedSpecsTopKeys.length) {
+          state.selectedSpecsTopKeys = state.specsTopKeys.slice(0, 4);
+        }
+
+        render().catch(() => {});
+        return;
       }
+
+      if (current.length >= 4) {
+        window.alert("You can compare up to 4 specs at a time. Remove one first to add another.");
+        return;
+      }
+
+      state.selectedSpecsTopKeys = [...current, key];
 
       render().catch(() => {});
     });
