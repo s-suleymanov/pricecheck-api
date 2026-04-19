@@ -2062,7 +2062,7 @@
     "policies": {
       "return_period": "30d",
       "restocking_fee": "Unknown",
-      "free_shipping_threshold": "Varies per item",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes (on select items)"
     },
     "contact": {
