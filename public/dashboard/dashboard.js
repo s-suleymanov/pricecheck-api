@@ -3481,7 +3481,14 @@ if (hasCustomer) {
             pros.length
               ? `
                 <div class="pc-rv-expert-meta">
-                  ${pros.map((p) => `<span class="pc-rv-expert-chip pc-rv-expert-chip--pro">Pro: ${escapeHtml(p)}</span>`).join('')}
+                  ${pros.map((p) => `
+                    <span
+                      class="pc-rv-expert-chip pc-rv-expert-chip--pro"
+                      data-tooltip="Pro"
+                      aria-label="Pro"
+                      tabindex="0"
+                    >${escapeHtml(p)}</span>
+                  `).join('')}
                 </div>
               `
               : ''
@@ -3491,7 +3498,14 @@ if (hasCustomer) {
             cons.length
               ? `
                 <div class="pc-rv-expert-meta">
-                  ${cons.map((c) => `<span class="pc-rv-expert-chip pc-rv-expert-chip--con">Con: ${escapeHtml(c)}</span>`).join('')}
+                  ${cons.map((c) => `
+                    <span
+                      class="pc-rv-expert-chip pc-rv-expert-chip--con"
+                      data-tooltip="Con"
+                      aria-label="Con"
+                      tabindex="0"
+                    >${escapeHtml(c)}</span>
+                  `).join('')}
                 </div>
               `
               : ''
