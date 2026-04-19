@@ -1849,7 +1849,7 @@ aside{
 
 .ph-title-block{
   display:grid;
-  gap:20px;
+  gap:10px;
   min-width:0;
 }
 
