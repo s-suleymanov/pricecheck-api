@@ -1945,24 +1945,6 @@ body.pc-signin-open{
   flex: 0 0 auto;
 }
 
-.pc-account-trigger{
-  width:42px;
-  height:42px;
-  min-width:42px;
-  min-height:42px;
-  padding:0;
-  border-radius:999px;
-  border:1px solid #dbeafe;
-  background:#eff6ff;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  position:relative;
-  cursor:pointer;
-  transition:border-color .16s ease, transform .16s ease;
-}
-
 .pc-account-trigger:hover{
   border-color:#bfdbfe;
 }

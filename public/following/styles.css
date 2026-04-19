@@ -25,12 +25,10 @@
 
 .pc-following-list{
   width:100%;
-  padding:24px 0 0;
 }
 
 .pc-following-empty{
   background:#fff;
-  border:1px solid rgba(0,0,0,0.08);
   border-radius:18px;
   padding:18px;
 }

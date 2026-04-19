@@ -90,14 +90,19 @@ body{
 }
 
 .pc-avatar-fallback{
-  padding-bottom:7px;
-  width:100%;
-  height:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:60px;
-  color:#334155;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-family: Arial, Helvetica, sans-serif;
+  justify-content: center;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #2563eb;
+  font-size: 70px;
+  font-weight: 400;
+  line-height: 1;
+  user-select: none;
 }
 
 .pc-hero-copy{
@@ -118,7 +123,7 @@ body{
   font-size:clamp(28px, 5vw, 42px);
   line-height:1.08;
   overflow-wrap:anywhere;
-  font-weight:600;
+  font-weight:500;
 }
 
 .pc-email{
