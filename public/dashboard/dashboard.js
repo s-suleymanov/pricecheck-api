@@ -5174,71 +5174,64 @@ function recordHistory(key, title, imageUrl, brand) {
   }
 
   function getHistoryTrendVerdict(points){
-    const rows = Array.isArray(points) ? points : [];
-    if (rows.length < 2) {
-      return {
-        key: 'stable',
-        label: 'Stable',
-        detail: 'Not enough recent history to call a clear trend.'
-      };
-    }
-
-    const first = Number(rows[0]?.price_cents);
-    const last  = Number(rows[rows.length - 1]?.price_cents);
-
-    if (!Number.isFinite(first) || !Number.isFinite(last) || first <= 0 || last <= 0) {
-      return {
-        key: 'stable',
-        label: 'Stable',
-        detail: 'Not enough recent history to call a clear trend.'
-      };
-    }
-
-    const delta = last - first;
-    const pct = Math.abs(delta) / first;
-
-    // Treat very small movement as flat so the verdict does not feel noisy.
-    if (Math.abs(delta) < 300 || pct < 0.02) {
-      return {
-        key: 'stable',
-        label: 'Stable',
-        detail: 'Price has been mostly flat over this range.'
-      };
-    }
-
-    if (delta > 0) {
-      return {
-        key: 'wait',
-        label: 'Wait',
-        detail: 'Price is trending upward in this range.'
-      };
-    }
-
+  const rows = Array.isArray(points) ? points : [];
+  if (rows.length < 2) {
     return {
-      key: 'lower',
-      label: 'Tracking Lower',
-      detail: 'Price is trending downward in this range.'
+      key: 'stable',
+      label: 'Stable'
     };
   }
 
-  function renderHistoryVerdict(filtered){
-    const note = $('#chartNote');
-    if (!note) return;
+  const first = Number(rows[0]?.price_cents);
+  const last  = Number(rows[rows.length - 1]?.price_cents);
 
-    if (!Array.isArray(filtered) || !filtered.length) {
-      note.className = 'muted';
-      note.textContent = 'No history yet';
-      return;
-    }
-
-    const verdict = getHistoryTrendVerdict(filtered);
-
-    note.className = `history-verdict history-verdict--${verdict.key}`;
-    note.innerHTML = `
-      <span class="history-verdict__pill">${escapeHtml(verdict.label)}</span>
-      <span class="history-verdict__text">${escapeHtml(verdict.detail)}</span>
-    `;
+  if (!Number.isFinite(first) || !Number.isFinite(last) || first <= 0 || last <= 0) {
+    return {
+      key: 'stable',
+      label: 'Stable'
+    };
   }
+
+  const delta = last - first;
+  const pct = Math.abs(delta) / first;
+
+  if (Math.abs(delta) < 300 || pct < 0.02) {
+    return {
+      key: 'stable',
+      label: 'Stable'
+    };
+  }
+
+  if (delta > 0) {
+    return {
+      key: 'wait',
+      label: 'Wait'
+    };
+  }
+
+  return {
+    key: 'lower',
+    label: 'Tracking Lower'
+  };
+}
+
+  function renderHistoryVerdict(filtered){
+  const note = $('#chartNote');
+  if (!note) return;
+
+  if (!Array.isArray(filtered) || !filtered.length) {
+    note.className = 'muted';
+    note.textContent = 'No history yet';
+    return;
+  }
+
+  const verdict = getHistoryTrendVerdict(filtered);
+
+  note.className = `history-verdict history-verdict--${verdict.key}`;
+  note.innerHTML = `
+    <span class="history-verdict__pill">${escapeHtml(verdict.label)}</span>
+  `;
+}
 
 
 
@@ -7086,118 +7079,237 @@ function renderLineup(){
   lineupCard.hidden = false;
   state.selectedLineupFamily = currentFamily.model_number;
 
-  const currentFamilyName = String(currentFamily.model_number || '').trim().toLowerCase();
+  const currentFamilyName =
+    normalizeSpaces(currentFamily.model_number || '');
+
+  const currentCategory =
+    normalizeSpaces(currentFamily.category || '');
+
   const currentVersion =
-    String(state.selectedVersion || currentFamily.selected_version || '').trim() || 'Default';
+    normalizeSpaces(
+      state.selectedVersion ||
+      currentFamily.selected_version ||
+      currentFamily.products[0]?.version ||
+      'Default'
+    ) || 'Default';
 
-  const siblingFamilies = families.filter((fam) => {
-    return String(fam?.model_number || '').trim().toLowerCase() !== currentFamilyName;
-  });
+  function normKey(v){
+    return normLower(normalizeSpaces(v));
+  }
 
-  const showFamilyStrip = siblingFamilies.length > 0;
+  function dedupeBy(list, getKey){
+    const out = [];
+    const seen = new Set();
+
+    for (const item of (Array.isArray(list) ? list : [])) {
+      const key = normKey(getKey(item));
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(item);
+    }
+
+    return out;
+  }
+
+  function moveSelectedFirst(list, getKey, selectedValue){
+    const arr = Array.isArray(list) ? list.slice() : [];
+    const selectedKey = normKey(selectedValue);
+    if (!selectedKey) return arr;
+
+    const picked = [];
+    const rest = [];
+
+    for (const item of arr) {
+      if (normKey(getKey(item)) === selectedKey) picked.push(item);
+      else rest.push(item);
+    }
+
+    return picked.concat(rest);
+  }
 
   function productCountLabel(n){
     const count = Number(n) || 1;
     return `${count} product${count === 1 ? '' : 's'}`;
   }
 
-  const stripFamilies = showFamilyStrip
-    ? [
-        {
-          model_number: currentFamily.model_number,
-          key: '',
-          product_count: currentFamily.products.length,
-          isCurrent: true
-        },
-        ...siblingFamilies.map((fam) => ({
-          ...fam,
-          isCurrent: false
-        }))
-      ]
+  function familyCountLabel(n){
+    const count = Number(n) || 1;
+    return `${count} famil${count === 1 ? 'y' : 'ies'}`;
+  }
+
+  function categoryLabel(v){
+    const text = normalizeSpaces(v);
+    return text || 'Other';
+  }
+
+  const currentFallbackKey =
+    normalizeKey(currentFamily.products[0]?.key || '') || '';
+
+  const allFamilies = dedupeBy(
+    [
+      {
+        model_number: currentFamily.model_number,
+        key: currentFallbackKey,
+        category: currentFamily.category || null,
+        product_count: currentFamily.products.length
+      },
+      ...families
+    ]
+      .map((fam) => {
+        const key = normalizeKey(fam?.key || '');
+        const modelNumber = normalizeSpaces(fam?.model_number || '');
+        if (!key || !modelNumber) return null;
+
+        return {
+          model_number: modelNumber,
+          key,
+          category: normalizeSpaces(fam?.category || ''),
+          product_count: Number(fam?.product_count || 0) || 1
+        };
+      })
+      .filter(Boolean),
+    (fam) => fam.model_number
+  );
+
+  if (!allFamilies.length) {
+    lineupCard.hidden = true;
+    lineupContent.innerHTML = '';
+    state.selectedLineupFamily = null;
+    return;
+  }
+
+  const categoryCounts = new Map();
+  allFamilies.forEach((fam) => {
+    const key = normKey(fam.category);
+    categoryCounts.set(key, (categoryCounts.get(key) || 0) + 1);
+  });
+
+  let categories = dedupeBy(
+    allFamilies.map((fam) => ({
+      value: normalizeSpaces(fam.category || ''),
+      label: categoryLabel(fam.category || '')
+    })),
+    (item) => item.value
+  );
+
+  categories = moveSelectedFirst(categories, (item) => item.value, currentCategory);
+
+  let visibleFamilies = allFamilies.filter(
+    (fam) => normKey(fam.category) === normKey(currentCategory)
+  );
+
+  if (!visibleFamilies.length) {
+    visibleFamilies = allFamilies.slice();
+  }
+
+  visibleFamilies = moveSelectedFirst(
+    visibleFamilies,
+    (fam) => fam.model_number,
+    currentFamilyName
+  );
+
+  let visibleProducts = Array.isArray(currentFamily.products)
+    ? currentFamily.products
+        .map((product) => {
+          const key = normalizeKey(product?.key || '');
+          if (!key) return null;
+
+          return {
+            version: normalizeSpaces(product?.version || 'Default') || 'Default',
+            key,
+            model_name: normalizeSpaces(product?.model_name || '')
+          };
+        })
+        .filter(Boolean)
     : [];
 
-  const modelCols = Math.max(1, currentFamily.products.length);
+  visibleProducts = moveSelectedFirst(
+    visibleProducts,
+    (product) => product.version,
+    currentVersion
+  );
 
-  const modelsHtml = currentFamily.products.map((model) => {
-    const modelTitle =
-      String(model?.model_name || '').trim() ||
-      `${currentFamily.model_number} ${String(model?.version || 'Model').trim()}`;
+  function buildCategoryButton(item){
+    const isActive = normKey(item.value) === normKey(currentCategory);
 
-    const isActiveModel = normLower(model.version) === normLower(currentVersion);
+    const targetFamily =
+      allFamilies.find((fam) => normKey(fam.category) === normKey(item.value)) ||
+      null;
+
+    const targetKey = normalizeKey(targetFamily?.key || '') || '';
+    const targetTitle = normalizeSpaces(targetFamily?.model_number || item.label || 'Product');
+    const count = categoryCounts.get(normKey(item.value)) || 1;
 
     return `
-      <div class="pc-lineup-target">
-        <span class="pc-lineup-target__arrow" aria-hidden="true"></span>
-
-        <button
-          type="button"
-          class="pc-lineup-model${isActiveModel ? ' is-active' : ''}"
-          data-lineup-key="${escapeHtml(model.key)}"
-          data-lineup-title="${escapeHtml(modelTitle)}"
-        >
-          <div class="pc-lineup-model__version">${escapeHtml(model.version || 'Model')}</div>
-          <div class="pc-lineup-model__name">${escapeHtml(modelTitle)}</div>
-        </button>
-      </div>
+      <button
+        type="button"
+        class="pc-lineup-chip pc-lineup-chip--category${isActive ? ' is-active' : ''}"
+        data-lineup-key="${escapeHtml(targetKey)}"
+        data-lineup-title="${escapeHtml(targetTitle)}"
+      >
+        <div class="pc-lineup-chip__title">${escapeHtml(item.label)}</div>
+        <div class="pc-lineup-chip__meta">${escapeHtml(familyCountLabel(count))}</div>
+      </button>
     `;
-  }).join('');
+  }
+
+  function buildFamilyButton(fam){
+    const isActive = normKey(fam.model_number) === normKey(currentFamilyName);
+
+    return `
+      <button
+        type="button"
+        class="pc-lineup-chip pc-lineup-chip--family${isActive ? ' is-active' : ''}"
+        data-lineup-key="${escapeHtml(fam.key)}"
+        data-lineup-title="${escapeHtml(fam.model_number)}"
+      >
+        <div class="pc-lineup-chip__title">${escapeHtml(fam.model_number)}</div>
+        <div class="pc-lineup-chip__meta">${escapeHtml(productCountLabel(fam.product_count))}</div>
+      </button>
+    `;
+  }
+
+  function buildProductButton(product){
+    const isActive = normKey(product.version) === normKey(currentVersion);
+    const productTitle = product.model_name || `${currentFamilyName} ${product.version}`;
+
+    return `
+      <button
+        type="button"
+        class="pc-lineup-chip pc-lineup-chip--product${isActive ? ' is-active' : ''}"
+        data-lineup-key="${escapeHtml(product.key)}"
+        data-lineup-title="${escapeHtml(productTitle)}"
+      >
+        <div class="pc-lineup-chip__title">${escapeHtml(product.version)}</div>
+        <div class="pc-lineup-chip__meta">${escapeHtml(product.model_name || currentFamilyName)}</div>
+      </button>
+    `;
+  }
 
   lineupContent.innerHTML = `
-    <div class="pc-lineup-flow">
-      ${
-        showFamilyStrip ? `
-          <div class="pc-lineup-family-row">
-            ${stripFamilies.map((fam) => {
-              const count = Number(fam.product_count) || 1;
-
-              if (fam.isCurrent) {
-                return `
-                  <div class="pc-lineup-family-pill is-active">
-                    <div class="pc-lineup-family-pill__name">${escapeHtml(fam.model_number)}</div>
-                    <div class="pc-lineup-family-pill__count">${escapeHtml(productCountLabel(count))}</div>
-                  </div>
-                `;
-              }
-
-              return `
-                <button
-                  type="button"
-                  class="pc-lineup-family-pill"
-                  data-lineup-key="${escapeHtml(fam.key)}"
-                  data-lineup-title="${escapeHtml(fam.model_number)}"
-                >
-                  <div class="pc-lineup-family-pill__name">${escapeHtml(fam.model_number)}</div>
-                  <div class="pc-lineup-family-pill__count">${escapeHtml(productCountLabel(count))}</div>
-                </button>
-              `;
-            }).join('')}
-          </div>
-        ` : ''
-      }
-
-      <div class="pc-lineup-root-wrap">
-        <div class="pc-lineup-root">
-          <div class="pc-lineup-root__eyebrow">Current family</div>
-          <div class="pc-lineup-root__name">${escapeHtml(currentFamily.model_number)}</div>
-          <div class="pc-lineup-root__count">${escapeHtml(productCountLabel(currentFamily.products.length))}</div>
+    <div class="pc-lineup-stack">
+      <section class="pc-lineup-row">
+        <div class="pc-lineup-row__label">Categories</div>
+        <div class="pc-lineup-chip-row">
+          ${categories.map(buildCategoryButton).join('')}
         </div>
-      </div>
+      </section>
 
-      <div class="pc-lineup-tree" aria-hidden="true">
-        <div class="pc-lineup-tree__stem"></div>
-        <div class="pc-lineup-tree__bar${modelCols === 1 ? ' is-single' : ''}"></div>
-      </div>
+      <section class="pc-lineup-row">
+        <div class="pc-lineup-row__label">Families</div>
+        <div class="pc-lineup-chip-row">
+          ${visibleFamilies.map(buildFamilyButton).join('')}
+        </div>
+      </section>
 
-      <div class="pc-lineup-tree__targets">
-        ${modelsHtml}
-      </div>
+      <section class="pc-lineup-row">
+        <div class="pc-lineup-row__label">Products</div>
+        <div class="pc-lineup-chip-row">
+          ${visibleProducts.map(buildProductButton).join('')}
+        </div>
+      </section>
     </div>
   `;
-
-  const flowEl = lineupContent.querySelector('.pc-lineup-flow');
-  if (flowEl) {
-    flowEl.style.setProperty('--pc-lineup-cols', String(modelCols));
-  }
 
   lineupContent.querySelectorAll('[data-lineup-key]').forEach((el) => {
     el.addEventListener('click', () => {
