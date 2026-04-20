@@ -3427,11 +3427,6 @@ button.pc-lineup-model{
     font-size:48px;
   }
 
-  .pc-rv-breakdown-row{
-    grid-template-columns:1fr;
-    align-items:start;
-  }
-
   .pc-rv-breakdown-right{
     justify-content:flex-start;
   }
@@ -3450,6 +3445,20 @@ button.pc-lineup-model{
   justify-content:center;
   min-width:0;
   max-width:none;
+}
+
+@media (max-width:900px){
+  .pc-rv-customer-layout{
+    grid-template-columns:1fr;
+  }
+
+  .pc-rv-summary-card,
+  .pc-rv-breakdown-card{
+    grid-column:1;
+    grid-row:auto;
+    width:100%;
+    max-width:none;
+  }
 }
 
 .pc-rv-breakdown-label{
@@ -3535,10 +3544,6 @@ button.pc-lineup-model{
 }
 
 @media (max-width:530px){
-  .pc-rv-breakdown-row{
-    grid-template-columns:1fr;
-    align-items:start;
-  }
 
   .pc-rv-breakdown-right{
     justify-content:flex-start;
