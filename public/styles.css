@@ -257,7 +257,7 @@
 @media (max-width: 560px){
   .pc-ac__count{ display:none; }  /* hide only the number */
   .pc-ac__pill{ display:none; }
-  .nav-actions {margin-left: 10px;}
+  .nav-actions {margin-left: 6px;}
 }
 
 /* Search + AI circle container */
