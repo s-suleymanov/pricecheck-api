@@ -1271,6 +1271,10 @@ aside{
 /* Small helpers */
 .spaced{margin-bottom: 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 
+.legend__item {
+  margin-right: 10px;
+}
+
 /* Buttons inside offers and sidebar feel consistent */
 .btn-das:focus-visible,.pill:focus-visible{outline:2px solid var(--accent-b);outline-offset:2px}
 
@@ -1737,9 +1741,6 @@ aside{
   .controls{
     gap: 10px;
   }
-  .legend{
-    margin-top: 26px;
-  }
   h3 {
     font-size: 22px;
   }
@@ -1750,9 +1751,6 @@ aside{
   }
   .pc-warn--recall{
     margin: 0 16px;
-  }
-  #pImg, .pimg-wrap{
-    display: none;
   }
   .ph-media-hero{
     gap: 0 !important;
@@ -2125,9 +2123,12 @@ aside{
   color:var(--muted);
 }
 
-@media (max-width:700px){
+@media (max-width:800px){
   .pc-contents-grid{
     grid-template-columns:1fr;
+  }
+  #pImg, .pimg-wrap{
+    display: none;
   }
 }
 
@@ -4243,7 +4244,7 @@ button.pc-lineup-model{
 /* Product header media split */
 .ph-media-hero{
   display:grid;
-  grid-template-columns:minmax(280px, 35.4%) minmax(0, 1fr);
+  grid-template-columns:minmax(0, 35.4%) minmax(0, 1fr);
   gap:20px;
   align-items:start;
 }
@@ -4341,7 +4342,7 @@ button.pc-lineup-model{
   fill:currentColor;
 }
 
-@media (max-width: 900px){
+@media (max-width: 800px){
   .ph-media-hero{
     grid-template-columns:1fr;
   }
@@ -5033,10 +5034,6 @@ button.pc-lineup-model{
 
   .controls{
     gap:10px;
-  }
-
-  .legend{
-    margin-top:26px;
   }
 
   h3{

@@ -2102,7 +2102,7 @@
   "policies": {
     "return_period": "Report issues within 3 days of pickup or delivery",
     "restocking_fee": "No",
-    "free_shipping_threshold": "Delivery fees start at $3.99 for same-day orders over $35",
+    "free_shipping_threshold": "3.99+ (varies by store)",
     "price_match": "No"
   },
   "contact": {

@@ -231,6 +231,22 @@
   flex:0 0 auto;
 }
 
+@media (max-width: 440px){
+  .home-deal__coupon{
+    min-width: 18px;
+    border-radius: 6px;
+    font-size: 0;
+    letter-spacing: 0;
+  }
+
+  .home-deal__coupon::before{
+    content: "C";
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+  }
+}
+
 /* Keep header tidy on smaller screens */
 @media (max-width: 900px){
   .logo-head .brand{
@@ -241,6 +257,7 @@
 @media (max-width: 560px){
   .pc-ac__count{ display:none; }  /* hide only the number */
   .pc-ac__pill{ display:none; }
+  .nav-actions {margin-left: 10px;}
 }
 
 /* Search + AI circle container */
@@ -715,7 +732,24 @@ em {
 /* mobile breakpoint */
 @media (max-width: 900px){
   .nav .links{ display: none; }
-  .nav .btn.btn--outline{ display: none; }
+
+  .nav-signin-btn{
+    min-width: 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    justify-content: center !important;
+    gap: 0 !important;
+  }
+
+  .nav-signin-btn__text{
+    display: none !important;
+  }
+
+  .nav-signin-btn__icon{
+    display: inline-flex !important;
+  }
 }
 
 /* Mobile stack */
@@ -1457,7 +1491,7 @@ body.has-shortlist .shortlist-rail{
 
 .home-deals__grid{
   display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap:12px;
   width: 100%;
 }
@@ -1490,7 +1524,7 @@ body.has-shortlist .shortlist-rail{
 }
 
 /* Ultra-narrow: fall back to 1 column */
-@media (max-width: 360px){
+@media (max-width: 320px){
   .home-deals__grid{ grid-template-columns: 1fr; }
 }
 
@@ -1535,16 +1569,6 @@ body.has-shortlist .shortlist-rail{
   display:-webkit-box;
   -webkit-box-orient:vertical;
   overflow:hidden;
-}
-
-.nav-actions{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.nav-actions .btn svg{
-  display:block;
 }
 
 .home-deal__meta{
@@ -2095,12 +2119,15 @@ body.pc-signin-open{
 [hidden]{
   display: none !important;
 }
-
 .nav-actions{
   display:flex;
   align-items:center;
   gap:12px;
   position: relative;
+}
+
+.nav-actions .btn svg{
+  display:block;
 }
 
 .pc-account-trigger{
@@ -2126,6 +2153,34 @@ body.pc-signin-open{
   box-shadow:
     0 0 0 4px rgba(255,220,120,.30),
     0 0 16px 7px rgba(255,200,80,.35);
+}
+
+.nav-signin-btn{
+  min-width: 110px;
+  gap: 8px;
+  height: 44px;
+  white-space: nowrap;
+}
+
+.nav-signin-btn__text{
+  display: inline-block;
+  line-height: 1;
+}
+
+.nav-signin-btn__icon{
+  display: none;
+  width: 30px;
+  height: 30px;
+  line-height: 0;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+}
+
+.nav-signin-btn__icon svg{
+  width: 30px;
+  height: 30px;
+  display: block;
 }
 
 .pc-account-menu{
