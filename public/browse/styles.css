@@ -1431,23 +1431,27 @@ h1{
 /* Hide mobile-only row on desktop */
 .row2{ display: none; }
 
+@media (max-width: 350px){
+  .browse-sort {
+    display: none;
+  }
+}
+
 /* ===== Mobile/Tablet: switch back to cards ===== */
 @media (max-width: 860px){
   .wrap{ width: calc(100% - 28px);}
-
-  .grid{
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px;
-  }
 
   .card{
     border-radius: 18px;
   }
 
   .card.item{
-    display: block;
+    gap: 0;
     padding: 0;
+  }
+
+  .about-snippet{
+    display: none;
   }
 
   .thumb{
@@ -1468,7 +1472,7 @@ h1{
 
   .name{
     margin-top: 6px;
-    font-size: 16px;
+    font-size: 18px;
     white-space: normal;
     text-overflow: clip;
   }
