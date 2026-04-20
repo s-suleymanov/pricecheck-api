@@ -2438,10 +2438,11 @@ aside{
   gap:10px;
   overflow-x:auto;
   overflow-y:hidden;
-  padding-bottom:6px;
+  padding-bottom:4px;
   scroll-snap-type:x proximity;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:thin;
+  scrollbar-color:#cbd5e1 transparent;
 }
 
 .pc-lineup-chip-row::-webkit-scrollbar{
