@@ -4896,10 +4896,6 @@ button.pc-lineup-model{
     margin-top: 20px;
   }
 
-  .offer-wrapper{
-    border: none;
-  }
-
   .offer-store-cell::before,
   .offer-price-col::before{
     display:none;
