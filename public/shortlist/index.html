@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Shortlist | PriceCheck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://pricechecktool.com/shortlist/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+  <meta name="robots" content="noindex,follow">
+  <link rel="stylesheet" href="/browse/styles.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" type="image/png" href="/logo/logo.png">
+  <script src="/search.js" defer></script>
+  <script src="/partials/partials.js" defer></script>
+  <script src="/shortlist/shortlist.js" defer></script>
+  <script src="/shortlist/page.js" defer></script>
+</head>
+<body class="browse-page shortlist-page">
+  <div class="page">
+
+    <header class="nav">
+      <a class="logo-head" href="/" aria-label="Go to PriceCheck home">
+        <img src="/logo/logo2.png" alt="PriceCheck Logo" class="logo">
+        <div class="brand">
+          <span class="wordmark">PriceCheck</span>
+          <span class="edition">Beta</span>
+        </div>
+      </a>
+
+      <div class="nav-searchwrap" role="search" aria-label="Search PriceCheck">
+        <form class="nav-search" action="#" method="GET">
+          <input
+            class="nav-search__input"
+            type="search"
+            name="q"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </form>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <div class="layout layout--specs">
+        <div class="maincol">
+          <div class="muted" style="padding-bottom: 20px; padding-top: 10px;" id="shortlistMeta"></div>
+          <div style="padding-bottom: 20px;" id="shortlistTopbar"></div>
+          <div id="shortlistEmpty" class="empty-inline" hidden></div>
+          <section class="grid" id="shortlistGrid"></section>
+        </div>
+      </div>
+    </main>
+
+    <div id="site-footer"></div>
+  </div>
+</body>
+</html>

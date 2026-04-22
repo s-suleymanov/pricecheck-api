@@ -79,10 +79,19 @@ body{
 
 .spec-card-pills{
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
   margin-top: 10px;
   align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.spec-card-pills::-webkit-scrollbar{
+  display: none;
 }
 
 .shortlist-rail[hidden]{
@@ -90,70 +99,36 @@ body{
 }
 
 @media (min-width: 1280px){
-  .browse-page .shortlist-rail{
-    position: fixed;
-    right: 0;
-    top: 63px;
-    bottom: 0;
-    height: calc(100dvh - 63px);
-    z-index: 55;
-    box-sizing: border-box;
-    backdrop-filter: blur(10px);
-    overflow: visible;   /* changed from hidden so items can slide left */
-    padding: 0;
-  }
-
-  .browse-page .shortlist-mini{
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;   /* anchor items to the right edge */
-    gap: 8px;
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: visible;
-    padding: 8px 0;
-  }
-
   .browse-page .shortlist-mini::-webkit-scrollbar{
     width: 0;
     height: 0;
   }
 
-  .browse-page .shortlist-mini-item{
-    position: relative;
-    width: 70px;
-    height: 60px;
-    overflow: visible;
-    flex: 0 0 auto;
-    transition: width 0.2s ease;
+  .browse-page .shortlist-mini-item--launch{
+    margin-top: auto;
+    height: 40px;
   }
 
-  /* On hover: grow left by 120px */
-  .browse-page .shortlist-mini-item:hover{
-    width: 80px;
+  .browse-page .shortlist-mini-link--launch{
+    padding-left: 14px;
+    border-top-left-radius: 999px;
+    border-bottom-left-radius: 999px;
+    color: black;
+    height: 40px;
   }
 
-  .browse-page .shortlist-mini-link{
-    display: flex;
+  .browse-page .shortlist-mini-launch-icon{
+    display: inline-flex;
     align-items: center;
-    width: 100%;
-    height: 60px;
-    overflow: hidden;
-    text-decoration: none;
-    background: #fff;
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
-    border-right: none;
-    transition: box-shadow 0.2s ease;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
   }
 
-  .browse-page .shortlist-mini-img{
-    width: 60px;
-    height: 60px;
-    min-width: 60px;       /* never shrink the image */
-    object-fit: contain;
-    object-position: center;
+  .browse-page .shortlist-mini-launch-icon svg{
+    width: 26px;
+    height: 26px;
+    fill: currentColor;
     display: block;
   }
 
@@ -171,46 +146,6 @@ body{
     -webkit-box-orient: vertical;
     opacity: 0;
     transition: opacity 0.15s ease 0.05s;
-  }
-
-  .browse-page .shortlist-mini-item:hover .shortlist-mini-title{
-    opacity: 1;
-  }
-
-  .browse-page .shortlist-mini-remove{
-    position: absolute;
-    top: 5px;
-    right: 7px;
-    width: 14px;
-    height: 50px;
-    border: 0;
-    border-radius: 999px;
-    background: #FDECEA;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.14);
-    color: #111;
-    opacity: 0;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity .14s ease, transform .14s ease;
-    padding: 0;
-    z-index: 2;
-  }
-
-  .browse-page .shortlist-mini-item:hover .shortlist-mini-remove{
-    opacity: 1;
-  }
-
-  .browse-page .shortlist-mini-remove:hover{
-    transform: scale(1.05);
-  }
-
-  .browse-page .shortlist-mini-remove svg{
-    width: 12px;
-    height: 12px;
-    fill: #EA4335;
-    display: block;
   }
 }
 
@@ -741,7 +676,6 @@ h1{
     padding:12px 8px;
     border:1px solid rgba(15,23,42,.08);
     border-left:0;
-    backdrop-filter:blur(10px);
   }
 
   .browse-page .browse-rail__main{
@@ -1505,6 +1439,7 @@ h1{
 .card.item.spec-card{
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr);
+  padding: 20px;
   gap: 20px;
   align-items: start;
 }

@@ -34,12 +34,6 @@
     </svg>
   `;
 
-  const SHORTLIST_REMOVE_SVG = `
-    <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-      <path d="M256-200 200-256l224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"></path>
-    </svg>
-  `;
-
   function shortlistApi() {
     return window.PriceCheckShortlist || null;
   }
@@ -67,19 +61,41 @@
     if (!key) return null;
 
     const linkEl = cardEl.querySelector(".home-deal__link");
-    const href = api.safeHref(linkEl?.getAttribute("href") || "", { sameOrigin: true });
+    const rawHref =
+      linkEl?.getAttribute("href") ||
+      cardEl.getAttribute("data-href") ||
+      dashHref(key) ||
+      "";
+
+    const href = api.safeHref(rawHref, { sameOrigin: true });
     if (!href) return null;
 
-    const priceCents = Number.isFinite(Number(cardEl.getAttribute("data-price-cents")))
-      ? Number(cardEl.getAttribute("data-price-cents"))
-      : null;
+    const rawPrice = Number(cardEl.getAttribute("data-price-cents"));
+    const priceCents = Number.isFinite(rawPrice) ? rawPrice : null;
+
+    let title = String(cardEl.getAttribute("data-title") || "").trim();
+    if (!title) {
+      title = String(cardEl.querySelector(".home-deal__title")?.textContent || "").trim();
+    }
+
+    let brand = String(cardEl.getAttribute("data-brand") || "").trim();
+    if (!brand) {
+      brand = String(cardEl.querySelector(".home-deal__brand, .home-deal__subtitle, .subtitle")?.textContent || "").trim();
+    }
+
+    let img = String(cardEl.getAttribute("data-img") || "").trim();
+    if (!img) {
+      img =
+        String(cardEl.querySelector(".home-deal__img")?.getAttribute("src") || "").trim() ||
+        String(cardEl.querySelector(".home-deal__img img")?.getAttribute("src") || "").trim();
+    }
 
     return api.normalizeItem({
       key,
       href,
-      title: cardEl.getAttribute("data-title") || "",
-      brand: cardEl.getAttribute("data-brand") || "",
-      img: cardEl.getAttribute("data-img") || "",
+      title,
+      brand,
+      img,
       priceCents,
       source: "home"
     });
@@ -111,92 +127,37 @@
     });
   }
 
-  function renderShortlistRail() {
-  const api = shortlistApi();
-  if (!api) return;
-
-  const rail = document.getElementById("shortlistRail");
-  const mini = document.getElementById("shortlistMini");
-  if (!rail || !mini) return;
-
-  const items = api.readItems();
-
-  if (!items.length) {
-    rail.hidden = true;
-    document.body.classList.remove("has-shortlist");
-    mini.innerHTML = "";
-    return;
-  }
-
-  rail.hidden = false;
-  document.body.classList.add("has-shortlist");
-
-  mini.innerHTML = items.map((item) => `
-    <div class="shortlist-mini-item" title="${esc(item.title || item.brand || "Saved product")}">
-      <a class="shortlist-mini-link" href="${esc(item.href)}"
-         aria-label="${esc(item.title || item.brand || "Saved product")}">
-        ${item.img
-          ? `<img class="shortlist-mini-img" src="${esc(item.img)}" alt="">`
-          : `<div class="shortlist-mini-img"></div>`
-        }
-      </a>
-      <button type="button" class="shortlist-mini-remove"
-        data-shortlist-remove="${esc(item.key)}"
-        aria-label="Remove from shortlist" title="Remove from shortlist">
-        ${SHORTLIST_REMOVE_SVG}
-      </button>
-    </div>
-  `).join("");
-}
-
   function initHomeShortlistUi() {
-  const api = shortlistApi();
-  if (!api) return;
+    const api = shortlistApi();
+    if (!api) return;
 
-  if (!document.body.dataset.homeShortlistBound) {
-    document.body.dataset.homeShortlistBound = "1";
+    if (!document.body.dataset.homeShortlistBound) {
+      document.body.dataset.homeShortlistBound = "1";
 
-    document.body.addEventListener("click", (e) => {
-      const saveBtn = e.target.closest("[data-shortlist-toggle='1']");
-      if (saveBtn) {
-        e.preventDefault();
-        e.stopPropagation();
+      document.body.addEventListener("click", (e) => {
+        const saveBtn = e.target.closest("[data-shortlist-toggle='1']");
+        if (saveBtn) {
+          e.preventDefault();
+          e.stopPropagation();
 
-        const card = saveBtn.closest(".home-deal[data-dash-key]");
-        const item = shortlistItemFromHomeCard(card);
-        if (!item) return;
+          const card = saveBtn.closest(".home-deal[data-dash-key]");
+          const item = shortlistItemFromHomeCard(card);
+          if (!item) return;
 
-        api.toggle(item);
-        document.body.classList.add("has-shortlist");
-        renderShortlistRail();
-        syncShortlistButtons(document);
-        return;
-      }
+          api.toggle(item);
+          syncShortlistButtons(document);
+          return;
+        }
+      });
+    }
 
-      const removeBtn = e.target.closest("[data-shortlist-remove]");
-      if (removeBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const key = String(removeBtn.getAttribute("data-shortlist-remove") || "").trim();
-        if (!key) return;
-
-        api.remove(key);
-        renderShortlistRail();
-        syncShortlistButtons(document);
-        return;
-      }
+    window.addEventListener("pc:shortlist_changed", () => {
+      syncShortlistButtons(document);
     });
-  }
 
-  window.addEventListener("pc:shortlist_changed", () => {
-    renderShortlistRail();
+    api.mountRail();
     syncShortlistButtons(document);
-  });
-
-  renderShortlistRail();
-  syncShortlistButtons(document);
-}
+  }
 
   function slugify(s) {
     return String(s ?? "").trim().toLowerCase()
@@ -440,6 +401,7 @@
       <article
         class="home-deal"
         data-dash-key="${key}"
+        data-href="${href}"
         data-title="${title}"
         data-brand="${brand}"
         data-img="${esc(img)}"

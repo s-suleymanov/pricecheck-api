@@ -21,10 +21,13 @@ const VERSION_NORM_SQL = "COALESCE(NULLIF(lower(btrim(c.version)), ''), '')";
 // Serve browse page (SPA HTML for all browse paths)
 const BROWSE_HTML = path.join(__dirname, "..", "public", "browse", "index.html");
 
+const SHORTLIST_HTML = path.join(__dirname, "..", "public", "shortlist", "index.html");
+
 router.get("/browse", (_req, res) => res.redirect(301, "/browse/"));
 router.get("/browse/", (_req, res) => res.sendFile(BROWSE_HTML));
-// Catch-all for deeper browse paths like /browse/Apple/category/TV/page/2/
 router.get("/browse/*", (_req, res) => res.sendFile(BROWSE_HTML));
+router.get("/shortlist", (_req, res) => res.redirect(301, "/shortlist/"));
+router.get("/shortlist/", (_req, res) => res.sendFile(SHORTLIST_HTML));
 
 // GET /api/browse?type=brand&value=Sony&page=1&limit=24
 router.get("/api/browse", async (req, res) => {
@@ -414,6 +417,219 @@ router.get("/api/browse", async (req, res) => {
   } catch (e) {
     console.error("browse error:", e);
     res.status(500).json({ ok: false, error: "server_error" });
+  } finally {
+    client.release();
+  }
+});
+
+// GET /api/shortlist_specs?keys=pci:ABC,upc:123
+router.get("/api/shortlist_specs", async (req, res) => {
+  const rawKeys = String(req.query.keys || "").trim();
+
+  const keys = rawKeys
+    .split(",")
+    .map((s) => String(s || "").trim())
+    .filter(Boolean)
+    .slice(0, 24);
+
+  if (!keys.length) {
+    return res.json({
+      ok: true,
+      results: [],
+    });
+  }
+
+  const parsed = keys.map((key) => {
+    const i = key.indexOf(":");
+    if (i === -1) return null;
+
+    const kind = key.slice(0, i).trim().toLowerCase();
+    const value = key.slice(i + 1).trim();
+
+    if (!value) return null;
+    if (kind !== "pci" && kind !== "upc") return null;
+
+    return { kind, value };
+  }).filter(Boolean);
+
+  if (!parsed.length) {
+    return res.json({
+      ok: true,
+      results: [],
+    });
+  }
+
+  const client = await pool.connect();
+  try {
+    const values = [];
+    const matchSql = parsed.map((entry, idx) => {
+      const p = idx + 1;
+      values.push(entry.value);
+
+      if (entry.kind === "pci") {
+        return `(c.pci IS NOT NULL AND btrim(c.pci) <> '' AND upper(btrim(c.pci)) = upper(btrim($${p})))`;
+      }
+
+      return `(c.upc IS NOT NULL AND btrim(c.upc) <> '' AND public.norm_upc(c.upc) = public.norm_upc($${p}))`;
+    }).join(" OR ");
+
+    const sql = `
+      WITH matched AS (
+        SELECT DISTINCT ON (
+          upper(btrim(c.model_number)),
+          COALESCE(NULLIF(lower(btrim(c.version)), ''), '')
+        )
+          btrim(c.model_number) AS model_number,
+          upper(btrim(c.model_number)) AS model_number_norm,
+          COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+          btrim(COALESCE(c.version, '')) AS version,
+          NULLIF(btrim(c.model_name), '') AS model_name,
+          NULLIF(btrim(c.brand), '') AS brand,
+          NULLIF(btrim(c.category), '') AS category,
+          NULLIF(btrim(c.image_url), '') AS image_url,
+          COALESCE(c.dropship_warning, false) AS dropship_warning,
+          NULLIF(btrim(c.pci), '') AS pci,
+          NULLIF(btrim(c.upc), '') AS upc,
+          c.about,
+          c.specs,
+          c.is_refurbished,
+          c.is_bundle,
+          c.created_at,
+          c.id
+        FROM public.catalog c
+        WHERE c.model_number IS NOT NULL
+          AND btrim(c.model_number) <> ''
+          AND (${matchSql})
+        ORDER BY
+          upper(btrim(c.model_number)),
+          COALESCE(NULLIF(lower(btrim(c.version)), ''), ''),
+          (NULLIF(btrim(c.image_url), '') IS NOT NULL) DESC,
+          (NULLIF(btrim(c.model_name), '') IS NOT NULL) DESC,
+          c.created_at DESC NULLS LAST,
+          c.id DESC
+      ),
+
+      anchors AS (
+        SELECT
+          m.*,
+          CASE
+            WHEN m.pci IS NOT NULL THEN ('pci:' || m.pci)
+            WHEN m.upc IS NOT NULL THEN ('upc:' || m.upc)
+            ELSE NULL
+          END AS dashboard_key
+        FROM matched m
+      ),
+
+      listing_rollup AS (
+        SELECT
+          a.model_number_norm,
+          a.version_norm,
+          MIN(l.current_price_cents) FILTER (
+            WHERE l.current_price_cents IS NOT NULL
+          ) AS best_price_cents,
+          COUNT(*) FILTER (
+            WHERE l.current_price_cents IS NOT NULL
+          )::int AS priced_listing_count,
+          COUNT(DISTINCT lower(btrim(l.store))) FILTER (
+            WHERE l.store IS NOT NULL
+              AND btrim(l.store) <> ''
+              AND l.current_price_cents IS NOT NULL
+          )::int AS priced_store_count
+        FROM anchors a
+        LEFT JOIN public.catalog c
+          ON upper(btrim(c.model_number)) = a.model_number_norm
+         AND COALESCE(NULLIF(lower(btrim(c.version)), ''), '') = a.version_norm
+        LEFT JOIN public.listings l
+          ON (
+            (c.pci IS NOT NULL AND btrim(c.pci) <> '' AND l.pci IS NOT NULL AND btrim(l.pci) <> ''
+              AND upper(btrim(l.pci)) = upper(btrim(c.pci)))
+            OR
+            (c.upc IS NOT NULL AND btrim(c.upc) <> '' AND l.upc IS NOT NULL AND btrim(l.upc) <> ''
+              AND public.norm_upc(l.upc) = public.norm_upc(c.upc))
+          )
+        GROUP BY a.model_number_norm, a.version_norm
+      )
+
+      SELECT
+        a.model_number,
+        a.version,
+        a.model_name,
+        a.brand,
+        a.category,
+        a.image_url,
+        a.dropship_warning,
+        a.dashboard_key,
+        lr.best_price_cents,
+        pr.overall_score,
+        a.about,
+        a.specs,
+        a.is_refurbished,
+        a.is_bundle
+      FROM anchors a
+      LEFT JOIN listing_rollup lr
+        ON lr.model_number_norm = a.model_number_norm
+       AND lr.version_norm = a.version_norm
+      LEFT JOIN LATERAL (
+        SELECT picked_score.overall_score
+        FROM (
+          SELECT
+            pr2.overall_score,
+            0 AS priority,
+            pr2.updated_at,
+            pr2.id
+          FROM public.product_recommendations pr2
+          WHERE
+            (
+              a.pci IS NOT NULL
+              AND btrim(a.pci) <> ''
+              AND pr2.pci IS NOT NULL
+              AND btrim(pr2.pci) <> ''
+              AND upper(btrim(pr2.pci)) = upper(btrim(a.pci))
+            )
+            OR
+            (
+              a.upc IS NOT NULL
+              AND btrim(a.upc) <> ''
+              AND pr2.upc IS NOT NULL
+              AND btrim(pr2.upc) <> ''
+              AND public.norm_upc(pr2.upc) = public.norm_upc(a.upc)
+            )
+
+          UNION ALL
+
+          SELECT
+            pr3.overall_score,
+            1 AS priority,
+            pr3.updated_at,
+            pr3.id
+          FROM public.catalog c_same
+          JOIN public.product_recommendations pr3
+            ON (
+              (pr3.pci IS NOT NULL AND btrim(pr3.pci) <> '' AND c_same.pci IS NOT NULL AND btrim(c_same.pci) <> '' AND upper(btrim(pr3.pci)) = upper(btrim(c_same.pci)))
+              OR
+              (pr3.upc IS NOT NULL AND btrim(pr3.upc) <> '' AND c_same.upc IS NOT NULL AND btrim(c_same.upc) <> '' AND public.norm_upc(pr3.upc) = public.norm_upc(c_same.upc))
+            )
+          WHERE
+            a.model_number_norm IS NOT NULL
+            AND a.model_number_norm <> ''
+            AND upper(btrim(c_same.model_number)) = a.model_number_norm
+            AND COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') = a.version_norm
+        ) picked_score
+        ORDER BY picked_score.priority ASC, picked_score.updated_at DESC NULLS LAST, picked_score.id DESC
+        LIMIT 1
+      ) pr ON true
+      ORDER BY lower(COALESCE(a.brand, '')), lower(COALESCE(a.model_name, a.model_number, ''))
+    `;
+
+    const { rows } = await client.query(sql, values);
+
+    return res.json({
+      ok: true,
+      results: rows || [],
+    });
+  } catch (e) {
+    console.error("shortlist_specs error:", e);
+    return res.status(500).json({ ok: false, error: "server_error" });
   } finally {
     client.release();
   }

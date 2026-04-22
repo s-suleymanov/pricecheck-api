@@ -947,89 +947,35 @@ aside .note{
 
 /* ── Shortlist rail on dashboard (mirrors browse) ── */
 @media (min-width: 1280px) {
-  .dashboard-page .shortlist-rail {
-    position: fixed;
-    right: 0;
-    top: 63px;
-    bottom: 0;
-    height: calc(100dvh - 63px);
-    z-index: 55;
-    box-sizing: border-box;
-    overflow: visible;
-    padding: 0;
+
+  .dashboard-page .shortlist-mini-link--launch{
+    display: flex !important;
+    align-items: center !important;
+    padding-left: 14px !important;
+    border-top-left-radius: 999px !important;
+    border-bottom-left-radius: 999px !important;
+    color: #111 !important;
+    height: 40px !important;
+    overflow: visible !important;
+    text-decoration: none !important;
   }
 
-  .dashboard-page .shortlist-mini {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: visible;
-    padding: 8px 0;
+  .dashboard-page .shortlist-mini-launch-icon{
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 26px !important;
+    height: 26px !important;
   }
 
-  .dashboard-page .shortlist-mini::-webkit-scrollbar { width: 0; height: 0; }
-
-  .dashboard-page .shortlist-mini-item {
-    position: relative;
-    width: 70px;
-    height: 60px;
-    overflow: visible;
-    flex: 0 0 auto;
-    transition: width 0.2s ease;
+  .dashboard-page .shortlist-mini-launch-icon svg{
+    width: 26px !important;
+    height: 26px !important;
+    display: block !important;
   }
 
-  .dashboard-page .shortlist-mini-item:hover { width: 80px; }
-
-  .dashboard-page .shortlist-mini-link {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 60px;
-    overflow: hidden;
-    text-decoration: none;
-    background: #fff;
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
-    border-right: none;
-  }
-
-  .dashboard-page .shortlist-mini-img {
-    width: 60px;
-    height: 60px;
-    min-width: 60px;
-    object-fit: contain;
-    object-position: center;
-    display: block;
-  }
-
-  .dashboard-page .shortlist-mini-remove {
-    position: absolute;
-    top: 5px;
-    right: 7px;
-    width: 14px;
-    height: 50px;
-    border: 0;
-    border-radius: 999px;
-    background: #FDECEA;
-    color: #111;
-    opacity: 0;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity .14s ease, transform .14s ease;
-    padding: 0;
-    z-index: 2;
-  }
-
-  .dashboard-page .shortlist-mini-item:hover .shortlist-mini-remove { opacity: 1; }
-  .dashboard-page .shortlist-mini-remove:hover { transform: scale(1.05); }
-  .dashboard-page .shortlist-mini-remove svg {
-    width: 12px; height: 12px; fill: #EA4335; display: block;
+  .dashboard-page .shortlist-mini-launch-icon svg path{
+    fill: currentColor !important;
   }
 }
 

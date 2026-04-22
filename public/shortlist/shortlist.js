@@ -3,8 +3,29 @@
   const OPEN_KEY = "pc_shortlist_open_v1";
   const LIMIT = 24;
 
+  const SHORTLIST_REMOVE_SVG = `
+    <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+      <path d="M256-200 200-256l224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"></path>
+    </svg>
+  `;
+
+  const SHORTLIST_COMPARE_SVG = `
+    <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+      <path d="M400-40v-80H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h200v-80h80v880h-80ZM200-240h200v-240L200-240Zm360 120v-360l200 240v-520H560v-80h200q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H560Z"></path>
+    </svg>
+  `;
+
   function cleanText(v, max = 500) {
     return String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
   }
 
   function safeHref(raw, { sameOrigin = false } = {}) {
@@ -84,7 +105,7 @@
     const cur = readItems().filter((x) => x.key.toLowerCase() !== item.key.toLowerCase());
     cur.push(item);
     return writeItems(cur);
- }
+  }
 
   function remove(key) {
     const want = cleanText(key, 120).toLowerCase();
@@ -188,6 +209,107 @@
     return next;
   }
 
+  function renderRail({
+    railId = "shortlistRail",
+    miniId = "shortlistMini",
+    shortlistHref = "/shortlist/",
+    bodyClass = "has-shortlist"
+  } = {}) {
+    const rail = document.getElementById(railId);
+    const mini = document.getElementById(miniId);
+    if (!rail || !mini) return;
+
+    const items = readItems();
+
+    if (!items.length) {
+      rail.hidden = true;
+      document.body.classList.remove(bodyClass);
+      mini.innerHTML = "";
+      return;
+    }
+
+    rail.hidden = false;
+    document.body.classList.add(bodyClass);
+
+    mini.innerHTML = `
+      ${items.map((item) => `
+        <div class="shortlist-mini-item" title="${escapeHtml(item.title || item.brand || "Saved product")}">
+          <a
+            class="shortlist-mini-link"
+            href="${escapeHtml(item.href)}"
+            aria-label="${escapeHtml(item.title || item.brand || "Saved product")}"
+          >
+            ${item.img
+              ? `<img class="shortlist-mini-img" src="${escapeHtml(item.img)}" alt="">`
+              : `<div class="shortlist-mini-img"></div>`
+            }
+          </a>
+
+          <button
+            type="button"
+            class="shortlist-mini-remove"
+            data-shortlist-remove="${escapeHtml(item.key)}"
+            aria-label="Remove from shortlist"
+            title="Remove from shortlist"
+          >
+            ${SHORTLIST_REMOVE_SVG}
+          </button>
+        </div>
+      `).join("")}
+
+      ${items.length >= 2 ? `
+        <div class="shortlist-mini-item shortlist-mini-item--launch">
+          <a
+            class="shortlist-mini-link shortlist-mini-link--launch"
+            href="${escapeHtml(shortlistHref)}"
+            aria-label="Open shortlist comparison"
+            title="Open shortlist comparison"
+          >
+            <span class="shortlist-mini-launch-icon">${SHORTLIST_COMPARE_SVG}</span>
+          </a>
+        </div>
+      ` : ""}
+    `;
+  }
+
+  function bindRailEvents({
+    bodyFlag = "pcShortlistRailBound"
+  } = {}) {
+    if (document.body.dataset[bodyFlag] === "1") return;
+    document.body.dataset[bodyFlag] = "1";
+
+    document.body.addEventListener("click", (e) => {
+      const removeBtn = e.target.closest("[data-shortlist-remove]");
+      if (!removeBtn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const key = String(removeBtn.getAttribute("data-shortlist-remove") || "").trim();
+      if (!key) return;
+
+      removeAndEmit(key);
+    });
+  }
+
+  function mountRail(options = {}) {
+    bindRailEvents({
+      bodyFlag: options.bodyFlag || "pcShortlistRailBound"
+    });
+
+    renderRail(options);
+
+    const listener = () => {
+      renderRail(options);
+    };
+
+    window.addEventListener("pc:shortlist_changed", listener);
+
+    return () => {
+      window.removeEventListener("pc:shortlist_changed", listener);
+    };
+  }
+
   window.PriceCheckShortlist = {
     safeHref,
     normalizeItem,
@@ -201,6 +323,8 @@
     readOpen,
     setOpen,
     toggleOpen,
-    subscribe
+    subscribe,
+    renderRail,
+    mountRail
   };
 })();

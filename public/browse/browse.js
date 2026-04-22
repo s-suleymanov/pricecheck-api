@@ -28,12 +28,6 @@ const SHORTLIST_ON_SVG = `
   </svg>
 `;
 
-const SHORTLIST_REMOVE_SVG = `
-  <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-    <path d="M256-200 200-256l224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"></path>
-  </svg>
-`;
-
 function shortlistApi() {
   return window.PriceCheckShortlist || null;
 }
@@ -107,101 +101,48 @@ function syncShortlistButtons(root = document) {
   });
 }
 
-function renderShortlistRail() {
-  const api = shortlistApi();
-  if (!api) return;
+  function initShortlistBrowseUi() {
+    const api = shortlistApi();
+    if (!api) return;
 
-  const rail = document.getElementById("shortlistRail");
-  const mini = document.getElementById("shortlistMini");
-  if (!rail || !mini) return;
+    if (!document.body.dataset.shortlistBrowseBound) {
+      document.body.dataset.shortlistBrowseBound = "1";
 
-  const items = api.readItems();
-
-  if (!items.length) {
-    rail.hidden = true;
-    document.body.classList.remove("has-shortlist");
-    mini.innerHTML = "";
-    return;
-  }
-
-  rail.hidden = false;
-  document.body.classList.add("has-shortlist");
-
-  mini.innerHTML = items.map((item) => `
-    <div class="shortlist-mini-item" title="${escapeHtml(item.title || item.brand || "Saved product")}">
-      <a class="shortlist-mini-link" href="${escapeHtml(item.href)}"
-         aria-label="${escapeHtml(item.title || item.brand || "Saved product")}">
-        ${item.img
-          ? `<img class="shortlist-mini-img" src="${escapeHtml(item.img)}" alt="">`
-          : `<div class="shortlist-mini-img"></div>`
+      document.body.addEventListener("click", (e) => {
+        const specsPromoBtn = e.target.closest("[data-open-specs='1']");
+        if (specsPromoBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (state.activeTab !== "specs") {
+            state.activeTab = "specs";
+            render().catch(() => {});
+          }
+          return;
         }
-      </a>
-      <button type="button" class="shortlist-mini-remove"
-        data-shortlist-remove="${escapeHtml(item.key)}"
-        aria-label="Remove from shortlist" title="Remove from shortlist">
-        ${SHORTLIST_REMOVE_SVG}
-      </button>
-    </div>
-  `).join("");
-}
 
-function initShortlistBrowseUi() {
-  const api = shortlistApi();
-  if (!api) return;
+        const saveBtn = e.target.closest("[data-shortlist-toggle='1']");
+        if (saveBtn) {
+          e.preventDefault();
+          e.stopPropagation();
 
-  if (!document.body.dataset.shortlistBrowseBound) {
-    document.body.dataset.shortlistBrowseBound = "1";
+          const card = saveBtn.closest(".card.item[data-dash-key]");
+          const item = shortlistItemFromCardEl(card);
+          if (!item) return;
 
-    document.body.addEventListener("click", (e) => {
-      const specsPromoBtn = e.target.closest("[data-open-specs='1']");
-      if (specsPromoBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (state.activeTab !== "specs") {
-          state.activeTab = "specs";
-          render().catch(() => {});
+          api.toggle(item);
+          syncShortlistButtons(document);
+          return;
         }
-        return;
-      }
+      });
+    }
 
-      const saveBtn = e.target.closest("[data-shortlist-toggle='1']");
-      if (saveBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const card = saveBtn.closest(".card.item[data-dash-key]");
-        const item = shortlistItemFromCardEl(card);
-        if (!item) return;
-
-        api.toggle(item);
-        renderShortlistRail();
-        syncShortlistButtons(document);
-        return;
-      }
-
-      const removeBtn = e.target.closest("[data-shortlist-remove]");
-      if (removeBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const key = String(removeBtn.getAttribute("data-shortlist-remove") || "").trim();
-        if (!key) return;
-
-        api.remove(key);
-        renderShortlistRail();
-        syncShortlistButtons(document);
-      }
+    window.addEventListener("pc:shortlist_changed", () => {
+      syncShortlistButtons(document);
     });
-  }
 
-  window.addEventListener("pc:shortlist_changed", () => {
-    renderShortlistRail();
+    api.mountRail();
     syncShortlistButtons(document);
-  });
-
-  renderShortlistRail();
-  syncShortlistButtons(document);
-}
+  }
 
   function aboutHtmlFull(about) {
     if (!about || typeof about !== "object") return "";
@@ -1099,7 +1040,7 @@ const state = {
   function hydratePostPaintUi() {
     requestAnimationFrame(() => {
       syncShortlistButtons(els.grid || document);
-      renderShortlistRail();
+      window.PriceCheckShortlist?.renderRail();
     });
   }
 

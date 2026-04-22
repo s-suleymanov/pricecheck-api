@@ -4274,50 +4274,6 @@ if (mediaInner) {
     return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
-const _SHORTLIST_REMOVE_SVG = `
-  <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-    <path d="M256-200 200-256l224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/>
-  </svg>`;
-
-function renderDashboardShortlistRail() {
-  const api = window.PriceCheckShortlist;
-  const rail = document.getElementById("shortlistRail");
-  const mini = document.getElementById("shortlistMini");
-  if (!api || !rail || !mini) return;
-
-  const items = api.readItems();
-
-  if (!items.length) {
-    rail.hidden = true;
-    document.body.classList.remove("has-shortlist");
-    mini.innerHTML = "";
-    return;
-  }
-
-  rail.hidden = false;
-  document.body.classList.add("has-shortlist");
-
-  mini.innerHTML = items.map((item) => `
-    <div class="shortlist-mini-item"
-         title="${escapeHtml(item.title || item.brand || "Saved product")}">
-      <a class="shortlist-mini-link"
-         href="${escapeHtml(item.href)}"
-         aria-label="${escapeHtml(item.title || item.brand || "Saved product")}">
-        ${item.img
-          ? `<img class="shortlist-mini-img" src="${escapeHtml(item.img)}" alt="">`
-          : `<div class="shortlist-mini-img"></div>`}
-      </a>
-      <button type="button"
-              class="shortlist-mini-remove"
-              data-shortlist-remove="${escapeHtml(item.key)}"
-              aria-label="Remove from shortlist"
-              title="Remove from shortlist">
-        ${_SHORTLIST_REMOVE_SVG}
-      </button>
-    </div>
-  `).join("");
-}
-
 function syncDashboardShortlistButton() {
   const api = window.PriceCheckShortlist;
   const btn = document.getElementById("phShortlistBtn");
@@ -4341,61 +4297,36 @@ function syncDashboardShortlistButton() {
   if (iconOn)  iconOn.hidden  = !on;
 }
 
-function initDashboardShortlistUi() {
-  const api = window.PriceCheckShortlist;
-  if (!api) return;
+  function initDashboardShortlistUi() {
+    const api = window.PriceCheckShortlist;
+    if (!api) return;
 
-  document.body.addEventListener("click", (e) => {
-    const toggleBtn = e.target.closest("#phShortlistBtn");
-    if (toggleBtn) {
-      e.preventDefault();
-      e.stopPropagation();
+    if (!document.body.dataset.dashboardShortlistBound) {
+      document.body.dataset.dashboardShortlistBound = "1";
 
-      const key = String(state.lastKey || "").trim();
-      if (!key) return;
+      document.body.addEventListener("click", (e) => {
+        const saveBtn = e.target.closest("[data-shortlist-toggle='1']");
+        if (!saveBtn) return;
 
-      const id  = state.identity || {};
-      const cur = getCurrentVariant();
+        e.preventDefault();
+        e.stopPropagation();
 
-      const title      = String(cur?.model_name || id.model_name || id.model_number || "Product").trim();
-      const img        = String(cur?.image_url  || id.image_url  || "").trim();
-      const brand      = String(cur?.brand      || id.brand      || "").trim();
-      const href       = `${location.origin}${location.pathname}`;
+        const card = saveBtn.closest("[data-dash-key]");
+        const item = shortlistItemFromDashboardCard(card);
+        if (!item) return;
 
-      // Best current offer price
-      let priceCents = null;
-      for (const o of (Array.isArray(state.offers) ? state.offers : [])) {
-        const p  = (typeof o.price_cents           === "number" && o.price_cents           > 0) ? o.price_cents           : null;
-        const ef = (typeof o.effective_price_cents === "number" && o.effective_price_cents > 0) ? o.effective_price_cents : null;
-        const use = (p != null && ef != null && ef <= p) ? ef : p;
-        if (use != null && (priceCents == null || use < priceCents)) priceCents = use;
-      }
-
-      api.toggle(api.normalizeItem({ key, href, title, brand, img, priceCents, source: "dashboard" }));
-      syncDashboardShortlistButton();
-      renderDashboardShortlistRail();
-      return;
+        api.toggle(item);
+        syncDashboardShortlistButton();
+      });
     }
 
-    const removeBtn = e.target.closest("[data-shortlist-remove]");
-    if (removeBtn) {
-      e.preventDefault();
-      e.stopPropagation();
-      const key = String(removeBtn.getAttribute("data-shortlist-remove") || "").trim();
-      if (!key) return;
-      api.remove(key);
-      renderDashboardShortlistRail();
+    window.addEventListener("pc:shortlist_changed", () => {
       syncDashboardShortlistButton();
-    }
-  });
+    });
 
-  window.addEventListener("pc:shortlist_changed", () => {
-    renderDashboardShortlistRail();
+    api.mountRail();
     syncDashboardShortlistButton();
-  });
-
-  renderDashboardShortlistRail();
-}
+  }
 
   function hydrateHeader(){
     const id = state.identity || {};
