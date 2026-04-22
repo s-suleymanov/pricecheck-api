@@ -257,75 +257,145 @@ router.post("/api/home_feed", async (req, res) => {
         GROUP BY key, store_key
       ),
 
-      sa AS (
+            sa AS (
         SELECT key, ARRAY_AGG(store_key ORDER BY bp ASC, store_key ASC) AS stores
         FROM sb
         GROUP BY key
       ),
 
-      with_cat AS (
+      catalog_keys AS (
+        SELECT DISTINCT ON (key)
+          key,
+          model_name,
+          model_number,
+          brand,
+          category,
+          image_url,
+          model_number_norm,
+          version_norm
+        FROM (
+          SELECT
+            'pci:' || upper(btrim(c.pci)) AS key,
+            c.model_name,
+            c.model_number,
+            c.brand,
+            c.category,
+            c.image_url,
+            upper(btrim(c.model_number)) AS model_number_norm,
+            COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+            c.created_at,
+            c.id
+          FROM public.catalog c
+          WHERE c.pci IS NOT NULL
+            AND btrim(c.pci) <> ''
+            AND COALESCE(c.is_refurbished, false) = false
+            AND COALESCE(c.is_bundle, false) = false
+
+          UNION ALL
+
+          SELECT
+            'upc:' || btrim(c.upc) AS key,
+            c.model_name,
+            c.model_number,
+            c.brand,
+            c.category,
+            c.image_url,
+            upper(btrim(c.model_number)) AS model_number_norm,
+            COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+            c.created_at,
+            c.id
+          FROM public.catalog c
+          WHERE c.upc IS NOT NULL
+            AND btrim(c.upc) <> ''
+            AND COALESCE(c.is_refurbished, false) = false
+            AND COALESCE(c.is_bundle, false) = false
+        ) x
+        ORDER BY key, created_at DESC NULLS LAST, id DESC
+      ),
+
+      rec_exact AS (
+        SELECT DISTINCT ON (key)
+          key,
+          overall_score
+        FROM (
+          SELECT
+            'pci:' || upper(btrim(pr.pci)) AS key,
+            pr.overall_score,
+            pr.updated_at,
+            pr.id
+          FROM public.product_recommendations pr
+          WHERE pr.pci IS NOT NULL
+            AND btrim(pr.pci) <> ''
+
+          UNION ALL
+
+          SELECT
+            'upc:' || btrim(pr.upc) AS key,
+            pr.overall_score,
+            pr.updated_at,
+            pr.id
+          FROM public.product_recommendations pr
+          WHERE pr.upc IS NOT NULL
+            AND btrim(pr.upc) <> ''
+        ) r
+        ORDER BY key, updated_at DESC NULLS LAST, id DESC
+      ),
+
+      rec_family AS (
+        SELECT DISTINCT ON (model_number_norm, version_norm)
+          model_number_norm,
+          version_norm,
+          overall_score
+        FROM (
+          SELECT
+            upper(btrim(c_same.model_number)) AS model_number_norm,
+            COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') AS version_norm,
+            pr.overall_score,
+            pr.updated_at,
+            pr.id
+          FROM public.catalog c_same
+          JOIN public.product_recommendations pr
+            ON (
+              (
+                pr.pci IS NOT NULL
+                AND btrim(pr.pci) <> ''
+                AND c_same.pci IS NOT NULL
+                AND btrim(c_same.pci) <> ''
+                AND upper(btrim(pr.pci)) = upper(btrim(c_same.pci))
+              )
+              OR
+              (
+                pr.upc IS NOT NULL
+                AND btrim(pr.upc) <> ''
+                AND c_same.upc IS NOT NULL
+                AND btrim(c_same.upc) <> ''
+                AND public.norm_upc(pr.upc) = public.norm_upc(c_same.upc)
+              )
+            )
+          WHERE c_same.model_number IS NOT NULL
+            AND btrim(c_same.model_number) <> ''
+        ) rf
+        ORDER BY model_number_norm, version_norm, updated_at DESC NULLS LAST, id DESC
+      ),
+
+            with_cat AS (
         SELECT
           a.key,
           a.min_price_cents,
           a.max_price_cents,
           a.store_count,
           a.last_seen,
-          c.matched_new,
-          c.model_name,
-          c.model_number,
-          c.brand,
-          c.category,
-          c.image_url,
-          c.model_number_norm,
-          c.version_norm
+          ck.model_name,
+          ck.model_number,
+          ck.brand,
+          ck.category,
+          ck.image_url,
+          ck.model_number_norm,
+          ck.version_norm
         FROM agg a
-        LEFT JOIN LATERAL (
-          SELECT
-            1 AS matched_new,
-            c2.model_name,
-            c2.model_number,
-            c2.brand,
-            c2.category,
-            c2.image_url,
-            upper(btrim(c2.model_number)) AS model_number_norm,
-            COALESCE(NULLIF(lower(btrim(c2.version)), ''), '') AS version_norm
-          FROM public.catalog c2
-          WHERE (
-            (a.key LIKE 'pci:%'
-              AND c2.pci IS NOT NULL
-              AND btrim(c2.pci) <> ''
-              AND upper(btrim(c2.pci)) = substring(a.key FROM 5))
-            OR
-            (a.key LIKE 'upc:%'
-              AND c2.upc IS NOT NULL
-              AND btrim(c2.upc) <> ''
-              AND public.norm_upc(c2.upc) = public.norm_upc(substring(a.key FROM 5)))
-          )
-            AND COALESCE(c2.is_refurbished, false) = false
-            AND COALESCE(c2.is_bundle, false) = false
-          ORDER BY c2.created_at DESC NULLS LAST, c2.id DESC
-          LIMIT 1
-        ) c ON true
-        WHERE
-          (cardinality($6::text[]) = 0 OR a.key != ALL($6::text[]))
-          AND (
-            c.matched_new IS NOT NULL
-            OR NOT EXISTS (
-              SELECT 1
-              FROM public.catalog c3
-              WHERE (
-                (a.key LIKE 'pci:%'
-                  AND c3.pci IS NOT NULL
-                  AND btrim(c3.pci) <> ''
-                  AND upper(btrim(c3.pci)) = substring(a.key FROM 5))
-                OR
-                (a.key LIKE 'upc:%'
-                  AND c3.upc IS NOT NULL
-                  AND btrim(c3.upc) <> ''
-                  AND public.norm_upc(c3.upc) = public.norm_upc(substring(a.key FROM 5)))
-              )
-            )
-          )
+        LEFT JOIN catalog_keys ck
+          ON ck.key = a.key
+        WHERE cardinality($6::text[]) = 0 OR a.key != ALL($6::text[])
       ),
 
       coupon_group AS (
@@ -400,11 +470,11 @@ router.post("/api/home_feed", async (req, res) => {
           wc.last_seen DESC NULLS LAST
       ),
 
-      scored AS (
+           scored AS (
         SELECT
           g.*,
           sa.stores,
-          pr.overall_score,
+          COALESCE(rex.overall_score, rf.overall_score) AS overall_score,
           (
             CASE WHEN cardinality($4::text[]) > 0
               AND lower(btrim(COALESCE(g.brand,''))) = ANY($4::text[])
@@ -430,66 +500,13 @@ router.post("/api/home_feed", async (req, res) => {
             + g.store_count
           )::int AS score
         FROM grouped g
-        LEFT JOIN sa ON sa.key = g.key
-        LEFT JOIN LATERAL (
-          SELECT picked_score.overall_score
-          FROM (
-            SELECT
-              pr2.overall_score,
-              0 AS priority,
-              pr2.updated_at,
-              pr2.id
-            FROM public.product_recommendations pr2
-            WHERE
-              (
-                g.key LIKE 'pci:%'
-                AND pr2.pci IS NOT NULL
-                AND btrim(pr2.pci) <> ''
-                AND upper(btrim(pr2.pci)) = substring(g.key FROM 5)
-              )
-              OR
-              (
-                g.key LIKE 'upc:%'
-                AND pr2.upc IS NOT NULL
-                AND btrim(pr2.upc) <> ''
-                AND public.norm_upc(pr2.upc) = public.norm_upc(substring(g.key FROM 5))
-              )
-
-            UNION ALL
-
-            SELECT
-              pr3.overall_score,
-              1 AS priority,
-              pr3.updated_at,
-              pr3.id
-            FROM public.catalog c_anchor
-            JOIN public.catalog c_same
-              ON upper(btrim(c_same.model_number)) = upper(btrim(c_anchor.model_number))
-             AND COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') = COALESCE(NULLIF(lower(btrim(c_anchor.version)), ''), '')
-            JOIN public.product_recommendations pr3
-              ON (
-                (pr3.pci IS NOT NULL AND btrim(pr3.pci) <> '' AND c_same.pci IS NOT NULL AND btrim(c_same.pci) <> '' AND upper(btrim(pr3.pci)) = upper(btrim(c_same.pci)))
-                OR
-                (pr3.upc IS NOT NULL AND btrim(pr3.upc) <> '' AND c_same.upc IS NOT NULL AND btrim(c_same.upc) <> '' AND public.norm_upc(pr3.upc) = public.norm_upc(c_same.upc))
-              )
-            WHERE
-              (
-                g.key LIKE 'pci:%'
-                AND c_anchor.pci IS NOT NULL
-                AND btrim(c_anchor.pci) <> ''
-                AND upper(btrim(c_anchor.pci)) = substring(g.key FROM 5)
-              )
-              OR
-              (
-                g.key LIKE 'upc:%'
-                AND c_anchor.upc IS NOT NULL
-                AND btrim(c_anchor.upc) <> ''
-                AND public.norm_upc(c_anchor.upc) = public.norm_upc(substring(g.key FROM 5))
-              )
-          ) picked_score
-          ORDER BY picked_score.priority ASC, picked_score.updated_at DESC NULLS LAST, picked_score.id DESC
-          LIMIT 1
-        ) pr ON true
+        LEFT JOIN sa
+          ON sa.key = g.key
+        LEFT JOIN rec_exact rex
+          ON rex.key = g.key
+        LEFT JOIN rec_family rf
+          ON rf.model_number_norm = g.model_number_norm
+         AND rf.version_norm = COALESCE(g.version_norm, '')
       )
 
       SELECT
@@ -582,76 +599,146 @@ router.post("/api/home_feed", async (req, res) => {
             GROUP BY key, store_key
           ),
 
-          sa AS (
+                    sa AS (
             SELECT key, ARRAY_AGG(store_key ORDER BY bp ASC, store_key ASC) AS stores
             FROM sb
             GROUP BY key
           ),
 
-        wc AS (
-          SELECT
-            a.key,
-            a.min_price_cents,
-            a.max_price_cents,
-            a.store_count,
-            a.last_seen,
-            c.matched_new,
-            c.model_name,
-            c.model_number,
-            c.brand,
-            c.category,
-            c.image_url,
-            c.model_number_norm,
-            c.version_norm
-          FROM agg a
-            LEFT JOIN LATERAL (
+          catalog_keys AS (
+            SELECT DISTINCT ON (key)
+              key,
+              model_name,
+              model_number,
+              brand,
+              category,
+              image_url,
+              model_number_norm,
+              version_norm
+            FROM (
               SELECT
-                1 AS matched_new,
-                c2.model_name,
-                c2.model_number,
-                c2.brand,
-                c2.category,
-                c2.image_url,
-                upper(btrim(c2.model_number)) AS model_number_norm,
-                COALESCE(NULLIF(lower(btrim(c2.version)), ''), '') AS version_norm
-              FROM public.catalog c2
-              WHERE (
-                (a.key LIKE 'pci:%'
-                  AND c2.pci IS NOT NULL
-                  AND btrim(c2.pci) <> ''
-                  AND upper(btrim(c2.pci)) = substring(a.key FROM 5))
-                OR
-                (a.key LIKE 'upc:%'
-                  AND c2.upc IS NOT NULL
-                  AND btrim(c2.upc) <> ''
-                  AND public.norm_upc(c2.upc) = public.norm_upc(substring(a.key FROM 5)))
-              )
-                AND COALESCE(c2.is_refurbished, false) = false
-                AND COALESCE(c2.is_bundle, false) = false
-              ORDER BY c2.created_at DESC NULLS LAST, c2.id DESC
-              LIMIT 1
-            ) c ON true
-            WHERE
-              (cardinality($1::text[]) = 0 OR a.key != ALL($1::text[]))
-              AND (
-                c.matched_new IS NOT NULL
-                OR NOT EXISTS (
-                  SELECT 1
-                  FROM public.catalog c3
-                  WHERE (
-                    (a.key LIKE 'pci:%'
-                      AND c3.pci IS NOT NULL
-                      AND btrim(c3.pci) <> ''
-                      AND upper(btrim(c3.pci)) = substring(a.key FROM 5))
-                    OR
-                    (a.key LIKE 'upc:%'
-                      AND c3.upc IS NOT NULL
-                      AND btrim(c3.upc) <> ''
-                      AND public.norm_upc(c3.upc) = public.norm_upc(substring(a.key FROM 5)))
+                'pci:' || upper(btrim(c.pci)) AS key,
+                c.model_name,
+                c.model_number,
+                c.brand,
+                c.category,
+                c.image_url,
+                upper(btrim(c.model_number)) AS model_number_norm,
+                COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+                c.created_at,
+                c.id
+              FROM public.catalog c
+              WHERE c.pci IS NOT NULL
+                AND btrim(c.pci) <> ''
+                AND COALESCE(c.is_refurbished, false) = false
+                AND COALESCE(c.is_bundle, false) = false
+
+              UNION ALL
+
+              SELECT
+                'upc:' || btrim(c.upc) AS key,
+                c.model_name,
+                c.model_number,
+                c.brand,
+                c.category,
+                c.image_url,
+                upper(btrim(c.model_number)) AS model_number_norm,
+                COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+                c.created_at,
+                c.id
+              FROM public.catalog c
+              WHERE c.upc IS NOT NULL
+                AND btrim(c.upc) <> ''
+                AND COALESCE(c.is_refurbished, false) = false
+                AND COALESCE(c.is_bundle, false) = false
+            ) x
+            ORDER BY key, created_at DESC NULLS LAST, id DESC
+          ),
+
+          rec_exact AS (
+            SELECT DISTINCT ON (key)
+              key,
+              overall_score
+            FROM (
+              SELECT
+                'pci:' || upper(btrim(pr.pci)) AS key,
+                pr.overall_score,
+                pr.updated_at,
+                pr.id
+              FROM public.product_recommendations pr
+              WHERE pr.pci IS NOT NULL
+                AND btrim(pr.pci) <> ''
+
+              UNION ALL
+
+              SELECT
+                'upc:' || btrim(pr.upc) AS key,
+                pr.overall_score,
+                pr.updated_at,
+                pr.id
+              FROM public.product_recommendations pr
+              WHERE pr.upc IS NOT NULL
+                AND btrim(pr.upc) <> ''
+            ) r
+            ORDER BY key, updated_at DESC NULLS LAST, id DESC
+          ),
+
+          rec_family AS (
+            SELECT DISTINCT ON (model_number_norm, version_norm)
+              model_number_norm,
+              version_norm,
+              overall_score
+            FROM (
+              SELECT
+                upper(btrim(c_same.model_number)) AS model_number_norm,
+                COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') AS version_norm,
+                pr.overall_score,
+                pr.updated_at,
+                pr.id
+              FROM public.catalog c_same
+              JOIN public.product_recommendations pr
+                ON (
+                  (
+                    pr.pci IS NOT NULL
+                    AND btrim(pr.pci) <> ''
+                    AND c_same.pci IS NOT NULL
+                    AND btrim(c_same.pci) <> ''
+                    AND upper(btrim(pr.pci)) = upper(btrim(c_same.pci))
+                  )
+                  OR
+                  (
+                    pr.upc IS NOT NULL
+                    AND btrim(pr.upc) <> ''
+                    AND c_same.upc IS NOT NULL
+                    AND btrim(c_same.upc) <> ''
+                    AND public.norm_upc(pr.upc) = public.norm_upc(c_same.upc)
                   )
                 )
-              )
-                    ),
+              WHERE c_same.model_number IS NOT NULL
+                AND btrim(c_same.model_number) <> ''
+            ) rf
+            ORDER BY model_number_norm, version_norm, updated_at DESC NULLS LAST, id DESC
+          ),
+
+          wc AS (
+            SELECT
+              a.key,
+              a.min_price_cents,
+              a.max_price_cents,
+              a.store_count,
+              a.last_seen,
+              ck.model_name,
+              ck.model_number,
+              ck.brand,
+              ck.category,
+              ck.image_url,
+              ck.model_number_norm,
+              ck.version_norm
+            FROM agg a
+            LEFT JOIN catalog_keys ck
+              ON ck.key = a.key
+            WHERE cardinality($1::text[]) = 0 OR a.key != ALL($1::text[])
+          ),
 
           coupon_group AS (
             SELECT
@@ -712,6 +799,8 @@ router.post("/api/home_feed", async (req, res) => {
               wc.brand,
               wc.category,
               wc.image_url,
+              wc.model_number_norm,
+              wc.version_norm,
               COALESCE(cg.has_coupon, false) AS has_coupon
             FROM wc
             LEFT JOIN coupon_group cg
@@ -725,70 +814,17 @@ router.post("/api/home_feed", async (req, res) => {
 
           SELECT
             g.*,
-            pr.overall_score,
+            COALESCE(rex.overall_score, rf.overall_score) AS overall_score,
             COALESCE(sa.stores, ARRAY[]::text[]) AS stores,
             store_count AS score
           FROM g
-          LEFT JOIN sa ON sa.key = g.key
-          LEFT JOIN LATERAL (
-            SELECT picked_score.overall_score
-            FROM (
-              SELECT
-                pr2.overall_score,
-                0 AS priority,
-                pr2.updated_at,
-                pr2.id
-              FROM public.product_recommendations pr2
-              WHERE
-                (
-                  g.key LIKE 'pci:%'
-                  AND pr2.pci IS NOT NULL
-                  AND btrim(pr2.pci) <> ''
-                  AND upper(btrim(pr2.pci)) = substring(g.key FROM 5)
-                )
-                OR
-                (
-                  g.key LIKE 'upc:%'
-                  AND pr2.upc IS NOT NULL
-                  AND btrim(pr2.upc) <> ''
-                  AND public.norm_upc(pr2.upc) = public.norm_upc(substring(g.key FROM 5))
-                )
-
-              UNION ALL
-
-              SELECT
-                pr3.overall_score,
-                1 AS priority,
-                pr3.updated_at,
-                pr3.id
-              FROM public.catalog c_anchor
-              JOIN public.catalog c_same
-                ON upper(btrim(c_same.model_number)) = upper(btrim(c_anchor.model_number))
-               AND COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') = COALESCE(NULLIF(lower(btrim(c_anchor.version)), ''), '')
-              JOIN public.product_recommendations pr3
-                ON (
-                  (pr3.pci IS NOT NULL AND btrim(pr3.pci) <> '' AND c_same.pci IS NOT NULL AND btrim(c_same.pci) <> '' AND upper(btrim(pr3.pci)) = upper(btrim(c_same.pci)))
-                  OR
-                  (pr3.upc IS NOT NULL AND btrim(pr3.upc) <> '' AND c_same.upc IS NOT NULL AND btrim(c_same.upc) <> '' AND public.norm_upc(pr3.upc) = public.norm_upc(c_same.upc))
-                )
-              WHERE
-                (
-                  g.key LIKE 'pci:%'
-                  AND c_anchor.pci IS NOT NULL
-                  AND btrim(c_anchor.pci) <> ''
-                  AND upper(btrim(c_anchor.pci)) = substring(g.key FROM 5)
-                )
-                OR
-                (
-                  g.key LIKE 'upc:%'
-                  AND c_anchor.upc IS NOT NULL
-                  AND btrim(c_anchor.upc) <> ''
-                  AND public.norm_upc(c_anchor.upc) = public.norm_upc(substring(g.key FROM 5))
-                )
-            ) picked_score
-            ORDER BY picked_score.priority ASC, picked_score.updated_at DESC NULLS LAST, picked_score.id DESC
-            LIMIT 1
-          ) pr ON true
+          LEFT JOIN sa
+            ON sa.key = g.key
+          LEFT JOIN rec_exact rex
+            ON rex.key = g.key
+          LEFT JOIN rec_family rf
+            ON rf.model_number_norm = g.model_number_norm
+           AND rf.version_norm = COALESCE(g.version_norm, '')
           ORDER BY store_count DESC, last_seen DESC NULLS LAST
           LIMIT $2
         `;
