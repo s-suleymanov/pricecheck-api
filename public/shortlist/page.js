@@ -219,7 +219,7 @@
       </div>
     `;
 
-    el.querySelectorAll("[data-spec-top-key]").forEach((btn) => {
+        el.querySelectorAll("[data-spec-top-key]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const key = String(btn.getAttribute("data-spec-top-key") || "").trim();
         if (!key) return;
@@ -237,6 +237,7 @@
             state.selectedSpecsTopKeys = state.specsTopKeys.slice(0, 4);
           }
 
+          renderTopbar();
           renderGrid();
           return;
         }
@@ -247,6 +248,7 @@
         }
 
         state.selectedSpecsTopKeys = [...current, key];
+        renderTopbar();
         renderGrid();
       });
     });
