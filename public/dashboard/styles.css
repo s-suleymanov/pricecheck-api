@@ -1641,11 +1641,6 @@ aside{
   color:#9f1239;
 }
 
-.pc-warn--limited{
-  background: #F3F4F6;
-  border: 1px solid #C7CED8;
-}
-
 .pc-warn__link{
   display:inline-block;
   font-weight:600;
