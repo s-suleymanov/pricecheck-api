@@ -4547,11 +4547,6 @@ button.pc-lineup-model{
   .pc-rec-verdict{
     font-size:28px;
   }
-
-  .pc-rec-lists,
-  .pc-rec-breakdown{
-    grid-template-columns:1fr;
-  }
 }
 
 .ph-media-stage.is-vertical .ph-media-stage__inner {

@@ -4274,28 +4274,84 @@ if (mediaInner) {
     return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
-function syncDashboardShortlistButton() {
-  const api = window.PriceCheckShortlist;
-  const btn = document.getElementById("phShortlistBtn");
-  if (!btn) return;
+  function buildDashboardHeaderShortlistItem() {
+    const key = String(state.lastKey || "").trim();
+    if (!key) return null;
 
-  const key = String(state.lastKey || "").trim();
+    const cur = getCurrentVariant() || null;
+    const id = state.identity || {};
 
-  if (!api || !key) {
-    btn.hidden = true;
-    return;
+    const title =
+      String(
+        cur?.model_name ||
+        id?.model_name ||
+        id?.model_number ||
+        "Product"
+      ).trim() || "Product";
+
+    const brand =
+      String(cur?.brand || id?.brand || "").trim();
+
+    const img =
+      String(
+        cur?.image_url ||
+        id?.image_url ||
+        "/logo/default.webp"
+      ).trim();
+
+    const priceCents = (() => {
+      const offers = Array.isArray(state.offers) ? state.offers : [];
+
+      const nums = offers
+        .map((o) => {
+          const effective = Number(o?.effective_price_cents);
+          const current = Number(o?.price_cents ?? o?.current_price_cents);
+
+          if (Number.isFinite(effective) && effective > 0) return effective;
+          if (Number.isFinite(current) && current > 0) return current;
+          return null;
+        })
+        .filter((v) => Number.isFinite(v) && v > 0);
+
+      return nums.length ? Math.min(...nums) : null;
+    })();
+
+    const href = prettyDashboardUrl(key, title).pathname;
+
+    return {
+      key,
+      href,
+      title,
+      brand,
+      img,
+      priceCents,
+      source: "dashboard"
+    };
   }
 
-  btn.hidden = false;
-  const on = api.has(key);
-  btn.classList.toggle("is-active", on);
-  btn.setAttribute("aria-label", on ? "Remove from shortlist" : "Save to shortlist");
-  btn.title = on ? "Remove from shortlist" : "Save to shortlist";
-  const iconOff = btn.querySelector("[data-shortlist-icon='off']");
-  const iconOn  = btn.querySelector("[data-shortlist-icon='on']");
-  if (iconOff) iconOff.hidden = on;
-  if (iconOn)  iconOn.hidden  = !on;
-}
+  function syncDashboardShortlistButton() {
+    const api = window.PriceCheckShortlist;
+    const btn = document.getElementById("phShortlistBtn");
+    if (!btn) return;
+
+    const key = String(state.lastKey || "").trim();
+
+    if (!api || !key) {
+      btn.hidden = true;
+      return;
+    }
+
+    btn.hidden = false;
+    const on = api.has(key);
+    btn.classList.toggle("is-active", on);
+    btn.setAttribute("aria-label", on ? "Remove from shortlist" : "Save to shortlist");
+    btn.title = on ? "Remove from shortlist" : "Save to shortlist";
+
+    const iconOff = btn.querySelector("[data-shortlist-icon='off']");
+    const iconOn = btn.querySelector("[data-shortlist-icon='on']");
+    if (iconOff) iconOff.hidden = on;
+    if (iconOn) iconOn.hidden = !on;
+  }
 
   function initDashboardShortlistUi() {
     const api = window.PriceCheckShortlist;
@@ -4305,6 +4361,19 @@ function syncDashboardShortlistButton() {
       document.body.dataset.dashboardShortlistBound = "1";
 
       document.body.addEventListener("click", (e) => {
+        const headerBtn = e.target.closest("#phShortlistBtn");
+        if (headerBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const item = buildDashboardHeaderShortlistItem();
+          if (!item) return;
+
+          api.toggle(item);
+          syncDashboardShortlistButton();
+          return;
+        }
+
         const saveBtn = e.target.closest("[data-shortlist-toggle='1']");
         if (!saveBtn) return;
 
