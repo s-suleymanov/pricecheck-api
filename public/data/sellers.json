@@ -53,7 +53,7 @@
     "policies": {
       "return_period": "30d",
       "restocking_fee": "No",
-      "free_shipping_threshold": "$49+",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes (10-day price adjustment; select furniture)"
     },
     "contact": {
@@ -225,7 +225,7 @@
     }
   },
   "abt": {
-    "name": "Abt Electronics",
+    "name": "Abt",
     "logo": "/logo/seller/abt.webp",
     "website": "https://www.abt.com",
     "owned_by": "Abt Family",
@@ -723,6 +723,26 @@
     "phone": "1-855-253-6686",
     "chat_available": true,
     "support_page": "https://pcsupport.lenovo.com/us/en"
+  }
+},
+"pcrichard": {
+  "name": "Richard Son",
+  "logo": "/logo/seller/pcrichard.png",
+  "website": "https://www.pcrichard.com",
+  "owned_by": "",
+  "type": "Electronics & Appliance Retailer",
+  "location": "United States",
+  "founded": 1909,
+  "policies": {
+    "return_period": "30d",
+    "restocking_fee": "Unknown",
+    "free_shipping_threshold": "Free Shipping",
+    "price_match": "Yes"
+  },
+  "contact": {
+    "phone": "1-877-727-1909",
+    "chat_available": true,
+    "support_page": "https://www.pcrichard.com/customer-service.html"
   }
 },
   "tesla": {
