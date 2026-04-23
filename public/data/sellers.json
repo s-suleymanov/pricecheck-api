@@ -73,7 +73,7 @@
     "policies": {
       "return_period": "30d",
       "restocking_fee": "15% (unless defective)",
-      "free_shipping_threshold": "No Minimum (Free Shipping Standard Shipping)",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes"
     },
     "contact": {
@@ -115,7 +115,7 @@
     "policies": {
       "return_period": "15-30d (Category dependent)",
       "restocking_fee": "No (Unless parts missing/damaged)",
-      
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes"
     },
     "contact": {
