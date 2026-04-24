@@ -1630,8 +1630,17 @@ function buildDashboardToc() {
       && !!parts[3];
   }
 
-  function applySeoFromData(title, imageUrl, key) {
-  const cleanTitle = String(title || 'Product').trim() || 'Product';
+function applySeoFromData(title, imageUrl, key) {
+  const cur = getCurrentVariant() || null;
+  const id = state.identity || {};
+
+  const brand = String(cur?.brand || id?.brand || '').trim();
+  const rawTitle = String(title || 'Product').trim() || 'Product';
+
+  const cleanTitle =
+    brand && !rawTitle.toLowerCase().startsWith(brand.toLowerCase())
+      ? `${brand} ${rawTitle}`
+      : rawTitle;
   const pageTitle = `${cleanTitle} - PriceCheck`;
 
   document.title = pageTitle;
