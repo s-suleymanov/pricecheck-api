@@ -2804,7 +2804,6 @@ button.pc-lineup-model{
 
 .media-choice.is-active{
   border-color:rgba(99,102,241,.65);
-  box-shadow:0 0 0 2px rgba(99,102,241,.15);
 }
 
 .media-choice__thumb{
