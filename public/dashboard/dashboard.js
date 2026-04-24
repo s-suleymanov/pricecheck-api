@@ -1637,10 +1637,7 @@ function applySeoFromData(title, imageUrl, key) {
   const brand = String(cur?.brand || id?.brand || '').trim();
   const rawTitle = String(title || 'Product').trim() || 'Product';
 
-  const cleanTitle =
-    brand && !rawTitle.toLowerCase().startsWith(brand.toLowerCase())
-      ? `${brand} ${rawTitle}`
-      : rawTitle;
+  const cleanTitle = `${brand} ${rawTitle}`.trim();
   const pageTitle = `${cleanTitle} - PriceCheck`;
 
   document.title = pageTitle;

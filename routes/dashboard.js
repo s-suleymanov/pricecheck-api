@@ -1313,7 +1313,10 @@ async function getSeoForRawKey(client, rawKey) {
   const meta = selectedCatalog || catalogIdentity || null;
   const listingTitle = seed?.seed_listing?.title ? String(seed.seed_listing.title).trim() : '';
 
-  const title = String(meta?.model_name || listingTitle || 'Product').trim() || 'Product';
+  const brand = String(meta?.brand || '').trim();
+  const rawTitle = String(meta?.model_name || listingTitle || 'Product').trim() || 'Product';
+
+  const title = `${brand} ${rawTitle}`.trim();
   const image_url = meta?.image_url ? String(meta.image_url).trim() : '';
 
   return { title, image_url: image_url || null, canonicalKey };
