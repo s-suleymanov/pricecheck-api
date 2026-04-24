@@ -1649,7 +1649,7 @@
   },
   "sonos": {
     "name": "Sonos",
-    "logo": "",
+    "logo": "/logo/seller/sonos.png",
     "website": "https://www.sonos.com",
     "owned_by": "",
     "type": "Proprietary",
