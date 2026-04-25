@@ -4122,7 +4122,11 @@ async function run(raw){
 
     if (canonicalKey) {
       state.lastKey = canonicalKey;
-      applyPrettyUrl(canonicalKey, bestTitle, 'replace');
+
+      const brandForUrl = String(cur?.brand || id?.brand || '').trim();
+      const titleForUrl = `${brandForUrl} ${bestTitle}`.trim();
+
+      applyPrettyUrl(canonicalKey, titleForUrl, 'replace');
       applySeoFromData(bestTitle, bestImg, canonicalKey);
     }
 

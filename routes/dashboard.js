@@ -1799,13 +1799,16 @@ async function serveDashboardIndexWithSeo(req, res, next) {
     const reqSlug = req.params.slug ? String(req.params.slug).trim() : '';
     const wantSlug = slugifyTitleServer(seo.title);
 
-    const isPretty = !!req.params.slug;
+    const currentPath = req.path.endsWith('/') ? req.path : `${req.path}/`;
+
+    if (currentPath !== canonicalPath) {
+      return res.redirect(301, canonicalUrl);
+    }
+
     const isCanonicalPci =
       canonicalKind === 'pci' &&
       kind === 'pci' &&
-      String(value).trim().toUpperCase() === String(canonicalVal).trim().toUpperCase() &&
-      isPretty &&
-      reqSlug === wantSlug;
+      String(value).trim().toUpperCase() === String(canonicalVal).trim().toUpperCase();
 
     const robots = isCanonicalPci ? 'index,follow' : 'noindex,follow';
 
