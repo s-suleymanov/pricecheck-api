@@ -415,8 +415,8 @@ router.get(["/rankings/:category", "/rankings/:category/"], async (req, res, nex
 
             <div class="ranking-meta">
               <span>${esc(money(p.best_price_cents))}</span>
-              <span>Feature score ${esc(p.featureScore)}/100</span>
-              <span>Value score ${esc(p.valueScore.toFixed(2))}</span>
+              <span>Feature Score: ${esc(p.featureScore)}/100</span>
+              <span>Value Score: ${esc(p.valueScore.toFixed(2))}</span>
             </div>
 
             <p>${esc(whyText(p))}</p>
