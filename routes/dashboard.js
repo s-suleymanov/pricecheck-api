@@ -1829,7 +1829,6 @@ async function serveDashboardIndexWithSeo(req, res, next) {
   }
 }
 
-// Canonical key-in-path pages (no slug)
 router.get(['/dashboard/:kind/:value', '/dashboard/:kind/:value/'], serveDashboardIndexWithSeo);
 
 // Canonical slug + key-in-path pages

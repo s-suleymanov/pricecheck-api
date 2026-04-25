@@ -1699,9 +1699,7 @@ function buildDashboardToc() {
   }
 
   function applyPrettyUrl(key, title, mode = 'replace') {
-    const url = prettyDashboardUrl(key, title);
-    if (mode === 'push') history.pushState({ key }, '', url);
-    else history.replaceState({ key }, '', url);
+    return;
   }
 
   function canonicalOriginForMeta() {
