@@ -530,7 +530,7 @@ router.get(["/rankings/:category", "/rankings/:category/"], async (req, res, nex
     .ranking-img img{
       width:100%;
       height:100%;
-      object-fit:contain;
+      object-fit:cover;
     }
 
     .ranking-img-empty{
