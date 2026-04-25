@@ -1807,7 +1807,7 @@ async function serveDashboardIndexWithSeo(req, res, next) {
       isPretty &&
       reqSlug === wantSlug;
 
-    const robots = isCanonicalPci ? 'index,follow' : 'noindex,follow';
+    const robots = hasValidProduct ? 'index,follow' : 'noindex,follow';
 
     const html = renderDashboardHtml({
       pageTitle,
