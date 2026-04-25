@@ -713,7 +713,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
     const r = await client.query(
       `
       select id, upc, pci, model_name, model_number, brand, category, image_url,
-        version, color, variant, dimensions, specs, media, marketing_images, timeline, files, contents, about, created_at,
+        version, color, variant, dimensions, specs, specs_norm, media, marketing_images, timeline, files, contents, about, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
       where pci is not null and btrim(pci) <> ''
@@ -732,7 +732,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
     const r = await client.query(
       `
       select id, upc, pci, model_name, model_number, brand, category, image_url,
-        version, color, variant, dimensions, specs, media, marketing_images, timeline, files, contents, about, created_at,
+        version, color, variant, dimensions, specs, specs_norm, media, marketing_images, timeline, files, contents, about, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
       where norm_upc(upc) = norm_upc($1)
@@ -829,6 +829,7 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
       image_url: row.image_url || null,
       dimensions: (row.dimensions && typeof row.dimensions === 'object' && !Array.isArray(row.dimensions)) ? row.dimensions : null,
       specs: (row.specs && typeof row.specs === 'object' && !Array.isArray(row.specs)) ? row.specs : null,
+      specs_norm: (row.specs_norm && typeof row.specs_norm === 'object' && !Array.isArray(row.specs_norm)) ? row.specs_norm : null,
       timeline: Array.isArray(row.timeline) ? row.timeline : null,
       media: Array.isArray(row.media) ? row.media : null,
       marketing_images: Array.isArray(row.marketing_images)
@@ -849,7 +850,7 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
   const r = await client.query(
     `
     select id, upc, pci, model_name, model_number, brand, category, image_url,
-      version, color, variant, dimensions, specs, media, timeline, files, contents, about, created_at
+      version, color, variant, dimensions, specs, specs_norm, media, timeline, files, contents, about, created_at
     from public.catalog
     where model_number is not null and btrim(model_number) <> ''
       and upper(btrim(model_number)) = upper(btrim($1))
@@ -901,6 +902,7 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
         image_url: row.image_url || null,
         dimensions: (row.dimensions && typeof row.dimensions === 'object' && !Array.isArray(row.dimensions)) ? row.dimensions : null,
         specs: (row.specs && typeof row.specs === 'object' && !Array.isArray(row.specs)) ? row.specs : null,
+        specs_norm: (row.specs_norm && typeof row.specs_norm === 'object' && !Array.isArray(row.specs_norm)) ? row.specs_norm : null,
         timeline: Array.isArray(row.timeline) ? row.timeline : null,
         media: Array.isArray(row.media) ? row.media : null,
         files: (
@@ -1280,6 +1282,255 @@ async function getPriceHistoryDailyAndStats(client, selectedKeys, days) {
   };
 
   return { daily: dailyRes.rows, stats };
+}
+
+function numberFromNorm(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function boolFromNorm(v) {
+  if (typeof v === 'boolean') return v;
+  const s = String(v ?? '').trim().toLowerCase();
+  if (['true', 'yes', '1'].includes(s)) return true;
+  if (['false', 'no', '0'].includes(s)) return false;
+  return null;
+}
+
+function ipTier(v) {
+  const s = String(v || '').trim().toUpperCase();
+
+  if (s.includes('IPX7') || s.includes('IP57') || s.includes('IP67')) {
+    return { tier: 3, label: 'Strong water protection' };
+  }
+
+  if (s.includes('IPX5') || s.includes('IP55')) {
+    return { tier: 2, label: 'Above basic water resistance' };
+  }
+
+  if (s.includes('IPX4') || s.includes('IP54')) {
+    return { tier: 1, label: 'Basic splash resistance' };
+  }
+
+  return { tier: 0, label: s || null };
+}
+
+function percentileCopy(metric, percentile) {
+  const p = Number(percentile);
+  if (!Number.isFinite(p)) return null;
+
+  const top = Math.max(1, Math.round(100 - p));
+
+  if (metric === 'price') {
+    return `Priced lower than ${Math.round(p)}% of comparable products`;
+  }
+
+  return `Top ${top}% in this category`;
+}
+
+async function getValueSnapshot(client, meta, selectedKeys, anchorPriceCents) {
+  const category = String(meta?.category || '').trim();
+  const specsNorm = (
+    meta?.specs_norm &&
+    typeof meta.specs_norm === 'object' &&
+    !Array.isArray(meta.specs_norm)
+  ) ? meta.specs_norm : null;
+
+  if (!category || !specsNorm) return null;
+
+  const battery = numberFromNorm(specsNorm.battery_life_hours);
+  const caseBattery = numberFromNorm(specsNorm.battery_life_with_case_hours);
+  const anc = boolFromNorm(specsNorm.active_noise_cancelling);
+  const transparency = boolFromNorm(specsNorm.transparency_mode);
+  const wirelessCharging = boolFromNorm(specsNorm.wireless_charging_case);
+  const water = ipTier(specsNorm.water_resistance_rating);
+
+  const priceCents = Number(anchorPriceCents);
+  const hasPrice = Number.isFinite(priceCents) && priceCents > 0;
+
+  const r = await client.query(
+    `
+    WITH product_base AS (
+      SELECT DISTINCT ON (
+        COALESCE(NULLIF(upper(btrim(c.pci)), ''), public.norm_upc(c.upc), upper(btrim(c.model_number)))
+      )
+        c.pci,
+        c.upc,
+        c.model_number,
+        c.specs_norm
+      FROM public.catalog c
+      WHERE c.category IS NOT NULL
+        AND btrim(c.category) <> ''
+        AND lower(btrim(c.category)) = lower(btrim($1))
+        AND c.specs_norm IS NOT NULL
+        AND jsonb_typeof(c.specs_norm) = 'object'
+      ORDER BY
+        COALESCE(NULLIF(upper(btrim(c.pci)), ''), public.norm_upc(c.upc), upper(btrim(c.model_number))),
+        c.created_at DESC NULLS LAST,
+        c.id DESC
+    ),
+    product_prices AS (
+      SELECT
+        COALESCE(NULLIF(upper(btrim(l.pci)), ''), public.norm_upc(l.upc)) AS product_key,
+        MIN(
+          CASE
+            WHEN l.effective_price_cents IS NOT NULL
+             AND l.effective_price_cents > 0
+             AND (
+               l.current_price_cents IS NULL
+               OR l.current_price_cents <= 0
+               OR l.effective_price_cents <= l.current_price_cents
+             )
+            THEN l.effective_price_cents
+            WHEN l.current_price_cents IS NOT NULL AND l.current_price_cents > 0
+            THEN l.current_price_cents
+            ELSE NULL
+          END
+        ) AS best_price_cents
+      FROM public.listings l
+      WHERE coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
+      GROUP BY COALESCE(NULLIF(upper(btrim(l.pci)), ''), public.norm_upc(l.upc))
+    ),
+    joined AS (
+      SELECT
+        pb.*,
+        pp.best_price_cents,
+        NULLIF(pb.specs_norm->>'battery_life_hours', '')::numeric AS battery_life_hours,
+        NULLIF(pb.specs_norm->>'battery_life_with_case_hours', '')::numeric AS battery_life_with_case_hours,
+        CASE WHEN lower(pb.specs_norm->>'active_noise_cancelling') IN ('true','yes','1') THEN true ELSE false END AS active_noise_cancelling,
+        CASE WHEN lower(pb.specs_norm->>'transparency_mode') IN ('true','yes','1') THEN true ELSE false END AS transparency_mode,
+        CASE WHEN lower(pb.specs_norm->>'wireless_charging_case') IN ('true','yes','1') THEN true ELSE false END AS wireless_charging_case
+      FROM product_base pb
+      LEFT JOIN product_prices pp
+        ON pp.product_key = COALESCE(NULLIF(upper(btrim(pb.pci)), ''), public.norm_upc(pb.upc))
+    )
+    SELECT
+      COUNT(*)::int AS sample_size,
+
+      COUNT(battery_life_hours)::int AS battery_sample_size,
+      ROUND(
+        100.0 * COUNT(*) FILTER (WHERE battery_life_hours <= $2::numeric)
+        / NULLIF(COUNT(battery_life_hours), 0)
+      )::int AS battery_percentile,
+
+      COUNT(battery_life_with_case_hours)::int AS case_battery_sample_size,
+      ROUND(
+        100.0 * COUNT(*) FILTER (WHERE battery_life_with_case_hours <= $3::numeric)
+        / NULLIF(COUNT(battery_life_with_case_hours), 0)
+      )::int AS case_battery_percentile,
+
+      COUNT(best_price_cents)::int AS price_sample_size,
+      ROUND(
+        100.0 * COUNT(*) FILTER (WHERE best_price_cents >= $4::int)
+        / NULLIF(COUNT(best_price_cents), 0)
+      )::int AS price_percentile,
+
+      COUNT(*) FILTER (WHERE active_noise_cancelling = true)::int AS anc_yes_count,
+      COUNT(active_noise_cancelling)::int AS anc_sample_size,
+
+      COUNT(*) FILTER (WHERE transparency_mode = true)::int AS transparency_yes_count,
+      COUNT(transparency_mode)::int AS transparency_sample_size,
+
+      COUNT(*) FILTER (WHERE wireless_charging_case = true)::int AS wireless_charging_yes_count,
+      COUNT(wireless_charging_case)::int AS wireless_charging_sample_size
+    FROM joined
+    `,
+    [
+      category,
+      battery ?? null,
+      caseBattery ?? null,
+      hasPrice ? priceCents : null
+    ]
+  );
+
+  const row = r.rows[0] || {};
+  const items = [];
+
+  if (battery != null && Number(row.battery_sample_size) >= 5 && row.battery_percentile != null) {
+    items.push({
+      key: 'battery_life_hours',
+      label: 'Battery life',
+      value: `${battery} hours`,
+      score: Number(row.battery_percentile),
+      insight: percentileCopy('battery', row.battery_percentile),
+      sample_size: Number(row.battery_sample_size)
+    });
+  }
+
+  if (caseBattery != null && Number(row.case_battery_sample_size) >= 5 && row.case_battery_percentile != null) {
+    items.push({
+      key: 'battery_life_with_case_hours',
+      label: 'Battery with case',
+      value: `${caseBattery} hours`,
+      score: Number(row.case_battery_percentile),
+      insight: percentileCopy('battery', row.case_battery_percentile),
+      sample_size: Number(row.case_battery_sample_size)
+    });
+  }
+
+  if (hasPrice && Number(row.price_sample_size) >= 5 && row.price_percentile != null) {
+    items.push({
+      key: 'price',
+      label: 'Price',
+      value: `$${(priceCents / 100).toFixed(2)}`,
+      score: Number(row.price_percentile),
+      insight: percentileCopy('price', row.price_percentile),
+      sample_size: Number(row.price_sample_size)
+    });
+  }
+
+  if (anc != null && Number(row.anc_sample_size) >= 5) {
+    const pct = Math.round((Number(row.anc_yes_count || 0) / Number(row.anc_sample_size || 1)) * 100);
+    items.push({
+      key: 'active_noise_cancelling',
+      label: 'ANC',
+      value: anc ? 'Included' : 'Not included',
+      score: anc ? pct : 100 - pct,
+      insight: anc ? `Included on ${pct}% of comparable products` : `Missing compared with ${pct}% that include ANC`,
+      sample_size: Number(row.anc_sample_size)
+    });
+  }
+
+  if (transparency != null && Number(row.transparency_sample_size) >= 5) {
+    const pct = Math.round((Number(row.transparency_yes_count || 0) / Number(row.transparency_sample_size || 1)) * 100);
+    items.push({
+      key: 'transparency_mode',
+      label: 'Transparency',
+      value: transparency ? 'Included' : 'Not included',
+      score: transparency ? pct : 100 - pct,
+      insight: transparency ? `Included on ${pct}% of comparable products` : `Missing compared with ${pct}% that include it`,
+      sample_size: Number(row.transparency_sample_size)
+    });
+  }
+
+  if (wirelessCharging != null && Number(row.wireless_charging_sample_size) >= 5) {
+    const pct = Math.round((Number(row.wireless_charging_yes_count || 0) / Number(row.wireless_charging_sample_size || 1)) * 100);
+    items.push({
+      key: 'wireless_charging_case',
+      label: 'Wireless charging',
+      value: wirelessCharging ? 'Included' : 'Not included',
+      score: wirelessCharging ? pct : 100 - pct,
+      insight: wirelessCharging ? `Included on ${pct}% of comparable products` : `Missing compared with ${pct}% that include it`,
+      sample_size: Number(row.wireless_charging_sample_size)
+    });
+  }
+
+  if (water.label) {
+    items.push({
+      key: 'water_resistance_rating',
+      label: 'Water resistance',
+      value: String(specsNorm.water_resistance_rating || ''),
+      score: water.tier * 33,
+      insight: water.label,
+      sample_size: null
+    });
+  }
+
+  return {
+    category,
+    sample_size: Number(row.sample_size || 0),
+    items
+  };
 }
 
 async function getSeoForRawKey(client, rawKey) {
@@ -1668,6 +1919,7 @@ const anchorPriceCents = (offers || [])
 
 const similar = meta ? await getSimilarProducts(client, meta, anchorPriceCents, 48) : [];
 const lineup = meta ? await getLineupData(client, meta) : null;
+const valueSnapshot = meta ? await getValueSnapshot(client, meta, selectedKeys, anchorPriceCents) : null;
 
     return res.json({
       ok: true,
@@ -1687,6 +1939,7 @@ const lineup = meta ? await getLineupData(client, meta) : null;
         image_url: meta?.image_url || null,
         dimensions: (meta?.dimensions && typeof meta.dimensions === 'object' && !Array.isArray(meta.dimensions)) ? meta.dimensions : null,
         specs: (meta?.specs && typeof meta.specs === 'object' && !Array.isArray(meta.specs)) ? meta.specs : null,
+        specs_norm: (meta?.specs_norm && typeof meta.specs_norm === 'object' && !Array.isArray(meta.specs_norm)) ? meta.specs_norm : null,
         media: Array.isArray(meta?.media) ? meta.media : null,
         marketing_images: Array.isArray(meta?.marketing_images)
           ? meta.marketing_images.map(v => String(v || '').trim()).filter(Boolean)
@@ -1708,6 +1961,7 @@ const lineup = meta ? await getLineupData(client, meta) : null;
         selected_asin: null
       },
       recommendation,
+      value_snapshot: valueSnapshot,
       variants,
       families,
       similar,

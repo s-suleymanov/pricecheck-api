@@ -64,6 +64,7 @@
     activeMediaIndex: 0,
     mediaBound: false,
     recommendation: null,
+    valueSnapshot: null,
     community: {
       tips: [],
       questions: [],
@@ -266,6 +267,107 @@ function getCurrentSpecsObject(){
   }
 
   return {};
+}
+
+function getCurrentSpecsNormObject(){
+  const cur = getCurrentVariant() || null;
+
+  if (cur && cur.specs_norm && typeof cur.specs_norm === 'object' && !Array.isArray(cur.specs_norm)) {
+    return cur.specs_norm;
+  }
+
+  if (state.identity && state.identity.specs_norm && typeof state.identity.specs_norm === 'object' && !Array.isArray(state.identity.specs_norm)) {
+    return state.identity.specs_norm;
+  }
+
+  return {};
+}
+
+function prettyNormSpecLabel(key){
+  return String(key || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase())
+    .replace(/\bAnc\b/g, 'ANC')
+    .replace(/\bIp\b/g, 'IP');
+}
+
+function prettyNormSpecValue(value){
+  if (value === true) return 'Yes';
+  if (value === false) return 'No';
+  if (value == null) return '';
+
+  if (typeof value === 'number') return String(value);
+
+  return String(value).trim();
+}
+
+function valueScoreTone(score){
+  const n = Number(score);
+  if (!Number.isFinite(n)) return 'low';
+  if (n >= 80) return 'great';
+  if (n >= 60) return 'good';
+  if (n >= 35) return 'mixed';
+  return 'low';
+}
+
+function renderValueDonut(score){
+  const n = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
+
+  return `
+    <div class="pc-value-donut pc-value-donut--${valueScoreTone(n)}" style="--pc-value-score:${n}">
+      <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+        <circle class="pc-value-donut__track" cx="60" cy="60" r="48"></circle>
+        <circle
+          class="pc-value-donut__value"
+          cx="60"
+          cy="60"
+          r="48"
+          pathLength="100"
+          stroke-dasharray="${n} 100"
+        ></circle>
+      </svg>
+      <span>${n}</span>
+    </div>
+  `;
+}
+
+function renderValueSnapshot(){
+  const card = document.getElementById('valueSnapshotCard');
+  const host = document.getElementById('valueSnapshotContent');
+  if (!card || !host) return;
+
+  const snap = state.valueSnapshot || null;
+  const items = Array.isArray(snap?.items) ? snap.items : [];
+
+  if (!items.length) {
+    card.hidden = true;
+    host.innerHTML = '';
+    return;
+  }
+
+  card.hidden = false;
+
+  host.innerHTML = `
+    <div class="pc-value-list">
+      ${items.map((item) => `
+        <article class="pc-value-item">
+          ${renderValueDonut(item.score)}
+          <div class="pc-value-item__body">
+            <div class="pc-value-item__top">
+              <span class="pc-value-item__label">${escapeHtml(item.label || '')}</span>
+              <span class="pc-value-item__value">${escapeHtml(item.value || '')}</span>
+            </div>
+            <div class="pc-value-item__insight">${escapeHtml(item.insight || '')}</div>
+            ${
+              item.sample_size
+                ? `<div class="pc-value-item__sample">Based on ${escapeHtml(item.sample_size)} comparable products</div>`
+                : ''
+            }
+          </div>
+        </article>
+      `).join('')}
+    </div>
+  `;
 }
 
 function getCurrentCategoryForSpecPills(){
@@ -3962,6 +4064,7 @@ async function run(raw){
     state.recommendation = (data.recommendation && typeof data.recommendation === 'object')
     ? data.recommendation
     : null;
+    state.valueSnapshot = data.value_snapshot || null;
     state.selectedLineupFamily = String(data?.lineup?.current_family?.model_number || '').trim() || null;
     state.selectedFileIndex = -1;
     state.selectedTimelineIndex = -1;
@@ -4042,6 +4145,7 @@ async function run(raw){
     renderVariants();
     renderDimensions();
     renderSidebarSpecs();
+    renderValueSnapshot();
     renderContents();
     renderHeroMediaCarousel();
     renderFilesCard();
