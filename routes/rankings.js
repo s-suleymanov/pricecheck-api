@@ -1,5 +1,6 @@
 const express = require("express");
 const pool = require("../db");
+const rankingRules = require("../public/data/ranking_rules.json");
 
 const router = express.Router();
 
@@ -55,54 +56,75 @@ function numVal(v) {
 function scoreProduct(categorySlug, specsNorm) {
   const s = specsNorm && typeof specsNorm === "object" ? specsNorm : {};
   const category = String(categorySlug || "").toLowerCase();
+  const rules = rankingRules[category];
+
+  if (!rules || !Array.isArray(rules.fields)) {
+    return genericScore(s);
+  }
 
   let score = 0;
 
-  if (category.includes("earbud") || category.includes("headphone")) {
-    score += Math.min(100, numVal(s.battery_life_hours) * 8) * 0.22;
-    score += Math.min(100, numVal(s.battery_life_with_case_hours) * 2.5) * 0.18;
-    score += boolVal(s.active_noise_cancelling) ? 18 : 0;
-    score += boolVal(s.transparency_mode) ? 10 : 0;
-    score += boolVal(s.built_in_microphone) ? 8 : 0;
-    score += boolVal(s.true_wireless) ? 8 : 0;
-    score += boolVal(s.wireless_charging_case) ? 6 : 0;
-    score += waterScore(s.water_resistance_rating) * 0.10;
-    return clampScore(score);
+  for (const rule of rules.fields) {
+    score += scoreField(rule, s[rule.key]);
   }
 
-  if (category === "tv" || category === "tvs") {
-    score += Math.min(100, numVal(s.screen_size_inches) * 1.4) * 0.18;
-    score += resolutionScore(s.resolution) * 0.18;
-    score += Math.min(100, numVal(s.refresh_rate_hz)) * 0.16;
-    score += boolVal(s.hdr) ? 12 : 0;
-    score += boolVal(s.local_dimming) ? 12 : 0;
-    score += boolVal(s.hdmi_2_1) ? 10 : 0;
-    score += boolVal(s.smart_tv) ? 8 : 0;
-    return clampScore(score);
+  return clampScore(score);
+}
+
+function scoreField(rule, value) {
+  const type = String(rule.type || "").trim();
+  const weight = Number(rule.weight || 0);
+
+  if (type === "boolean") {
+    return boolVal(value) ? weight : 0;
   }
 
-  if (category.includes("speaker")) {
-    score += Math.min(100, numVal(s.battery_life_hours) * 6) * 0.22;
-    score += waterScore(s.water_resistance_rating) * 0.14;
-    score += boolVal(s.bluetooth) ? 12 : 0;
-    score += boolVal(s.wifi) ? 10 : 0;
-    score += boolVal(s.voice_assistant) ? 8 : 0;
-    score += boolVal(s.stereo_pairing) ? 8 : 0;
-    score += Math.min(100, numVal(s.output_watts) * 2) * 0.18;
-    return clampScore(score);
+  if (type === "number") {
+    const raw = Math.min(Number(rule.cap || 100), numVal(value) * Number(rule.multiplier || 1));
+    return raw * weight;
   }
 
-  if (category.includes("robot-vacuum") || category.includes("robot vacuum")) {
-    score += Math.min(100, numVal(s.suction_pa) / 50) * 0.22;
-    score += Math.min(100, numVal(s.battery_life_minutes) / 2) * 0.16;
-    score += boolVal(s.self_emptying) ? 16 : 0;
-    score += boolVal(s.mopping) ? 10 : 0;
-    score += boolVal(s.lidar_navigation) ? 14 : 0;
-    score += boolVal(s.app_control) ? 8 : 0;
-    return clampScore(score);
+  if (type === "water_rating") {
+    return waterScore(value) * weight;
   }
 
-  return genericScore(s);
+  if (type === "codec") {
+    return codecScore(value) * weight;
+  }
+
+  if (type === "earbud_driver") {
+    return earbudDriverScore(value) * weight;
+  }
+
+  return 0;
+}
+
+function codecScore(v) {
+  const s = Array.isArray(v)
+    ? v.join(" ").toLowerCase()
+    : String(v || "").toLowerCase();
+
+  let score = 0;
+
+  if (s.includes("sbc")) score += 5;
+  if (s.includes("aac")) score += 12;
+  if (s.includes("lc3")) score += 12;
+  if (s.includes("aptx adaptive")) score += 25;
+  else if (s.includes("aptx hd")) score += 22;
+  else if (s.includes("aptx")) score += 18;
+  if (s.includes("ldac")) score += 25;
+
+  return Math.min(30, score);
+}
+
+function earbudDriverScore(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  if (n < 6) return 45;
+  if (n < 8) return 65;
+  if (n < 10) return 80;
+  if (n <= 12) return 90;
+  return 85;
 }
 
 function genericScore(s) {
@@ -218,63 +240,109 @@ router.get(["/rankings/:category", "/rankings/:category/"], async (req, res, nex
     const canonicalUrl = `${SITE_ORIGIN}/rankings/${categorySlug}/`;
 
     const q = await pool.query(
-      `
-      WITH products AS (
-        SELECT DISTINCT ON (
-          COALESCE(NULLIF(upper(btrim(c.pci)), ''), public.norm_upc(c.upc), upper(btrim(c.model_number)))
+        `
+        WITH catalog_rows AS (
+            SELECT
+            c.id,
+            c.pci,
+            c.upc,
+            c.brand,
+            c.model_name,
+            c.model_number,
+            c.category,
+            c.image_url,
+            c.specs_norm,
+            c.created_at,
+            upper(btrim(c.model_number)) AS model_number_norm,
+            COALESCE(NULLIF(lower(btrim(c.version)), ''), '__default__') AS version_norm
+            FROM public.catalog c
+            WHERE c.category IS NOT NULL
+            AND btrim(c.category) <> ''
+            AND lower(btrim(c.category)) = ANY($1::text[])
+            AND c.model_number IS NOT NULL
+            AND btrim(c.model_number) <> ''
+            AND c.specs_norm IS NOT NULL
+            AND jsonb_typeof(c.specs_norm) = 'object'
+        ),
+        groups AS (
+            SELECT DISTINCT
+            model_number_norm,
+            version_norm
+            FROM catalog_rows
+        ),
+        group_prices AS (
+            SELECT
+            cr.model_number_norm,
+            cr.version_norm,
+            MIN(
+                CASE
+                WHEN l.effective_price_cents IS NOT NULL
+                AND l.effective_price_cents > 0
+                AND (
+                    l.current_price_cents IS NULL
+                    OR l.current_price_cents <= 0
+                    OR l.effective_price_cents <= l.current_price_cents
+                )
+                THEN l.effective_price_cents
+                WHEN l.current_price_cents IS NOT NULL AND l.current_price_cents > 0
+                THEN l.current_price_cents
+                ELSE NULL
+                END
+            ) AS best_price_cents
+            FROM catalog_rows cr
+            JOIN public.listings l
+            ON (
+                (
+                cr.pci IS NOT NULL
+                AND btrim(cr.pci) <> ''
+                AND l.pci IS NOT NULL
+                AND btrim(l.pci) <> ''
+                AND upper(btrim(l.pci)) = upper(btrim(cr.pci))
+                )
+                OR
+                (
+                cr.upc IS NOT NULL
+                AND btrim(cr.upc) <> ''
+                AND l.upc IS NOT NULL
+                AND btrim(l.upc) <> ''
+                AND public.norm_upc(l.upc) = public.norm_upc(cr.upc)
+                )
+            )
+            AND coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
+            GROUP BY cr.model_number_norm, cr.version_norm
+        ),
+        picked AS (
+            SELECT DISTINCT ON (cr.model_number_norm, cr.version_norm)
+            cr.pci,
+            cr.upc,
+            cr.brand,
+            cr.model_name,
+            cr.model_number,
+            cr.category,
+            cr.image_url,
+            cr.specs_norm,
+            cr.model_number_norm,
+            cr.version_norm,
+            gp.best_price_cents
+            FROM catalog_rows cr
+            JOIN group_prices gp
+            ON gp.model_number_norm = cr.model_number_norm
+            AND gp.version_norm = cr.version_norm
+            WHERE gp.best_price_cents IS NOT NULL
+            ORDER BY
+            cr.model_number_norm,
+            cr.version_norm,
+            CASE WHEN cr.image_url IS NULL OR btrim(cr.image_url) = '' THEN 1 ELSE 0 END,
+            CASE WHEN cr.pci IS NULL OR btrim(cr.pci) = '' THEN 1 ELSE 0 END,
+            cr.created_at DESC NULLS LAST,
+            cr.id DESC
         )
-          c.pci,
-          c.upc,
-          c.brand,
-          c.model_name,
-          c.model_number,
-          c.category,
-          c.image_url,
-          c.specs_norm
-        FROM public.catalog c
-        WHERE c.category IS NOT NULL
-          AND btrim(c.category) <> ''
-          AND lower(btrim(c.category)) = ANY($1::text[])
-          AND c.specs_norm IS NOT NULL
-          AND jsonb_typeof(c.specs_norm) = 'object'
-        ORDER BY
-          COALESCE(NULLIF(upper(btrim(c.pci)), ''), public.norm_upc(c.upc), upper(btrim(c.model_number))),
-          c.created_at DESC NULLS LAST,
-          c.id DESC
-      ),
-      prices AS (
-        SELECT
-          COALESCE(NULLIF(upper(btrim(l.pci)), ''), public.norm_upc(l.upc)) AS product_key,
-          MIN(
-            CASE
-              WHEN l.effective_price_cents IS NOT NULL
-               AND l.effective_price_cents > 0
-               AND (
-                 l.current_price_cents IS NULL
-                 OR l.current_price_cents <= 0
-                 OR l.effective_price_cents <= l.current_price_cents
-               )
-              THEN l.effective_price_cents
-              WHEN l.current_price_cents IS NOT NULL AND l.current_price_cents > 0
-              THEN l.current_price_cents
-              ELSE NULL
-            END
-          ) AS best_price_cents
-        FROM public.listings l
-        WHERE coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
-        GROUP BY COALESCE(NULLIF(upper(btrim(l.pci)), ''), public.norm_upc(l.upc))
-      )
-      SELECT
-        p.*,
-        pr.best_price_cents
-      FROM products p
-      LEFT JOIN prices pr
-        ON pr.product_key = COALESCE(NULLIF(upper(btrim(p.pci)), ''), public.norm_upc(p.upc))
-      WHERE pr.best_price_cents IS NOT NULL
-      LIMIT 300
-      `,
-      [terms.map(t => t.toLowerCase())]
-    );
+        SELECT *
+        FROM picked
+        LIMIT 300
+        `,
+        [terms.map(t => t.toLowerCase())]
+        );
 
     const ranked = q.rows
       .map((row) => {

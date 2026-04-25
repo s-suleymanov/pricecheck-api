@@ -1,0 +1,17 @@
+{
+  "earbuds": {
+    "label": "Earbuds",
+    "fields": [
+      { "key": "battery_life_hours", "type": "number", "multiplier": 8, "weight": 0.16, "cap": 100 },
+      { "key": "battery_life_with_case_hours", "type": "number", "multiplier": 2.5, "weight": 0.14, "cap": 100 },
+      { "key": "active_noise_cancelling", "type": "boolean", "weight": 14 },
+      { "key": "transparency_mode", "type": "boolean", "weight": 7 },
+      { "key": "multipoint_pairing", "type": "boolean", "weight": 7 },
+      { "key": "built_in_microphone", "type": "boolean", "weight": 5 },
+      { "key": "wireless_charging_case", "type": "boolean", "weight": 5 },
+      { "key": "water_resistance_rating", "type": "water_rating", "weight": 0.08 },
+      { "key": "codec_support", "type": "codec", "weight": 1 },
+      { "key": "driver_size_mm", "type": "earbud_driver", "weight": 0.06 }
+    ]
+  }
+}
