@@ -3439,11 +3439,6 @@ async function renderReviewsCard(productKey, runToken) {
   const overall = Number.isFinite(overallNum) ? overallNum : 0;
   renderTitleRatingBadge();
 
-  const verifiedPctNum = Number(aggregate.verified_pct);
-  const verifiedPct = Number.isFinite(verifiedPctNum)
-    ? Math.max(0, Math.min(100, Math.round(verifiedPctNum)))
-    : null;
-
   const hasCustomer = total > 0 && overall > 0;
   const hasExpert = expertReviews.length > 0;
   const hasCommunity = communityReviews.length > 0;
@@ -3560,10 +3555,6 @@ if (hasCustomer) {
     high: 'High Confidence'
   }[confidence];
 
-  const verifiedPill = verifiedPct != null
-    ? `<span class="pc-rv-pill">${verifiedPct}% Verified</span>`
-    : '';
-
   customerHtml = `
     <section class="pc-review-section">
       <div class="pc-rv-customer-layout">
@@ -3575,7 +3566,6 @@ if (hasCustomer) {
 
           <div class="pc-rv-summary-meta">
             <span class="pc-rv-confidence pc-rv-confidence--${confidence}">${confidenceLabel}</span>
-            ${verifiedPill}
           </div>
         </div>
 
