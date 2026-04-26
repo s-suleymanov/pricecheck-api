@@ -3559,7 +3559,6 @@ if (hasCustomer) {
     <section class="pc-review-section">
       <div class="pc-rv-customer-layout">
         <div class="pc-rv-summary-card">
-          <div class="pc-rv-summary-label">Average rating</div>
           <div class="pc-rv-summary-score">${overall.toFixed(1)}</div>
           <div class="pc-rv-summary-scale">out of 5</div>
           <div class="pc-rv-summary-note">Based on ${fmtCompact(total)} reviews</div>
@@ -3570,7 +3569,6 @@ if (hasCustomer) {
         </div>
 
         <div class="pc-rv-breakdown-card">
-          <div class="pc-rv-subhead">Rating breakdown</div>
           <div class="pc-rv-breakdown-list">
             ${breakdownRows}
           </div>
