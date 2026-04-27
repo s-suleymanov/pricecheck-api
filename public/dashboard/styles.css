@@ -2775,6 +2775,8 @@ button.pc-lineup-model{
 .media-choice{
   flex:0 0 auto;
   width:100px;
+  height: stretch;
+  align-items: center;
   border:1px solid var(--line);
   background:#fff;
   border-radius:16px;
