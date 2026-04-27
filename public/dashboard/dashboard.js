@@ -43,7 +43,6 @@
     offers:[],
     history:[],
     historyStats: null,
-    similar:[],
     lineup: null,
     selectedTimelineIndex: -1,
     rangeDays: 30,
@@ -111,9 +110,26 @@
     return Math.max(72, Math.round(height));
   }
 
-  function setDashboardOffsetVars() {
-    const top = getDashboardHeaderOffset() + 12;
-    document.documentElement.style.setProperty('--pc-dashboard-header-offset', `${top}px`);
+  function syncTopAlertsVisibility() {
+    const wrap = document.querySelector('.ph-top-alerts');
+    if (!wrap) return;
+
+    const hasVisibleAlert = Array.from(wrap.querySelectorAll('.pc-warn'))
+      .some((el) => el && !el.hidden);
+
+    wrap.hidden = !hasVisibleAlert;
+  }
+
+  function setDashboardLoading(isLoading){
+    document.body.classList.toggle('is-dashboard-loading', !!isLoading);
+  }
+
+  function revealDashboardAfterPaint(){
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setDashboardLoading(false);
+      });
+    });
   }
 
   function isActuallyVisible(el) {
@@ -136,9 +152,8 @@
     `;
   }
 
-  function getDashboardTocCards() {
+function getDashboardTocCards() {
   const wrap = document.querySelector('main.wrap');
-  const productHeader = document.getElementById('productHeader');
 
   const cards = [];
   const seen = new Set();
@@ -150,14 +165,14 @@
     cards.push(el);
   }
 
-  if (productHeader) {
-    pushCard(productHeader);
-  }
-
   if (wrap) {
     wrap.querySelectorAll('section.card[id]').forEach((el) => {
-      if (el.id === 'productHeader') return;
       if (el.closest('aside')) return;
+
+      // Product image is now inside the sticky left column.
+      // Do not let the far-left navigation target the inner sticky scroller.
+      if (el.closest('.dashboard-split__left')) return;
+
       pushCard(el);
     });
   }
@@ -171,15 +186,6 @@
     })
     .map((card) => {
       if (!isActuallyVisible(card)) return null;
-
-      if (card.id === 'productHeader') {
-        return {
-          id: 'productHeader',
-          label: 'Overview',
-          pathData: PRODUCT_HEADER_TOC_ICON_PATH,
-          card
-        };
-      }
 
       const h2 = card.querySelector('h2[data-icon-path]');
       if (!h2) return null;
@@ -331,45 +337,6 @@ function renderValueDonut(score){
   `;
 }
 
-function renderValueSnapshot(){
-  const card = document.getElementById('valueSnapshotCard');
-  const host = document.getElementById('valueSnapshotContent');
-  if (!card || !host) return;
-
-  const snap = state.valueSnapshot || null;
-  const items = Array.isArray(snap?.items) ? snap.items : [];
-
-  if (!items.length) {
-    card.hidden = true;
-    host.innerHTML = '';
-    return;
-  }
-
-  card.hidden = false;
-
-  host.innerHTML = `
-    <div class="pc-value-list">
-      ${items.map((item) => `
-        <article class="pc-value-item">
-          ${renderValueDonut(item.score)}
-          <div class="pc-value-item__body">
-            <div class="pc-value-item__top">
-              <span class="pc-value-item__label">${escapeHtml(item.label || '')}</span>
-              <span class="pc-value-item__value">${escapeHtml(item.value || '')}</span>
-            </div>
-            <div class="pc-value-item__insight">${escapeHtml(item.insight || '')}</div>
-            ${
-              item.sample_size
-                ? `<div class="pc-value-item__sample">Based on ${escapeHtml(item.sample_size)} comparable products</div>`
-                : ''
-            }
-          </div>
-        </article>
-      `).join('')}
-    </div>
-  `;
-}
-
 function getCurrentCategoryForSpecPills(){
   const cur = getCurrentVariant() || null;
 
@@ -493,17 +460,53 @@ function normalizeMediaInput(raw){
 function mediaSource(){
   const cur = getCurrentVariant() || null;
 
-  if (Array.isArray(cur?.media)) return cur.media;
-  if (cur?.media && typeof cur.media === 'object' && Array.isArray(cur.media.items)) {
-    return cur.media.items;
+  const imageUrl =
+    (cur?.image_url && String(cur.image_url).trim()) ||
+    (state.identity?.image_url && String(state.identity.image_url).trim()) ||
+    '';
+
+  let media = [];
+
+  if (Array.isArray(cur?.media) && cur.media.length) {
+    media = cur.media;
+  } else if (cur?.media && typeof cur.media === 'object' && Array.isArray(cur.media.items) && cur.media.items.length) {
+    media = cur.media.items;
+  } else if (Array.isArray(state.identity?.media) && state.identity.media.length) {
+    media = state.identity.media;
+  } else if (state.identity?.media && typeof state.identity.media === 'object' && Array.isArray(state.identity.media.items) && state.identity.media.items.length) {
+    media = state.identity.media.items;
   }
 
-  if (Array.isArray(state.identity?.media)) return state.identity.media;
-  if (state.identity?.media && typeof state.identity.media === 'object' && Array.isArray(state.identity.media.items)) {
-    return state.identity.media.items;
-  }
+  return [imageUrl, ...media]
+    .map((item) => {
+      if (typeof item === 'string') return item.trim();
 
-  return [];
+      if (item && typeof item === 'object') {
+        return {
+          ...item,
+          url: String(item.url || item.src || '').trim()
+        };
+      }
+
+      return '';
+    })
+    .filter((item) => {
+      if (typeof item === 'string') return !!item;
+      return !!String(item?.url || item?.src || '').trim();
+    })
+    .filter((item, index, arr) => {
+      const url = typeof item === 'string'
+        ? item
+        : String(item.url || item.src || '').trim();
+
+      return arr.findIndex((other) => {
+        const otherUrl = typeof other === 'string'
+          ? other
+          : String(other.url || other.src || '').trim();
+
+        return otherUrl === url;
+      }) === index;
+    });
 }
 
 function parseImageMediaItem(input){
@@ -557,14 +560,14 @@ function heroMediaMarkup(item){
   }
 
   return `
-    <div class="ph-media-asset ph-media-asset--image">
-      <img
-        src="${escapeHtml(item.imageUrl)}"
-        alt="${escapeHtml(item.title || 'Product media')}"
-        loading="lazy"
-        decoding="async"
-      >
-    </div>
+    <img
+      class="ph-media-stage__img"
+      src="${escapeHtml(item.imageUrl)}"
+      alt="${escapeHtml(item.title || 'Product media')}"
+      loading="lazy"
+      decoding="async"
+      onerror="this.style.visibility='hidden';"
+    >
   `;
 }
 
@@ -937,6 +940,16 @@ if (nextStepsSearchBtn && !nextStepsSearchBtn._pcBound) {
   });
 }
 
+const nextStepsCommentsBtn = document.getElementById('nextStepsCommentsBtn');
+
+if (nextStepsCommentsBtn && !nextStepsCommentsBtn._pcBound) {
+  nextStepsCommentsBtn._pcBound = true;
+  nextStepsCommentsBtn.addEventListener('click', () => {
+    openDashboardBottomPanel();
+    setDashboardBottomPanelTab('reviews');
+  });
+}
+
 function ensureDashboardBottomPanel() {
   if (_dashboardBottomPanelEl) return _dashboardBottomPanelEl;
 
@@ -1298,7 +1311,6 @@ function renderRecommendationCard() {
   const tone = recommendationTone(score);
   const verdict = String(rec.verdict || recommendationLabel(score)).trim();
   const summary = String(rec.summary || '').trim();
-  const warning = 'This AI-generated summary may be incomplete or inaccurate. Please verify important details before buying.';
 
   card.hidden = false;
   el.innerHTML = `
@@ -1320,10 +1332,6 @@ function renderRecommendationCard() {
 
           ${summary ? `<p class="pc-rec-summary">${escapeHtml(summary)}</p>` : ''}
         </div>
-      </div>
-
-      <div class="pc-rec-warning">
-        <strong>Note:</strong> ${escapeHtml(warning)}
       </div>
 
       ${renderRecommendationBreakdown(rec.score_breakdown)}
@@ -1390,8 +1398,6 @@ function buildSidebarRecommendationTocButton() {
 
 function buildDashboardToc() {
   if (!tocEl) return;
-
-  setDashboardOffsetVars();
 
   const items = getDashboardTocCards();
 
@@ -2012,9 +2018,8 @@ const filesCard = document.getElementById('files');
 const filesContent = document.getElementById('filesContent');
 const contentsCard = document.getElementById('contentsCard');
 const contentsContent = document.getElementById('contentsContent');
-const aboutCard = document.getElementById('aboutCard');
-const aboutParagraphs = document.getElementById('aboutParagraphs');
-const aboutPoints = document.getElementById('aboutPoints');
+const verdictCard = document.getElementById('verdictCard');
+const verdictContent = document.getElementById('verdictContent');
 const lineupCard = document.getElementById('lineup');
 
 const lineupContent = document.getElementById('lineupContent');
@@ -3979,7 +3984,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   initDashboardTocObservers();
   scheduleDashboardTocRefresh();
   wireTopbarCommentButton();
-  initSimilarSidebarObserver();
 
   window.addEventListener('pc:auth_changed', () => {
     loadBrandFollowState();
@@ -3987,7 +3991,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const key = currentKeyFromUrl() || "";
   if (!key.trim()) {
-    document.getElementById("pTitle").textContent = "Search a product to view the dashboard.";
+    showMessage("Search a product to view the dashboard.");
     return;
   }
   run(key);
@@ -4018,6 +4022,7 @@ async function run(raw){
   }
 
   state.lastKey = key;
+  setDashboardLoading(true);
 
   try{
     const res = await fetch(`/api/compare/${encodeURIComponent(key)}`, {
@@ -4045,7 +4050,6 @@ async function run(raw){
     state.offers = Array.isArray(data.offers) ? data.offers : [];
     state.history = (data.history && Array.isArray(data.history.daily)) ? data.history.daily : [];
     state.historyStats = (data.history && data.history.stats) ? data.history.stats : null;
-    state.similar = Array.isArray(data.similar) ? data.similar : [];
     state.lineup = (data.lineup && typeof data.lineup === 'object') ? data.lineup : null;
     state.recommendation = (data.recommendation && typeof data.recommendation === 'object')
     ? data.recommendation
@@ -4130,17 +4134,15 @@ async function run(raw){
     drawChart();
     renderCouponsCard();
     renderTopSpecPills();
-    renderAboutCard();
+    renderVerdictCard();
     renderTimeline();
     renderVariants();
     renderDimensions();
     renderSidebarSpecs();
-    renderValueSnapshot();
     renderContents();
     renderHeroMediaCarousel();
     renderFilesCard();
     renderLineup();
-    renderSimilarProducts();
 
     if (isStaleRun(runToken)) return;
     await renderOffers(true, runToken);
@@ -4175,7 +4177,7 @@ async function run(raw){
 
     syncDashboardShortlistButton();
     scheduleDashboardTocRefresh();
-    scheduleSimilarProductsRefresh();
+    revealDashboardAfterPaint();
 
   } catch(err){
     if (isStaleRun(runToken)) return;
@@ -4187,12 +4189,10 @@ async function run(raw){
  function showMessage(msg){
   $('#pTitle').textContent = msg;
 
-  const img = $('#pImg');
-  if (img) {
-    img.removeAttribute('src');
-    img.style.display = 'none';
-    img.onerror = null;
-  }
+  state.mediaItems = [];
+  state.activeMediaIndex = 0;
+  renderHeroMediaStage();
+  renderMediaStrip();
 
   const pIdsEl = $('#pIds');
   if (pIdsEl) {
@@ -4210,7 +4210,6 @@ async function run(raw){
   state.offers = [];
   state.history = [];
   state.historyStats = null;
-  state.similar = [];
   state.lineup = null;
   state.selectedVariantKey = null;
   state.selectedVersion = null;
@@ -4220,9 +4219,8 @@ async function run(raw){
   state.selectedTimelineIndex = -1;
   state.selectedLineupFamily = null;
 
-  if (aboutCard) aboutCard.hidden = true;
-  if (aboutParagraphs) aboutParagraphs.innerHTML = '';
-  if (aboutPoints) aboutPoints.innerHTML = '';
+  if (verdictCard) verdictCard.hidden = true;
+  if (verdictContent) verdictContent.innerHTML = '';
 
   if (brandRow) brandRow.hidden = true;
   if (brandLine) brandLine.textContent = '';
@@ -4245,6 +4243,8 @@ async function run(raw){
 
   const limitedEl = document.getElementById('ps-limited');
   if (limitedEl) limitedEl.hidden = true;
+
+  syncTopAlertsVisibility();
 
   if (contentsCard) contentsCard.hidden = true;
   if (contentsContent) contentsContent.innerHTML = '';
@@ -4315,12 +4315,6 @@ if (mediaInner) {
   $('#chartNote').className = 'muted';
   $('#chartNote').textContent = 'No history yet';
 
-  state.similar = [];
-  const similarPanel = document.getElementById('panelSimilar');
-  if (similarPanel) {
-    similarPanel.innerHTML = '<div class="sidebar-empty">No similar products found.</div>';
-  }
-
   if (dimCard) dimCard.hidden = true;
   if (dimToggle) dimToggle.innerHTML = '';
   if (dimContent) dimContent.innerHTML = '';
@@ -4368,6 +4362,7 @@ if (mediaInner) {
 
   syncDashboardShortlistButton();
   scheduleDashboardTocRefresh();
+  revealDashboardAfterPaint();
 }
 
   function escapeHtml(s){
@@ -4502,7 +4497,7 @@ if (mediaInner) {
     const DEFAULT_IMG = '/logo/default.webp';
 
     {
-      const warnEl = document.querySelector('#ps-warn'); // or whatever your dashboard warning element id is
+      const warnEl = document.querySelector('#ps-warn');
       if (warnEl) warnEl.hidden = !(id.dropship_warning === true);
     }
     {
@@ -4525,6 +4520,8 @@ if (mediaInner) {
         }
       }
     }
+
+    syncTopAlertsVisibility();
 
     const cur = getCurrentVariant() || null;
     const brand = String(cur?.brand || id.brand || '').trim();
@@ -4551,23 +4548,6 @@ if (mediaInner) {
     if (pIdsEl) {
       pIdsEl.innerHTML = '';
       pIdsEl.hidden = true;
-    }
-
-    const img = $('#pImg');
-    const src =
-      (cur && cur.image_url && String(cur.image_url).trim()) ||
-      (id && id.image_url && String(id.image_url).trim()) ||
-      DEFAULT_IMG;
-
-    if (src) {
-      img.src = src;
-      img.loading = 'lazy';
-      img.decoding = 'async';
-      img.style.display = 'block';
-      img.onerror = () => { img.style.display = 'none'; };
-    } else {
-      img.removeAttribute('src');
-      img.style.display = 'none';
     }
 
     const brandRow = document.getElementById('pBrandRow');
@@ -6333,7 +6313,6 @@ async function renderOffers(sortByPrice, runToken){
     <div class="offer-grid-head" role="presentation">
       <div class="offer-grid-head__cell offer-grid-head__cell--store">Store</div>
       <div class="offer-grid-head__cell">Price</div>
-      <div class="offer-grid-head__cell">Delivery</div>
       <div class="offer-grid-head__cell">Rating</div>
     </div>
   `;
@@ -6343,7 +6322,6 @@ async function renderOffers(sortByPrice, runToken){
     const storeDisplay = titleCase(seller?.name || o.store || '');
     const hasPrice = o._price != null;
     const priceText = hasPrice ? fmt.format(o._price) : '';
-    const deliveryText = String(deliveryTextForOffer(o, seller) || '').trim();
     const shippingText = hasPrice ? formatShippingLine(o, seller) : '';
     const storeReturnsPillHtml = returnsPillHtml(o, seller);
     const storeRatingPill = sellerRatingPillHtml(seller);
@@ -6394,10 +6372,6 @@ async function renderOffers(sortByPrice, runToken){
         }
       </div>
 
-      <div class="offer-delivery-col" data-label="Delivery">
-        <div class="offer-cell-main">${deliveryText ? escapeHtml(deliveryText) : ''}</div>
-      </div>
-
       <div class="offer-rating-col" data-label="Rating">
         ${ratingMetaHtml || ''}
       </div>
@@ -6410,150 +6384,6 @@ async function renderOffers(sortByPrice, runToken){
   });
 
   note.textContent = 'PriceCheck does not use affiliate or sponsored links.';
-}
-
-let _similarResizeObserver = null;
-let _similarRefreshRaf = 0;
-
-function scheduleSimilarProductsRefresh() {
-  if (_similarRefreshRaf) cancelAnimationFrame(_similarRefreshRaf);
-
-  _similarRefreshRaf = requestAnimationFrame(() => {
-    _similarRefreshRaf = 0;
-    renderSimilarProducts();
-  });
-}
-
-function initSimilarSidebarObserver() {
-  const main = document.querySelector('.main-content');
-  if (!main || !('ResizeObserver' in window)) return;
-
-  if (_similarResizeObserver) {
-    _similarResizeObserver.disconnect();
-  }
-
-  _similarResizeObserver = new ResizeObserver(() => {
-    scheduleSimilarProductsRefresh();
-  });
-
-  _similarResizeObserver.observe(main);
-
-  window.addEventListener('resize', scheduleSimilarProductsRefresh, { passive: true });
-}
-
-function getSidebarAvailableHeight() {
-  const main = document.querySelector('.main-content');
-  const panel = document.getElementById('panelSimilar');
-
-  if (!main || !panel) return 0;
-
-  const mainRect = main.getBoundingClientRect();
-  const panelRect = panel.getBoundingClientRect();
-
-  const available = Math.round(mainRect.bottom - panelRect.top);
-
-  // small trim so the bottoms visually finish on the same line
-  return Math.max(0, available - 4);
-}
-
-function similarProductCardHtml(p) {
-  const key = String(p?.dashboard_key || '').trim();
-  const title = String(p?.model_name || 'Product').trim() || 'Product';
-  const href = key ? prettyDashboardUrl(key, title).pathname : '/dashboard/';
-  const brand = titleCase(p?.brand || '');
-  const price = (typeof p?.best_price_cents === 'number' && p.best_price_cents > 0)
-    ? fmt.format(p.best_price_cents / 100)
-    : 'NA';
-  const img = String(p?.image_url || '').trim() || '/logo/default.webp';
-
-  return `
-    <a class="pc-similar-item" href="${escapeHtml(href)}">
-      <div class="pc-similar-thumb-wrap">
-        <img
-          class="pc-similar-thumb"
-          src="${escapeHtml(img)}"
-          alt=""
-          loading="lazy"
-          decoding="async"
-        >
-        <div class="pc-similar-price">&#9733;</div>
-      </div>
-
-      <div class="pc-similar-main">
-        <div class="pc-similar-brand muted">${escapeHtml(brand)}</div>
-        <div class="pc-similar-title">${escapeHtml(title)}</div>
-        <div class="pc-similar-price-row muted">${escapeHtml(price)}</div>
-      </div>
-    </a>
-  `;
-}
-
-function fitSimilarProductsToSidebar(items) {
-  const panel = document.getElementById('panelSimilar');
-  if (!panel) return;
-
-  const availableHeight = getSidebarAvailableHeight();
-
-  if (!availableHeight) {
-    panel.innerHTML = `<div class="sidebar-empty">No similar products found.</div>`;
-    panel.style.height = '';
-    panel.style.maxHeight = '';
-    return;
-  }
-
-  panel.style.boxSizing = 'border-box';
-  panel.style.height = `${availableHeight}px`;
-  panel.style.maxHeight = `${availableHeight}px`;
-  panel.innerHTML = `<div class="pc-similar-list"></div>`;
-
-  const list = panel.querySelector('.pc-similar-list');
-  if (!list) return;
-
-  let rendered = 0;
-
-  for (const item of items) {
-    list.insertAdjacentHTML('beforeend', similarProductCardHtml(item));
-
-    if (panel.scrollHeight > availableHeight) {
-      const last = list.lastElementChild;
-      if (last) last.remove();
-      break;
-    }
-
-    rendered += 1;
-  }
-
-  if (!rendered && items.length) {
-    list.innerHTML = similarProductCardHtml(items[0]);
-  }
-}
-
-function renderSimilarProducts(){
-  const panel = document.getElementById('panelSimilar');
-  const fallback = document.getElementById('similarContent');
-  const host = panel || fallback;
-  if (!host) return;
-
-  const items = Array.isArray(state.similar) ? state.similar : [];
-
-  if (!items.length) {
-    if (panel) {
-      panel.innerHTML = `<div class="sidebar-empty">No similar products found.</div>`;
-    } else {
-      host.innerHTML = 'No similar products found.';
-    }
-    return;
-  }
-
-  if (panel) {
-    fitSimilarProductsToSidebar(items);
-  } else {
-    host.innerHTML = `
-      <div class="pc-similar-list">
-        ${items.map(similarProductCardHtml).join('')}
-      </div>
-    `;
-  }
 }
 
   function renderVariants(){
@@ -6729,20 +6559,173 @@ function renderContents(){
   `;
 }
 
-function normalizeAboutInput(raw){
+function normalizeVerdictList(raw){
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map(v => String(v || '').trim())
+    .filter(Boolean);
+}
+
+function normalizeVerdictAlternatives(raw){
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+
+      const label = String(item.label || item.type || 'Alternative').trim();
+      const title = String(item.title || item.name || '').trim();
+      const reason = String(item.reason || item.note || '').trim();
+      const key = String(item.key || item.dashboard_key || '').trim();
+      const url = safeHttpHref(item.url || '');
+
+      if (!title && !reason) return null;
+
+      return { label, title, reason, key, url };
+    })
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
+function verdictAlternativeHref(item){
+  const url = safeHttpHref(item?.url || '');
+  if (url) return url;
+
+  const key = String(item?.key || '').trim();
+  const title = String(item?.title || 'product').trim() || 'product';
+
+  if (!key || !key.includes(':')) return '';
+
+  try {
+    return prettyDashboardUrl(key, title).href;
+  } catch {
+    return '';
+  }
+}
+
+function normalizeVerdictInput(raw){
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
 
-  const paragraphs = Array.isArray(raw.paragraphs)
-    ? raw.paragraphs.map(v => String(v || '').trim()).filter(Boolean)
-    : [];
+  const summary = String(
+    raw.summary ||
+    raw.verdict ||
+    raw.text ||
+    ''
+  ).trim();
 
-  const bullets = Array.isArray(raw.bullets)
-    ? raw.bullets.map(v => String(v || '').trim()).filter(Boolean)
-    : [];
+  const note = String(
+    raw.note ||
+    raw.reason ||
+    raw.subtext ||
+    ''
+  ).trim();
 
-  if (!paragraphs.length && !bullets.length) return null;
+  const buyIf = normalizeVerdictList(raw.buy_if || raw.buyIf || raw.buy);
+  const skipIf = normalizeVerdictList(raw.skip_if || raw.skipIf || raw.skip);
+  const alternatives = normalizeVerdictAlternatives(raw.alternatives || raw.better_value || raw.betterValue);
 
-  return { paragraphs, bullets };
+  if (!summary && !note && !buyIf.length && !skipIf.length && !alternatives.length) return null;
+
+  return {
+    summary,
+    note,
+    buyIf,
+    skipIf,
+    alternatives
+  };
+}
+
+function verdictSource(){
+  const cur = getCurrentVariant() || null;
+
+  const fromVariant = normalizeVerdictInput(cur?.verdict);
+  if (fromVariant) return fromVariant;
+
+  const fromIdentity = normalizeVerdictInput(state.identity?.verdict);
+  if (fromIdentity) return fromIdentity;
+
+  return null;
+}
+
+function verdictListHtml(title, items){
+  if (!Array.isArray(items) || !items.length) return '';
+
+  return `
+    <section class="pc-verdict-list-card">
+      <div class="pc-verdict-list-card__title">${escapeHtml(title)}</div>
+      <ul class="pc-verdict-list">
+        ${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+      </ul>
+    </section>
+  `;
+}
+
+function renderVerdictCard(){
+  if (!verdictCard || !verdictContent) return;
+
+  const verdict = verdictSource();
+
+  if (!verdict) {
+    verdictCard.hidden = true;
+    verdictContent.innerHTML = '';
+    return;
+  }
+
+  const hasBuySkip = verdict.buyIf.length || verdict.skipIf.length;
+  const hasAlternatives = verdict.alternatives.length;
+
+  verdictCard.hidden = false;
+
+  verdictContent.innerHTML = `
+    <div class="pc-verdict-stack">
+      ${
+        verdict.summary || verdict.note
+          ? `
+            <section class="pc-verdict-hero">
+              ${verdict.summary ? `<p class="pc-verdict-summary">${escapeHtml(verdict.summary)}</p>` : ''}
+              ${verdict.note ? `<p class="pc-verdict-note">${escapeHtml(verdict.note)}</p>` : ''}
+            </section>
+          `
+          : ''
+      }
+
+      ${
+        hasBuySkip
+          ? `
+            <div class="pc-verdict-buy-skip">
+              ${verdictListHtml('Buy if', verdict.buyIf)}
+              ${verdictListHtml('Skip if', verdict.skipIf)}
+            </div>
+          `
+          : ''
+      }
+
+      ${
+        hasAlternatives
+          ? `
+            <section class="pc-verdict-alternatives">
+
+              <div class="pc-verdict-alt-list">
+                ${verdict.alternatives.map((item) => {
+                  const href = verdictAlternativeHref(item);
+                  const inner = `
+                    <span class="pc-verdict-alt__label">${escapeHtml(item.label || 'Alternative')}</span>
+                    <span class="pc-verdict-alt__title">${escapeHtml(item.title || 'Alternative')}</span>
+                    ${item.reason ? `<span class="pc-verdict-alt__reason">${escapeHtml(item.reason)}</span>` : ''}
+                  `;
+
+                  return href
+                    ? `<a class="pc-verdict-alt" href="${escapeHtml(href)}">${inner}</a>`
+                    : `<article class="pc-verdict-alt">${inner}</article>`;
+                }).join('')}
+              </div>
+            </section>
+          `
+          : ''
+      }
+    </div>
+  `;
 }
 
 function aboutSource(){
@@ -6801,10 +6784,22 @@ function renderSidebarSpecs(){
         ? state.identity.specs
         : null;
 
-  let rows = flattenSpecsRows(specs)
-    .filter(([label, value]) => String(label || '').trim() && String(value || '').trim());
+  const specRows = flattenSpecsRows(specs)
+    .filter(([label, value]) => {
+      return String(label || '').trim() && String(value || '').trim();
+    });
 
-  if (!rows.length) {
+  const rankingRows = Array.isArray(state.valueSnapshot?.items)
+    ? state.valueSnapshot.items.filter((item) => {
+        const label = String(item?.label || '').trim();
+        const value = String(item?.value || '').trim();
+        const score = Number(item?.score);
+
+        return label && value && Number.isFinite(score);
+      })
+    : [];
+
+  if (!rankingRows.length && !specRows.length) {
     card.hidden = true;
     host.innerHTML = '';
     return;
@@ -6812,38 +6807,48 @@ function renderSidebarSpecs(){
 
   card.hidden = false;
 
-  const priority = [
-    'motor',
-    'range',
-    'battery',
-    'top speed',
-    'wheel size',
-    'water resistance'
-  ];
-
-  rows.sort((a, b) => {
-    const aKey = String(a[0] || '').trim().toLowerCase();
-    const bKey = String(b[0] || '').trim().toLowerCase();
-
-    const aIdx = priority.indexOf(aKey);
-    const bIdx = priority.indexOf(bKey);
-
-    const aRank = aIdx === -1 ? 999 : aIdx;
-    const bRank = bIdx === -1 ? 999 : bIdx;
-
-    if (aRank !== bRank) return aRank - bRank;
-    return aKey.localeCompare(bKey);
-  });
-
   host.innerHTML = `
-    <div class="pc-specs-grid">
-      ${rows.map(([label, value]) => `
-        <div class="pc-spec-tile">
-          <div class="pc-spec-tile__label">${escapeHtml(label)}</div>
-          <div class="pc-spec-tile__value">${escapeHtml(value)}</div>
-        </div>
-      `).join('')}
-    </div>
+    ${
+      rankingRows.length
+        ? `
+          <div class="pc-value-list">
+            ${rankingRows.map((item) => `
+              <article class="pc-value-item">
+                ${renderValueDonut(item.score)}
+
+                <div class="pc-value-item__body">
+                  <div class="pc-value-item__top">
+                    <span class="pc-value-item__label">${escapeHtml(item.label || '')}</span>
+                    <span class="pc-value-item__value">${escapeHtml(item.value || '')}</span>
+                  </div>
+
+                  ${
+                    item.insight
+                      ? `<div class="pc-value-item__insight">${escapeHtml(item.insight)}</div>`
+                      : ''
+                  }
+                </div>
+              </article>
+            `).join('')}
+          </div>
+        `
+        : ''
+    }
+
+    ${
+      specRows.length
+        ? `
+          <div class="pc-specs-grid">
+            ${specRows.map(([label, value]) => `
+              <div class="pc-spec-tile">
+                <div class="pc-spec-tile__label">${escapeHtml(label)}</div>
+                <div class="pc-spec-tile__value">${escapeHtml(value)}</div>
+              </div>
+            `).join('')}
+          </div>
+        `
+        : ''
+    }
   `;
 }
 
