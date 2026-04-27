@@ -356,7 +356,7 @@
     "policies": {
       "return_period": "14 days",
       "restocking_fee": "None",
-      "free_shipping_threshold": "No minimum",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes"
     },
     "contact": {
@@ -456,7 +456,7 @@
     "policies": {
       "return_period": "14 days",
       "restocking_fee": "None",
-      "free_shipping_threshold": "No minimum",
+      "free_shipping_threshold": "Free Shipping",
       "price_match": "Yes"
     },
     "contact": {
@@ -2282,7 +2282,7 @@
   "policies": {
     "return_period": "30 days",
     "restocking_fee": "Unknown",
-    "free_shipping_threshold": "No minimum (Free Standard Shipping)",
+    "free_shipping_threshold": "Free Shipping",
     "price_match": "Yes"
   },
   "contact": {
