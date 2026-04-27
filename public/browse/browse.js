@@ -115,6 +115,7 @@ function syncShortlistButtons(root = document) {
           e.stopPropagation();
           if (state.activeTab !== "specs") {
             state.activeTab = "specs";
+            renderBrowseRail();
             render().catch(() => {});
           }
           return;
@@ -544,6 +545,7 @@ rail.innerHTML = `
     if (key === "stores" || key === "specs") {
       if (state.activeTab === key) return;
       state.activeTab = key;
+      renderBrowseRail();
       render().catch(() => {});
       return;
     }
