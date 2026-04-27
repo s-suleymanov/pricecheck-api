@@ -1671,7 +1671,7 @@ aside .note{
   html {
     overflow-x: hidden;
   }
-  .wrap{padding: 0 0 24px 0;}
+
   .pc-warn{
     margin-left: 18px;
     margin-right: 18px;
@@ -2904,6 +2904,14 @@ button.pc-lineup-model{
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
     padding-bottom: 4px;
+  }
+
+  .dashboard-split-wrap{
+    margin-top: 60px !important;
+  }
+
+  #variantColorSection{
+    margin-top: 0 !important;
   }
 
   #variant2Pills .media-choice,
