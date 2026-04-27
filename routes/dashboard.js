@@ -2668,4 +2668,82 @@ router.post('/api/community/:key/post', async (req, res) => {
   }
 });
 
+router.post('/api/page-feedback', async (req, res) => {
+  try {
+    const body = req.body || {};
+
+    const visitorId = String(body.visitor_id || '').trim().slice(0, 120);
+    const feedbackKey = String(body.feedback_key || '').trim().slice(0, 500);
+
+    const productKey = String(body.product_key || '').trim() || null;
+    const pagePath = String(body.page_path || '').trim();
+    const pageUrl = String(body.page_url || '').trim() || null;
+
+    const decisionRaw = String(body.decision || '').trim();
+    const missingRaw = String(body.missing_reason || '').trim();
+
+    const allowedDecisions = new Set(['yes', 'not_sure', 'no']);
+    const allowedReasons = new Set(['wrong_price', 'wrong_specs', 'better_option_missing']);
+
+    const decision = allowedDecisions.has(decisionRaw) ? decisionRaw : null;
+    const missingReason = allowedReasons.has(missingRaw) ? missingRaw : null;
+
+    if (!pagePath) {
+      return res.status(400).json({ ok: false, error: 'Missing page_path' });
+    }
+
+    if (!visitorId || !feedbackKey) {
+      return res.status(400).json({ ok: false, error: 'Missing feedback identity' });
+    }
+
+    if (!decision && !missingReason) {
+      return res.status(400).json({ ok: false, error: 'Missing feedback value' });
+    }
+
+    const userAgent = String(req.get('user-agent') || '').slice(0, 500) || null;
+
+    const result = await pool.query(
+      `
+        insert into public.page_feedback (
+          visitor_id,
+          feedback_key,
+          product_key,
+          page_path,
+          page_url,
+          decision,
+          missing_reason,
+          user_agent
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8)
+        on conflict (feedback_key)
+        do update set
+          decision = coalesce(public.page_feedback.decision, excluded.decision),
+          missing_reason = coalesce(public.page_feedback.missing_reason, excluded.missing_reason),
+          product_key = coalesce(public.page_feedback.product_key, excluded.product_key),
+          page_url = coalesce(public.page_feedback.page_url, excluded.page_url),
+          updated_at = now()
+        returning id, created_at, updated_at, decision, missing_reason
+      `,
+      [
+        visitorId,
+        feedbackKey,
+        productKey,
+        pagePath,
+        pageUrl,
+        decision,
+        missingReason,
+        userAgent
+      ]
+    );
+
+    return res.json({
+      ok: true,
+      feedback: result.rows[0]
+    });
+  } catch (err) {
+    console.error('POST /api/page-feedback failed', err);
+    return res.status(500).json({ ok: false, error: 'Failed to save feedback' });
+  }
+});
+
 module.exports = router;

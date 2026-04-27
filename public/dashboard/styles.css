@@ -309,39 +309,111 @@
 }
 
 .pc-next-steps-card{
-  padding: 40px 24px;
+  padding: 36px 24px;
 }
 
-.pc-next-steps{
-  max-width: 640px;
+.pc-page-feedback{
+  max-width: 680px;
   margin: 0 auto;
   text-align: center;
 }
 
-.pc-next-steps h2{
-  margin: 10px 0 29px;
+.pc-page-feedback__eyebrow{
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #64748b;
 }
 
-.pc-next-steps__actions{
-  margin-top: 22px;
+.pc-page-feedback h2{
+  margin: 0 0 22px;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+
+.pc-page-feedback__choices,
+.pc-page-feedback__reasons{
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.pc-next-steps__sub{
-  margin-top: 14px;
-}
-
-.pc-next-steps__sub a{
-  color: var(--muted);
-  text-decoration: none;
+.pc-page-feedback__choice,
+.pc-page-feedback__reason{
+  min-height: 44px;
+  border: 1px solid #dbe2ea;
+  border-radius: 999px;
+  background: #fff;
+  color: #111827;
+  padding: 0 18px;
+  font: inherit;
   font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
 }
 
-.pc-next-steps__sub a:hover{
-  text-decoration: underline;
+.pc-page-feedback__choice:hover,
+.pc-page-feedback__reason:hover{
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.pc-page-feedback__choice.is-selected,
+.pc-page-feedback__reason.is-selected{
+  border-color: #111827;
+  background: #111827;
+  color: #fff;
+}
+
+.pc-page-feedback__followup{
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid #eef2f7;
+}
+
+.pc-page-feedback__thanks{
+  margin: 0 0 14px;
+  color: #475569;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.pc-page-feedback__status{
+  margin: 16px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.pc-page-feedback__status.is-error{
+  color: #b91c1c;
+}
+
+@media (max-width: 560px){
+  .pc-next-steps-card{
+    padding: 28px 16px;
+  }
+
+  .pc-page-feedback__choice,
+  .pc-page-feedback__reason{
+    width: 100%;
+  }
+}
+
+.pc-page-feedback__choice:disabled,
+.pc-page-feedback__reason:disabled{
+  cursor: default;
+}
+
+.pc-page-feedback__choice:disabled:not(.is-selected),
+.pc-page-feedback__reason:disabled:not(.is-selected){
+  opacity: .45;
 }
 
 @media (max-width:1100px){

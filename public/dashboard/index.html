@@ -582,17 +582,28 @@
     </section>
 
     <section class="card pc-next-steps-card" id="nextStepsCard">
-      <div class="pc-next-steps">
-        <h2>Still deciding?</h2>
+      <div class="pc-page-feedback" id="pageFeedbackCard">
+        <p class="pc-page-feedback__eyebrow">Feedback</p>
 
-        <div class="pc-next-steps__actions">
-          <button type="button" class="btn btn--solid" id="nextStepsSearchBtn">Try another search</button>
-          <button type="button" class="btn btn--outline" id="nextStepsCommentsBtn">View comments</button>
+        <h2>Did this page help you decide?</h2>
+
+        <div class="pc-page-feedback__choices" aria-label="Did this page help you decide?">
+          <button type="button" class="pc-page-feedback__choice" data-feedback-decision="yes">Yes</button>
+          <button type="button" class="pc-page-feedback__choice" data-feedback-decision="not_sure">Not sure</button>
+          <button type="button" class="pc-page-feedback__choice" data-feedback-decision="no">No</button>
         </div>
 
-        <div class="pc-next-steps__sub">
-          <a href="/support/">Send feedback</a>
+        <div class="pc-page-feedback__followup" id="pageFeedbackFollowup" hidden>
+          <p class="pc-page-feedback__thanks">Thanks. What was missing?</p>
+
+          <div class="pc-page-feedback__reasons" aria-label="What was missing?">
+            <button type="button" class="pc-page-feedback__reason" data-feedback-reason="wrong_price">Wrong price</button>
+            <button type="button" class="pc-page-feedback__reason" data-feedback-reason="wrong_specs">Wrong specs</button>
+            <button type="button" class="pc-page-feedback__reason" data-feedback-reason="better_option_missing">Better option missing</button>
+          </div>
         </div>
+
+        <p class="pc-page-feedback__status" id="pageFeedbackStatus" hidden aria-live="polite"></p>
       </div>
     </section>
   </main>

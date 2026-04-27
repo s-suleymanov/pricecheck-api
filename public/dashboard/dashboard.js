@@ -927,26 +927,210 @@ function clampDashboardBottomPanelHeight(value) {
   return Math.max(42, Math.min(max, Math.round(Number(value) || 320)));
 }
 
-const nextStepsSearchBtn = document.getElementById('nextStepsSearchBtn');
+const pageFeedbackCard = document.getElementById('pageFeedbackCard');
 
-if (nextStepsSearchBtn && !nextStepsSearchBtn._pcBound) {
-  nextStepsSearchBtn._pcBound = true;
-  nextStepsSearchBtn.addEventListener('click', () => {
-    const input = document.querySelector('.nav-search__input');
-    if (!input) return;
-    input.focus();
-    input.select?.();
-    window.scrollTo({ top: 0, behavior: 'auto' });
+const PAGE_FEEDBACK_VISITOR_KEY = 'pc_page_feedback_visitor_id_v1';
+const PAGE_FEEDBACK_SAVED_PREFIX = 'pc_page_feedback_saved_v1:';
+
+const pageFeedbackState = {
+  decision: '',
+  missing_reason: '',
+  decisionLocked: false,
+  reasonLocked: false
+};
+
+function pageFeedbackRandomId() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return window.crypto.randomUUID();
+  }
+
+  return `anon_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+function getPageFeedbackVisitorId() {
+  try {
+    let id = localStorage.getItem(PAGE_FEEDBACK_VISITOR_KEY);
+
+    if (!id) {
+      id = pageFeedbackRandomId();
+      localStorage.setItem(PAGE_FEEDBACK_VISITOR_KEY, id);
+    }
+
+    return id;
+  } catch {
+    return 'anon_unavailable';
+  }
+}
+
+function getPageFeedbackLocalKey() {
+  return `${PAGE_FEEDBACK_SAVED_PREFIX}${location.pathname}`;
+}
+
+function getPageFeedbackFeedbackKey() {
+  return `${getPageFeedbackVisitorId()}|${location.pathname}`;
+}
+
+function loadPageFeedbackSavedState() {
+  try {
+    const raw = localStorage.getItem(getPageFeedbackLocalKey());
+    if (!raw) return;
+
+    const saved = JSON.parse(raw);
+    if (!saved || typeof saved !== 'object') return;
+
+    pageFeedbackState.decision = String(saved.decision || '').trim();
+    pageFeedbackState.missing_reason = String(saved.missing_reason || '').trim();
+
+    pageFeedbackState.decisionLocked = !!pageFeedbackState.decision;
+    pageFeedbackState.reasonLocked = !!pageFeedbackState.missing_reason;
+  } catch {
+    // Ignore saved-state errors.
+  }
+}
+
+function savePageFeedbackSavedState() {
+  try {
+    localStorage.setItem(getPageFeedbackLocalKey(), JSON.stringify({
+      decision: pageFeedbackState.decision || '',
+      missing_reason: pageFeedbackState.missing_reason || ''
+    }));
+  } catch {
+    // Ignore saved-state errors.
+  }
+}
+
+function setPageFeedbackStatus(message, isError = false) {
+  const status = document.getElementById('pageFeedbackStatus');
+  if (!status) return;
+
+  const text = String(message || '').trim();
+
+  if (!text) {
+    status.hidden = true;
+    status.textContent = '';
+    status.classList.remove('is-error');
+    return;
+  }
+
+  status.hidden = false;
+  status.textContent = text;
+  status.classList.toggle('is-error', !!isError);
+}
+
+function getPageFeedbackProductKey() {
+  const direct = String(state.lastKey || '').trim();
+  if (direct) return direct;
+
+  const id = state.identity || {};
+  const pci = String(id.selected_pci || id.pci || '').trim();
+  const upc = String(id.selected_upc || id.upc || '').trim();
+  const asin = String(id.asin || '').trim();
+
+  if (pci) return `pci:${pci}`;
+  if (upc) return `upc:${upc}`;
+  if (asin) return `asin:${asin}`;
+
+  return '';
+}
+
+function applyPageFeedbackUiState() {
+  if (!pageFeedbackCard) return;
+
+  pageFeedbackCard.querySelectorAll('[data-feedback-decision]').forEach((btn) => {
+    const value = String(btn.getAttribute('data-feedback-decision') || '').trim();
+    const selected = !!pageFeedbackState.decision && value === pageFeedbackState.decision;
+
+    btn.classList.toggle('is-selected', selected);
+    btn.disabled = !!pageFeedbackState.decisionLocked;
+  });
+
+  const followup = document.getElementById('pageFeedbackFollowup');
+  const shouldShowFollowup =
+    pageFeedbackState.decision === 'not_sure' ||
+    pageFeedbackState.decision === 'no';
+
+  if (followup) followup.hidden = !shouldShowFollowup;
+
+  pageFeedbackCard.querySelectorAll('[data-feedback-reason]').forEach((btn) => {
+    const value = String(btn.getAttribute('data-feedback-reason') || '').trim();
+    const selected = !!pageFeedbackState.missing_reason && value === pageFeedbackState.missing_reason;
+
+    btn.classList.toggle('is-selected', selected);
+    btn.disabled = !!pageFeedbackState.reasonLocked;
   });
 }
 
-const nextStepsCommentsBtn = document.getElementById('nextStepsCommentsBtn');
+async function submitPageFeedback(partial) {
+  Object.assign(pageFeedbackState, partial || {});
+  savePageFeedbackSavedState();
 
-if (nextStepsCommentsBtn && !nextStepsCommentsBtn._pcBound) {
-  nextStepsCommentsBtn._pcBound = true;
-  nextStepsCommentsBtn.addEventListener('click', () => {
-    openDashboardBottomPanel();
-    setDashboardBottomPanelTab('reviews');
+  setPageFeedbackStatus('Saving.');
+
+  try {
+    const res = await fetch('/api/page-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        visitor_id: getPageFeedbackVisitorId(),
+        feedback_key: getPageFeedbackFeedbackKey(),
+        product_key: getPageFeedbackProductKey(),
+        page_path: location.pathname,
+        page_url: location.href,
+        decision: pageFeedbackState.decision || null,
+        missing_reason: pageFeedbackState.missing_reason || null
+      })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    setPageFeedbackStatus('Saved. Thank you.');
+  } catch (err) {
+    console.error('Page feedback failed', err);
+    setPageFeedbackStatus('Could not save feedback.', true);
+  }
+}
+
+  if (pageFeedbackCard && !pageFeedbackCard._pcBound) {
+    pageFeedbackCard._pcBound = true;
+
+    loadPageFeedbackSavedState();
+    applyPageFeedbackUiState();
+
+    pageFeedbackCard.addEventListener('click', (event) => {
+      const decisionBtn = event.target.closest('[data-feedback-decision]');
+      const reasonBtn = event.target.closest('[data-feedback-reason]');
+
+    if (decisionBtn) {
+    if (pageFeedbackState.decisionLocked) return;
+
+    const decision = String(decisionBtn.getAttribute('data-feedback-decision') || '').trim();
+    if (!decision) return;
+
+    pageFeedbackState.decision = decision;
+    pageFeedbackState.decisionLocked = true;
+
+    if (decision === 'yes') {
+      pageFeedbackState.missing_reason = '';
+      pageFeedbackState.reasonLocked = false;
+    }
+
+    applyPageFeedbackUiState();
+    submitPageFeedback({ decision });
+    return;
+  }
+
+    if (reasonBtn) {
+      if (pageFeedbackState.reasonLocked) return;
+
+      const missing_reason = String(reasonBtn.getAttribute('data-feedback-reason') || '').trim();
+      if (!missing_reason) return;
+
+      pageFeedbackState.missing_reason = missing_reason;
+      pageFeedbackState.reasonLocked = true;
+
+      applyPageFeedbackUiState();
+      submitPageFeedback({ missing_reason });
+    }
   });
 }
 
