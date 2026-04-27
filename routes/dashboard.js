@@ -713,7 +713,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
     const r = await client.query(
       `
       select id, upc, pci, model_name, model_number, brand, category, image_url,
-        version, color, variant, dimensions, specs, specs_norm, media, marketing_images, timeline, files, contents, about, created_at,
+        version, color, variant, dimensions, specs, specs_norm, media, marketing_images, timeline, files, contents, verdict, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
       where pci is not null and btrim(pci) <> ''
@@ -732,7 +732,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
     const r = await client.query(
       `
       select id, upc, pci, model_name, model_number, brand, category, image_url,
-        version, color, variant, dimensions, specs, specs_norm, media, marketing_images, timeline, files, contents, about, created_at,
+        version, color, variant, dimensions, specs, specs_norm, media, marketing_images, timeline, files, contents, verdict, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
       where norm_upc(upc) = norm_upc($1)
@@ -843,14 +843,14 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
         (Array.isArray(row.files) || Array.isArray(row.files.items))
       ) ? row.files : null,
       contents: Array.isArray(row.contents) ? row.contents : null,
-      about: (row.about && typeof row.about === 'object' && !Array.isArray(row.about)) ? row.about : null
+      verdict: (row.verdict && typeof row.verdict === 'object' && !Array.isArray(row.verdict)) ? row.verdict : null
     }] : [];
   }
 
   const r = await client.query(
     `
     select id, upc, pci, model_name, model_number, brand, category, image_url,
-      version, color, variant, dimensions, specs, specs_norm, media, timeline, files, contents, about, created_at
+      version, color, variant, dimensions, specs, specs_norm, media, timeline, files, contents, verdict, created_at
     from public.catalog
     where model_number is not null and btrim(model_number) <> ''
       and upper(btrim(model_number)) = upper(btrim($1))
@@ -911,7 +911,7 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
           (Array.isArray(row.files) || Array.isArray(row.files.items))
         ) ? row.files : null,
         contents: Array.isArray(row.contents) ? row.contents : null,
-        about: (row.about && typeof row.about === 'object' && !Array.isArray(row.about)) ? row.about : null,
+        verdict: (row.verdict && typeof row.verdict === 'object' && !Array.isArray(row.verdict)) ? row.verdict : null,
         marketing_images: Array.isArray(row.marketing_images) ? row.marketing_images : null
       };
     })
@@ -1952,7 +1952,7 @@ const valueSnapshot = meta ? await getValueSnapshot(client, meta, selectedKeys, 
           (Array.isArray(meta.files) || Array.isArray(meta.files.items))
         ) ? meta.files : null,
         contents: Array.isArray(meta?.contents) ? meta.contents : null,
-        about: (meta?.about && typeof meta.about === 'object' && !Array.isArray(meta.about)) ? meta.about : null,
+        verdict: (meta?.verdict && typeof meta.verdict === 'object' && !Array.isArray(meta.verdict)) ? meta.verdict : null,
         dropship_warning: !!meta?.dropship_warning,
         recall_url: meta?.recall_url || null,
         coverage_warning: !!meta?.coverage_warning,
