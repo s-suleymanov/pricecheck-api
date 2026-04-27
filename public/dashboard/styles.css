@@ -5684,7 +5684,8 @@ body {
   }
 
   #specsContent .pc-value-donut span{
-    font-size: 13px;
+    font-size: 15px;
+    padding: 0;
   }
 
   #specsContent .pc-value-item__label,
