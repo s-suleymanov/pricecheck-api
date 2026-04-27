@@ -3829,6 +3829,7 @@ button.pc-lineup-model{
   grid-area: variant;
   margin-top: 10px;
   width: 100%;
+  padding: 10px;
 }
 
 .variant-color-grid{
