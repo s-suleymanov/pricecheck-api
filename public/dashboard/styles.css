@@ -1241,7 +1241,7 @@ aside .note{
   display:grid;
   gap:5px;
   padding:14px 42px 14px 14px;
-  border:1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius:16px;
   background:rgba(255,255,255,.72);
   color:inherit;
@@ -1275,7 +1275,7 @@ aside .note{
   border-radius:999px;
   background:#e5e7eb;
   color:#374151;
-  font-size:14px;
+  font-size:15px;
   line-height:1;
   font-weight:700;
 }
@@ -4508,6 +4508,7 @@ body {
   display:grid;
   justify-items:center;
   gap:12px;
+  border: 1px solid #e2e8f0;
 }
 
 .pc-rec-metric__ring{
@@ -5550,7 +5551,7 @@ body {
 
 /* Specs merged layout: vertical reading with score on the right */
 #specsContent{
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 /* Ranked rows inside Specs */
