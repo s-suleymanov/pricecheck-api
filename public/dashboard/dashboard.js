@@ -101,7 +101,7 @@
   const QA_REPLY_ICON_PATH = 'M760-200v-160q0-50-35-85t-85-35H273l144 144-57 56-240-240 240-240 57 56-144 144h367q83 0 141.5 58.5T840-360v160h-80Z';
 
   function getDashboardHeaderOffset() {
-    const host = document.getElementById('site-header');
+    const host = document.getElementById('siteHeader')
     if (!host) return 88;
 
     const rect = host.getBoundingClientRect();
@@ -1509,7 +1509,7 @@ function buildDashboardToc() {
   }
 
   function initDashboardTocObservers() {
-    const host = document.getElementById('site-header');
+    const host = document.getElementById('siteHeader')
     if (!host) return;
 
     if (!_tocResizeObserver && 'ResizeObserver' in window) {

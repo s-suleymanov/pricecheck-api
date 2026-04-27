@@ -5469,6 +5469,7 @@ body {
 
 .dashboard-split__right #offersCard{
   width: 100%;
+  padding: 5px 8px;
 }
 
 .chart{
