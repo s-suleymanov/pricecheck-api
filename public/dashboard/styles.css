@@ -5681,7 +5681,7 @@ body {
   font-size: 17px;
   font-weight: 500;
   color: #64748b;
-  text-transform: none;
+  text-transform: capitalize;
 }
 
 #specsContent .pc-value-item__value{
