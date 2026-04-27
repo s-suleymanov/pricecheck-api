@@ -145,17 +145,21 @@ function syncShortlistButtons(root = document) {
   }
 
   function aboutHtmlFull(about) {
-    if (!about || typeof about !== "object") return "";
+    let firstParagraph = "";
 
-    const firstParagraph = Array.isArray(about.paragraphs)
-      ? String(about.paragraphs.find((p) => String(p || "").trim()) || "").trim()
-      : "";
+    if (typeof about === "string") {
+      firstParagraph = about.trim();
+    } else if (about && typeof about === "object") {
+      firstParagraph = Array.isArray(about.paragraphs)
+        ? String(about.paragraphs.find((p) => String(p || "").trim()) || "").trim()
+        : "";
+    }
 
     if (!firstParagraph) return "";
 
     return `
       <div class="detail-about">
-        <div class="side-label">About</div>
+        <div class="side-label">Summary</div>
         <div class="detail-about-paragraphs">
           <p>${escapeHtml(firstParagraph)}</p>
         </div>
@@ -1133,9 +1137,11 @@ const img = rawImg
     const brand = (r.brand || "").trim();
     const brandLine = brand ? brand : "";
 
-        let aboutText = "";
+    let aboutText = "";
 
-    if (r.about && typeof r.about === "object") {
+    if (typeof r.about === "string") {
+      aboutText = r.about.trim();
+    } else if (r.about && typeof r.about === "object") {
       const paragraphs = Array.isArray(r.about.paragraphs) ? r.about.paragraphs : [];
       const bullets = Array.isArray(r.about.bullets) ? r.about.bullets : [];
 
@@ -1171,7 +1177,8 @@ const img = rawImg
           aria-disabled="true"
           data-title="${escapeHtml(displayName)}"
           data-brand="${escapeHtml(brandLine)}"
-          data-img="${escapeHtml(String(r.image_url || ""))}">
+          data-img="${escapeHtml(String(r.image_url || ""))}"
+          data-about="${escapeHtml(aboutText)}">
           ${inner}
         </div>
       `;
@@ -1185,7 +1192,8 @@ const img = rawImg
         data-dash-key="${escapeHtml(dashKey)}"
         data-title="${escapeHtml(displayName)}"
         data-brand="${escapeHtml(brandLine)}"
-        data-img="${escapeHtml(String(r.image_url || ""))}">
+        data-img="${escapeHtml(String(r.image_url || ""))}"
+        data-about="${escapeHtml(aboutText)}">
         ${inner}
       </a>
     `;
@@ -3192,9 +3200,14 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
     // Sync selected label/color from the current variant key (if available)
     const curVar = findByKey(variants, state.detailDashKey);
+    const cardAbout = state.detailSourceCardEl
+      ? String(state.detailSourceCardEl.getAttribute("data-about") || "").trim()
+      : "";
+
     const detailAbout =
       aboutHtmlFull(curVar?.about) ||
-      aboutHtmlFull(data?.about);
+      aboutHtmlFull(data?.about) ||
+      aboutHtmlFull(cardAbout);
 
     if (!curVar) {
       state.detailSelectedVariantLabel = "";

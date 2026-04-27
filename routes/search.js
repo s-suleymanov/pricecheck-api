@@ -771,7 +771,6 @@ router.get("/api/search", async (req, res) => {
             c.category,
             c.image_url,
             COALESCE(c.dropship_warning, false) AS dropship_warning,
-            c.about,
             COALESCE(c.is_refurbished, false) AS is_refurbished,
             COALESCE(c.is_bundle, false) AS is_bundle,
             c.pci,
@@ -828,16 +827,18 @@ router.get("/api/search", async (req, res) => {
         SELECT
           a.*,
           ch.best_price_cents,
-          pr.overall_score
+          pr.overall_score,
+          NULLIF(btrim(pr.summary), '') AS about
         FROM anchors a
         LEFT JOIN cheapest ch
           ON ch.model_number_norm = a.model_number_norm
          AND ch.version_norm = a.version_norm
       LEFT JOIN LATERAL (
-        SELECT picked_score.overall_score
+        SELECT picked_score.overall_score, picked_score.summary
         FROM (
           SELECT
             pr2.overall_score,
+            pr2.summary,
             0 AS priority,
             pr2.updated_at,
             pr2.id
@@ -863,6 +864,7 @@ router.get("/api/search", async (req, res) => {
 
           SELECT
             pr3.overall_score,
+            pr3.summary,
             1 AS priority,
             pr3.updated_at,
             pr3.id
@@ -1003,7 +1005,6 @@ router.get("/api/search", async (req, res) => {
         c.category,
         c.image_url,
         COALESCE(c.dropship_warning, false) AS dropship_warning,
-        c.about,
         COALESCE(c.is_refurbished, false) AS is_refurbished,
         COALESCE(c.is_bundle, false) AS is_bundle,
         c.pci,
@@ -1064,16 +1065,18 @@ router.get("/api/search", async (req, res) => {
       SELECT
         a.*,
         ch.best_price_cents,
-        pr.overall_score
+        pr.overall_score,
+        NULLIF(btrim(pr.summary), '') AS about
       FROM anchors a
       LEFT JOIN cheapest ch
         ON ch.model_number_norm = a.model_number_norm
       AND ch.version_norm = a.version_norm
       LEFT JOIN LATERAL (
-        SELECT picked_score.overall_score
+        SELECT picked_score.overall_score, picked_score.summary
         FROM (
           SELECT
             pr2.overall_score,
+            pr2.summary,
             0 AS priority,
             pr2.updated_at,
             pr2.id
@@ -1099,6 +1102,7 @@ router.get("/api/search", async (req, res) => {
 
           SELECT
             pr3.overall_score,
+            pr3.summary,
             1 AS priority,
             pr3.updated_at,
             pr3.id

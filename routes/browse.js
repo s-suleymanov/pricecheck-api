@@ -159,7 +159,6 @@ router.get("/api/browse", async (req, res) => {
           COALESCE(c.dropship_warning, false) AS dropship_warning,
           NULLIF(btrim(c.pci), '') AS pci,
           NULLIF(btrim(c.upc), '') AS upc,
-          c.about,
           c.specs,
           c.is_refurbished,
           c.is_bundle,
@@ -245,7 +244,7 @@ router.get("/api/browse", async (req, res) => {
           a.category,
           a.image_url,
           a.dropship_warning,
-          a.about,
+          NULLIF(btrim(pr.summary), '') AS about,
           a.specs,
           a.is_refurbished,
           a.is_bundle,
@@ -271,10 +270,11 @@ router.get("/api/browse", async (req, res) => {
           ON lr.model_number_norm = a.model_number_norm
         AND lr.version_norm = a.version_norm
         LEFT JOIN LATERAL (
-          SELECT picked_score.overall_score
+          SELECT picked_score.overall_score, picked_score.summary
           FROM (
             SELECT
               pr2.overall_score,
+              pr2.summary,
               0 AS priority,
               pr2.updated_at,
               pr2.id
@@ -300,6 +300,7 @@ router.get("/api/browse", async (req, res) => {
 
             SELECT
               pr3.overall_score,
+              pr3.summary,
               1 AS priority,
               pr3.updated_at,
               pr3.id
@@ -490,7 +491,6 @@ router.get("/api/shortlist_specs", async (req, res) => {
           COALESCE(c.dropship_warning, false) AS dropship_warning,
           NULLIF(btrim(c.pci), '') AS pci,
           NULLIF(btrim(c.upc), '') AS upc,
-          c.about,
           c.specs,
           c.is_refurbished,
           c.is_bundle,
@@ -561,7 +561,7 @@ router.get("/api/shortlist_specs", async (req, res) => {
         a.dashboard_key,
         lr.best_price_cents,
         pr.overall_score,
-        a.about,
+        NULLIF(btrim(pr.summary), '') AS about,
         a.specs,
         a.is_refurbished,
         a.is_bundle
@@ -570,10 +570,11 @@ router.get("/api/shortlist_specs", async (req, res) => {
         ON lr.model_number_norm = a.model_number_norm
        AND lr.version_norm = a.version_norm
       LEFT JOIN LATERAL (
-        SELECT picked_score.overall_score
+        SELECT picked_score.overall_score, picked_score.summary
         FROM (
           SELECT
             pr2.overall_score,
+            pr2.summary,
             0 AS priority,
             pr2.updated_at,
             pr2.id
@@ -599,6 +600,7 @@ router.get("/api/shortlist_specs", async (req, res) => {
 
           SELECT
             pr3.overall_score,
+            pr3.summary,
             1 AS priority,
             pr3.updated_at,
             pr3.id
