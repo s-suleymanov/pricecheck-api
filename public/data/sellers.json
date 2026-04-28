@@ -224,6 +224,25 @@
       "support_page": "https://www.bjs.com/help"
     }
   },
+    "earfun": {
+    "name": "EarFun",
+    "logo": "/logo/seller/earfun.png",
+    "website": "https://www.myearfun.com",
+    "owned_by": "",
+    "type": "Proprietary",
+    "location": "China",
+    "founded": null,
+    "policies": {
+      "return_period": "",
+      "restocking_fee": "Unknown",
+      "price_match": "Unknown"
+    },
+    "contact": {
+      "phone": null,
+      "chat_available": false,
+      "support_page": null
+    }
+  },
   "abt": {
     "name": "Abt",
     "logo": "/logo/seller/abt.webp",
