@@ -298,13 +298,17 @@ function prettyNormSpecLabel(key){
 }
 
 function prettyNormSpecValue(value){
-  if (value === true) return 'Yes';
-  if (value === false) return 'No';
+  if (value === true) return 'Included';
+  if (value === false) return 'Not Included';
   if (value == null) return '';
 
   if (typeof value === 'number') return String(value);
 
-  return String(value).trim();
+  const text = String(value).trim();
+  if (/^(yes|true|included)$/i.test(text)) return 'Included';
+  if (/^(no|false|not included)$/i.test(text)) return 'Not Included';
+
+  return text;
 }
 
 function valueScoreTone(score){
@@ -6603,11 +6607,25 @@ async function copyText(text){
   return false;
 }
 
-  function specValueToText(v){
+    function specValueToText(v){
     if (v == null) return '';
-    if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+
+    if (typeof v === 'boolean') {
+      return v ? 'Included' : 'Not Included';
+    }
+
     if (typeof v === 'number') return String(v);
-    if (typeof v === 'string') return v.trim();
+
+    if (typeof v === 'string') {
+      const text = v.trim();
+      if (!text) return '';
+
+      if (/^(yes|true|included)$/i.test(text)) return 'Included';
+      if (/^(no|false|not included)$/i.test(text)) return 'Not Included';
+
+      return text;
+    }
+
     return String(v).trim();
   }
 
