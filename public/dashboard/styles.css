@@ -5634,6 +5634,7 @@ body {
 #specsContent .pc-value-list{
   display: grid;
   gap: 0;
+  border-bottom: 1px solid #eef2f7;
 }
 
 #specsContent .pc-value-item{
@@ -5705,7 +5706,6 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0;
-  border-top: 1px solid #eef2f7;
 }
 
 #specsContent .pc-spec-tile{

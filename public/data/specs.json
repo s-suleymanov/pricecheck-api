@@ -1,11 +1,13 @@
 {
   "earbuds": [
     "Bluetooth Version",
+    "Fit",
+    "Charging Port",
     "Headphone Fit",
     "Frequency Range",
     "Water Resistance",
     "Battery Life",
-    "Noise Cancellation"   
+    "Noise Cancellation"
   ],
   "headphones": [
     "Noise Cancelling",
