@@ -126,9 +126,7 @@
 
   function revealDashboardAfterPaint(){
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setDashboardLoading(false);
-      });
+      setDashboardLoading(false);
     });
   }
 
@@ -4451,11 +4449,9 @@ function wireCardIcons(){
   });
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   wireCardIcons();
   wireBrandFollowButton();
-  await loadNameOverridesOnce();
-  await loadSpecPillConfigOnce();
   initDashboardShortlistUi();
   initDashboardTocObservers();
   scheduleDashboardTocRefresh();
@@ -4479,7 +4475,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     showMessage("Search a product to view the dashboard.");
     return;
   }
+
   run(key);
+
+  Promise.allSettled([
+    loadNameOverridesOnce(),
+    loadSpecPillConfigOnce()
+  ]).then(() => {
+    renderTopSpecPills();
+  });
 });
 
 document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(btn => {
