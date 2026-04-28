@@ -3462,8 +3462,8 @@ async function renderCommunityCard(productKey, runToken){
     return;
   }
 
-  tipsListEl.innerHTML = '<div class="sidebar-empty">Loading.</div>';
-  questionsListEl.innerHTML = '<div class="sidebar-empty">Loading.</div>';
+  tipsListEl.innerHTML = '';
+  questionsListEl.innerHTML = '';
 
   let signedIn = false;
   let data;
@@ -3739,21 +3739,8 @@ async function renderReviewsCard(productKey, runToken) {
     return;
   }
 
-  mountCustomerReviews(`
-    <div class="pc-reviews-wrap pc-reviews-loading">
-      <div class="pc-reviews-skeleton"></div>
-      <div class="pc-reviews-skeleton pc-reviews-skeleton--short"></div>
-      <div class="pc-reviews-skeleton"></div>
-    </div>
-  `);
-
-  mountUserReviews(`
-    <div class="pc-reviews-wrap pc-reviews-loading">
-      <div class="pc-reviews-skeleton"></div>
-      <div class="pc-reviews-skeleton pc-reviews-skeleton--short"></div>
-      <div class="pc-reviews-skeleton"></div>
-    </div>
-  `);
+  mountCustomerReviews('');
+  mountUserReviews('');
   wireCardIcons();
 
   let data;
@@ -4634,7 +4621,7 @@ async function run(raw, options = {}){
       setRobots('noindex,follow');
     }
 
-    if (isStaleRun(runToken)) return;
+       if (isStaleRun(runToken)) return;
 
     hydrateHeader();
     renderRecommendationCard();
@@ -4647,42 +4634,16 @@ async function run(raw, options = {}){
     renderDimensions();
     renderSidebarSpecs();
     renderContents();
+
     if (!skipHeroMediaRender) {
       renderHeroMediaCarousel();
     }
+
     renderFilesCard();
     renderLineup();
 
     if (isStaleRun(runToken)) return;
     await renderOffers(true, runToken);
-
-    renderMarketingImagesCard();
-
-    if (isStaleRun(runToken)) return;
-    await renderReviewsCard(state.lastKey, runToken);
-
-    if (isStaleRun(runToken)) return;
-    await renderCommunityCard(state.lastKey, runToken);
-
-    if (isStaleRun(runToken)) return;
-
-    {
-      const _hKey = canonicalKey || state.lastKey;
-      const _hTitle = bestTitle;
-      const _hImg = bestImg;
-      const _hBrand = String(state.identity?.brand || "").trim();
-
-      if (_hKey && _hTitle) {
-        recordHistory(_hKey, _hTitle, _hImg, _hBrand);
-      }
-    }
-
-    await wireProductActions(
-      canonicalKey || state.lastKey,
-      bestTitle,
-      bestImg,
-      String(state.identity?.brand || '').trim()
-    );
 
     syncDashboardShortlistButton();
     scheduleDashboardTocRefresh();
@@ -4692,6 +4653,41 @@ async function run(raw, options = {}){
     } else {
       setDashboardLoading(false);
     }
+
+    const lowerKey = canonicalKey || state.lastKey;
+    const lowerTitle = bestTitle;
+    const lowerImg = bestImg;
+    const lowerBrand = String(state.identity?.brand || '').trim();
+
+    requestAnimationFrame(() => {
+      (async () => {
+        if (isStaleRun(runToken)) return;
+
+        renderMarketingImagesCard();
+
+        if (isStaleRun(runToken)) return;
+        await renderCommunityCard(state.lastKey, runToken);
+
+        if (isStaleRun(runToken)) return;
+        await renderReviewsCard(state.lastKey, runToken);
+
+        if (isStaleRun(runToken)) return;
+
+        if (lowerKey && lowerTitle) {
+          recordHistory(lowerKey, lowerTitle, lowerImg, lowerBrand);
+        }
+
+        await wireProductActions(
+          lowerKey,
+          lowerTitle,
+          lowerImg,
+          lowerBrand
+        );
+
+        syncDashboardShortlistButton();
+        scheduleDashboardTocRefresh();
+      })().catch(console.error);
+    });
 
   } catch(err){
     if (isStaleRun(runToken)) return;
