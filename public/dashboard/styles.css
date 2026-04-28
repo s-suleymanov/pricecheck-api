@@ -2965,7 +2965,6 @@ button.pc-lineup-model{
   line-height:1.25;
   font-weight:500;
   color:var(--ink);
-  word-break:break-word;
 }
 
 @media (max-width: 530px) {
