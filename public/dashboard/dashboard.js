@@ -585,10 +585,37 @@ function renderHeroMediaStage(){
   clampHeroMediaIndex();
 
   const item = list[state.activeMediaIndex] || null;
-  inner.innerHTML = heroMediaMarkup(item);
+  const nextUrl = mediaItemImageUrl(item);
 
   stage.classList.toggle('is-empty', !list.length);
   stage.classList.remove('is-vertical');
+
+  if (!item || !nextUrl) {
+    const hasPlaceholder = !!inner.querySelector('.ph-media-stage__placeholder');
+    if (hasPlaceholder) return;
+
+    inner.innerHTML = heroMediaMarkup(null);
+    return;
+  }
+
+  const existingImg = inner.querySelector('.ph-media-stage__img');
+
+  if (existingImg) {
+    const existingUrl = String(existingImg.currentSrc || existingImg.src || '').trim();
+
+    if (sameMediaUrl(existingUrl, nextUrl)) {
+      existingImg.alt = item.title || 'Product media';
+      existingImg.style.visibility = '';
+      return;
+    }
+
+    existingImg.src = nextUrl;
+    existingImg.alt = item.title || 'Product media';
+    existingImg.style.visibility = '';
+    return;
+  }
+
+  inner.innerHTML = heroMediaMarkup(item);
 }
 
 function getCurrentHeroMediaItem(){
@@ -597,17 +624,135 @@ function getCurrentHeroMediaItem(){
   return list[state.activeMediaIndex] || null;
 }
 
+function mediaItemImageUrl(item){
+  return String(item?.imageUrl || item?.thumb || '').trim();
+}
+
+function normalizeComparableMediaUrl(raw){
+  const s = String(raw || '').trim();
+  if (!s) return '';
+
+  try {
+    return new URL(s, location.origin).href;
+  } catch {
+    return s;
+  }
+}
+
+function sameMediaUrl(a, b){
+  const A = normalizeComparableMediaUrl(a);
+  const B = normalizeComparableMediaUrl(b);
+  return !!A && !!B && A === B;
+}
+
+function currentHeroRenderedUrl(){
+  const img = document.querySelector('#phMediaInner .ph-media-stage__img');
+  return String(img?.currentSrc || img?.src || '').trim();
+}
+
+function isSameAsCurrentHeroMedia(item){
+  const nextUrl = mediaItemImageUrl(item);
+  const currentUrl =
+    currentHeroRenderedUrl() ||
+    mediaItemImageUrl(getCurrentHeroMediaItem());
+
+  return sameMediaUrl(nextUrl, currentUrl);
+}
+
+function mediaItemsSignature(items){
+  return (Array.isArray(items) ? items : [])
+    .map(mediaItemImageUrl)
+    .map(normalizeComparableMediaUrl)
+    .join('|');
+}
+
+const HERO_PREVIEW_IMAGE_CACHE = new Map();
+let _heroPreviewToken = 0;
+
+function preloadHeroPreviewUrl(rawUrl){
+  const url = String(rawUrl || '').trim();
+  if (!url) return Promise.reject(new Error('Missing image URL'));
+
+  const cached = HERO_PREVIEW_IMAGE_CACHE.get(url);
+
+  if (cached === 'ready') {
+    return Promise.resolve(url);
+  }
+
+  if (cached && typeof cached.then === 'function') {
+    return cached;
+  }
+
+  const pending = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.decoding = 'async';
+
+    img.onload = () => {
+      HERO_PREVIEW_IMAGE_CACHE.set(url, 'ready');
+      resolve(url);
+    };
+
+    img.onerror = () => {
+      HERO_PREVIEW_IMAGE_CACHE.delete(url);
+      reject(new Error('Image failed to load'));
+    };
+
+    img.src = url;
+  });
+
+  HERO_PREVIEW_IMAGE_CACHE.set(url, pending);
+  return pending;
+}
+
 function previewHeroMediaItem(item){
   const inner = document.getElementById('phMediaInner');
   const stage = document.getElementById('phMediaStage');
-  if (!inner || !stage) return;
+  if (!inner || !stage) return false;
 
-  inner.innerHTML = heroMediaMarkup(item || null);
-  stage.classList.toggle('is-empty', !item);
-  stage.classList.remove('is-vertical');
+  const nextUrl = mediaItemImageUrl(item);
+  if (!nextUrl) return false;
+
+  if (isSameAsCurrentHeroMedia(item)) return false;
+
+  const token = ++_heroPreviewToken;
+
+  preloadHeroPreviewUrl(nextUrl)
+    .then(() => {
+      if (token !== _heroPreviewToken) return;
+
+      stage.classList.toggle('is-empty', false);
+      stage.classList.remove('is-vertical');
+
+      const existingImg = inner.querySelector('.ph-media-stage__img');
+
+      if (existingImg) {
+        if (!sameMediaUrl(existingImg.currentSrc || existingImg.src || '', nextUrl)) {
+          existingImg.src = nextUrl;
+        }
+
+        existingImg.alt = item.title || 'Product media';
+        existingImg.style.visibility = '';
+        return;
+      }
+
+      inner.innerHTML = heroMediaMarkup(item);
+    })
+    .catch(() => {
+      // Keep the current hero image if the hovered preview image fails.
+    });
+
+  return true;
 }
 
 function restoreHeroMediaPreview(){
+  _heroPreviewToken += 1;
+
+  const currentItem = getCurrentHeroMediaItem();
+  const currentUrl = mediaItemImageUrl(currentItem);
+  const renderedUrl = currentHeroRenderedUrl();
+
+  if (sameMediaUrl(currentUrl, renderedUrl)) return;
+
   renderHeroMediaStage();
 }
 
@@ -784,11 +929,49 @@ function renderHeroMediaCarousel(){
     .map(parseImageMediaItem)
     .filter(Boolean);
 
-  state.mediaItems = items;
-  state.activeMediaIndex = 0;
+  const previousItems = Array.isArray(state.mediaItems) ? state.mediaItems : [];
+  const previousSignature = mediaItemsSignature(previousItems);
+  const nextSignature = mediaItemsSignature(items);
+  const sameMediaList = previousSignature === nextSignature;
 
-  renderHeroMediaStage();
-  renderMediaStrip();
+  const previousActiveUrl = mediaItemImageUrl(getCurrentHeroMediaItem());
+
+  state.mediaItems = items;
+
+  if (!items.length) {
+    state.activeMediaIndex = 0;
+  } else if (sameMediaList) {
+    clampHeroMediaIndex();
+  } else {
+    const matchingIndex = items.findIndex((item) => {
+      return sameMediaUrl(mediaItemImageUrl(item), previousActiveUrl);
+    });
+
+    state.activeMediaIndex = matchingIndex >= 0 ? matchingIndex : 0;
+  }
+
+  const currentItem = getCurrentHeroMediaItem();
+  const currentUrl = mediaItemImageUrl(currentItem);
+  const renderedUrl = currentHeroRenderedUrl();
+
+  if (!sameMediaUrl(currentUrl, renderedUrl)) {
+    renderHeroMediaStage();
+  } else {
+    const stage = document.getElementById('phMediaStage');
+    if (stage) {
+      stage.classList.toggle('is-empty', !items.length);
+      stage.classList.remove('is-vertical');
+    }
+  }
+
+  const stripHost = document.getElementById('mediaStripPills');
+  const stripAlreadyRendered = !!stripHost?.querySelector('.pc-media-strip-row');
+
+  if (!sameMediaList || !stripAlreadyRendered) {
+    renderMediaStrip();
+  } else {
+    updateMediaStripActiveState();
+  }
 }
 
 function marketingImagesSource(){
@@ -1892,8 +2075,25 @@ function buildDashboardToc() {
     return url;
   }
 
-  function applyPrettyUrl(key, title, mode = 'replace') {
-    return;
+    function applyPrettyUrl(key, title, mode = 'replace') {
+    const normalizedKey = normalizeKey(key);
+    if (!normalizedKey) return;
+
+    const nextUrl = prettyDashboardUrl(normalizedKey, title || 'Product');
+    if (!nextUrl || nextUrl.origin !== location.origin) return;
+
+    const nextPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+    const currentPath = `${location.pathname}${location.search}${location.hash}`;
+
+    if (nextPath === currentPath) return;
+
+    const method = mode === 'push' ? 'pushState' : 'replaceState';
+
+    window.history[method](
+      { pcDashboardKey: normalizedKey },
+      '',
+      nextPath
+    );
   }
 
   function canonicalOriginForMeta() {
@@ -3939,76 +4139,177 @@ wireCardIcons();
 function renderImageChoiceGroup(hostEl, options, selectedValue, onPick, typeLabel){
   if (!hostEl) return;
 
-  hostEl.innerHTML = '';
+  const list = Array.isArray(options) ? options : [];
 
-  for (const opt of options){
+  const signature = list
+    .map((opt) => {
+      const label = normalizeSpaces(opt?.label);
+      const image = String(opt?.image || '').trim() || '/logo/default.webp';
+      return `${label}::${image}`;
+    })
+    .join('|');
+
+  const optionByLabel = new Map();
+
+  for (const opt of list) {
     const label = normalizeSpaces(opt?.label);
     if (!label) continue;
-
-    const image = String(opt?.image || '').trim() || '/logo/default.webp';
-    const isActive = normLower(label) === normLower(selectedValue);
-
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'media-choice' + (isActive ? ' is-active' : '');
-    b.setAttribute('aria-label', `${typeLabel} ${label}`);
-    b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-
-    b.innerHTML = `
-      <span class="media-choice__thumb">
-        <img
-          src="${escapeHtml(image)}"
-          alt="${escapeHtml(label)}"
-          loading="lazy"
-          decoding="async"
-        >
-      </span>
-      <span class="media-choice__label">${escapeHtml(label)}</span>
-    `;
-
-    b.addEventListener('click', () => {
-      onPick(label);
-    });
-
-    b.addEventListener('mouseenter', () => {
-      const previewItem = previewItemFromChoice(opt);
-      if (!previewItem) return;
-      previewHeroMediaItem(previewItem);
-    });
-
-    b.addEventListener('focus', () => {
-      const previewItem = previewItemFromChoice(opt);
-      if (!previewItem) return;
-      previewHeroMediaItem(previewItem);
-    });
-
-    const img = b.querySelector('img');
-    if (img) {
-      img.addEventListener('error', () => {
-        img.src = '/logo/default.webp';
-      }, { once: true });
-    }
-
-    hostEl.appendChild(b);
+    optionByLabel.set(normLower(label), opt);
   }
 
-  hostEl.onmouseleave = () => {
-    restoreHeroMediaPreview();
-  };
+  hostEl._pcImageChoiceOptionsByLabel = optionByLabel;
+  hostEl._pcImageChoiceOnPick = onPick;
 
-  hostEl.onfocusout = () => {
-    requestAnimationFrame(() => {
-      if (!hostEl.contains(document.activeElement)) {
-        restoreHeroMediaPreview();
+  if (!hostEl._pcImageChoiceBound) {
+    hostEl._pcImageChoiceBound = true;
+
+    const getChoiceFromEvent = (event) => {
+      const btn = event.target.closest('.media-choice[data-choice-label]');
+      if (!btn || !hostEl.contains(btn)) return null;
+
+      const label = String(btn.getAttribute('data-choice-label') || '').trim();
+      if (!label) return null;
+
+      const option = hostEl._pcImageChoiceOptionsByLabel?.get(normLower(label));
+      if (!option) return null;
+
+      return { btn, label, option };
+    };
+
+    hostEl.addEventListener('click', (event) => {
+      const hit = getChoiceFromEvent(event);
+      if (!hit) return;
+      if (hit.btn.classList.contains('is-active')) return;
+
+      const pick = hostEl._pcImageChoiceOnPick;
+      if (typeof pick === 'function') {
+        pick(hit.label);
       }
     });
-  };
+
+    hostEl.addEventListener('mouseover', (event) => {
+      const hit = getChoiceFromEvent(event);
+      if (!hit) return;
+
+      const related = event.relatedTarget;
+      if (related && hit.btn.contains(related)) return;
+
+      const previewItem = previewItemFromChoice(hit.option);
+      if (previewItem) previewHeroMediaItem(previewItem);
+    });
+
+    hostEl.addEventListener('focusin', (event) => {
+      const hit = getChoiceFromEvent(event);
+      if (!hit) return;
+
+      const previewItem = previewItemFromChoice(hit.option);
+      if (previewItem) previewHeroMediaItem(previewItem);
+    });
+
+    hostEl.addEventListener('mouseleave', () => {
+      restoreHeroMediaPreview();
+    });
+
+    hostEl.addEventListener('focusout', () => {
+      requestAnimationFrame(() => {
+        if (!hostEl.contains(document.activeElement)) {
+          restoreHeroMediaPreview();
+        }
+      });
+    });
+  }
+
+  if (hostEl._pcImageChoiceSignature !== signature) {
+    hostEl._pcImageChoiceSignature = signature;
+
+    hostEl.innerHTML = list.map((opt) => {
+      const label = normalizeSpaces(opt?.label);
+      if (!label) return '';
+
+      const image = String(opt?.image || '').trim() || '/logo/default.webp';
+
+      return `
+        <button
+          type="button"
+          class="media-choice"
+          data-choice-label="${escapeHtml(label)}"
+          aria-label="${escapeHtml(`${typeLabel} ${label}`)}"
+          aria-pressed="false"
+        >
+          <span class="media-choice__thumb">
+            <img
+              src="${escapeHtml(image)}"
+              alt="${escapeHtml(label)}"
+              loading="lazy"
+              decoding="async"
+            >
+          </span>
+          <span class="media-choice__label">${escapeHtml(label)}</span>
+        </button>
+      `;
+    }).join('');
+
+    hostEl.querySelectorAll('.media-choice img').forEach((img) => {
+      img.addEventListener('error', () => {
+        if (String(img.getAttribute('src') || '').includes('/logo/default.webp')) return;
+        img.src = '/logo/default.webp';
+      }, { once: true });
+    });
+
+    list.forEach((opt) => {
+      const previewItem = previewItemFromChoice(opt);
+      const url = mediaItemImageUrl(previewItem);
+      if (url) preloadHeroPreviewUrl(url).catch(() => {});
+    });
+  }
+
+  hostEl.querySelectorAll('.media-choice[data-choice-label]').forEach((btn) => {
+    const label = String(btn.getAttribute('data-choice-label') || '').trim();
+    const isActive = normLower(label) === normLower(selectedValue);
+
+    btn.classList.toggle('is-active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
+
+function renderSelectedVariantShell(){
+  syncSelectorsFromSelectedKey();
+
+  hydrateHeader();
+  renderTopSpecPills();
+  renderVerdictCard();
+  renderTimeline();
+  renderVariants();
+  renderDimensions();
+  renderSidebarSpecs();
+  renderContents();
+  renderHeroMediaCarousel();
+  renderFilesCard();
+  renderMarketingImagesCard();
+  scheduleDashboardTocRefresh();
 }
 
 function pushVariantSelectionAndRun(){
-  if (!state.selectedVariantKey) return;
-  applyPrettyUrl(state.selectedVariantKey, $('#pTitle')?.textContent || 'Product', 'push');
-  run(state.selectedVariantKey);
+  const key = String(state.selectedVariantKey || '').trim();
+  if (!key) return;
+
+  const cur = getCurrentVariant() || null;
+  const title =
+    (cur?.model_name && String(cur.model_name).trim()) ||
+    ($('#pTitle')?.textContent && String($('#pTitle').textContent).trim()) ||
+    'Product';
+
+  const brand = String(cur?.brand || state.identity?.brand || '').trim();
+  const titleForUrl = `${brand} ${title}`.trim();
+
+  applyPrettyUrl(key, titleForUrl, 'push');
+
+  renderSelectedVariantShell();
+
+  run(key, {
+    showFullLoading: false,
+    skipHeroMediaRender: true
+  });
 }
 
 function renderVersionVariantColor(){
@@ -4177,6 +4478,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadBrandFollowState();
   });
 
+  window.addEventListener('popstate', () => {
+    const key = currentKeyFromUrl() || "";
+    if (!key.trim()) return;
+
+    run(key, {
+      showFullLoading: false
+    });
+  });
+
   const key = currentKeyFromUrl() || "";
   if (!key.trim()) {
     showMessage("Search a product to view the dashboard.");
@@ -4200,17 +4510,26 @@ document.querySelectorAll('#historyToggle .dim-unit-btn[data-range]').forEach(bt
   });
 });
 
-async function run(raw){
+async function run(raw, options = {}){
   const runToken = nextRunToken();
   const key = normalizeKey(raw);
+  const showFullLoading = options.showFullLoading !== false;
+  const skipHeroMediaRender = options.skipHeroMediaRender === true;
 
   if (!key) {
     showMessage("Enter an ASIN, UPC, PCI, Best Buy SKU, Walmart itemId, or Target TCIN.");
+    if (showFullLoading) revealDashboardAfterPaint();
+    else setDashboardLoading(false);
     return;
   }
 
   state.lastKey = key;
-  setDashboardLoading(true);
+
+  if (showFullLoading) {
+    setDashboardLoading(true);
+  } else {
+    setDashboardLoading(false);
+  }
 
   try{
     const res = await fetch(`/api/compare/${encodeURIComponent(key)}`, {
@@ -4328,7 +4647,9 @@ async function run(raw){
     renderDimensions();
     renderSidebarSpecs();
     renderContents();
-    renderHeroMediaCarousel();
+    if (!skipHeroMediaRender) {
+      renderHeroMediaCarousel();
+    }
     renderFilesCard();
     renderLineup();
 
@@ -4365,7 +4686,12 @@ async function run(raw){
 
     syncDashboardShortlistButton();
     scheduleDashboardTocRefresh();
-    revealDashboardAfterPaint();
+
+    if (showFullLoading) {
+      revealDashboardAfterPaint();
+    } else {
+      setDashboardLoading(false);
+    }
 
   } catch(err){
     if (isStaleRun(runToken)) return;
@@ -4836,12 +5162,6 @@ async function loadBrandFollowState() {
     setFollowButtonUi();
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PATCH: replace the existing toggleBrandFollow() function in dashboard.js
-// with this version. The only change is the window.dispatchEvent call at the
-// end so partials.js / following.js can react immediately.
-// ─────────────────────────────────────────────────────────────────────────────
 
 async function toggleBrandFollow() {
   const brand = String(state.followBrand || '').trim();
@@ -8081,9 +8401,4 @@ function renderDimensions(){
 }
 
   window.run = run;
-
-  window.addEventListener('popstate', () => {
-    const raw = currentKeyFromUrl();
-    if (raw) run(raw);
-  });
 })();
