@@ -534,8 +534,19 @@ _skelResizeTimer = setTimeout(() => {
   let _busy  = false;
   const PAGE = 24;
 
-  const HOME_FEED_CACHE_KEY = "pc_home_feed_cache_v1";
-  const HOME_FEED_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+  const HOME_FEED_CACHE_KEY = "pc_home_feed_cache_v3_headphones_recent";
+
+  function homeFeedDateKey(d = new Date()) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Los_Angeles",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(d);
+
+    const get = type => parts.find(p => p.type === type)?.value || "";
+    return `${get("year")}-${get("month")}-${get("day")}`;
+  }
 
   function normSig(sig) {
     return {
@@ -554,8 +565,7 @@ _skelResizeTimer = setTimeout(() => {
       const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== "object") return null;
 
-      const age = Date.now() - Number(parsed.savedAt || 0);
-      if (!Number.isFinite(age) || age < 0 || age > HOME_FEED_CACHE_TTL) {
+      if (parsed.dateKey !== homeFeedDateKey()) {
         localStorage.removeItem(HOME_FEED_CACHE_KEY);
         return null;
       }
@@ -575,6 +585,7 @@ _skelResizeTimer = setTimeout(() => {
   function writeHomeFeedCache(payload) {
     try {
       localStorage.setItem(HOME_FEED_CACHE_KEY, JSON.stringify({
+        dateKey: homeFeedDateKey(),
         savedAt: Date.now(),
         rows: Array.isArray(payload?.rows) ? payload.rows : [],
         sig: normSig(payload?.sig),
@@ -696,21 +707,18 @@ _skelResizeTimer = setTimeout(() => {
   }
 }
 
-  // ── API call ──────────────────────────────────────────────────────────────
   async function apiFeed(sig, off, lim) {
-    const r = await fetch("/api/home_feed", {
-      method:"POST",
-      headers:{"Content-Type":"application/json",Accept:"application/json"},
-      body: JSON.stringify({
-        signals:      { brands:sig.brands, categories:sig.categories, keywords:sig.keywords },
-        exclude_keys: [...(sig.seenKeys||[]), ..._seen],
-        limit: lim,
-        offset: off,
-      }),
-    });
-    if (!r.ok) throw new Error(r.status);
-    return r.json();
-  }
+const url = `/api/home_feed?limit=${encodeURIComponent(lim)}&offset=${encodeURIComponent(off)}`;
+
+const r = await fetch(url, {
+  method: "GET",
+  headers: { Accept: "application/json" },
+  cache: "force-cache"
+});
+
+if (!r.ok) throw new Error(r.status);
+return r.json();
+}
 
 async function loadFirst(sig, opts = {}) {
   const forceRefresh = !!opts.forceRefresh;
@@ -863,56 +871,25 @@ async function loadFirst(sig, opts = {}) {
   }
 
   async function boot() {
-  const cold = { brands: [], categories: [], keywords: [], seenKeys: [] };
+    const cold = { brands: [], categories: [], keywords: [], seenKeys: [] };
 
-  initHomeShortlistUi();
+    initHomeShortlistUi();
 
-  const cached = readHomeFeedCache();
-  if (cached?.rows?.length) {
-    hydrateFromCache(cached);
-    wireScroll();
-    return;
-  }
+    document.body.classList.add("pc-home-ready");
 
-  let signedIn = false;
-  try {
-    signedIn = await getHomeViewerSignedIn();
-  } catch (_) {
-    signedIn = false;
-  }
+    _sig = cold;
+    renderPills(cold);
 
-  if (!signedIn) {
-  _sig = cold;
-  renderPills(cold);
-  await loadFirst(cold);
-  wireScroll();
-  return;
-}
-
-let sig = cold;
-
-try {
-  const r = await fetch("/api/history", {
-    credentials: "same-origin",
-    headers: { Accept: "application/json" }
-  });
-
-  const json = r.ok ? await r.json() : null;
-
-  if (json?.signed_in && Array.isArray(json.results) && json.results.length) {
-    const nextSig = extractSignals(json.results);
-
-    if (nextSig.brands.length || nextSig.categories.length || nextSig.keywords.length) {
-      sig = nextSig;
+    const cached = readHomeFeedCache();
+    if (cached?.rows?.length) {
+      hydrateFromCache(cached);
+      wireScroll();
+      return;
     }
-  }
-} catch (_) {}
 
-_sig = sig;
-renderPills(sig);
-await loadFirst(sig);
-wireScroll();
-}
+    await loadFirst(cold);
+    wireScroll();
+  }
 
   boot();
 })();
