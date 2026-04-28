@@ -5565,6 +5565,8 @@ body {
 #nextStepsCard{
   width: 100%;
   clear: both;
+  padding-top: 30px;
+  padding-bottom: 30px;
 }
 
 @media (max-width: 1100px){
