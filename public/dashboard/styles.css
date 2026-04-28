@@ -1238,6 +1238,7 @@ aside .note{
   padding:16px;
   display:grid;
   gap:12px;
+  align-content:start;
 }
 
 .pc-verdict-buy-skip .pc-verdict-list-card:first-child{
