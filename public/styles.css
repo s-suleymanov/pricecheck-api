@@ -1614,6 +1614,10 @@ body.has-shortlist .shortlist-rail{
     display: none;
   }
 
+  .home-deal__shortlist{
+    display: none;
+  }
+
   .home-deals__grid{
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
