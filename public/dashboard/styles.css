@@ -5548,7 +5548,7 @@ body {
 
 .dashboard-split__right #offersCard{
   width: 100%;
-  padding: 5px 8px;
+  padding: 0 5px;
 }
 
 .chart{
