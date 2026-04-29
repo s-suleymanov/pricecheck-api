@@ -3947,9 +3947,10 @@ button.pc-lineup-model{
 }
 
 .variant-color-grid{
-  display:grid;
-  grid-template-columns:minmax(0, max-content) minmax(0, 1fr);
-  align-items:start;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: stretch;
 }
 
 #variant2Card,
