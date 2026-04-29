@@ -232,6 +232,184 @@ function absImageUrl(url) {
   return `${SITE_ORIGIN}${u.startsWith("/") ? "" : "/"}${u}`;
 }
 
+function normalizeDashboardRankKey(raw) {
+  const s = String(raw || "").trim();
+  const i = s.indexOf(":");
+  if (i === -1) return null;
+
+  const kind = s.slice(0, i).trim().toLowerCase();
+  const value = s.slice(i + 1).trim();
+
+  if (!value) return null;
+  if (kind !== "pci" && kind !== "upc") return null;
+
+  return {
+    kind,
+    value: kind === "pci"
+      ? value.toUpperCase()
+      : value.replace(/[\s-]/g, "")
+  };
+}
+
+function sameRankKey(row, target) {
+  if (!row || !target) return false;
+
+  if (target.kind === "pci") {
+    return String(row.pci || "").trim().toUpperCase() === target.value;
+  }
+
+  if (target.kind === "upc") {
+    return String(row.upc || "").replace(/[\s-]/g, "") === target.value;
+  }
+
+  return false;
+}
+
+router.get("/api/rankings/:category/rank", async (req, res, next) => {
+  try {
+    const categorySlug = slugify(req.params.category || "");
+    const categoryLabel = slugToTitle(categorySlug);
+    const terms = categoryTerms(categorySlug);
+    const target = normalizeDashboardRankKey(req.query.key);
+
+    if (!target) {
+      return res.status(400).json({ error: "Missing rank key." });
+    }
+
+    const q = await pool.query(
+      `
+      WITH catalog_rows AS (
+        SELECT
+          c.id,
+          c.pci,
+          c.upc,
+          c.brand,
+          c.model_name,
+          c.model_number,
+          c.category,
+          c.image_url,
+          c.specs_norm,
+          c.created_at,
+          upper(btrim(c.model_number)) AS model_number_norm,
+          COALESCE(NULLIF(lower(btrim(c.version)), ''), '__default__') AS version_norm
+        FROM public.catalog c
+        WHERE c.category IS NOT NULL
+          AND btrim(c.category) <> ''
+          AND lower(btrim(c.category)) = ANY($1::text[])
+          AND c.model_number IS NOT NULL
+          AND btrim(c.model_number) <> ''
+          AND c.specs_norm IS NOT NULL
+          AND jsonb_typeof(c.specs_norm) = 'object'
+      ),
+      group_prices AS (
+        SELECT
+          cr.model_number_norm,
+          cr.version_norm,
+          MIN(
+            CASE
+              WHEN l.effective_price_cents IS NOT NULL
+               AND l.effective_price_cents > 0
+               AND (
+                 l.current_price_cents IS NULL
+                 OR l.current_price_cents <= 0
+                 OR l.effective_price_cents <= l.current_price_cents
+               )
+              THEN l.effective_price_cents
+              WHEN l.current_price_cents IS NOT NULL AND l.current_price_cents > 0
+              THEN l.current_price_cents
+              ELSE NULL
+            END
+          ) AS best_price_cents
+        FROM catalog_rows cr
+        JOIN public.listings l
+          ON (
+            (
+              cr.pci IS NOT NULL
+              AND btrim(cr.pci) <> ''
+              AND l.pci IS NOT NULL
+              AND btrim(l.pci) <> ''
+              AND upper(btrim(l.pci)) = upper(btrim(cr.pci))
+            )
+            OR
+            (
+              cr.upc IS NOT NULL
+              AND btrim(cr.upc) <> ''
+              AND l.upc IS NOT NULL
+              AND btrim(l.upc) <> ''
+              AND public.norm_upc(l.upc) = public.norm_upc(cr.upc)
+            )
+          )
+         AND coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
+        GROUP BY cr.model_number_norm, cr.version_norm
+      ),
+      picked AS (
+        SELECT DISTINCT ON (cr.model_number_norm, cr.version_norm)
+          cr.pci,
+          cr.upc,
+          cr.brand,
+          cr.model_name,
+          cr.model_number,
+          cr.category,
+          cr.image_url,
+          cr.specs_norm,
+          cr.model_number_norm,
+          cr.version_norm,
+          gp.best_price_cents
+        FROM catalog_rows cr
+        JOIN group_prices gp
+          ON gp.model_number_norm = cr.model_number_norm
+         AND gp.version_norm = cr.version_norm
+        WHERE gp.best_price_cents IS NOT NULL
+        ORDER BY
+          cr.model_number_norm,
+          cr.version_norm,
+          CASE WHEN cr.image_url IS NULL OR btrim(cr.image_url) = '' THEN 1 ELSE 0 END,
+          CASE WHEN cr.pci IS NULL OR btrim(cr.pci) = '' THEN 1 ELSE 0 END,
+          cr.created_at DESC NULLS LAST,
+          cr.id DESC
+      )
+      SELECT *
+      FROM picked
+      LIMIT 300
+      `,
+      [terms.map(t => t.toLowerCase())]
+    );
+
+    const ranked = q.rows
+      .map((row) => {
+        const featureScore = scoreProduct(categorySlug, row.specs_norm || {});
+        const price = Number(row.best_price_cents) / 100;
+        const valueScore = price > 0 ? featureScore / Math.sqrt(price) : 0;
+
+        return {
+          ...row,
+          featureScore,
+          valueScore
+        };
+      })
+      .sort((a, b) => b.valueScore - a.valueScore)
+      .slice(0, 50);
+
+    const index = ranked.findIndex(row => sameRankKey(row, target));
+
+    if (index === -1) {
+      return res.status(404).json({ error: "Rank not found." });
+    }
+
+    const row = ranked[index];
+
+    return res.json({
+      rank: index + 1,
+      total: ranked.length,
+      category: categoryLabel,
+      score: Number(row.valueScore || 0),
+      url: `/rankings/${categorySlug}/`
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get(["/rankings/:category", "/rankings/:category/"], async (req, res, next) => {
   try {
     const categorySlug = slugify(req.params.category || "");

@@ -1860,6 +1860,46 @@ aside .note{
   border:1px solid transparent;
 }
 
+.ph-rank-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  min-height:28px;
+  padding:0 7px;
+  border-radius:9px;
+  background:#eef2ff;
+  color:#4338ca;
+  font-size:17px;
+  line-height:1;
+  font-weight:700;
+  white-space:nowrap;
+  text-decoration:none;
+  border:1px solid transparent;
+}
+
+.ph-rank-badge[hidden]{
+  display:none !important;
+}
+
+.ph-rank-badge:hover{
+  background:#e0e7ff;
+  color:#3730a3;
+  text-decoration:none;
+}
+
+.ph-rank-badge svg{
+  width:20px;
+  height:20px;
+  display:block;
+  fill:currentColor;
+  flex:0 0 auto;
+}
+
+.ph-rank-badge span{
+  display:inline-block;
+}
+
 .ph-title-block{
   display:grid;
   gap:10px;

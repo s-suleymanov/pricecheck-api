@@ -99,6 +99,7 @@
 
   const PRODUCT_HEADER_TOC_ICON_PATH = 'M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z';
   const QA_REPLY_ICON_PATH = 'M760-200v-160q0-50-35-85t-85-35H273l144 144-57 56-240-240 240-240 57 56-144 144h367q83 0 141.5 58.5T840-360v160h-80Z';
+  const RANK_GEM_ICON_PATH = 'M480-120 80-600l120-240h560l120 240-400 480Zm-95-520h190l-60-120h-70l-60 120Zm55 347v-267H218l222 267Zm80 0 222-267H520v267Zm144-347h106l-60-120H604l60 120Zm-474 0h106l60-120H250l-60 120Z';
 
   function getDashboardHeaderOffset() {
     const host = document.getElementById('siteHeader')
@@ -2674,6 +2675,112 @@ function clearTitleRatingBadge(){
   el.textContent = '';
 }
 
+function categoryToRankingSlug(raw) {
+  const s = normalizeSpaces(raw || '').toLowerCase();
+
+  if (!s) return '';
+  if (s.includes('earbud')) return 'earbuds';
+  if (s.includes('headphone')) return 'headphones';
+  if (s.includes('speaker')) return 'speakers';
+  if (s === 'tv' || s.includes('smart tv') || s.includes('television')) return 'tv';
+  if (s.includes('robot vacuum')) return 'robot-vacuum';
+
+  return s
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function getCurrentRankKey() {
+  const cur = getCurrentVariant() || null;
+
+  const selectedKey = normalizeKey(state.selectedVariantKey || '');
+  if (/^(pci|upc):/i.test(selectedKey)) return selectedKey;
+
+  const pci =
+    String(cur?.pci || '').trim() ||
+    String(state.identity?.selected_pci || state.identity?.pci || '').trim();
+
+  if (pci) return `pci:${pci}`;
+
+  const upc =
+    String(cur?.upc || '').trim() ||
+    String(state.identity?.selected_upc || state.identity?.upc || '').trim();
+
+  if (upc) return `upc:${upc}`;
+
+  return '';
+}
+
+function clearRankBadge() {
+  const el = document.getElementById('phRankBadge');
+  if (!el) return;
+
+  el.hidden = true;
+  el.innerHTML = '';
+  el.removeAttribute('data-tooltip');
+  el.removeAttribute('tabindex');
+}
+
+function renderRankBadge(data, categorySlug) {
+  const el = document.getElementById('phRankBadge');
+  if (!el) return;
+
+  const rank = Number(data?.rank);
+  if (!Number.isInteger(rank) || rank <= 0) {
+    clearRankBadge();
+    return;
+  }
+
+  const fallbackUrl = `/rankings/${categorySlug}/`;
+  const href = safeHttpHref(data?.url || fallbackUrl, { sameOrigin: true }) || fallbackUrl;
+
+  el.href = href;
+  el.innerHTML = `
+    <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+      <path d="${escapeHtml(RANK_GEM_ICON_PATH)}"></path>
+    </svg>
+    <span>#${rank}</span>
+  `;
+  el.setAttribute('data-tooltip', 'PriceCheck Rank');
+  el.setAttribute('aria-label', `PriceCheck rank #${rank}`);
+  el.setAttribute('tabindex', '0');
+  el.hidden = false;
+}
+
+async function loadRankBadge(runToken) {
+  clearRankBadge();
+
+  const cur = getCurrentVariant() || null;
+  const categorySlug = categoryToRankingSlug(cur?.category || state.identity?.category || '');
+  const key = getCurrentRankKey();
+
+  if (!categorySlug || !key) return;
+
+  try {
+    const res = await fetch(
+      `/api/rankings/${encodeURIComponent(categorySlug)}/rank?key=${encodeURIComponent(key)}`,
+      { headers: { Accept: 'application/json' } }
+    );
+
+    if (runToken != null && isStaleRun(runToken)) return;
+
+    if (!res.ok) {
+      clearRankBadge();
+      return;
+    }
+
+    const data = await res.json().catch(() => null);
+
+    if (runToken != null && isStaleRun(runToken)) return;
+
+    renderRankBadge(data, categorySlug);
+  } catch {
+    if (runToken != null && isStaleRun(runToken)) return;
+    clearRankBadge();
+  }
+}
+
 function clearTopbarRatingSummary(){
   setTopbarRatingSummary(null, null);
 }
@@ -4560,8 +4667,10 @@ async function run(raw, options = {}){
     state.selectedVariantKey = chooseSelectedVariantKeyFromKey(state.lastKey, data);
     syncSelectorsFromSelectedKey();
 
-    if (isStaleRun(runToken)) return;
+    loadRankBadge(runToken);
 
+    if (isStaleRun(runToken)) return;
+    
     const id = data.identity || {};
     const cur = (() => {
       const k = chooseSelectedVariantKeyFromKey(state.lastKey, data);
