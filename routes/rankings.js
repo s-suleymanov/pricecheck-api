@@ -783,6 +783,7 @@ router.get(["/rankings/:category", "/rankings/:category/"], async (req, res, nex
 
     @media(max-width:700px){
       .ranking-page{
+        margin-top:50px;
         padding:22px 14px 60px;
       }
 
@@ -791,13 +792,30 @@ router.get(["/rankings/:category", "/rankings/:category/"], async (req, res, nex
       }
 
       .ranking-item{
-        grid-template-columns:44px 74px minmax(0,1fr);
-        gap:10px;
+        grid-template-columns:74px minmax(0,1fr);
+        grid-template-areas:
+          "rank body"
+          "image body";
+        gap:8px 12px;
+        align-items:start;
+      }
+
+      .ranking-rank{
+        grid-area:rank;
+        font-size:42px;
+        line-height:1;
+        text-align:center;
       }
 
       .ranking-img{
+        grid-area:image;
         width:74px;
         height:74px;
+      }
+
+      .ranking-body{
+        grid-area:body;
+        min-width:0;
       }
 
       .ranking-title{
