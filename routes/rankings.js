@@ -301,6 +301,27 @@ router.get("/api/rankings/:category/rank", async (req, res, next) => {
           AND c.specs_norm IS NOT NULL
           AND jsonb_typeof(c.specs_norm) = 'object'
       ),
+      target_group AS (
+        SELECT DISTINCT
+          cr.model_number_norm,
+          cr.version_norm
+        FROM catalog_rows cr
+        WHERE
+          (
+            $2::text = 'pci'
+            AND cr.pci IS NOT NULL
+            AND btrim(cr.pci) <> ''
+            AND upper(btrim(cr.pci)) = upper(btrim($3::text))
+          )
+          OR
+          (
+            $2::text = 'upc'
+            AND cr.upc IS NOT NULL
+            AND btrim(cr.upc) <> ''
+            AND public.norm_upc(cr.upc) = public.norm_upc($3::text)
+          )
+        LIMIT 1
+      ),
       group_prices AS (
         SELECT
           cr.model_number_norm,
@@ -354,7 +375,13 @@ router.get("/api/rankings/:category/rank", async (req, res, next) => {
           cr.specs_norm,
           cr.model_number_norm,
           cr.version_norm,
-          gp.best_price_cents
+          gp.best_price_cents,
+          EXISTS (
+            SELECT 1
+            FROM target_group tg
+            WHERE tg.model_number_norm = cr.model_number_norm
+              AND tg.version_norm = cr.version_norm
+          ) AS is_target_group
         FROM catalog_rows cr
         JOIN group_prices gp
           ON gp.model_number_norm = cr.model_number_norm
@@ -372,7 +399,7 @@ router.get("/api/rankings/:category/rank", async (req, res, next) => {
       FROM picked
       LIMIT 300
       `,
-      [terms.map(t => t.toLowerCase())]
+      [terms.map(t => t.toLowerCase()), target.kind, target.value]
     );
 
     const ranked = q.rows
@@ -390,7 +417,7 @@ router.get("/api/rankings/:category/rank", async (req, res, next) => {
       .sort((a, b) => b.valueScore - a.valueScore)
       .slice(0, 50);
 
-    const index = ranked.findIndex(row => sameRankKey(row, target));
+    const index = ranked.findIndex(row => !!row.is_target_group);
 
     if (index === -1) {
       return res.status(404).json({ error: "Rank not found." });
