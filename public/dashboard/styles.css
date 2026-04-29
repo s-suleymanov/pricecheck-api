@@ -4821,6 +4821,30 @@ body {
   padding: 18px 0 18px 18px;
 }
 
+.offer-wrapper:has(> .offer.offer--cheapest){
+  padding: 5px 0;
+}
+
+.offer.offer--cheapest{
+  background:
+    radial-gradient(circle at 14% 50%, rgba(255, 250, 226, 0.62) 0%, rgba(255, 250, 226, 0) 38%),
+    linear-gradient(
+      90deg,
+      #faefcc 0%,
+      #fcf5dd 28%,
+      #fff9ea 56%,
+      #fffdf6 78%,
+      #ffffff 100%
+    );
+  border-radius: 18px;
+  padding: 13px 0 13px 18px;
+}
+
+/* Prevent normal divider from touching the cheapest highlight */
+.offer-wrapper:has(> .offer.offer--cheapest) + .offer-wrapper{
+  border-top: none;
+}
+
 .offer-store-cell{
   min-width:0;
   display:grid;

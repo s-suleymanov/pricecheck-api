@@ -6802,6 +6802,12 @@ async function renderOffers(sortByPrice, runToken){
     });
   }
 
+  const cheapestOfferCents = arr.reduce((best, offer) => {
+    const cents = Number(offer?._price_cents);
+    if (!Number.isFinite(cents) || cents <= 0) return best;
+    return best == null || cents < best ? cents : best;
+  }, null);
+
   const sellerRows = await Promise.all(
     arr.map(async (o) => {
       const sellerInfo = await getSellerInfo(o.store);
@@ -6847,7 +6853,11 @@ async function renderOffers(sortByPrice, runToken){
       : `<span class="offer-logo-spacer" aria-hidden="true"></span>`;
 
     const row = document.createElement('div');
-    row.className = 'offer';
+    const isCheapestOffer =
+      cheapestOfferCents != null &&
+      Number(o?._price_cents) === cheapestOfferCents;
+
+    row.className = `offer${isCheapestOffer ? ' offer--cheapest' : ''}`;
 
     row.innerHTML = `
       <div class="offer-store-cell" data-label="Store">
