@@ -1,0 +1,453 @@
+[
+  {
+    "slug": "best-under-100",
+    "path": "/guides/earbuds/best-under-100/",
+    "type": "guide",
+    "category": "earbuds",
+    "title": "Best Earbuds Under $100",
+    "seo_title": "Best Earbuds Under $100 - PriceCheck",
+    "description": "Compare the best earbuds under $100 using current prices, specs, battery life, ANC, water resistance, codec support, and PriceCheck product data.",
+    "price_cap_cents": 10000,
+    "hero": {
+      "eyebrow": "Buying Guide",
+      "heading": "Best Earbuds Under $100",
+      "dek": "A practical guide to the best earbuds under $100, comparing current prices, battery life, noise cancelling, comfort, water resistance, and everyday features."
+    },
+    "quick_answer": {
+      "heading": "Quick Answer",
+      "items": [
+        {
+          "label": "Best Overall",
+          "slot": "best_overall"
+        },
+        {
+          "label": "Best Workout Pick",
+          "slot": "best_workout"
+        },
+        {
+          "label": "Best Battery Pick",
+          "slot": "best_battery"
+        },
+        {
+          "label": "iPhone-Friendly Pick",
+          "slot": "best_iphone"
+        },
+        {
+          "label": "Best Cheap Pick",
+          "slot": "best_cheap"
+        }
+      ]
+    },
+    "pick_slots": [
+      {
+        "slot": "best_overall",
+        "label": "Best Overall",
+        "strategy": "highest_value_score"
+      },
+      {
+        "slot": "best_workout",
+        "label": "Best Workout Pick",
+        "strategy": "best_workout_score"
+      },
+      {
+        "slot": "best_battery",
+        "label": "Best Battery Pick",
+        "strategy": "best_battery_score"
+      },
+      {
+        "slot": "best_iphone",
+        "label": "iPhone-Friendly Pick",
+        "strategy": "best_iphone_score"
+      },
+      {
+        "slot": "best_cheap",
+        "label": "Best Cheap Pick",
+        "strategy": "lowest_price_with_acceptable_score"
+      }
+    ],
+    "comparison_rows": [
+      {
+        "label": "Price",
+        "key": "price"
+      },
+      {
+        "label": "ANC",
+        "key": "active_noise_cancelling"
+      },
+      {
+        "label": "Battery",
+        "key": "battery_life_hours"
+      },
+      {
+        "label": "Case Battery",
+        "key": "battery_life_with_case_hours"
+      },
+      {
+        "label": "Water Resistance",
+        "key": "water_resistance_rating"
+      },
+      {
+        "label": "Multipoint",
+        "key": "multipoint_pairing"
+      },
+      {
+        "label": "Codec Support",
+        "key": "codec_support"
+      },
+      {
+        "label": "Wireless Charging",
+        "key": "wireless_charging_case"
+      }
+    ],
+    "method": {
+      "heading": "How PriceCheck Ranks Them",
+      "body": "PriceCheck filters earbuds under $100, groups color variants into the same product family, checks current store prices, and compares specs such as battery life, ANC, water resistance, multipoint, codec support, and wireless charging."
+    },
+    "related": [
+      {
+        "label": "All Earbuds Ranked By Value",
+        "href": "/rankings/earbuds/"
+      },
+      {
+        "label": "Liberty 4 NC vs Method 360 ANC",
+        "href": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/"
+      }
+    ]
+  },
+  {
+  "slug": "soundcore-liberty-4-nc-vs-skullcandy-method-360-anc",
+  "path": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "soundcore Liberty 4 NC vs Skullcandy Method 360 ANC",
+  "seo_title": "soundcore Liberty 4 NC vs Skullcandy Method 360 ANC - PriceCheck",
+  "description": "Compare soundcore Liberty 4 NC and Skullcandy Method 360 ANC by current price, ANC, battery life, water resistance, codec support, wireless charging, seller availability, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Liberty 4 NC vs Skullcandy Method 360 ANC",
+    "dek": "A side-by-side comparison of soundcore Liberty 4 NC and Skullcandy Method 360 ANC earbuds based on price, ANC, battery life, workout fit, and everyday features."
+  },
+  "products": [
+    {
+      "slot": "liberty_4_nc",
+      "label": "soundcore Liberty 4 NC",
+      "brand": "soundcore",
+      "match": "Liberty 4 NC"
+    },
+    {
+      "slot": "method_360_anc",
+      "label": "Skullcandy Method 360 ANC",
+      "brand": "Skullcandy",
+      "match": "Method 360 ANC"
+    }
+  ],
+  "quick_answer": [
+    {
+      "label": "Pick Liberty 4 NC if",
+      "product_slot": "liberty_4_nc",
+      "body": "You want the better all-around feature set, LDAC, wireless charging, and a more practical everyday case."
+    },
+    {
+      "label": "Pick Method 360 ANC if",
+      "product_slot": "method_360_anc",
+      "body": "You want Bose-tuned sound, secure fit fins, workout-friendly design, and the Skullcandy case style."
+    }
+  ],
+  "winners": [
+    {
+      "label": "Overall Value",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Stronger all-around feature set for most buyers."
+    },
+    {
+      "label": "Workout Fit",
+      "winner_slot": "method_360_anc",
+      "reason": "The fit-fin design is better suited for movement."
+    },
+    {
+      "label": "Battery",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Better total battery package."
+    },
+    {
+      "label": "Codec Support",
+      "winner_slot": "liberty_4_nc",
+      "reason": "LDAC gives it the stronger codec advantage."
+    },
+    {
+      "label": "Case Portability",
+      "winner_slot": "liberty_4_nc",
+      "reason": "More practical for everyday carry."
+    },
+    {
+      "label": "Brand/Style",
+      "winner_slot": "method_360_anc",
+      "reason": "Skullcandy has the louder case style and Bose-tuned positioning."
+    },
+    {
+      "label": "ANC Features",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Better feature depth for everyday noise cancelling."
+    }
+  ],
+  "comparison_rows": [
+    {
+      "label": "Price",
+      "key": "price"
+    },
+    {
+      "label": "ANC",
+      "key": "active_noise_cancelling"
+    },
+    {
+      "label": "Battery",
+      "key": "battery_life_hours"
+    },
+    {
+      "label": "Case Battery",
+      "key": "battery_life_with_case_hours"
+    },
+    {
+      "label": "Water Resistance",
+      "key": "water_resistance_rating"
+    },
+    {
+      "label": "Multipoint",
+      "key": "multipoint_pairing"
+    },
+    {
+      "label": "Codec Support",
+      "key": "codec_support"
+    },
+    {
+      "label": "Wireless Charging",
+      "key": "wireless_charging_case"
+    },
+    {
+      "label": "Best Seller",
+      "key": "best_seller"
+    }
+  ],
+  "verdict_blocks": [
+    {
+      "heading": "Buy Liberty 4 NC if",
+      "product_slot": "liberty_4_nc",
+      "items": [
+        "You want the safer all-around feature set.",
+        "You care about LDAC, wireless charging, and everyday convenience.",
+        "You want the better practical pick for normal daily use."
+      ]
+    },
+    {
+      "heading": "Buy Method 360 ANC if",
+      "product_slot": "method_360_anc",
+      "items": [
+        "You want a more secure workout fit.",
+        "You care about the Bose-tuned sound positioning.",
+        "You prefer Skullcandy's case style and sport-focused design."
+      ]
+    }
+  ],
+  "method": {
+    "heading": "How PriceCheck Compares These Earbuds",
+    "body": "PriceCheck compares soundcore Liberty 4 NC and Skullcandy Method 360 ANC using current prices, seller availability, normalized specs, and review signals. The main factors are price, ANC, battery life, water resistance, codec support, wireless charging, and workout fit."
+  },
+  "related": [
+    {
+      "label": "Best Earbuds Under $100",
+      "href": "/guides/earbuds/best-under-100/"
+    },
+    {
+      "label": "All Earbuds Ranked By Value",
+      "href": "/rankings/earbuds/"
+    }
+  ]
+},
+{
+  "slug": "sony-wf-1000xm5-worth-it",
+  "path": "/guides/earbuds/sony-wf-1000xm5-worth-it/",
+  "type": "worth_it",
+  "category": "earbuds",
+  "title": "Are Sony WF-1000XM5 Worth It?",
+  "seo_title": "Are Sony WF-1000XM5 Worth It? - PriceCheck",
+  "description": "Decide whether the Sony WF-1000XM5 are worth buying at today's price, or whether cheaper and newer alternatives make more sense.",
+  "hero": {
+    "eyebrow": "Worth It?",
+    "heading": "Are Sony WF-1000XM5 Worth It?",
+    "dek": "A price-focused guide to Sony WF-1000XM5 earbuds, comparing current price, ANC, LDAC support, battery life, comfort, and cheaper alternatives."
+  },
+  "quick_answer": "The Sony WF-1000XM5 are worth it if you want premium ANC, LDAC support, strong sound quality, and a smaller premium earbud design. They are not the best value if the price is near $248, because cheaper earbuds now cover many everyday features well.",
+  "products": [
+    {
+      "slot": "sony_wf_1000xm5",
+      "label": "Sony WF-1000XM5",
+      "brand": "Sony",
+      "match": "WF-1000XM5"
+    },
+    {
+      "slot": "liberty_4_nc",
+      "label": "soundcore Liberty 4 NC",
+      "brand": "soundcore",
+      "match": "Liberty 4 NC"
+    },
+    {
+      "slot": "airpods_pro_2",
+      "label": "Airpods Pro 2",
+      "brand": "Apple",
+      "match": "Airpods Pro 2",
+      "pci": "YQCKHL1M"
+    },
+    {
+      "slot": "bose_qc_ultra",
+      "label": "Bose QuietComfort Ultra Earbuds",
+      "brand": "Bose",
+      "match": "QuietComfort Ultra Earbuds"
+    },
+    {
+      "slot": "galaxy_buds3_pro",
+      "label": "Samsung Galaxy Buds3 Pro",
+      "brand": "Samsung",
+      "match": "Galaxy Buds3 Pro"
+    }
+  ],
+  "price_ranges": [
+    {
+        "range": "Under $180",
+        "label": "Strong Buy",
+        "min_cents": 0,
+        "max_cents": 17999
+    },
+    {
+        "range": "$180 To $220",
+        "label": "Fair Price",
+        "min_cents": 18000,
+        "max_cents": 22000
+    },
+    {
+        "range": "$220 To $250",
+        "label": "Worth It For Sony Buyers",
+        "min_cents": 22001,
+        "max_cents": 25000
+    },
+    {
+        "range": "Above $250",
+        "label": "Compare Alternatives First",
+        "min_cents": 25001,
+        "max_cents": null
+    }
+    ],
+  "pricecheck_verdict": "Recommended for premium ANC and LDAC, but not the best value at this price.",
+  "buy_if": [
+    "You want premium ANC.",
+    "You want LDAC support.",
+    "You prefer Sony sound and app controls.",
+    "You want a smaller premium earbud than older Sony models.",
+    "You care about strong everyday listening quality."
+  ],
+  "skip_if": [
+    "You want the best value under $100.",
+    "You are sensitive to earbud fit.",
+    "You mainly use iPhone and want Apple ecosystem features.",
+    "You want the lowest-price ANC earbuds that are good enough.",
+    "You do not care about LDAC."
+  ],
+  "alternatives": [
+    {
+      "label": "Better Value",
+      "product_slot": "liberty_4_nc",
+      "body": "Much cheaper, still strong for ANC, LDAC, battery, and everyday features."
+    },
+    {
+      "label": "Better iPhone Pick",
+      "product_slot": "airpods_pro_2",
+      "body": "Better for Apple ecosystem features, device switching, and iOS controls."
+    },
+    {
+      "label": "Premium ANC Alternative",
+      "product_slot": "bose_qc_ultra",
+      "body": "Better if ANC is the top priority and you are okay paying premium pricing."
+    },
+    {
+      "label": "Samsung Ecosystem Pick",
+      "product_slot": "galaxy_buds3_pro",
+      "body": "Better if you use Samsung devices and want ecosystem features."
+    }
+  ],
+  "comparison_rows": [
+    {
+      "label": "Current Price",
+      "key": "price"
+    },
+    {
+      "label": "Best For",
+      "key": "best_for",
+      "values": {
+        "sony_wf_1000xm5": "Premium ANC, LDAC, Sony sound",
+        "liberty_4_nc": "Lower-price ANC and features",
+        "airpods_pro_2": "iPhone and Apple ecosystem",
+        "bose_qc_ultra": "Top-priority ANC",
+        "galaxy_buds3_pro": "Samsung ecosystem"
+      }
+    },
+    {
+      "label": "ANC",
+      "key": "active_noise_cancelling"
+    },
+    {
+      "label": "Battery",
+      "key": "battery_life_hours"
+    },
+    {
+      "label": "Case Battery",
+      "key": "battery_life_with_case_hours"
+    },
+    {
+      "label": "Water Resistance",
+      "key": "water_resistance_rating"
+    },
+    {
+      "label": "Multipoint",
+      "key": "multipoint_pairing"
+    },
+    {
+      "label": "Codec Support",
+      "key": "codec_support"
+    },
+    {
+      "label": "Wireless Charging",
+      "key": "wireless_charging_case"
+    },
+    {
+      "label": "Ecosystem Fit",
+      "key": "ecosystem_fit",
+      "values": {
+        "sony_wf_1000xm5": "Android and LDAC users",
+        "liberty_4_nc": "Broad everyday use",
+        "airpods_pro_2": "Apple users",
+        "bose_qc_ultra": "ANC-first buyers",
+        "galaxy_buds3_pro": "Samsung users"
+      }
+    }
+  ],
+  "final_verdict": "The Sony WF-1000XM5 are still strong premium earbuds, but they make the most sense when the price drops closer to $180 to $220. At $248, they are mainly for buyers who specifically want Sony ANC, LDAC, and premium sound. Most value-focused buyers should compare the Liberty 4 NC or another cheaper ANC model first.",
+  "method": {
+    "heading": "How PriceCheck Evaluates This Page",
+    "body": "PriceCheck evaluates the Sony WF-1000XM5 using current prices, seller availability, normalized specs, and review signals. This page gives the most weight to price, ANC, codec support, battery life, comfort, ecosystem fit, and how well the Sony WF-1000XM5 compare against lower-price alternatives."
+  },
+  "related": [
+    {
+      "label": "Best Earbuds Under $100",
+      "href": "/guides/earbuds/best-under-100/"
+
+    },
+    {
+      "label": "Liberty 4 NC vs Method 360 ANC",
+      "href": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/"
+    },
+    {
+      "label": "All Earbuds Ranked By Value",
+      "href": "/rankings/earbuds/"
+    }
+  ]
+}
+]

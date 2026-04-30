@@ -50,6 +50,7 @@ app.use(require("./routes/history"));
 app.use(require("./routes/labels"));
 app.use(require("./routes/algorithm"));
 app.use(require("./routes/rankings"));
+app.use(require("./routes/buying"));
 app.use("/api/reviews", require("./routes/reviews"));
 
 // health
