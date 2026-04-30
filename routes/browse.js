@@ -15,6 +15,15 @@ function normText(v) {
   return String(v ?? "").trim();
 }
 
+function limitText(v, max = 500) {
+  return String(v ?? "").trim().slice(0, max);
+}
+
+function cleanEventInt(v, fallback = null) {
+  const n = Number.parseInt(String(v ?? ""), 10);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 // Helper SQL snippet: normalize version for grouping.
 const VERSION_NORM_SQL = "COALESCE(NULLIF(lower(btrim(c.version)), ''), '')";
 
@@ -424,6 +433,138 @@ router.get("/api/browse", async (req, res) => {
 });
 
 // GET /api/shortlist_specs?keys=pci:ABC,upc:123
+
+// POST /api/browse_events
+router.post("/api/browse_events", express.json({ limit: "64kb" }), async (req, res) => {
+  const rawEvents = Array.isArray(req.body?.events)
+    ? req.body.events
+    : [req.body || {}];
+
+  const events = rawEvents
+    .slice(0, 100)
+    .map((e) => {
+      const eventType = limitText(e.event_type || e.eventType, 24).toLowerCase();
+
+      return {
+        event_type: eventType,
+        session_id: limitText(e.session_id, 120),
+
+        page_url: limitText(e.page_url, 1000),
+        referrer: limitText(e.referrer, 1000),
+        viewport: limitText(e.viewport, 80),
+
+        active_tab: limitText(e.active_tab, 60),
+        browse_q: limitText(e.browse_q, 200),
+        browse_brand: limitText(e.browse_brand, 200),
+        browse_category: limitText(e.browse_category, 200),
+        browse_family: limitText(e.browse_family, 200),
+        browse_variant: limitText(e.browse_variant, 200),
+        browse_color: limitText(e.browse_color, 200),
+        browse_condition: limitText(e.browse_condition, 60),
+        browse_sort: limitText(e.browse_sort, 60),
+        browse_page: cleanEventInt(e.browse_page),
+
+        result_position: cleanEventInt(e.result_position),
+
+        dashboard_key: limitText(e.dashboard_key, 240),
+        href: limitText(e.href, 1000),
+        product_title: limitText(e.product_title, 300),
+        product_brand: limitText(e.product_brand, 200),
+
+        source: "browse"
+      };
+    })
+    .filter((e) => {
+      if (e.event_type !== "impression" && e.event_type !== "click") return false;
+      if (!e.dashboard_key && !e.href) return false;
+      return true;
+    });
+
+  if (!events.length) {
+    return res.json({ ok: true, inserted: 0 });
+  }
+
+  try {
+    await pool.query(
+      `
+      INSERT INTO public.browse_product_events (
+        event_type,
+        session_id,
+        page_url,
+        referrer,
+        viewport,
+        active_tab,
+        browse_q,
+        browse_brand,
+        browse_category,
+        browse_family,
+        browse_variant,
+        browse_color,
+        browse_condition,
+        browse_sort,
+        browse_page,
+        result_position,
+        dashboard_key,
+        href,
+        product_title,
+        product_brand,
+        source
+      )
+      SELECT
+        x.event_type,
+        NULLIF(x.session_id, ''),
+        NULLIF(x.page_url, ''),
+        NULLIF(x.referrer, ''),
+        NULLIF(x.viewport, ''),
+        NULLIF(x.active_tab, ''),
+        NULLIF(x.browse_q, ''),
+        NULLIF(x.browse_brand, ''),
+        NULLIF(x.browse_category, ''),
+        NULLIF(x.browse_family, ''),
+        NULLIF(x.browse_variant, ''),
+        NULLIF(x.browse_color, ''),
+        NULLIF(x.browse_condition, ''),
+        NULLIF(x.browse_sort, ''),
+        x.browse_page,
+        x.result_position,
+        NULLIF(x.dashboard_key, ''),
+        NULLIF(x.href, ''),
+        NULLIF(x.product_title, ''),
+        NULLIF(x.product_brand, ''),
+        'browse'
+      FROM jsonb_to_recordset($1::jsonb) AS x (
+        event_type TEXT,
+        session_id TEXT,
+        page_url TEXT,
+        referrer TEXT,
+        viewport TEXT,
+        active_tab TEXT,
+        browse_q TEXT,
+        browse_brand TEXT,
+        browse_category TEXT,
+        browse_family TEXT,
+        browse_variant TEXT,
+        browse_color TEXT,
+        browse_condition TEXT,
+        browse_sort TEXT,
+        browse_page INTEGER,
+        result_position INTEGER,
+        dashboard_key TEXT,
+        href TEXT,
+        product_title TEXT,
+        product_brand TEXT
+      )
+      `,
+      [JSON.stringify(events)]
+    );
+
+    return res.json({ ok: true, inserted: events.length });
+  } catch (e) {
+    console.error("browse_events error:", e);
+    return res.status(500).json({ ok: false, error: "server_error" });
+  }
+});
+
 router.get("/api/shortlist_specs", async (req, res) => {
   const rawKeys = String(req.query.keys || "").trim();
 

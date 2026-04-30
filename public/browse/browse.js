@@ -191,6 +191,162 @@ function syncShortlistButtons(root = document) {
   }
 }
 
+const BROWSE_TRACKING_SESSION_KEY = "pc_browse_session_id";
+const browseTrackedImpressions = new Set();
+let browseImpressionObserver = null;
+
+function getBrowseTrackingSessionId() {
+  try {
+    let id = localStorage.getItem(BROWSE_TRACKING_SESSION_KEY);
+    if (id) return id;
+
+    id = crypto?.randomUUID
+      ? crypto.randomUUID()
+      : `pc_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+    localStorage.setItem(BROWSE_TRACKING_SESSION_KEY, id);
+    return id;
+  } catch (_e) {
+    return "";
+  }
+}
+
+function browseTrackingContext() {
+  return {
+    session_id: getBrowseTrackingSessionId(),
+    page_url: location.href,
+    referrer: document.referrer || "",
+    viewport: `${window.innerWidth}x${window.innerHeight}`,
+
+    active_tab: state.activeTab || "",
+    browse_q: state.q || "",
+    browse_brand: state.brand || "",
+    browse_category: state.category || "",
+    browse_family: state.family || "",
+    browse_variant: state.variant || "",
+    browse_color: state.color || "",
+    browse_condition: state.condition || "",
+    browse_sort: state.sort || "",
+    browse_page: state.page || 1
+  };
+}
+
+function browseEventFromCard(card, eventType, position) {
+  if (!card) return null;
+
+  const href = safeHref(card.getAttribute("href") || "", { sameOrigin: true });
+  const dashboardKey = String(card.getAttribute("data-dash-key") || "").trim();
+
+  if (!href && !dashboardKey) return null;
+
+  return {
+    ...browseTrackingContext(),
+    event_type: eventType,
+    result_position: position,
+    dashboard_key: dashboardKey,
+    href,
+    product_title: card.getAttribute("data-title") || "",
+    product_brand: card.getAttribute("data-brand") || ""
+  };
+}
+
+function sendBrowseEvents(events) {
+  const cleanEvents = Array.isArray(events) ? events.filter(Boolean) : [];
+  if (!cleanEvents.length) return;
+
+  const body = JSON.stringify({ events: cleanEvents });
+
+  try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([body], { type: "application/json" });
+      if (navigator.sendBeacon("/api/browse_events", blob)) return;
+    }
+  } catch (_e) {}
+
+  fetch("/api/browse_events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+    keepalive: true
+  }).catch(() => {});
+}
+
+function trackBrowseCardImpressions(root = document) {
+  const cards = Array.from(root.querySelectorAll("a.card.item[data-dash-key]"));
+  if (!cards.length) return;
+
+  if (!("IntersectionObserver" in window)) {
+    return;
+  }
+
+  if (browseImpressionObserver) {
+    browseImpressionObserver.disconnect();
+    browseImpressionObserver = null;
+  }
+
+  browseImpressionObserver = new IntersectionObserver((entries) => {
+    const events = [];
+
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      if (entry.intersectionRatio < 0.5) return;
+
+      const card = entry.target;
+      const cardsNow = Array.from(document.querySelectorAll("a.card.item[data-dash-key]"));
+      const position = Math.max(1, cardsNow.indexOf(card) + 1);
+
+      const dashboardKey = String(card.getAttribute("data-dash-key") || "").trim();
+      const signature = [
+        location.pathname,
+        location.search,
+        state.activeTab || "",
+        state.page || 1,
+        dashboardKey,
+        position
+      ].join("|");
+
+      if (browseTrackedImpressions.has(signature)) {
+        browseImpressionObserver.unobserve(card);
+        return;
+      }
+
+      browseTrackedImpressions.add(signature);
+      browseImpressionObserver.unobserve(card);
+
+      events.push(browseEventFromCard(card, "impression", position));
+    });
+
+    sendBrowseEvents(events);
+  }, {
+    root: null,
+    threshold: [0.5]
+  });
+
+  cards.forEach((card) => {
+    browseImpressionObserver.observe(card);
+  });
+}
+
+function initBrowseTracking() {
+  if (document.body.dataset.browseTrackingBound === "1") return;
+  document.body.dataset.browseTrackingBound = "1";
+
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("[data-shortlist-toggle='1']")) return;
+    if (e.target.closest("button[data-card-variant-key], button[data-card-variant-more]")) return;
+
+    const card = e.target.closest("a.card.item[data-dash-key]");
+    if (!card) return;
+
+    const cards = Array.from(document.querySelectorAll("a.card.item[data-dash-key]"));
+    const position = Math.max(1, cards.indexOf(card) + 1);
+
+    sendBrowseEvents([
+      browseEventFromCard(card, "click", position)
+    ]);
+  }, true);
+}
+
   function slugify(s) {
     return String(s ?? "")
       .trim()
@@ -2573,6 +2729,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     state.animateNextRender = true;
 
     setupVariantHydrator(els.grid);
+    trackBrowseCardImpressions(els.grid);
 
     if (parts.length === 0) {
       const rawQ = (state.q || "").trim();
@@ -3913,6 +4070,7 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
     document.addEventListener("DOMContentLoaded", async () => {
     cacheEls();
     initShortlistBrowseUi();
+    initBrowseTracking();
     readUrl();
     wire();
     renderBrowseRail();
