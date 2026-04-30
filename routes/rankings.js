@@ -415,7 +415,7 @@ router.get("/api/rankings/:category/rank", async (req, res, next) => {
         };
       })
       .sort((a, b) => b.valueScore - a.valueScore)
-      .slice(0, 50);
+      .slice(0, 100);
 
     const index = ranked.findIndex(row => !!row.is_target_group);
 
@@ -562,7 +562,7 @@ router.get(["/rankings/:category", "/rankings/:category/"], async (req, res, nex
         };
       })
       .sort((a, b) => b.valueScore - a.valueScore)
-      .slice(0, 50);
+      .slice(0, 100);
 
     if (!ranked.length) {
         return next();
@@ -580,7 +580,7 @@ router.get(["/rankings/:category", "/rankings/:category/"], async (req, res, nex
         description: desc,
         url: canonicalUrl,
         numberOfItems: ranked.length,
-        itemListElement: ranked.slice(0, 20).map((p, i) => {
+        itemListElement: ranked.slice(0, 100).map((p, i) => {
             const title = `${p.brand || ""} ${p.model_name || p.model_number || "Product"}`.trim();
             const key = dashboardKey(p);
             const href = key
