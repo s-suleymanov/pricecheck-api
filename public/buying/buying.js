@@ -4,6 +4,135 @@
   const picks = Array.isArray(data.picks) ? data.picks : [];
   const comparisonRows = Array.isArray(data.comparison_rows) ? data.comparison_rows : [];
 
+    const BUYING_PRODUCT_EVENT_ENDPOINT = "/api/buying/product-event";
+
+  function cleanBuyingEventValue(value, max = 800) {
+    const text = String(value || "").trim();
+    if (!text) return "";
+    return text.slice(0, max);
+  }
+
+  function buyingDashboardKeyFromUrl(rawUrl) {
+    const href = String(rawUrl || "").trim();
+    if (!href) return "";
+
+    try {
+      const url = new URL(href, location.origin);
+      const parts = url.pathname.split("/").filter(Boolean);
+      const dashboardIndex = parts.indexOf("dashboard");
+
+      if (dashboardIndex === -1) return "";
+
+      const kind = parts[dashboardIndex + 2] || "";
+      const value = parts[dashboardIndex + 3] || "";
+
+      if (!kind || !value) return "";
+
+      return `${kind}:${decodeURIComponent(value)}`;
+    } catch {
+      return "";
+    }
+  }
+
+  function findBuyingProductByHref(rawHref) {
+    const targetKey = buyingDashboardKeyFromUrl(rawHref);
+
+    if (targetKey) {
+      const hit = picks.find(product => {
+        return buyingDashboardKeyFromUrl(product.dashboard_url) === targetKey;
+      });
+
+      if (hit) return hit;
+    }
+
+    const href = String(rawHref || "").trim();
+
+    return picks.find(product => {
+      return String(product.dashboard_url || "").trim() === href;
+    }) || null;
+  }
+
+  function buyingProductEventBasePayload() {
+    return {
+      page_type: cleanBuyingEventValue(page.type || "guide", 80),
+      page_category: cleanBuyingEventValue(page.category || page.category_label || "", 120),
+      page_slug: cleanBuyingEventValue(page.slug || "", 160),
+      page_title: cleanBuyingEventValue(page.title || document.title || "", 300),
+      page_path: cleanBuyingEventValue(location.pathname, 500),
+      page_url: cleanBuyingEventValue(location.href, 1000)
+    };
+  }
+
+  function trackBuyingProductEvent(payload) {
+    const eventType = cleanBuyingEventValue(payload?.event_type || "", 80);
+    if (!eventType) return;
+
+    const body = JSON.stringify({
+      ...buyingProductEventBasePayload(),
+      ...payload
+    });
+
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([body], { type: "application/json" });
+        const sent = navigator.sendBeacon(BUYING_PRODUCT_EVENT_ENDPOINT, blob);
+        if (sent) return;
+      }
+    } catch {}
+
+    try {
+      fetch(BUYING_PRODUCT_EVENT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+        keepalive: true
+      }).catch(() => {});
+    } catch {}
+  }
+
+  function wireBuyingProductEventTracking() {
+    document.addEventListener("click", event => {
+      const target = event.target && event.target.nodeType === 1
+        ? event.target
+        : event.target?.parentElement;
+
+      const link = target?.closest?.("a[href]");
+      if (!link) return;
+
+      const href = link.getAttribute("href") || "";
+      const key = buyingDashboardKeyFromUrl(href);
+
+      if (!key) return;
+
+      const product = findBuyingProductByHref(href);
+
+      trackBuyingProductEvent({
+        event_type: "dashboard_product_click",
+        product_key: cleanBuyingEventValue(key, 200),
+        product_pci: cleanBuyingEventValue(product?.pci || "", 80),
+        product_upc: cleanBuyingEventValue(product?.upc || "", 80),
+        product_title: cleanBuyingEventValue(product?.title || link.textContent || "", 300),
+        product_label: cleanBuyingEventValue(product?.label || "", 160),
+        product_slot: cleanBuyingEventValue(product?.slot || "", 160),
+        target_url: cleanBuyingEventValue(link.href || href, 1000),
+        target_label: cleanBuyingEventValue(link.textContent || product?.title || "", 300),
+        metadata: {
+          link_class: cleanBuyingEventValue(link.className || "", 200)
+        }
+      });
+    }, { capture: true });
+  }
+
+  function trackBuyingPageView() {
+    trackBuyingProductEvent({
+      event_type: "page_view",
+      metadata: {
+        ranked_count: Number(data.ranked_count || picks.length || 0),
+        pick_count: picks.length
+      }
+    });
+  }
+
   const $ = (selector, root = document) => root.querySelector(selector);
 
   function esc(s) {
@@ -523,6 +652,7 @@ function renderWorthItDecision(root) {
 }
 
   function init() {
+    wireBuyingProductEventTracking();
     renderHero();
     renderQuickAnswer();
     renderPickCards();
@@ -530,6 +660,7 @@ function renderWorthItDecision(root) {
     renderMethod();
     renderRelated();
     setupRevealAnimations();
+    trackBuyingPageView();
     }
 
   init();

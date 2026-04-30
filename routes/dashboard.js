@@ -6,6 +6,99 @@ const crypto = require('crypto');
 const router = express.Router();
 const pool = require('../db');
 
+const DASHBOARD_PRODUCT_EVENT_TYPES = new Set([
+  'seller_click',
+  'alternative_click'
+]);
+
+function cleanDashboardEventText(value, max = 800) {
+  const text = String(value || '').trim();
+  if (!text) return null;
+  return text.slice(0, max);
+}
+
+function cleanDashboardEventMetadata(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return value;
+}
+
+router.post('/api/dashboard/product-event', express.json({ limit: '20kb' }), async (req, res) => {
+  const body = req.body || {};
+  const eventType = cleanDashboardEventText(body.event_type, 80);
+
+  if (!DASHBOARD_PRODUCT_EVENT_TYPES.has(eventType)) {
+    return res.status(400).json({
+      ok: false,
+      error: 'invalid_event_type'
+    });
+  }
+
+  try {
+    await pool.query(
+      `
+      INSERT INTO public.dashboard_product_event (
+        event_type,
+        product_key,
+        product_pci,
+        product_upc,
+        product_title,
+        page_path,
+        page_url,
+        target_url,
+        target_label,
+        store,
+        seller_slug,
+        alternative_key,
+        alternative_label,
+        alternative_title,
+        user_agent,
+        referrer,
+        metadata
+      )
+      VALUES (
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9, $10,
+        $11, $12, $13, $14, $15,
+        $16, $17::jsonb
+      )
+      `,
+      [
+        eventType,
+        cleanDashboardEventText(body.product_key, 200),
+        cleanDashboardEventText(body.product_pci, 80),
+        cleanDashboardEventText(body.product_upc, 80),
+        cleanDashboardEventText(body.product_title, 300),
+
+        cleanDashboardEventText(body.page_path, 500),
+        cleanDashboardEventText(body.page_url, 1000),
+
+        cleanDashboardEventText(body.target_url, 1000),
+        cleanDashboardEventText(body.target_label, 300),
+
+        cleanDashboardEventText(body.store, 120),
+        cleanDashboardEventText(body.seller_slug, 160),
+
+        cleanDashboardEventText(body.alternative_key, 200),
+        cleanDashboardEventText(body.alternative_label, 160),
+        cleanDashboardEventText(body.alternative_title, 300),
+
+        cleanDashboardEventText(req.get('user-agent'), 500),
+        cleanDashboardEventText(req.get('referer'), 1000),
+
+        JSON.stringify(cleanDashboardEventMetadata(body.metadata))
+      ]
+    );
+
+    return res.status(204).send();
+  } catch (err) {
+    console.error('dashboard_product_event insert failed', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'event_insert_failed'
+    });
+  }
+});
+
 // -------------------------
 // dashboard HTML template + SEO injection
 // -------------------------

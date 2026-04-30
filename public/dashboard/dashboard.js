@@ -101,6 +101,89 @@
   const QA_REPLY_ICON_PATH = 'M760-200v-160q0-50-35-85t-85-35H273l144 144-57 56-240-240 240-240 57 56-144 144h367q83 0 141.5 58.5T840-360v160h-80Z';
   const RANK_GEM_ICON_PATH = 'M480-120 80-600l120-240h560l120 240-400 480Zm-95-520h190l-60-120h-70l-60 120Zm55 347v-267H218l222 267Zm80 0 222-267H520v267Zm144-347h106l-60-120H604l60 120Zm-474 0h106l60-120H250l-60 120Z';
 
+    const DASHBOARD_PRODUCT_EVENT_ENDPOINT = '/api/dashboard/product-event';
+
+  function cleanDashboardEventValue(value, max = 800) {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    return text.slice(0, max);
+  }
+
+  function dashboardProductEventBasePayload() {
+    const cur = getCurrentVariant ? getCurrentVariant() : null;
+    const titleEl = document.getElementById('pTitle');
+
+    return {
+      product_key: cleanDashboardEventValue(state.lastKey || currentKeyFromUrl() || '', 200),
+      product_pci: cleanDashboardEventValue(cur?.pci || state.identity?.pci || '', 80),
+      product_upc: cleanDashboardEventValue(cur?.upc || state.identity?.upc || '', 80),
+      product_title: cleanDashboardEventValue(
+        cur?.model_name ||
+        state.identity?.model_name ||
+        titleEl?.textContent ||
+        '',
+        300
+      ),
+      page_path: cleanDashboardEventValue(location.pathname, 500),
+      page_url: cleanDashboardEventValue(location.href, 1000)
+    };
+  }
+
+  function trackDashboardProductEvent(payload) {
+    const eventType = cleanDashboardEventValue(payload?.event_type || '', 80);
+    if (!eventType) return;
+
+    const body = JSON.stringify({
+      ...dashboardProductEventBasePayload(),
+      ...payload
+    });
+
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([body], { type: 'application/json' });
+        const sent = navigator.sendBeacon(DASHBOARD_PRODUCT_EVENT_ENDPOINT, blob);
+        if (sent) return;
+      }
+    } catch {}
+
+    try {
+      fetch(DASHBOARD_PRODUCT_EVENT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        keepalive: true
+      }).catch(() => {});
+    } catch {}
+  }
+
+  function wireDashboardProductEventTracking() {
+    document.addEventListener('click', (event) => {
+      const target = event.target && event.target.nodeType === 1
+        ? event.target
+        : event.target?.parentElement;
+
+      const el = target?.closest?.('[data-dashboard-event]');
+      if (!el) return;
+
+      const eventType = cleanDashboardEventValue(el.getAttribute('data-dashboard-event'), 80);
+      if (!eventType) return;
+
+      trackDashboardProductEvent({
+        event_type: eventType,
+        target_url: cleanDashboardEventValue(el.getAttribute('href') || el.dataset.dashboardTargetUrl || '', 1000),
+        target_label: cleanDashboardEventValue(el.dataset.dashboardTargetLabel || el.textContent || '', 300),
+        store: cleanDashboardEventValue(el.dataset.dashboardStore || '', 120),
+        seller_slug: cleanDashboardEventValue(el.dataset.dashboardSellerSlug || '', 160),
+        alternative_key: cleanDashboardEventValue(el.dataset.dashboardAlternativeKey || '', 200),
+        alternative_label: cleanDashboardEventValue(el.dataset.dashboardAlternativeLabel || '', 160),
+        alternative_title: cleanDashboardEventValue(el.dataset.dashboardAlternativeTitle || '', 300),
+        metadata: {
+          click_kind: cleanDashboardEventValue(el.dataset.dashboardClickKind || '', 80)
+        }
+      });
+    }, { capture: true });
+  }
+
   function getDashboardHeaderOffset() {
     const host = document.getElementById('siteHeader')
     if (!host) return 88;
@@ -4559,6 +4642,7 @@ function wireCardIcons(){
 document.addEventListener("DOMContentLoaded", () => {
   wireCardIcons();
   wireBrandFollowButton();
+  wireDashboardProductEventTracking();
   initDashboardShortlistUi();
   initDashboardTocObservers();
   scheduleDashboardTocRefresh();
@@ -6943,6 +7027,7 @@ async function renderOffers(sortByPrice, runToken){
   sellerRows.forEach(({ offer: o, seller, hasSeller, sellerHref }) => {
     const bestLink = safeHttpHref(o.url || canonicalLink(o.store, o) || '');
     const storeDisplay = titleCase(seller?.name || o.store || '');
+    const sellerSlug = sellerSlugFromStore(o.store);
     const hasPrice = o._price != null;
     const priceText = hasPrice ? fmt.format(o._price) : '';
     const shippingText = hasPrice ? formatShippingLine(o, seller) : '';
@@ -6954,9 +7039,20 @@ async function renderOffers(sortByPrice, runToken){
     const logoHtml = sellerLogoHtml(seller, storeDisplay);
 
     const logoSlotHtml = logoHtml
-      ? (
-          hasSeller && sellerHref
-            ? `<a class="offer-logo-link" href="${escapeHtml(sellerHref)}" aria-label="Open ${escapeHtml(storeDisplay)} seller page">${logoHtml}</a>`
+    ? (
+        hasSeller && sellerHref
+          ? `
+            <a
+              class="offer-logo-link"
+              href="${escapeHtml(sellerHref)}"
+              aria-label="Open ${escapeHtml(storeDisplay)} seller page"
+              data-dashboard-event="seller_click"
+              data-dashboard-click-kind="seller_page"
+              data-dashboard-store="${escapeHtml(o.store || '')}"
+              data-dashboard-seller-slug="${escapeHtml(sellerSlug)}"
+              data-dashboard-target-label="${escapeHtml(storeDisplay)}"
+                >${logoHtml}</a>
+              `
             : `<span class="offer-logo-link is-static" aria-hidden="true">${logoHtml}</span>`
         )
       : `<span class="offer-logo-spacer" aria-hidden="true"></span>`;
@@ -6977,7 +7073,20 @@ async function renderOffers(sortByPrice, runToken){
             <span class="offer-store">${escapeHtml(storeDisplay)}</span>
             ${
               bestLink
-                ? `<a class="offer-go-inline" href="${escapeHtml(bestLink)}" target="_blank" rel="noopener" aria-label="Go to ${escapeHtml(storeDisplay)}">${OFFER_EXTERNAL_SVG}</a>`
+                ? `
+                  <a
+                    class="offer-go-inline"
+                    href="${escapeHtml(bestLink)}"
+                    target="_blank"
+                    rel="noopener"
+                    aria-label="Go to ${escapeHtml(storeDisplay)}"
+                    data-dashboard-event="seller_click"
+                    data-dashboard-click-kind="retailer_offer"
+                    data-dashboard-store="${escapeHtml(o.store || '')}"
+                    data-dashboard-seller-slug="${escapeHtml(sellerSlug)}"
+                    data-dashboard-target-label="${escapeHtml(storeDisplay)}"
+                  >${OFFER_EXTERNAL_SVG}</a>
+                `
                 : ''
             }
           </div>
@@ -7357,7 +7466,18 @@ function renderVerdictCard(){
                   `;
 
                   return href
-                    ? `<a class="pc-verdict-alt" href="${escapeHtml(href)}">${inner}</a>`
+                    ? `
+                      <a
+                        class="pc-verdict-alt"
+                        href="${escapeHtml(href)}"
+                        data-dashboard-event="alternative_click"
+                        data-dashboard-click-kind="verdict_alternative"
+                        data-dashboard-alternative-key="${escapeHtml(item.key || '')}"
+                        data-dashboard-alternative-label="${escapeHtml(item.label || 'Alternative')}"
+                        data-dashboard-alternative-title="${escapeHtml(item.title || 'Alternative')}"
+                        data-dashboard-target-label="${escapeHtml(item.title || 'Alternative')}"
+                      >${inner}</a>
+                    `
                     : `<article class="pc-verdict-alt">${inner}</article>`;
                 }).join('')}
               </div>

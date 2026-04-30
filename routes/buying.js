@@ -6,6 +6,101 @@ const rankingRules = require("../public/data/ranking_rules.json");
 
 const router = express.Router();
 
+const BUYING_PRODUCT_EVENT_TYPES = new Set([
+  "page_view",
+  "dashboard_product_click"
+]);
+
+function cleanBuyingEventText(value, max = 800) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  return text.slice(0, max);
+}
+
+function cleanBuyingEventMetadata(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return value;
+}
+
+router.post("/api/buying/product-event", express.json({ limit: "20kb" }), async (req, res) => {
+  const body = req.body || {};
+  const eventType = cleanBuyingEventText(body.event_type, 80);
+
+  if (!BUYING_PRODUCT_EVENT_TYPES.has(eventType)) {
+    return res.status(400).json({
+      ok: false,
+      error: "invalid_event_type"
+    });
+  }
+
+  try {
+    await pool.query(
+      `
+      INSERT INTO public.buying_product_event (
+        event_type,
+        page_type,
+        page_category,
+        page_slug,
+        page_title,
+        page_path,
+        page_url,
+        product_key,
+        product_pci,
+        product_upc,
+        product_title,
+        product_label,
+        product_slot,
+        target_url,
+        target_label,
+        user_agent,
+        referrer,
+        metadata
+      )
+      VALUES (
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9, $10,
+        $11, $12, $13, $14, $15,
+        $16, $17, $18::jsonb
+      )
+      `,
+      [
+        eventType,
+
+        cleanBuyingEventText(body.page_type, 80),
+        cleanBuyingEventText(body.page_category, 120),
+        cleanBuyingEventText(body.page_slug, 160),
+        cleanBuyingEventText(body.page_title, 300),
+
+        cleanBuyingEventText(body.page_path, 500),
+        cleanBuyingEventText(body.page_url, 1000),
+
+        cleanBuyingEventText(body.product_key, 200),
+        cleanBuyingEventText(body.product_pci, 80),
+        cleanBuyingEventText(body.product_upc, 80),
+        cleanBuyingEventText(body.product_title, 300),
+        cleanBuyingEventText(body.product_label, 160),
+        cleanBuyingEventText(body.product_slot, 160),
+
+        cleanBuyingEventText(body.target_url, 1000),
+        cleanBuyingEventText(body.target_label, 300),
+
+        cleanBuyingEventText(req.get("user-agent"), 500),
+        cleanBuyingEventText(req.get("referer"), 1000),
+
+        JSON.stringify(cleanBuyingEventMetadata(body.metadata))
+      ]
+    );
+
+    return res.status(204).send();
+  } catch (err) {
+    console.error("buying_product_event insert failed", err);
+    return res.status(500).json({
+      ok: false,
+      error: "event_insert_failed"
+    });
+  }
+});
+
 const SITE_ORIGIN = process.env.SITE_ORIGIN || "https://www.pricechecktool.com";
 const DEFAULT_IMAGE = `${SITE_ORIGIN}/logo/default.webp`;
 
