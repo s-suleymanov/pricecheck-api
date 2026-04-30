@@ -21,15 +21,11 @@
       : [];
   }
 
-  function renderCards(target, items, fallbackText) {
+  function renderCards(target, items) {
     if (!target) return;
 
     const safeItems = cleanItems(items);
-
-    if (!safeItems.length) {
-      target.innerHTML = `<div class="pc-explore-empty">${esc(fallbackText)}</div>`;
-      return;
-    }
+    if (!safeItems.length) return;
 
     target.innerHTML = safeItems.map(item => {
       return `
@@ -55,15 +51,11 @@
         ...cleanItems(data.guides)
       ];
 
-      renderCards(els.bestLists, bestLists, "No best lists yet.");
-      renderCards(els.worthIt, data.worth_it, "No worth-it checks yet.");
-      renderCards(els.comparisons, data.comparisons, "No comparisons yet.");
+      renderCards(els.bestLists, bestLists);
+      renderCards(els.worthIt, data.worth_it);
+      renderCards(els.comparisons, data.comparisons);
     } catch (err) {
-      console.error(err);
-
-      renderCards(els.bestLists, [], "Best lists could not load.");
-      renderCards(els.worthIt, [], "Worth-it checks could not load.");
-      renderCards(els.comparisons, [], "Comparisons could not load.");
+      console.warn("Explore API unavailable. Keeping static Explore links.", err);
     }
   }
 
