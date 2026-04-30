@@ -40,6 +40,7 @@ body {
   font-size: clamp(42px, 6vw, 72px);
   line-height: 0.96;
   letter-spacing: -0.02em;
+  font-weight: 600;
 }
 
 .buying-dek {
