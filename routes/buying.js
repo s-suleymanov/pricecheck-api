@@ -637,6 +637,99 @@ function findComparisonPageConfig(slug) {
   });
 }
 
+function explorePagePath(page) {
+  const type = String(page.type || "").trim().toLowerCase();
+  const category = slugify(page.category || "");
+  const slug = slugify(page.slug || "");
+
+  if (page.path) return page.path;
+
+  if (type === "comparison") {
+    return `/compare/${slug}/`;
+  }
+
+  return `/guides/${category}/${slug}/`;
+}
+
+function exploreCardType(page) {
+  const type = String(page.type || "").trim().toLowerCase();
+
+  if (type === "comparison") return "comparison";
+  if (type === "worth_it" || type === "worth-it") return "worth_it";
+
+  return "guide";
+}
+
+function exploreCardFromPage(page) {
+  const category = slugify(page.category || "");
+  const title = page.title || page.seo_title || slugToTitle(page.slug || "Guide");
+
+  return {
+    title,
+    description: page.description || "",
+    category,
+    category_label: slugToTitle(category),
+    type: exploreCardType(page),
+    href: explorePagePath(page)
+  };
+}
+
+router.get("/api/explore", async (_req, res, next) => {
+  try {
+    const raw = fs.readFileSync(BUYING_PAGES_PATH, "utf8");
+    const pages = JSON.parse(raw);
+
+    const cards = Array.isArray(pages)
+      ? pages.map(exploreCardFromPage).filter(card => card.title && card.href)
+      : [];
+
+    const guides = cards
+      .filter(card => card.type === "guide")
+      .sort((a, b) => a.title.localeCompare(b.title));
+
+    const worthIt = cards
+      .filter(card => card.type === "worth_it")
+      .sort((a, b) => a.title.localeCompare(b.title));
+
+    const comparisons = cards
+      .filter(card => card.type === "comparison")
+      .sort((a, b) => a.title.localeCompare(b.title));
+
+    const rankings = Object.entries(rankingRules)
+      .filter(([, rule]) => rule && Array.isArray(rule.fields) && rule.fields.length)
+      .map(([category, rule]) => {
+        const categorySlug = slugify(category);
+        const categoryLabel = rule.label || slugToTitle(categorySlug);
+
+        return {
+          title: `${categoryLabel} Rankings`,
+          description: `Compare ${categoryLabel.toLowerCase()} by price, specs, sellers, and review signals.`,
+          category: categorySlug,
+          category_label: categoryLabel,
+          type: "ranking",
+          href: `/rankings/${categorySlug}/`
+        };
+      })
+      .sort((a, b) => a.title.localeCompare(b.title));
+
+    return res.json({
+      rankings,
+      guides,
+      worth_it: worthIt,
+      comparisons,
+      counts: {
+        rankings: rankings.length,
+        guides: guides.length,
+        worth_it: worthIt.length,
+        comparisons: comparisons.length,
+        total: rankings.length + guides.length + worthIt.length + comparisons.length
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 async function getRankedCandidates(pageConfig) {
   const categorySlug = slugify(pageConfig.category || "");
   const terms = categoryTerms(categorySlug).map(t => t.toLowerCase());

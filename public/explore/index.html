@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>PriceCheck Explore</title>
-  <meta name="description" content="PriceCheck explore." />
-  <link rel="canonical" href="https://pricechecktool.com/explore/" />
+  <title>Explore PriceCheck Rankings, Worth-It Checks, and Product Comparisons</title>
+  <meta name="description" content="Explore PriceCheck rankings, worth-it checks, and product comparisons built from current prices, specs, sellers, and review signals." />
+  <link rel="canonical" href="https://www.pricechecktool.com/explore/" />
 
   <link rel="icon" href="/logo/logo.png" type="image/png" />
   <link rel="stylesheet" href="/styles.css" />
@@ -18,6 +18,7 @@
 
   <script src="/search.js" defer></script>
   <script src="/partials/partials.js" defer></script>
+  <script src="/explore/explore.js" defer></script>
 </head>
 
 <body class="pc-home pc-explore-page" data-side-active="explore" style="margin:0;">
@@ -201,21 +202,46 @@
   <main class="home-center" role="main">
     <div class="home-center__inner">
       <div class="pc-explore-layout pc-page-layout">
-        <section class="pc-explore-main" aria-label="Explore">
-          <section class="pc-explore-hero" aria-labelledby="pcExploreTitle">
-            <div class="pc-explore-hero__center">
-              <div class="pc-explore-hero__card">
-                <h1 id="pcExploreTitle" class="pc-explore-hero__title">Explore</h1>
-                <p class="pc-explore-hero__feature">This section is being rebuilt.</p>
-                <p class="pc-explore-hero__message">
-                  The next version of product browsing, discovery, and category exploration will live here.
-                </p>
-              </div>
+
+      <section class="pc-explore-main" aria-labelledby="pcExploreTitle">
+
+        <header class="pc-explore-hero">
+          <h1 id="pcExploreTitle">Explore PriceCheck</h1>
+          <p>Find rankings, worth-it checks, and product matchups built from current prices, specs, sellers, and review signals.</p>
+        </header>
+
+        <section class="pc-explore-section" aria-labelledby="pcExploreRankingsTitle">
+          <div class="pc-explore-section__head">
+            <div>
+              <h2 id="pcExploreRankingsTitle">Best Lists</h2>
             </div>
-          </section>
+          </div>
+
+          <div class="pc-explore-grid" id="pcExploreRankings"></div>
         </section>
 
-               <aside class="home-side" aria-label="Home sidebar">
+        <section class="pc-explore-section" aria-labelledby="pcExploreGuidesTitle">
+          <div class="pc-explore-section__head">
+            <div>
+              <h2 id="pcExploreGuidesTitle">Worth It?</h2>
+            </div>
+          </div>
+
+          <div class="pc-explore-grid" id="pcExploreGuides"></div>
+        </section>
+
+        <section class="pc-explore-section" aria-labelledby="pcExploreComparisonsTitle">
+          <div class="pc-explore-section__head">
+            <div>
+              <h2 id="pcExploreComparisonsTitle">Head-to-Head</h2>
+            </div>
+          </div>
+
+          <div class="pc-explore-grid" id="pcExploreComparisons"></div>
+        </section>
+      </section>
+
+      <aside class="home-side" aria-label="Home sidebar">
   <div class="home-side__inner">
 
     <nav class="home-side__section" aria-label="About">
