@@ -596,9 +596,11 @@
   };
 
   document.addEventListener("DOMContentLoaded", () => {
-    const homeInputs = Array.from(document.querySelectorAll(".home-search__input"));
+    const searchInputs = Array.from(
+      document.querySelectorAll(".home-search__input, .nav-search__input")
+    );
 
-    for (const input of homeInputs) {
+    for (const input of searchInputs) {
       const form = input.closest("form");
       if (form) bindForm(form, input);
       attachAutocomplete(input, { endpoint: "/api/suggest", limit: 8 });
