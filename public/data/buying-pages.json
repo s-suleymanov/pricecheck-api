@@ -449,5 +449,145 @@
       "href": "/rankings/earbuds/"
     }
   ]
+},
+{
+  "slug": "best-first-earbuds-to-buy",
+  "path": "/guides/earbuds/best-first-earbuds-to-buy/",
+  "type": "guide",
+  "category": "earbuds",
+  "title": "Best First Earbuds To Buy",
+  "seo_title": "Best First Earbuds To Buy (2026) - PriceCheck",
+  "description": "Find the best first earbuds to buy using current prices, specs, battery life, ANC, water resistance, multipoint, codec support, and PriceCheck product data.",
+  "price_cap_cents": 15000,
+  "hero": {
+    "eyebrow": "Buying Guide",
+    "heading": "Best First Earbuds To Buy",
+    "dek": "A starter-friendly guide for choosing your first real pair of earbuds, focused on useful features, fair prices, battery life, comfort signals, noise cancelling, workout durability, and easy everyday use."
+  },
+  "quick_answer": {
+    "heading": "Quick Answer",
+    "body": "If this is your first pair of earbuds, start with a lower-price sealed earbud before paying flagship prices. The soundcore P31i is the safest first pick for most buyers, while the Skullcandy Dime Evo is the cheaper simple pick and the JBL Endurance Race 2 is better for workouts.",
+    "items": [
+      {
+        "label": "Best First Pair",
+        "slot": "best_first_pair"
+      },
+      {
+        "label": "Lowest-Price First Pair",
+        "slot": "lowest_price_first_pair"
+      },
+      {
+        "label": "Long-Battery First Pair",
+        "slot": "long_battery_first_pair"
+      },
+      {
+        "label": "Workout First Pair",
+        "slot": "workout_first_pair"
+      },
+      {
+        "label": "Wireless-Charging First Pair",
+        "slot": "iphone_friendly_first_pair"
+      }
+    ]
+  },
+  "pick_slots": [
+    {
+      "slot": "best_first_pair",
+      "label": "Best First Pair",
+      "strategy": "highest_value_score"
+    },
+    {
+      "slot": "lowest_price_first_pair",
+      "label": "Lowest-Price First Pair",
+      "strategy": "lowest_price_with_acceptable_score"
+    },
+    {
+      "slot": "long_battery_first_pair",
+      "label": "Long-Battery First Pair",
+      "strategy": "best_battery_score"
+    },
+    {
+      "slot": "workout_first_pair",
+      "label": "Workout First Pair",
+      "strategy": "best_workout_score"
+    },
+    {
+      "slot": "iphone_friendly_first_pair",
+      "label": "Wireless-Charging First Pair",
+      "strategy": "best_iphone_score"
+    }
+  ],
+  "comparison_rows": [
+    {
+      "label": "Price",
+      "key": "price"
+    },
+    {
+      "label": "ANC",
+      "key": "active_noise_cancelling"
+    },
+    {
+      "label": "Transparency Mode",
+      "key": "transparency_mode"
+    },
+    {
+      "label": "Battery",
+      "key": "battery_life_hours"
+    },
+    {
+      "label": "Case Battery",
+      "key": "battery_life_with_case_hours"
+    },
+    {
+      "label": "Water Resistance",
+      "key": "water_resistance_rating"
+    },
+    {
+      "label": "Multipoint",
+      "key": "multipoint_pairing"
+    },
+    {
+      "label": "Codec Support",
+      "key": "codec_support"
+    },
+    {
+      "label": "Wireless Charging",
+      "key": "wireless_charging_case"
+    },
+    {
+      "label": "Built-In Microphone",
+      "key": "built_in_microphone"
+    },
+    {
+      "label": "Driver Size",
+      "key": "driver_size_mm"
+    },
+    {
+      "label": "Best Seller",
+      "key": "best_seller"
+    }
+  ],
+  "method": {
+    "heading": "How PriceCheck Picks First Earbuds",
+    "body": "PriceCheck filters earbuds under $150, groups color variants into the same product family, checks current store prices, and compares the features that matter most for a first pair. This includes ANC, transparency mode, battery life, case battery, water resistance, multipoint pairing, codec support, wireless charging, microphone support, seller availability, and overall value. The goal is to find a safe first pair with useful everyday features, not the most expensive flagship earbud."
+  },
+  "related": [
+    {
+      "label": "All Earbuds Ranked By Value",
+      "href": "/rankings/earbuds/"
+    },
+    {
+      "label": "Best Earbuds Under $100",
+      "href": "/guides/earbuds/best-under-100/"
+    },
+    {
+      "label": "Liberty 4 NC vs Method 360 ANC",
+      "href": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/"
+    },
+    {
+      "label": "Are Sony WF-1000XM5 Worth It?",
+      "href": "/guides/earbuds/sony-wf-1000xm5-worth-it/"
+    }
+  ]
 }
 ]

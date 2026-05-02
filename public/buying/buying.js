@@ -168,6 +168,13 @@
     return `Best seller: ${seller.store}${rating}${reviews}`;
   }
 
+  function storeCountText(count) {
+    const n = Number(count || 0);
+
+    if (n === 1) return "1 Store";
+    return `${n} Stores`;
+  }
+
   function firstLine(value) {
     if (Array.isArray(value)) return value[0] || "";
     return String(value || "");
@@ -263,7 +270,22 @@ function renderQuickAnswer() {
   root.classList.remove("buying-quick__grid--compare");
   root.classList.remove("buying-quick__grid--worth");
 
-  root.innerHTML = picks.map(product => {
+ const quickAnswer = page.quick_answer && typeof page.quick_answer === "object"
+  ? page.quick_answer
+  : {};
+
+const quickAnswerBody = String(quickAnswer.body || "").trim();
+
+const quickAnswerHtml = quickAnswerBody
+  ? `
+    <div class="buying-quick__answer">
+      <strong>${esc(quickAnswer.heading || "Quick Answer")}</strong>
+      <p>${esc(quickAnswerBody)}</p>
+    </div>
+  `
+  : "";
+
+  root.innerHTML = quickAnswerHtml + picks.map(product => {
     return `
       <a class="quick-pick" href="#${esc(product.slot || "")}">
         <span>${esc(product.label)}</span>
@@ -274,7 +296,7 @@ function renderQuickAnswer() {
   }).join("");
 }
 
-  function renderPickCards() {
+function renderPickCards() {
   const root = $("#topPicks");
 
   if (!root) return;
@@ -308,7 +330,7 @@ function renderQuickAnswer() {
           <h3 class="buying-card__title">${esc(product.title)}</h3>
 
           <div class="buying-card__meta">
-            <span class="buying-pill">${esc(product.store_count)} Stores</span>
+            <span class="buying-pill">${esc(storeCountText(product.store_count))}</span>
           </div>
 
           <p class="buying-card__verdict">${esc(product.verdict)}</p>

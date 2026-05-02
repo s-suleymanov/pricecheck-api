@@ -107,6 +107,49 @@ body {
   font-size: 18px;
 }
 
+.buying-quick__grid:not(.buying-quick__grid--compare):not(.buying-quick__grid--worth) .quick-pick {
+  display: flex;
+  flex-direction: column;
+  min-height: 142px;
+}
+
+.buying-quick__grid:not(.buying-quick__grid--compare):not(.buying-quick__grid--worth) .quick-pick span {
+  min-height: 40px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.buying-quick__grid:not(.buying-quick__grid--compare):not(.buying-quick__grid--worth) .quick-pick strong {
+  min-height: 48px;
+}
+
+.buying-quick__grid:not(.buying-quick__grid--compare):not(.buying-quick__grid--worth) .quick-pick small {
+  margin-top: auto;
+}
+
+.buying-quick__answer {
+  grid-column: 1 / -1;
+  padding: 18px 20px;
+  border: 1px solid #e3e8f2;
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.buying-quick__answer strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--buying-text);
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.buying-quick__answer p {
+  margin: 0;
+  color: var(--buying-muted);
+  font-size: 20px;
+  line-height: 1.5;
+}
+
 .buying-section,
 .buying-method,
 .buying-related {
