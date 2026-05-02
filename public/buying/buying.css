@@ -81,9 +81,9 @@ body {
 .quick-pick span {
   display: block;
   margin-bottom: 7px;
-  color: var(--buying-text);
-  font-size: 16px;
-  font-weight: 450;
+  color: var(--buying-blue);
+  font-size: 18px;
+  font-weight: 550;
 }
 
 .quick-pick--compare span {
@@ -404,7 +404,7 @@ body {
   }
 
   .buying-hero {
-    padding: 28px;
+    padding: 6px;
   }
 
   .buying-quick__grid {
@@ -414,7 +414,7 @@ body {
   .buying-section,
   .buying-method,
   .buying-related {
-    padding: 22px;
+    padding: 12px;
   }
 
   .buying-section__head {
@@ -440,6 +440,7 @@ body {
     gap: 14px;
     padding-top: 14px;
     border-top: 1px solid var(--buying-line);
+    justify-items: start;
   }
 
   .buying-card__image {
@@ -474,6 +475,7 @@ body {
 
   .buying-dek {
     font-size: 16px;
+    display: none;
   }
 
   .buying-card {
