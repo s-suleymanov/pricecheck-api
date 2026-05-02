@@ -132,6 +132,17 @@ function safeJsonForHtml(value) {
     .replace(/\u2029/g, "\\u2029");
 }
 
+function heroText(payload, field, fallback = "") {
+  const page = payload && payload.page ? payload.page : {};
+  const hero = page.hero && typeof page.hero === "object" ? page.hero : {};
+
+  if (field === "eyebrow") return hero.eyebrow || page.type || fallback;
+  if (field === "heading") return hero.heading || page.title || fallback;
+  if (field === "dek") return hero.dek || page.description || fallback;
+
+  return fallback;
+}
+
 function slugify(s) {
   return String(s || "product")
     .trim()
@@ -1456,7 +1467,10 @@ router.get(["/guides/:category/:slug", "/guides/:category/:slug/"], async (req, 
       .replace(/__PAGE_DESCRIPTION__/g, esc(desc))
       .replace(/__CANONICAL_URL__/g, esc(canonicalUrl))
       .replace(/__OG_IMAGE__/g, esc(firstImage))
-      .replace(/__JSON_LD__/g, safeJsonForHtml(payload.json_ld));
+      .replace(/__JSON_LD__/g, safeJsonForHtml(payload.json_ld))
+      .replace(/__BUYING_HERO_EYEBROW__/g, esc(heroText(payload, "eyebrow", "Buying Guide")))
+      .replace(/__BUYING_HERO_HEADING__/g, esc(heroText(payload, "heading", "Buying Guide")))
+      .replace(/__BUYING_HERO_DEK__/g, esc(heroText(payload, "dek", "")));
 
     return res.type("html").send(html);
   } catch (err) {
