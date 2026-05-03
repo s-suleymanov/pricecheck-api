@@ -285,7 +285,42 @@ const quickAnswerHtml = quickAnswerBody
   `
   : "";
 
-  root.innerHTML = quickAnswerHtml + picks.map(product => {
+const infographic = page.infographic && typeof page.infographic === "object"
+  ? page.infographic
+  : quickAnswer.infographic && typeof quickAnswer.infographic === "object"
+    ? quickAnswer.infographic
+    : null;
+
+const infographicSrc = String(infographic?.src || "").trim();
+
+const infographicId = page.slug
+  ? `pc-infographic-hidden:${page.slug}`
+  : `pc-infographic-hidden:${location.pathname}`;
+
+const infographicHidden = infographicSrc && localStorage.getItem(infographicId) === "1";
+
+const infographicHtml = infographicSrc && !infographicHidden
+  ? `
+    <figure class="buying-infographic" data-buying-infographic data-infographic-storage-key="${esc(infographicId)}">
+      <button class="buying-infographic__hide" type="button" data-hide-infographic="1">
+        Hide infographic
+      </button>
+
+      <img
+        src="${esc(infographicSrc)}"
+        alt="${esc(infographic.alt || "")}"
+        width="${esc(infographic.width || 1080)}"
+        height="${esc(infographic.height || 1920)}"
+        loading="lazy"
+        decoding="async"
+      >
+
+      ${infographic.caption ? `<figcaption>${esc(infographic.caption)}</figcaption>` : ""}
+    </figure>
+  `
+  : "";
+
+  root.innerHTML = quickAnswerHtml + infographicHtml + picks.map(product => {
     return `
       <a class="quick-pick" href="#${esc(product.slot || "")}">
         <span>${esc(product.label)}</span>
@@ -294,6 +329,26 @@ const quickAnswerHtml = quickAnswerBody
       </a>
     `;
   }).join("");
+}
+
+function wireInfographicControls() {
+  document.addEventListener("click", event => {
+    const button = event.target?.closest?.("[data-hide-infographic]");
+    if (!button) return;
+
+    const figure = button.closest("[data-buying-infographic]");
+    if (!figure) return;
+
+    const storageKey = figure.getAttribute("data-infographic-storage-key");
+
+    if (storageKey) {
+      try {
+        localStorage.setItem(storageKey, "1");
+      } catch {}
+    }
+
+    figure.remove();
+  });
 }
 
 function renderPickCards() {
@@ -674,15 +729,16 @@ function renderWorthItDecision(root) {
 }
 
   function init() {
-    wireBuyingProductEventTracking();
-    renderHero();
-    renderQuickAnswer();
-    renderPickCards();
-    renderComparisonTable();
-    renderMethod();
-    renderRelated();
-    setupRevealAnimations();
-    trackBuyingPageView();
+      renderHero();
+      renderQuickAnswer();
+      renderPickCards();
+      renderComparisonTable();
+      renderMethod();
+      renderRelated();
+      wireInfographicControls();
+      setupRevealAnimations();
+      wireBuyingProductEventTracking();
+      trackBuyingPageView();
     }
 
   init();

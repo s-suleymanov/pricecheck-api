@@ -467,6 +467,13 @@
   "quick_answer": {
     "heading": "Quick Answer",
     "body": "If this is your first pair of earbuds, start with a lower-price sealed earbud before paying flagship prices. The soundcore P31i is the safest first pick for most buyers, while the Skullcandy Dime Evo is the cheaper simple pick and the JBL Endurance Race 2 is better for workouts.",
+    "infographic": {
+      "src": "/infographics/earbuds/best-first-earbuds-to-buy-pricecheck.png",
+      "alt": "Best first earbuds to buy infographic showing soundcore P31i, Skullcandy Dime Evo, JBL Endurance Race 2, and soundcore P41i as starter earbud picks.",
+      "width": 1080,
+      "height": 1920,
+      "caption": "PriceCheck’s first-earbud picks focus on use case, current pricing, and clear tradeoffs for first-time buyers."
+    },
     "items": [
       {
         "label": "Best First Pair",
