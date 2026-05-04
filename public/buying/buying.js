@@ -157,6 +157,20 @@
     })}`;
   }
 
+  function formatAuthorDate(value) {
+    if (!value) return "";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const yy = String(date.getFullYear()).slice(-2);
+
+    return `${mm}.${dd}.${yy}`;
+  }
+
   function sellerText(product) {
     const seller = product.best_seller;
 
@@ -214,6 +228,19 @@
     $("#buyingEyebrow").textContent = hero.eyebrow || "Buying Guide";
     $("#buyingTitle").textContent = hero.heading || page.title || "Buying Guide";
     $("#buyingDek").textContent = hero.dek || page.description || "";
+
+    const dek = $("#buyingDek");
+    if (dek && !document.querySelector(".buying-author")) {
+      const authorDate = formatAuthorDate(page.published_at || page.date || data.generated_at);
+
+      dek.insertAdjacentHTML("afterend", `
+        <p class="buying-author">
+          <span>Sam Lyman</span>
+          ${authorDate ? `<span class="buying-author__sep">/</span><span>${esc(authorDate)}</span>` : ""}
+        </p>
+      `);
+    }
+
     const updated = $("#buyingUpdated");
     if (updated) updated.textContent = formatGeneratedAt(data.generated_at);
 
@@ -232,6 +259,7 @@ function renderQuickAnswer() {
 
   const pageType = String(page.type || "").toLowerCase();
   const isComparison = pageType === "comparison";
+  const isBrandGuide = pageType === "brand_guide";
   const isWorthIt = pageType === "worth_it";
 
   if (isWorthIt) {
@@ -251,7 +279,7 @@ function renderQuickAnswer() {
     return;
   }
   
-    if (isComparison && Array.isArray(page.quick_answer) && page.quick_answer.length) {
+  if ((isComparison || isBrandGuide) && Array.isArray(page.quick_answer) && page.quick_answer.length) {
       root.classList.add("buying-quick__grid--compare");
       root.classList.remove("buying-quick__grid--worth");
 
@@ -390,18 +418,24 @@ function renderPickCards() {
   if (!root) return;
 
   const pageType = String(page.type || "").toLowerCase();
-    const isComparison = pageType === "comparison";
-    const isWorthIt = pageType === "worth_it";
+  const isComparison = pageType === "comparison";
+  const isWorthIt = pageType === "worth_it";
+  const isBrandGuide = pageType === "brand_guide";
 
-    if (isWorthIt) {
+  if (isWorthIt) {
     renderWorthItDecision(root);
     return;
-    }
+  }
 
-    if (isComparison) {
+  if (isComparison) {
     renderComparisonDecision(root);
     return;
-    }
+  }
+
+  if (isBrandGuide) {
+    renderBrandGuideDecision(root);
+    return;
+  }
 
   root.innerHTML = picks.map((product, index) => {
     const buyIf = firstLine(product.buy_if);
@@ -447,6 +481,144 @@ function renderPickCards() {
       </article>
     `;
   }).join("");
+}
+
+function renderBrandGuideDecision(root) {
+  const parentSection = root.closest(".buying-section");
+  const kicker = parentSection ? $(".buying-kicker", parentSection) : null;
+
+  if (kicker) kicker.textContent = "Best For Each Buyer";
+
+  function soundcoreFit(product) {
+    const title = String(product.title || "").toLowerCase();
+
+    if (title.includes("p31i")) {
+      return {
+        label: "First Pair / Lower Price",
+        fit: "Buy this if you want a lower-price first Soundcore pair with ANC, LDAC, multipoint, and strong battery life.",
+        skip: "Skip it if wireless charging matters."
+      };
+    }
+
+    if (title.includes("p40i")) {
+      return {
+        label: "Wireless Charging Pick",
+        fit: "Buy this if you want a lower-price Soundcore pair with wireless charging, ANC, multipoint, and long battery life.",
+        skip: "Skip it if LDAC matters."
+      };
+    }
+
+    if (title.includes("p41i")) {
+      return {
+        label: "Huge Battery / Phone-Charging Case",
+        fit: "Buy this if battery life is the reason you are buying, or if you want the phone-charging case.",
+        skip: "Skip it if you want a compact case or wireless charging."
+      };
+    }
+
+    if (title.includes("liberty 4 nc")) {
+      return {
+        label: "Safer All-Around ANC Pick",
+        fit: "Buy this if you want the safest Soundcore pick for most people, with ANC, LDAC, multipoint, wireless charging, and broad store coverage.",
+        skip: "Skip it if you want the upgraded Liberty model."
+      };
+    }
+
+    if (title.includes("liberty 4 pro")) {
+      return {
+        label: "Upgraded Soundcore Pick",
+        fit: "Buy this if you want the more premium Soundcore option with LDAC, ANC, multipoint, wireless charging, and deeper controls.",
+        skip: "Skip it if you are trying to stay under $100."
+      };
+    }
+
+    if (title.includes("space a40")) {
+      return {
+        label: "Smaller Older Value Pick",
+        fit: "Buy this if you want a compact older Soundcore value pick with ANC, LDAC, multipoint, and wireless charging.",
+        skip: "Skip it if you want the newest Soundcore model."
+      };
+    }
+
+    if (title.includes("liberty 5")) {
+      return {
+        label: "Newer Liberty Pick Under $100",
+        fit: "Buy this if you want a newer Liberty model with LDAC, Dolby Audio, ANC, multipoint, wireless charging, and IP55 durability.",
+        skip: "Skip it if you want the cheaper Liberty 4 NC."
+      };
+    }
+
+    if (title.includes("sport x20")) {
+      return {
+        label: "Workout Pick",
+        fit: "Buy this if you want Soundcore earbuds for workouts, adjustable ear hooks, stronger water resistance, ANC, and long battery life.",
+        skip: "Skip it if you want wireless charging or a tiny pocket case."
+      };
+    }
+
+    if (title.includes("aeroclip")) {
+      return {
+        label: "Open-Ear Awareness Pick",
+        fit: "Buy this if you want open-ear awareness, a clip-on fit, LDAC, multipoint, and less ear-canal pressure.",
+        skip: "Skip it if you want ANC, sealed bass, or private listening."
+      };
+    }
+
+    return {
+      label: product.label || "Soundcore Pick",
+      fit: product.buyer_fit || product.verdict || "Buy this if it matches your main use case better than the other Soundcore models.",
+      skip: firstLine(product.skip_if) || "Skip it if another Soundcore model fits your main use case better."
+    };
+  }
+
+  const cards = picks.map(product => {
+    const fit = soundcoreFit(product);
+
+    return `
+      <article class="brand-guide-card" id="${esc(product.slot || "")}">
+        <a class="brand-guide-card__image" href="${esc(product.dashboard_url)}" aria-label="Open ${esc(product.title)} dashboard">
+          <img src="${esc(product.image_url)}" alt="${esc(product.title)}" loading="lazy" decoding="async">
+        </a>
+
+        <div class="brand-guide-card__body">
+          <p class="buying-card__label">${esc(fit.label)}</p>
+          <h3>${esc(product.title)}</h3>
+          <p>${esc(fit.fit)}</p>
+
+          <div class="brand-guide-card__meta">
+            <span class="buying-pill">${esc(product.price)}</span>
+            <span class="buying-pill">${esc(storeCountText(product.store_count))}</span>
+          </div>
+
+          <p class="brand-guide-card__skip">
+            <span class="brand-guide-card__skip-icon" aria-hidden="true">
+              <svg viewBox="0 -960 960 960" focusable="false">
+                <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"></path>
+              </svg>
+            </span>
+            <span>${esc(fit.skip)}</span>
+          </p>
+
+          <a class="brand-guide-card__link" href="${esc(product.dashboard_url)}">View Full Page</a>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  root.innerHTML = `
+    <div class="brand-guide-block">
+      <div class="brand-guide-grid">
+        ${cards}
+      </div>
+    </div>
+
+    ${page.final_verdict ? `
+      <div class="worth-final-card">
+        <p class="buying-kicker">Final Recommendation</p>
+        <p>${esc(page.final_verdict)}</p>
+      </div>
+    ` : ""}
+  `;
 }
 
 function renderComparisonDecision(root) {

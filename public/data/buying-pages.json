@@ -802,5 +802,381 @@
       "href": "/rankings/earbuds/"
     }
   ]
+},
+{
+  "slug": "best-earbuds-for-work-under-100",
+  "path": "/guides/earbuds/best-earbuds-for-work-under-100/",
+  "type": "guide",
+  "category": "earbuds",
+  "title": "Best Earbuds For Work Under $100",
+  "seo_title": "Best Earbuds For Work Under $100 - PriceCheck",
+  "description": "Find the best earbuds for work under $100 using current prices, microphone support, multipoint, battery life, transparency mode, ANC, wireless charging, seller availability, and PriceCheck product data.",
+  "price_cap_cents": 10000,
+  "hero": {
+    "eyebrow": "Buying Guide",
+    "heading": "Best Earbuds For Work Under $100",
+    "dek": "A practical guide to earbuds under $100 for work calls, laptop switching, meetings, commuting, and daily use."
+  },
+  "quick_answer": {
+    "heading": "Quick Answer",
+    "body": "For work under $100, prioritize multipoint, built-in microphone support, battery life, and transparency mode before music-only specs. Multipoint is the biggest work feature because it helps you switch between a laptop and phone. Transparency mode also matters because sealed earbuds can make your own voice feel blocked during calls.",
+    "infographic": {
+      "src": "/infographics/earbuds/best-earbuds-for-work-under-100-pricecheck.png",
+      "alt": "Best earbuds for work under 100 dollars infographic showing PriceCheck work-focused earbud picks by price, microphone support, multipoint, battery life, transparency mode, ANC, wireless charging, and buyer fit.",
+      "width": 1080,
+      "height": 1920,
+      "caption": "PriceCheck’s work-focused earbud picks prioritize current pricing, multipoint, microphone support, battery life, transparency mode, and practical daily-use tradeoffs."
+    },
+    "items": [
+      {
+        "label": "Best Work Pick",
+        "slot": "best_work_pick"
+      },
+      {
+        "label": "Best Phone And Laptop Pick",
+        "slot": "best_phone_laptop_pick"
+      },
+      {
+        "label": "Best Long-Meeting Pick",
+        "slot": "best_long_meeting_pick"
+      },
+      {
+        "label": "Best Cheap Work Pick",
+        "slot": "best_cheap_work_pick"
+      },
+      {
+        "label": "Best Commute Work Pick",
+        "slot": "best_commute_work_pick"
+      }
+    ]
+  },
+  "pick_slots": [
+    {
+      "slot": "best_work_pick",
+      "label": "Best Work Pick",
+      "strategy": "highest_value_score"
+    },
+    {
+      "slot": "best_phone_laptop_pick",
+      "label": "Best Phone And Laptop Pick",
+      "strategy": "highest_value_score"
+    },
+    {
+      "slot": "best_long_meeting_pick",
+      "label": "Best Long-Meeting Pick",
+      "strategy": "best_battery_score"
+    },
+    {
+      "slot": "best_cheap_work_pick",
+      "label": "Best Cheap Work Pick",
+      "strategy": "lowest_price_with_acceptable_score"
+    },
+    {
+      "slot": "best_commute_work_pick",
+      "label": "Best Commute Work Pick",
+      "strategy": "highest_value_score"
+    }
+  ],
+  "comparison_rows": [
+    {
+      "label": "Price",
+      "key": "price"
+    },
+    {
+      "label": "Built-In Microphone",
+      "key": "built_in_microphone"
+    },
+    {
+      "label": "Multipoint",
+      "key": "multipoint_pairing"
+    },
+    {
+      "label": "Transparency Mode",
+      "key": "transparency_mode"
+    },
+    {
+      "label": "Battery",
+      "key": "battery_life_hours"
+    },
+    {
+      "label": "Case Battery",
+      "key": "battery_life_with_case_hours"
+    },
+    {
+      "label": "ANC",
+      "key": "active_noise_cancelling"
+    },
+    {
+      "label": "Wireless Charging",
+      "key": "wireless_charging_case"
+    },
+    {
+      "label": "Water Resistance",
+      "key": "water_resistance_rating"
+    },
+    {
+      "label": "Codec Support",
+      "key": "codec_support"
+    },
+    {
+      "label": "Best Seller",
+      "key": "best_seller"
+    }
+  ],
+  "buying_notes": [
+    {
+      "heading": "Good For Buyers Who Want",
+      "items": [
+        "Earbuds under $100 for work calls, meetings, and daily use.",
+        "Multipoint for switching between a phone and laptop.",
+        "A built-in microphone for calls without using a separate headset.",
+        "Enough battery life for longer meetings.",
+        "Transparency mode so sealed earbuds feel less closed off during calls.",
+        "ANC for reducing what you hear during work or commuting."
+      ]
+    },
+    {
+      "heading": "Skip It If",
+      "items": [
+        "You need a dedicated boom microphone.",
+        "Your job depends on professional call quality.",
+        "You record podcasts, voiceovers, or client audio.",
+        "You take calls in loud streets every day.",
+        "You want guaranteed hands-on microphone test results."
+      ]
+    }
+  ],
+  "work_buying_advice": {
+    "heading": "What Matters For Work",
+    "body": "For work earbuds, multipoint matters more than most music specs because it helps you move between a laptop and phone. Built-in microphone support is the baseline for calls. Battery life matters for long meetings. Transparency mode helps if sealed earbuds make your own voice feel blocked. ANC is useful for what you hear, but it should not be treated as proof of better microphone quality."
+  },
+  "final_verdict": "The best earbuds for work under $100 should be picked around multipoint, microphone support, battery life, transparency mode, and current price. Multipoint is the biggest work feature because it helps with laptop and phone switching. Transparency mode is also useful because sealed earbuds can make your own voice feel unnatural during calls. If your job depends on call quality, a dedicated headset is still the safer choice.",
+  "social_caption": "Best earbuds for work under $100: prioritize multipoint, mic support, battery life, and transparency mode before music-only specs.",
+  "video_script": "Looking for earbuds for work under $100? Do not start with music specs. Start with multipoint, because switching between your laptop and phone is the biggest work feature. Then check built-in microphone support, battery life, and transparency mode. Transparency mode matters because sealed earbuds can make your own voice feel blocked during calls. ANC helps what you hear, but it does not automatically mean the other person hears you better. My simple answer: for work, prioritize multipoint, mic support, battery, and daily convenience.",
+  "infographic": {
+    "headline": "Best Earbuds For Work Under $100",
+    "subhead": "For work, prioritize multipoint, microphone support, battery life, and transparency mode before music-only specs.",
+    "sections": [
+      {
+        "label": "Most Important",
+        "items": [
+          "Multipoint for phone and laptop",
+          "Built-in microphone",
+          "Long earbud battery life",
+          "Transparency mode",
+          "Reliable current price"
+        ]
+      },
+      {
+        "label": "Helpful, But Secondary",
+        "items": [
+          "ANC",
+          "Wireless charging",
+          "Codec support",
+          "Water resistance"
+        ]
+      },
+      {
+        "label": "Skip Earbuds If",
+        "items": [
+          "You need a boom microphone",
+          "Your job depends on call quality",
+          "You record professional audio",
+          "You take calls in loud streets every day"
+        ]
+      }
+    ]
+  },
+  "method": {
+    "heading": "How PriceCheck Picks Work Earbuds",
+    "body": "PriceCheck filters earbuds under $100, groups color variants into the same product family, checks current store prices, and compares work-relevant specs such as built-in microphone support, multipoint pairing, battery life, case battery, transparency mode, ANC, wireless charging, water resistance, codec support, seller availability, and overall buyer fit. PriceCheck does not use affiliate links, paid placements, sponsorships, or brand deals."
+  },
+  "related": [
+    {
+      "label": "Best Earbuds Under $100",
+      "href": "/guides/earbuds/best-under-100/"
+    },
+    {
+      "label": "Best First Earbuds To Buy",
+      "href": "/guides/earbuds/best-first-earbuds-to-buy/"
+    },
+    {
+      "label": "EarFun Air Pro 4 vs Liberty 4 NC",
+      "href": "/compare/earfun-air-pro-4-vs-soundcore-liberty-4-nc/"
+    },
+    {
+      "label": "All Earbuds Ranked By Value",
+      "href": "/rankings/earbuds/"
+    }
+  ]
+},
+{
+  "slug": "which-soundcore-earbuds-should-you-buy",
+  "path": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/",
+  "type": "brand_guide",
+  "category": "earbuds",
+  "brand": "soundcore",
+  "title": "Which Soundcore Earbuds Should You Buy?",
+  "seo_title": "Which Soundcore Earbuds Should You Buy? - PriceCheck",
+  "description": "Compare Soundcore earbuds by buyer fit, current prices, ANC, battery life, multipoint, codec support, wireless charging, workout use, and everyday value.",
+  "max_products": 40,
+  "hero": {
+    "eyebrow": "Brand Guide",
+    "heading": "Which Soundcore Earbuds Should You Buy?",
+    "dek": "A practical guide to choosing the right Soundcore earbuds based on how you actually use them: first pair, wireless charging, huge battery, all-around ANC, upgraded features, or smaller older value."
+  },
+  "quick_answer": [
+    {
+      "label": "Pick P31i if",
+      "body": "You want a first pair or lower-price Soundcore earbuds for simple daily use."
+    },
+    {
+      "label": "Pick P40i if",
+      "body": "You want wireless charging without jumping straight to a higher-price Liberty model."
+    },
+    {
+      "label": "Pick P41i if",
+      "body": "You want huge battery life or a phone-charging case."
+    },
+    {
+      "label": "Pick Liberty 4 NC if",
+      "body": "You want the safer all-around ANC pick for most buyers."
+    },
+    {
+      "label": "Pick Liberty 4 Pro if",
+      "body": "You want the upgraded Soundcore pick with the strongest feature set."
+    },
+    {
+      "label": "Pick Space A40 if",
+      "body": "You want a smaller older value pick instead of a newer full-size model."
+    }
+  ],
+  "brand_fit_rules": [
+    {
+      "match": "P31i",
+      "order": 10,
+      "label": "First Pair / Lower Price",
+      "buyer_fit": "Good for buyers who want a first pair or lower-price Soundcore earbuds for simple daily use."
+    },
+    {
+      "match": "P40i",
+      "order": 20,
+      "label": "Wireless Charging Pick",
+      "buyer_fit": "Good for buyers who want wireless charging without jumping straight to a higher-price Liberty model."
+    },
+    {
+      "match": "P41i",
+      "order": 30,
+      "label": "Huge Battery / Phone-Charging Case",
+      "buyer_fit": "Good for buyers who want huge battery life or a case that can help charge a phone."
+    },
+    {
+      "match": "Liberty 4 NC",
+      "order": 40,
+      "label": "Safer All-Around ANC Pick",
+      "buyer_fit": "Good for buyers who want the safer all-around Soundcore pick with ANC, multipoint, LDAC, and everyday convenience."
+    },
+    {
+      "match": "Liberty 4 Pro",
+      "order": 50,
+      "label": "Upgraded Soundcore Pick",
+      "buyer_fit": "Good for buyers who want the upgraded Soundcore model instead of the lower-price everyday picks."
+    },
+    {
+      "match": "Space A40",
+      "order": 60,
+      "label": "Smaller Older Value Pick",
+      "buyer_fit": "Good for buyers who want a smaller older Soundcore value pick instead of a newer full-size model."
+    }
+  ],
+  "comparison_rows": [
+    {
+      "label": "Current Price",
+      "key": "price"
+    },
+    {
+      "label": "Best For",
+      "key": "best_for",
+      "values": {}
+    },
+    {
+      "label": "ANC",
+      "key": "active_noise_cancelling"
+    },
+    {
+      "label": "Transparency Mode",
+      "key": "transparency_mode"
+    },
+    {
+      "label": "Battery",
+      "key": "battery_life_hours"
+    },
+    {
+      "label": "Case Battery",
+      "key": "battery_life_with_case_hours"
+    },
+    {
+      "label": "Multipoint",
+      "key": "multipoint_pairing"
+    },
+    {
+      "label": "Codec Support",
+      "key": "codec_support"
+    },
+    {
+      "label": "Wireless Charging",
+      "key": "wireless_charging_case"
+    },
+    {
+      "label": "Water Resistance",
+      "key": "water_resistance_rating"
+    },
+    {
+      "label": "Built-In Microphone",
+      "key": "built_in_microphone"
+    },
+    {
+      "label": "Best Seller",
+      "key": "best_seller"
+    }
+  ],
+  "final_verdict": "Most buyers should start with the Soundcore model that fits their use case, not the one with the longest spec list. Pick P31i for a first pair or lower price. Pick P40i for wireless charging. Pick P41i for huge battery life or the phone-charging case. Pick Liberty 4 NC for the safer all-around ANC choice. Pick Liberty 4 Pro if you want the upgraded Soundcore model. Pick Space A40 if you want a smaller older value pick.",
+  "social_caption": "Which Soundcore earbuds should you buy? P31i for first pair, P40i for wireless charging, P41i for huge battery, Liberty 4 NC for all-around ANC, Liberty 4 Pro for upgraded Soundcore, and Space A40 for smaller older value.",
+  "video_script": "Which Soundcore earbuds should you buy? The names are confusing, so pick by buyer fit. P31i is for a first pair or lower price. P40i is for wireless charging. P41i is for huge battery life or the phone-charging case. Liberty 4 NC is the safer all-around ANC pick. Liberty 4 Pro is the upgraded Soundcore pick. Space A40 is the smaller older value pick. The simple answer: do not buy by name. Buy by what problem you need the earbuds to solve.",
+  "infographic": {
+    "src": "/infographics/earbuds/which-soundcore-earbuds-should-you-buy-pricecheck.png",
+    "alt": "Which Soundcore earbuds should you buy infographic comparing P31i, P40i, P41i, Liberty 4 NC, Liberty 4 Pro, and Space A40 by buyer fit, current price, specs, and use case.",
+    "width": 1080,
+    "height": 1920,
+    "caption": "PriceCheck’s Soundcore guide focuses on buyer fit first, then current pricing and specs.",
+    "headline": "Which Soundcore Earbuds Should You Buy?",
+    "subhead": "Pick by buyer fit first. Specs only matter when they support how you use the earbuds."
+  },
+  "method": {
+    "heading": "How PriceCheck Compares Soundcore Earbuds",
+    "body": "PriceCheck pulls Soundcore earbuds from the catalog, groups color variants into the same product family, checks current store prices, and compares specs such as ANC, transparency mode, battery life, case battery, multipoint, codec support, wireless charging, water resistance, microphone support, seller availability, and buyer fit."
+  },
+  "related": [
+    {
+      "label": "Best Earbuds Under $100",
+      "href": "/guides/earbuds/best-under-100/"
+    },
+    {
+      "label": "Best First Earbuds To Buy",
+      "href": "/guides/earbuds/best-first-earbuds-to-buy/"
+    },
+    {
+      "label": "Best Earbuds For Work Under $100",
+      "href": "/guides/earbuds/best-earbuds-for-work-under-100/"
+    },
+    {
+      "label": "EarFun Air Pro 4 vs Liberty 4 NC",
+      "href": "/compare/earfun-air-pro-4-vs-soundcore-liberty-4-nc/"
+    },
+    {
+      "label": "All Earbuds Ranked By Value",
+      "href": "/rankings/earbuds/"
+    }
+  ]
 }
 ]

@@ -88,20 +88,6 @@
   gap:12px;
 }
 
-.pc-explore-page .pc-explore-card{
-  display:flex;
-  flex-direction:column;
-  min-height:140px;
-  padding:18px;
-  border:1px solid #e5e7eb;
-  border-radius:22px;
-  background:#fff;
-  color:#111827;
-  text-decoration:none;
-  box-shadow:0 1px 2px rgba(17, 24, 39, .04);
-  transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease;
-}
-
 .pc-explore-page .pc-explore-card:hover{
   transform:translateY(-2px);
   border-color:#d1d5db;
@@ -116,15 +102,6 @@
   font-weight:700;
   letter-spacing:.03em;
   text-transform:uppercase;
-}
-
-.pc-explore-page .pc-explore-card strong{
-  display:block;
-  color:#111827;
-  font-size:20px;
-  line-height:1.25;
-  letter-spacing:-.02em;
-  font-weight:650;
 }
 
 .pc-explore-page .pc-explore-card p{
@@ -220,6 +197,7 @@
 
 .pc-explore-hero p {
   max-width: 680px;
+  padding-left: 3px;
   margin: 14px 0 0;
   font-size: 17px;
   line-height: 1.55;
@@ -252,13 +230,6 @@
 
 .pc-explore-card {
   min-height: 128px;
-}
-
-.pc-explore-card strong {
-  display: block;
-  font-size: 16px;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
 }
 
 .pc-explore-card p {
@@ -303,4 +274,91 @@
   .pc-explore-card {
     min-height: auto;
   }
+}
+
+/* Uniform Explore cards with section colors */
+
+.pc-explore-page .pc-explore-section {
+  --pc-explore-accent: #2563eb;
+  --pc-explore-accent-border: rgba(37, 99, 235, 0.22);
+  --pc-explore-card-bg: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.pc-explore-page .pc-explore-section--rankings {
+  --pc-explore-accent: #111827;
+  --pc-explore-accent-border: rgba(17, 24, 39, 0.18);
+  --pc-explore-card-bg: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.pc-explore-page .pc-explore-section--best {
+  --pc-explore-accent: #2563eb;
+  --pc-explore-accent-border: rgba(37, 99, 235, 0.22);
+  --pc-explore-card-bg: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.pc-explore-page .pc-explore-section--brand {
+  --pc-explore-accent: #7c3aed;
+  --pc-explore-accent-border: rgba(124, 58, 237, 0.22);
+  --pc-explore-card-bg: linear-gradient(180deg, #ffffff 0%, #fbf8ff 100%);
+}
+
+.pc-explore-page .pc-explore-section--worth {
+  --pc-explore-accent: #059669;
+  --pc-explore-accent-border: rgba(5, 150, 105, 0.22);
+  --pc-explore-card-bg: linear-gradient(180deg, #ffffff 0%, #f7fdf9 100%);
+}
+
+.pc-explore-page .pc-explore-section--compare {
+  --pc-explore-accent: #ea580c;
+  --pc-explore-accent-border: rgba(234, 88, 12, 0.24);
+  --pc-explore-card-bg: linear-gradient(180deg, #ffffff 0%, #fff9f5 100%);
+}
+
+.pc-explore-page .pc-explore-card {
+  position: relative;
+  min-height: 132px;
+  padding: 18px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 22px;
+  background: var(--pc-explore-card-bg);
+  color: #111827;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.pc-explore-page .pc-explore-card::before {
+  content: "";
+  display: block;
+  width: 34px;
+  height: 4px;
+  margin-bottom: 16px;
+  border-radius: 999px;
+  background: var(--pc-explore-accent);
+  opacity: 0.95;
+}
+
+.pc-explore-page .pc-explore-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--pc-explore-accent-border);
+  box-shadow: 0 14px 34px rgba(17, 24, 39, 0.08);
+}
+
+.pc-explore-page .pc-explore-card strong {
+  display: block;
+  color: #111827;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.pc-explore-page .pc-explore-card p {
+  margin: 10px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
 }

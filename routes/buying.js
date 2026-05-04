@@ -634,6 +634,357 @@ function buildPickedProducts(ranked, pageConfig) {
   return picks;
 }
 
+function brandGuideRuleForProduct(row, pageConfig) {
+  const rules = Array.isArray(pageConfig.brand_fit_rules) ? pageConfig.brand_fit_rules : [];
+  const haystack = `${row.brand || ""} ${row.model_name || ""} ${row.model_number || ""}`.toLowerCase();
+
+  for (const rule of rules) {
+    const match = String(rule.match || "").trim().toLowerCase();
+    if (!match) continue;
+
+    if (haystack.includes(match)) {
+      return rule;
+    }
+  }
+
+  return null;
+}
+
+function brandGuideLabel(row, pageConfig) {
+  const rule = brandGuideRuleForProduct(row, pageConfig);
+  if (rule && rule.label) return rule.label;
+
+  const specs = row.specs_norm || {};
+
+  if (boolVal(specs.multipoint_pairing) && boolVal(specs.active_noise_cancelling)) {
+    return "Best For Everyday Work And ANC";
+  }
+
+  if (numVal(specs.battery_life_with_case_hours) >= 50) {
+    return "Best For Long Battery Life";
+  }
+
+  if (boolVal(specs.wireless_charging_case)) {
+    return "Best For Wireless Charging";
+  }
+
+  if (boolVal(specs.active_noise_cancelling)) {
+    return "Best For ANC Buyers";
+  }
+
+  return "Best For Lower-Price Buyers";
+}
+
+function brandGuideBuyerFit(row, pageConfig) {
+  const rule = brandGuideRuleForProduct(row, pageConfig);
+  if (rule && rule.buyer_fit) return rule.buyer_fit;
+
+  const specs = row.specs_norm || {};
+
+  if (boolVal(specs.multipoint_pairing)) {
+    return "Good for buyers who switch between a phone and laptop.";
+  }
+
+  if (numVal(specs.battery_life_with_case_hours) >= 50) {
+    return "Good for buyers who care most about long battery life.";
+  }
+
+  if (boolVal(specs.wireless_charging_case)) {
+    return "Good for buyers who want easier case charging.";
+  }
+
+  if (boolVal(specs.active_noise_cancelling)) {
+    return "Good for buyers who want ANC without jumping to flagship pricing.";
+  }
+
+  return "Good for buyers who want a simpler lower-price pair.";
+}
+
+function brandGuideSortWeight(row, pageConfig) {
+  const rule = brandGuideRuleForProduct(row, pageConfig);
+
+  if (rule && Number.isFinite(Number(rule.order))) {
+    return Number(rule.order);
+  }
+
+  return 999;
+}
+
+function toBrandGuideProductPayload(row, pageConfig) {
+  const title = productTitle(row);
+  const slot = slugify(row.model_name || row.model_number || title);
+  const product = toProductPayload(row, {
+    slot,
+    label: brandGuideLabel(row, pageConfig)
+  });
+
+  return {
+    ...product,
+    buyer_fit: brandGuideBuyerFit(row, pageConfig),
+    brand_guide_order: brandGuideSortWeight(row, pageConfig)
+  };
+}
+
+async function getBrandGuideCandidates(pageConfig) {
+  const categorySlug = slugify(pageConfig.category || "");
+  const terms = categoryTerms(categorySlug).map(t => t.toLowerCase());
+  const brand = String(pageConfig.brand || pageConfig.brand_name || "").trim().toLowerCase();
+  const maxProducts = Math.max(1, Math.min(80, Number(pageConfig.max_products || 40)));
+
+  if (!brand) return [];
+
+  const q = await pool.query(
+    `
+    WITH catalog_rows AS (
+      SELECT
+        c.id,
+        c.pci,
+        c.upc,
+        c.brand,
+        c.model_name,
+        c.model_number,
+        c.category,
+        c.image_url,
+        c.specs_norm,
+        c.specs,
+        c.verdict AS catalog_verdict,
+        c.created_at,
+        upper(btrim(c.model_number)) AS model_number_norm,
+        COALESCE(NULLIF(lower(btrim(c.version)), ''), '__default__') AS version_norm
+      FROM public.catalog c
+      WHERE c.category IS NOT NULL
+        AND btrim(c.category) <> ''
+        AND lower(btrim(c.category)) = ANY($1::text[])
+        AND lower(btrim(c.brand)) = $2::text
+        AND c.model_number IS NOT NULL
+        AND btrim(c.model_number) <> ''
+        AND c.specs_norm IS NOT NULL
+        AND jsonb_typeof(c.specs_norm) = 'object'
+        AND COALESCE(c.is_refurbished, false) = false
+        AND COALESCE(c.is_bundle, false) = false
+    ),
+    listing_matches AS (
+      SELECT
+        cr.model_number_norm,
+        cr.version_norm,
+        l.store,
+        l.store_sku,
+        l.url,
+        l.offer_tag,
+        l.rating,
+        l.review_count,
+        COALESCE(l.current_price_observed_at, l.created_at) AS observed_at,
+        CASE
+          WHEN l.effective_price_cents IS NOT NULL
+           AND l.effective_price_cents > 0
+           AND (
+             l.current_price_cents IS NULL
+             OR l.current_price_cents <= 0
+             OR l.effective_price_cents <= l.current_price_cents
+           )
+          THEN l.effective_price_cents
+          WHEN l.current_price_cents IS NOT NULL AND l.current_price_cents > 0
+          THEN l.current_price_cents
+          ELSE NULL
+        END AS price_cents
+      FROM catalog_rows cr
+      LEFT JOIN public.listings l
+        ON (
+          (
+            cr.pci IS NOT NULL
+            AND btrim(cr.pci) <> ''
+            AND l.pci IS NOT NULL
+            AND btrim(l.pci) <> ''
+            AND upper(btrim(l.pci)) = upper(btrim(cr.pci))
+          )
+          OR
+          (
+            cr.upc IS NOT NULL
+            AND btrim(cr.upc) <> ''
+            AND l.upc IS NOT NULL
+            AND btrim(l.upc) <> ''
+            AND public.norm_upc(l.upc) = public.norm_upc(cr.upc)
+          )
+        )
+       AND coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
+    ),
+    valid_listing_matches AS (
+      SELECT *
+      FROM listing_matches
+      WHERE price_cents IS NOT NULL
+        AND price_cents > 0
+    ),
+    group_prices AS (
+      SELECT
+        model_number_norm,
+        version_norm,
+        MIN(price_cents) AS best_price_cents,
+        COUNT(DISTINCT lower(btrim(store))) AS store_count
+      FROM valid_listing_matches
+      GROUP BY model_number_norm, version_norm
+    ),
+    seller_rows AS (
+      SELECT DISTINCT ON (
+        model_number_norm,
+        version_norm,
+        lower(btrim(store)),
+        lower(btrim(COALESCE(store_sku, '')))
+      )
+        model_number_norm,
+        version_norm,
+        store,
+        store_sku,
+        url,
+        offer_tag,
+        rating,
+        review_count,
+        observed_at,
+        price_cents
+      FROM valid_listing_matches
+      ORDER BY
+        model_number_norm,
+        version_norm,
+        lower(btrim(store)),
+        lower(btrim(COALESCE(store_sku, ''))),
+        price_cents ASC,
+        observed_at DESC NULLS LAST
+    ),
+    sellers AS (
+      SELECT
+        model_number_norm,
+        version_norm,
+        jsonb_agg(
+          jsonb_build_object(
+            'store', store,
+            'store_sku', store_sku,
+            'url', url,
+            'offer_tag', offer_tag,
+            'rating', rating,
+            'review_count', review_count,
+            'price_cents', price_cents,
+            'price', ('$' || to_char(price_cents / 100.0, 'FM999999990.00'))
+          )
+          ORDER BY price_cents ASC, lower(btrim(store)) ASC
+        ) AS sellers
+      FROM seller_rows
+      GROUP BY model_number_norm, version_norm
+    ),
+    picked AS (
+      SELECT DISTINCT ON (cr.model_number_norm, cr.version_norm)
+        cr.*,
+        gp.best_price_cents,
+        COALESCE(gp.store_count, 0) AS store_count,
+        COALESCE(s.sellers, '[]'::jsonb) AS sellers
+      FROM catalog_rows cr
+      LEFT JOIN group_prices gp
+        ON gp.model_number_norm = cr.model_number_norm
+       AND gp.version_norm = cr.version_norm
+      LEFT JOIN sellers s
+        ON s.model_number_norm = cr.model_number_norm
+       AND s.version_norm = cr.version_norm
+      ORDER BY
+        cr.model_number_norm,
+        cr.version_norm,
+        CASE WHEN gp.best_price_cents IS NULL THEN 1 ELSE 0 END,
+        gp.best_price_cents ASC NULLS LAST,
+        CASE WHEN cr.image_url IS NULL OR btrim(cr.image_url) = '' THEN 1 ELSE 0 END,
+        CASE WHEN cr.pci IS NULL OR btrim(cr.pci) = '' THEN 1 ELSE 0 END,
+        cr.created_at DESC NULLS LAST,
+        cr.id DESC
+    )
+    SELECT
+      p.*,
+      pr.verdict AS rec_verdict,
+      pr.summary AS rec_summary,
+      pr.strengths AS rec_strengths,
+      pr.weaknesses AS rec_weaknesses,
+      pr.overall_score AS rec_overall_score
+    FROM picked p
+    LEFT JOIN LATERAL (
+      SELECT pr.*
+      FROM public.product_recommendations pr
+      WHERE
+        (
+          p.pci IS NOT NULL
+          AND btrim(p.pci) <> ''
+          AND pr.pci IS NOT NULL
+          AND btrim(pr.pci) <> ''
+          AND upper(btrim(pr.pci)) = upper(btrim(p.pci))
+        )
+        OR
+        (
+          p.upc IS NOT NULL
+          AND btrim(p.upc) <> ''
+          AND pr.upc IS NOT NULL
+          AND btrim(pr.upc) <> ''
+          AND public.norm_upc(pr.upc) = public.norm_upc(p.upc)
+        )
+      ORDER BY
+        CASE
+          WHEN p.pci IS NOT NULL
+           AND pr.pci IS NOT NULL
+           AND upper(btrim(pr.pci)) = upper(btrim(p.pci))
+          THEN 0
+          ELSE 1
+        END,
+        pr.updated_at DESC NULLS LAST
+      LIMIT 1
+    ) pr ON TRUE
+    LIMIT $3::int
+    `,
+    [terms, brand, maxProducts]
+  );
+
+  return q.rows
+    .map(row => {
+      const featureScore = scoreProduct(categorySlug, row.specs_norm || {});
+      const price = Number(row.best_price_cents || 0) / 100;
+      const valueScore = price > 0 ? featureScore / Math.sqrt(price) : 0;
+
+      return {
+        ...row,
+        featureScore,
+        valueScore
+      };
+    })
+    .sort((a, b) => {
+      const orderA = brandGuideSortWeight(a, pageConfig);
+      const orderB = brandGuideSortWeight(b, pageConfig);
+
+      if (orderA !== orderB) return orderA - orderB;
+
+      const hasPriceA = Number(a.best_price_cents || 0) > 0 ? 0 : 1;
+      const hasPriceB = Number(b.best_price_cents || 0) > 0 ? 0 : 1;
+
+      if (hasPriceA !== hasPriceB) return hasPriceA - hasPriceB;
+
+      return Number(b.valueScore || 0) - Number(a.valueScore || 0);
+    });
+}
+
+async function buildBrandGuidePagePayload(pageConfig) {
+  const categorySlug = slugify(pageConfig.category || "");
+  const categoryLabel = slugToTitle(categorySlug);
+  const rows = await getBrandGuideCandidates(pageConfig);
+  const picks = rows.map(row => toBrandGuideProductPayload(row, pageConfig));
+  const comparisonRows = buildComparisonRows(pageConfig, picks);
+  const canonicalPath = pageConfig.path || `/guides/${categorySlug}/${pageConfig.slug}/`;
+  const canonicalUrl = `${SITE_ORIGIN}${canonicalPath}`;
+
+  return {
+    page: {
+      ...pageConfig,
+      category_label: categoryLabel,
+      canonical_url: canonicalUrl
+    },
+    picks,
+    comparison_rows: comparisonRows,
+    ranked_count: rows.length,
+    generated_at: new Date().toISOString(),
+    json_ld: buildItemListJsonLd(pageConfig, picks, canonicalUrl)
+  };
+}
+
 function toProductPayload(row, slot) {
   const sellers = Array.isArray(row.sellers) ? row.sellers : [];
   const bestSeller = sellers[0] || null;
@@ -1397,12 +1748,15 @@ async function buildComparisonPagePayload(pageConfig) {
 }
 
 async function buildPagePayload(pageConfig) {
+  const pageType = String(pageConfig.type || "").toLowerCase();
 
-const pageType = String(pageConfig.type || "").toLowerCase();
+  if (pageType === "comparison" || pageType === "worth_it") {
+    return buildComparisonPagePayload(pageConfig);
+  }
 
-if (pageType === "comparison" || pageType === "worth_it") {
-return buildComparisonPagePayload(pageConfig);
-}
+  if (pageType === "brand_guide") {
+    return buildBrandGuidePagePayload(pageConfig);
+  }
 
   const categorySlug = slugify(pageConfig.category || "");
   const categoryLabel = slugToTitle(categorySlug);
