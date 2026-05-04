@@ -596,5 +596,206 @@
       "href": "/guides/earbuds/sony-wf-1000xm5-worth-it/"
     }
   ]
+},
+{
+  "slug": "earfun-air-pro-4-vs-soundcore-liberty-4-nc",
+  "path": "/compare/earfun-air-pro-4-vs-soundcore-liberty-4-nc/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC",
+  "seo_title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC - PriceCheck",
+  "description": "Compare EarFun Air Pro 4 and soundcore Liberty 4 NC by current price, ANC, battery life, codec support, wireless charging, multipoint, seller availability, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "EarFun Air Pro 4 vs Liberty 4 NC",
+    "dek": "A side-by-side comparison of EarFun Air Pro 4 and soundcore Liberty 4 NC earbuds based on price, ANC controls, codec support, wireless charging, battery life, and everyday use."
+  },
+  "products": [
+    {
+      "slot": "earfun_air_pro_4",
+      "label": "EarFun Air Pro 4",
+      "brand": "EarFun",
+      "match": "Air Pro 4"
+    },
+    {
+      "slot": "liberty_4_nc",
+      "label": "soundcore Liberty 4 NC",
+      "brand": "soundcore",
+      "match": "Liberty 4 NC"
+    }
+  ],
+  "quick_answer": [
+    {
+      "label": "Pick EarFun Air Pro 4 if",
+      "product_slot": "earfun_air_pro_4",
+      "body": "ANC controls and codec support matter more to you than wireless charging."
+    },
+    {
+      "label": "Pick Liberty 4 NC if",
+      "product_slot": "liberty_4_nc",
+      "body": "You want the safer everyday pick with wireless charging, LDAC, multipoint, strong battery life, and a practical case."
+    }
+  ],
+  "winners": [
+    {
+      "label": "Overall Pick",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Safer everyday feature mix for most buyers."
+    },
+    {
+      "label": "Everyday Use",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Wireless charging, multipoint, battery life, and a practical case make it easier to recommend for daily use."
+    },
+    {
+      "label": "ANC Controls",
+      "winner_slot": "earfun_air_pro_4",
+      "reason": "Better fit if ANC controls are a priority."
+    },
+    {
+      "label": "Codec Support",
+      "winner_slot": "earfun_air_pro_4",
+      "reason": "Better fit if codec support matters more than wireless charging."
+    },
+    {
+      "label": "Wireless Charging",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Liberty 4 NC is the better pick if wireless charging is important."
+    },
+    {
+      "label": "Multipoint",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Multipoint makes it more useful for switching between devices."
+    },
+    {
+      "label": "Battery",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Stronger everyday battery package based on the available PriceCheck notes."
+    }
+  ],
+  "comparison_rows": [
+    {
+      "label": "Price",
+      "key": "price"
+    },
+    {
+      "label": "Best For",
+      "key": "best_for",
+      "values": {
+        "earfun_air_pro_4": "ANC controls and codec support",
+        "liberty_4_nc": "Everyday use, wireless charging, LDAC, and multipoint"
+      }
+    },
+    {
+      "label": "ANC",
+      "key": "active_noise_cancelling"
+    },
+    {
+      "label": "Battery",
+      "key": "battery_life_hours"
+    },
+    {
+      "label": "Case Battery",
+      "key": "battery_life_with_case_hours"
+    },
+    {
+      "label": "Water Resistance",
+      "key": "water_resistance_rating"
+    },
+    {
+      "label": "Multipoint",
+      "key": "multipoint_pairing"
+    },
+    {
+      "label": "Codec Support",
+      "key": "codec_support"
+    },
+    {
+      "label": "Wireless Charging",
+      "key": "wireless_charging_case"
+    },
+    {
+      "label": "Best Seller",
+      "key": "best_seller"
+    }
+  ],
+  "verdict_blocks": [
+    {
+      "heading": "Buy EarFun Air Pro 4 if",
+      "product_slot": "earfun_air_pro_4",
+      "items": [
+        "You care more about ANC controls than wireless charging.",
+        "You want strong codec support.",
+        "You are comparing feature depth before choosing the most convenient everyday case."
+      ]
+    },
+    {
+      "heading": "Buy Liberty 4 NC if",
+      "product_slot": "liberty_4_nc",
+      "items": [
+        "You want the safer everyday pick.",
+        "You care about wireless charging, LDAC, multipoint, and battery life.",
+        "You want a practical case for normal daily use."
+      ]
+    }
+  ],
+  "final_verdict": "The safer pick is soundcore Liberty 4 NC. It is the better everyday choice for most buyers because it has wireless charging, LDAC, multipoint, strong battery life, and a practical case. Choose EarFun Air Pro 4 if ANC controls and codec support matter more to you than wireless charging.",
+  "social_caption": "EarFun Air Pro 4 vs Liberty 4 NC: Liberty 4 NC is the safer everyday pick. EarFun Air Pro 4 is better if ANC controls and codec support matter more than wireless charging.",
+  "video_script": "EarFun Air Pro 4 or Liberty 4 NC? Pick Liberty 4 NC if you want the safer everyday pair with wireless charging, LDAC, multipoint, strong battery life, and a practical case. Pick EarFun Air Pro 4 if ANC controls and codec support matter more to you than wireless charging. My simple answer: most buyers should start with Liberty 4 NC. Compare EarFun Air Pro 4 if control and codec support matter more than convenience.",
+  "infographic": {
+    "headline": "EarFun Air Pro 4 vs Liberty 4 NC",
+    "subhead": "Liberty 4 NC is the safer everyday pick. EarFun Air Pro 4 is better if ANC controls and codec support matter more than wireless charging.",
+    "sections": [
+      {
+        "label": "Pick Liberty 4 NC If",
+        "items": [
+          "You want the safer everyday pick",
+          "Wireless charging matters",
+          "LDAC matters",
+          "Multipoint matters",
+          "Strong battery life matters",
+          "You want a practical case"
+        ]
+      },
+      {
+        "label": "Pick EarFun Air Pro 4 If",
+        "items": [
+          "ANC controls matter more",
+          "Codec support matters more",
+          "Wireless charging is not a priority",
+          "You want to compare feature depth first"
+        ]
+      },
+      {
+        "label": "Simple Answer",
+        "items": [
+          "Most buyers should start with Liberty 4 NC.",
+          "Compare EarFun Air Pro 4 if ANC controls and codec support are your priority."
+        ]
+      }
+    ]
+  },
+  "method": {
+    "heading": "How PriceCheck Compares These Earbuds",
+    "body": "PriceCheck compares EarFun Air Pro 4 and soundcore Liberty 4 NC using current prices, seller availability, normalized specs, and review signals. The main factors are price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, and everyday buyer fit."
+  },
+  "related": [
+    {
+      "label": "Best Earbuds Under $100",
+      "href": "/guides/earbuds/best-under-100/"
+    },
+    {
+      "label": "Best First Earbuds To Buy",
+      "href": "/guides/earbuds/best-first-earbuds-to-buy/"
+    },
+    {
+      "label": "Liberty 4 NC vs Skullcandy Method 360 ANC",
+      "href": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/"
+    },
+    {
+      "label": "All Earbuds Ranked By Value",
+      "href": "/rankings/earbuds/"
+    }
+  ]
 }
 ]
