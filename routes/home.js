@@ -11,24 +11,25 @@ function clampInt(v, lo, hi, fallback) {
 }
 
 router.get("/api/home_deals", async (req, res) => {
-  const limit = clampInt(req.query.limit, 6, 200, 60);
+  const limit = clampInt(req.query.limit, 6, 60, 24);
   const offset = clampInt(req.query.offset, 0, 1000000, 0);
 
   const client = await pool.connect();
+
   try {
-        const sql = `
-      WITH
-      base AS (
+    const sql = `
+      WITH listing_base AS (
         SELECT
           CASE
             WHEN l.pci IS NOT NULL AND btrim(l.pci) <> ''
               THEN 'pci:' || upper(btrim(l.pci))
             WHEN l.upc IS NOT NULL AND btrim(l.upc) <> ''
               THEN 'upc:' || btrim(l.upc)
+            ELSE NULL
           END AS key,
           replace(lower(btrim(l.store)), ' ', '') AS store_key,
-          COALESCE(l.effective_price_cents, l.current_price_cents) AS price_cents,
-          COALESCE(l.current_price_observed_at, l.created_at) AS observed_at
+          COALESCE(l.effective_price_cents, l.current_price_cents)::int AS price_cents,
+          COALESCE(l.current_price_observed_at, l.created_at) AS last_seen
         FROM public.listings l
         WHERE coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
           AND COALESCE(l.effective_price_cents, l.current_price_cents) > 0
@@ -38,58 +39,45 @@ router.get("/api/home_deals", async (req, res) => {
           )
       ),
 
-      bk AS (
-        SELECT * FROM base WHERE key IS NOT NULL
-      ),
-
-      agg AS (
+      offer_groups AS (
         SELECT
           key,
           MIN(price_cents)::int AS min_price_cents,
           MAX(price_cents)::int AS max_price_cents,
           COUNT(DISTINCT store_key)::int AS store_count,
-          MAX(observed_at) AS last_seen
-        FROM bk
+          MAX(last_seen) AS last_seen,
+          ARRAY_AGG(DISTINCT store_key ORDER BY store_key) AS stores
+        FROM listing_base
+        WHERE key IS NOT NULL
         GROUP BY key
+        HAVING COUNT(DISTINCT store_key) >= 2
+           AND MAX(price_cents) > MIN(price_cents)
       ),
 
-      sb AS (
-        SELECT key, store_key, MIN(price_cents)::int AS bp
-        FROM bk
-        GROUP BY key, store_key
-      ),
-
-      sa AS (
-        SELECT key, ARRAY_AGG(store_key ORDER BY bp ASC, store_key ASC) AS stores
-        FROM sb
-        GROUP BY key
-      ),
-
-      catalog_keys AS (
+      catalog_one AS (
         SELECT DISTINCT ON (key)
           key,
-          model_name,
-          model_number,
+          COALESCE(NULLIF(btrim(model_name), ''), 'Product') AS title,
           brand,
           category,
           image_url,
-          model_number_norm,
-          version_norm
+          model_number
         FROM (
           SELECT
             'pci:' || upper(btrim(c.pci)) AS key,
             c.model_name,
-            c.model_number,
             c.brand,
             c.category,
             c.image_url,
-            upper(btrim(c.model_number)) AS model_number_norm,
-            COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+            c.model_number,
             c.created_at,
             c.id
           FROM public.catalog c
           WHERE c.pci IS NOT NULL
             AND btrim(c.pci) <> ''
+            AND c.image_url IS NOT NULL
+            AND btrim(c.image_url) <> ''
+            AND lower(btrim(c.image_url)) NOT IN ('null', 'undefined')
             AND COALESCE(c.is_refurbished, false) = false
             AND COALESCE(c.is_bundle, false) = false
 
@@ -98,124 +86,69 @@ router.get("/api/home_deals", async (req, res) => {
           SELECT
             'upc:' || btrim(c.upc) AS key,
             c.model_name,
-            c.model_number,
             c.brand,
             c.category,
             c.image_url,
-            upper(btrim(c.model_number)) AS model_number_norm,
-            COALESCE(NULLIF(lower(btrim(c.version)), ''), '') AS version_norm,
+            c.model_number,
             c.created_at,
             c.id
           FROM public.catalog c
           WHERE c.upc IS NOT NULL
             AND btrim(c.upc) <> ''
+            AND c.image_url IS NOT NULL
+            AND btrim(c.image_url) <> ''
+            AND lower(btrim(c.image_url)) NOT IN ('null', 'undefined')
             AND COALESCE(c.is_refurbished, false) = false
             AND COALESCE(c.is_bundle, false) = false
         ) x
         ORDER BY key, created_at DESC NULLS LAST, id DESC
       ),
 
-      with_cat AS (
+      joined AS (
         SELECT
-          a.key,
-          a.min_price_cents,
-          a.max_price_cents,
-          a.store_count,
-          a.last_seen,
-          ck.model_name,
-          ck.model_number,
-          ck.brand,
-          ck.category,
-          ck.image_url,
-          ck.model_number_norm,
-          ck.version_norm
-        FROM agg a
-        LEFT JOIN catalog_keys ck
-          ON ck.key = a.key
-      ),
-
-      coupon_group AS (
-        SELECT
-          wc.key,
-          BOOL_OR(
-            (
-              NULLIF(btrim(l.coupon_text), '') IS NOT NULL
-              OR NULLIF(btrim(l.coupon_code), '') IS NOT NULL
-              OR COALESCE(l.coupon_value_cents, 0) > 0
-              OR COALESCE(l.coupon_value_pct, 0) > 0
-              OR (
-                l.effective_price_cents IS NOT NULL
-                AND l.current_price_cents IS NOT NULL
-                AND l.effective_price_cents > 0
-                AND l.effective_price_cents < l.current_price_cents
-              )
-            )
-          ) AS has_coupon
-        FROM with_cat wc
-        LEFT JOIN public.catalog c_same
-          ON wc.model_number_norm IS NOT NULL
-         AND c_same.model_number IS NOT NULL
-         AND upper(btrim(c_same.model_number)) = wc.model_number_norm
-         AND COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') = COALESCE(wc.version_norm, '')
-        LEFT JOIN public.listings l
-          ON (
-            (
-              c_same.pci IS NOT NULL
-              AND btrim(c_same.pci) <> ''
-              AND l.pci IS NOT NULL
-              AND btrim(l.pci) <> ''
-              AND upper(btrim(l.pci)) = upper(btrim(c_same.pci))
-            )
-            OR
-            (
-              c_same.upc IS NOT NULL
-              AND btrim(c_same.upc) <> ''
-              AND l.upc IS NOT NULL
-              AND btrim(l.upc) <> ''
-              AND public.norm_upc(l.upc) = public.norm_upc(c_same.upc)
-            )
-          )
-         AND coalesce(nullif(lower(btrim(l.status)), ''), 'active') <> 'hidden'
-        GROUP BY wc.key
-      ),
-
-      grouped AS (
-        SELECT DISTINCT ON (
-          COALESCE(NULLIF(btrim(wc.model_number), ''), wc.key),
-          lower(btrim(COALESCE(wc.brand, '')))
-        )
-          wc.key,
-          wc.min_price_cents,
-          wc.max_price_cents,
-          wc.store_count,
-          wc.last_seen,
-          COALESCE(NULLIF(btrim(wc.model_name), ''), 'Product') AS title,
-          wc.brand,
-          wc.category,
-          wc.image_url,
-          COALESCE(cg.has_coupon, false) AS has_coupon
-        FROM with_cat wc
-        LEFT JOIN coupon_group cg
-          ON cg.key = wc.key
-        ORDER BY
-          COALESCE(NULLIF(btrim(wc.model_number), ''), wc.key),
-          lower(btrim(COALESCE(wc.brand, ''))),
-          wc.store_count DESC,
-          wc.last_seen DESC NULLS LAST
-      ),
-
-      scored AS (
-        SELECT
-          g.*,
-          sa.stores,
+          og.key,
+          co.title,
+          co.brand,
+          co.category,
+          co.image_url,
+          co.model_number,
+          og.min_price_cents,
+          og.max_price_cents,
+          og.store_count,
+          og.last_seen,
+          og.stores,
           (
-            ((g.max_price_cents - g.min_price_cents) * g.store_count)
-            + CASE WHEN g.last_seen > now() - interval '7 days' THEN 8 ELSE 0 END
+            ((og.max_price_cents - og.min_price_cents) * og.store_count)
+            + CASE WHEN og.last_seen > now() - interval '7 days' THEN 8 ELSE 0 END
           )::int AS score
-        FROM grouped g
-        LEFT JOIN sa ON sa.key = g.key
-        WHERE g.store_count >= 2
-          AND g.max_price_cents > g.min_price_cents
+        FROM offer_groups og
+        JOIN catalog_one co
+          ON co.key = og.key
+      ),
+
+      deduped AS (
+        SELECT DISTINCT ON (
+          COALESCE(NULLIF(btrim(model_number), ''), key),
+          lower(btrim(COALESCE(brand, '')))
+        )
+          key,
+          title,
+          brand,
+          category,
+          image_url,
+          min_price_cents,
+          max_price_cents,
+          store_count,
+          last_seen,
+          stores,
+          score
+        FROM joined
+        ORDER BY
+          COALESCE(NULLIF(btrim(model_number), ''), key),
+          lower(btrim(COALESCE(brand, ''))),
+          score DESC,
+          store_count DESC,
+          last_seen DESC NULLS LAST
       )
 
       SELECT
@@ -229,9 +162,9 @@ router.get("/api/home_deals", async (req, res) => {
         store_count,
         score,
         NULL::int AS overall_score,
-        COALESCE(has_coupon, false) AS has_coupon,
+        false AS has_coupon,
         COALESCE(stores, ARRAY[]::text[]) AS stores
-      FROM scored
+      FROM deduped
       ORDER BY score DESC, store_count DESC, last_seen DESC NULLS LAST
       LIMIT $1 OFFSET $2
     `;

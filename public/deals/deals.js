@@ -130,13 +130,18 @@
       .join("");
   }
 
+  function hasUsableImage(x) {
+  const img = String(x && x.image_url ? x.image_url : "").trim();
+  if (!img) return false;
+  if (img === "null" || img === "undefined") return false;
+  return true;
+}
+
   function cardHtml(x, sellers) {
+    if (!hasUsableImage(x)) return "";
+
     const title = esc(x.title || "Product");
     const img = String(x.image_url || "").trim();
-
-    const imgTag = img
-      ? `<img class="home-deal__img" src="${esc(img)}" alt="" loading="lazy" decoding="async">`
-      : `<div class="home-deal__img is-empty" aria-hidden="true"></div>`;
 
     const minP = centsToUsd(x.min_price_cents);
     const maxP = centsToUsd(x.max_price_cents);
@@ -146,7 +151,14 @@
 
     return `
       <a class="home-deal" href="${esc(href)}">
-        ${imgTag}
+        <img
+          class="home-deal__img"
+          src="${esc(img)}"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onerror="this.closest('.home-deal') && this.closest('.home-deal').remove()"
+        >
         <div class="home-deal__body">
           <div class="home-deal__icons" aria-hidden="true">
             ${icons}
@@ -182,7 +194,7 @@
   let _done = false;
   let _loading = false;
 
-  const INITIAL = 24;
+  const INITIAL = 12;
   const PAGE = 24;
 
   function ensureScaffold() {
@@ -215,38 +227,46 @@
   }
 
   async function loadNext({ first = false } = {}) {
-    if (_loading || _done) return;
-    _loading = true;
+  if (_loading || _done) return;
+  _loading = true;
 
-    ensureScaffold();
-    if (dealsEl._pcMore) dealsEl._pcMore.hidden = true;
+  ensureScaffold();
+  if (dealsEl._pcMore) dealsEl._pcMore.hidden = true;
 
-    try {
-      const take = first ? INITIAL : PAGE;
-      const rows = await loadDealsPage(_offset, take);
+  try {
+    const take = first ? INITIAL : PAGE;
+    const rows = await loadDealsPage(_offset, take);
 
-      if (!rows.length) {
-        _done = true;
-        if (emptyEl && !_rows.length) emptyEl.hidden = false;
-        return;
-      }
-
-      if (emptyEl) emptyEl.hidden = true;
-
-      _rows = _rows.concat(rows);
-      _offset += rows.length;
-
-      append(rows);
-
-      if (rows.length < take) _done = true;
-    } catch (e) {
-      console.error("deals failed:", e);
+    if (!rows.length) {
+      _done = true;
       if (emptyEl && !_rows.length) emptyEl.hidden = false;
-    } finally {
-      _loading = false;
-      if (dealsEl._pcMore) dealsEl._pcMore.hidden = true;
+      return;
     }
+
+    _offset += rows.length;
+
+    const usableRows = rows.filter(hasUsableImage);
+
+    if (!usableRows.length) {
+      if (rows.length < take) _done = true;
+      _loading = false;
+      return loadNext({ first: false });
+    }
+
+    if (emptyEl) emptyEl.hidden = true;
+
+    _rows = _rows.concat(usableRows);
+    append(usableRows);
+
+    if (rows.length < take) _done = true;
+  } catch (e) {
+    console.error("deals failed:", e);
+    if (emptyEl && !_rows.length) emptyEl.hidden = false;
+  } finally {
+    _loading = false;
+    if (dealsEl._pcMore) dealsEl._pcMore.hidden = true;
   }
+}
 
   function wireInfiniteScroll() {
     ensureScaffold();
@@ -288,26 +308,22 @@
   async function boot() {
     wireSubsToggle();
 
+    window.__pcSellersMap = {};
+
+    const sellersPromise = loadSellersMap()
+      .then((sellers) => {
+        window.__pcSellersMap = sellers || {};
+        rerenderAll();
+      })
+      .catch(() => {
+        window.__pcSellersMap = {};
+      });
+
     await loadNext({ first: true });
     wireInfiniteScroll();
 
-    try {
-      const sellers = await loadSellersMap();
-      window.__pcSellersMap = sellers || {};
-      rerenderAll();
-    } catch (_e) {}
+    sellersPromise.catch(() => {});
   }
 
-  // If this is an auth-gated page and the shell is still hidden, wait for sign-in.
-  if (shell && shell.hidden) {
-    const onAuth = (ev) => {
-      const d = ev && ev.detail ? ev.detail : {};
-      if (!d.signedIn) return;
-      window.removeEventListener("pc:auth_changed", onAuth);
-      boot();
-    };
-    window.addEventListener("pc:auth_changed", onAuth);
-  } else {
-    boot();
-  }
+  boot();
 })();
