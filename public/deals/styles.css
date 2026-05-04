@@ -77,3 +77,49 @@
   line-height: 1.7;
   color: #4b5563;
 }
+
+@media (max-width: 760px){
+  .pc-deals-page .home-center__inner{
+    width: 100%;
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .pc-deals-page .pc-page-layout{
+    display: block;
+  }
+
+  .pc-deals-page .home-side{
+    display: none;
+  }
+
+  .pc-deals-page .pc-deals-main{
+    width: 100%;
+    max-width: none;
+    padding: 0 16px;
+  }
+
+  .pc-deals-page .pc-deals-head{
+    padding: 22px 0 14px;
+  }
+
+  .pc-deals-page .pc-deals-title{
+    font-size: 34px;
+  }
+
+  .pc-deals-page .pc-deals-sub{
+    max-width: 280px;
+    font-size: 16px;
+    line-height: 1.55;
+    padding-left: 0;
+  }
+
+  .pc-deals-page #pcDeals.home-deals{
+    width: 100%;
+  }
+
+  .pc-deals-page .home-deals__grid{
+    width: 100%;
+  }
+}
