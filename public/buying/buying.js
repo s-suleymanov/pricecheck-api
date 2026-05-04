@@ -250,22 +250,55 @@ function renderQuickAnswer() {
 
     return;
   }
+  
+    if (isComparison && Array.isArray(page.quick_answer) && page.quick_answer.length) {
+      root.classList.add("buying-quick__grid--compare");
+      root.classList.remove("buying-quick__grid--worth");
 
-  if (isComparison && Array.isArray(page.quick_answer) && page.quick_answer.length) {
-    root.classList.add("buying-quick__grid--compare");
-    root.classList.remove("buying-quick__grid--worth");
+      const infographic = page.infographic && typeof page.infographic === "object"
+        ? page.infographic
+        : null;
 
-    root.innerHTML = page.quick_answer.map(item => {
-      return `
-        <div class="quick-pick quick-pick--compare">
-          <span>${esc(item.label || "")}</span>
-          <small>${esc(item.body || "")}</small>
-        </div>
-      `;
-    }).join("");
+      const infographicSrc = String(infographic?.src || "").trim();
 
-    return;
-  }
+      const infographicId = page.slug
+        ? `pc-infographic-hidden:${page.slug}`
+        : `pc-infographic-hidden:${location.pathname}`;
+
+      const infographicHidden = infographicSrc && localStorage.getItem(infographicId) === "1";
+
+      const infographicHtml = infographicSrc && !infographicHidden
+        ? `
+          <figure class="buying-infographic" data-buying-infographic data-infographic-storage-key="${esc(infographicId)}">
+            <button class="buying-infographic__hide" type="button" data-hide-infographic="1">
+              Hide infographic
+            </button>
+
+            <img
+              src="${esc(infographicSrc)}"
+              alt="${esc(infographic.alt || "")}"
+              width="${esc(infographic.width || 1080)}"
+              height="${esc(infographic.height || 1920)}"
+              loading="lazy"
+              decoding="async"
+            >
+
+            ${infographic.caption ? `<figcaption>${esc(infographic.caption)}</figcaption>` : ""}
+          </figure>
+        `
+        : "";
+
+      root.innerHTML = page.quick_answer.map(item => {
+        return `
+          <div class="quick-pick quick-pick--compare">
+            <span>${esc(item.label || "")}</span>
+            <small>${esc(item.body || "")}</small>
+          </div>
+        `;
+      }).join("") + infographicHtml;
+
+      return;
+    }
 
   root.classList.remove("buying-quick__grid--compare");
   root.classList.remove("buying-quick__grid--worth");
