@@ -35,6 +35,10 @@
     {
       title: "Which Soundcore Earbuds Should You Buy?",
       href: "/guides/earbuds/which-soundcore-earbuds-should-you-buy/"
+    },
+    {
+        title: "Which Sony Earbuds Should You Buy?",
+        href: "/guides/earbuds/which-sony-earbuds-should-you-buy/"
     }
   ];
 
@@ -129,9 +133,11 @@
       const bestLists = [
         ...STATIC_BEST_LISTS,
         ...cleanItems(data.guides).filter(item => {
-          return !isSoundcoreGuide(item) && !isStaticBestList(item);
+            return !String(item.href || "").includes("/which-sony-earbuds-should-you-buy/")
+            && !String(item.href || "").includes("/which-soundcore-earbuds-should-you-buy/")
+            && !isStaticBestList(item);
         })
-      ];
+    ];
 
       const brandGuides = [
         ...STATIC_BRAND_GUIDES,

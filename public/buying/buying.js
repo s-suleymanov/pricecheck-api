@@ -489,8 +489,65 @@ function renderBrandGuideDecision(root) {
 
   if (kicker) kicker.textContent = "Best For Each Buyer";
 
-  function soundcoreFit(product) {
+  function brandGuideFit(product) {
     const title = String(product.title || "").toLowerCase();
+    const brand = String(page.brand || product.brand || "").toLowerCase();
+
+    if (brand.includes("sony") || title.includes("sony")) {
+      if (title.includes("wf-1000xm5") || title.includes("1000xm5")) {
+        return {
+          label: "Premium ANC Pick",
+          fit: "Buy this if you want Sony's premium earbud pick for ANC, LDAC, and higher-end daily listening.",
+          skip: "Skip it if you want the lowest-price Sony option."
+        };
+      }
+
+      if (title.includes("wf-c700n") || title.includes("c700n")) {
+        return {
+          label: "Lower-Price ANC Pick",
+          fit: "Buy this if you want Sony noise cancelling without paying premium XM5 pricing.",
+          skip: "Skip it if you want Sony's strongest ANC and premium feature set."
+        };
+      }
+
+      if (title.includes("wf-c510") || title.includes("c510")) {
+        return {
+          label: "Cheaper Simple Sony Pick",
+          fit: "Buy this if you want a lower-price Sony pair for simple daily use and do not need ANC.",
+          skip: "Skip it if noise cancelling matters."
+        };
+      }
+
+      if (title.includes("linkbuds s")) {
+        return {
+          label: "Small Lightweight ANC Pick",
+          fit: "Buy this if you want a smaller Sony ANC earbud for everyday use.",
+          skip: "Skip it if you want Sony's top premium ANC pick."
+        };
+      }
+
+      if (title.includes("linkbuds fit")) {
+        return {
+          label: "Workout Fit Pick",
+          fit: "Buy this if you want a Sony pair focused more on movement, fit, and daily activity.",
+          skip: "Skip it if you want the strongest Sony ANC."
+        };
+      }
+
+      if (title.includes("wf-1000xm4") || title.includes("1000xm4")) {
+        return {
+          label: "Older Premium Value Pick",
+          fit: "Buy this if you want older Sony premium value and the price is clearly below the XM5.",
+          skip: "Skip it if the XM5 is close in price."
+        };
+      }
+
+      return {
+        label: product.label || "Sony Pick",
+        fit: product.buyer_fit || product.verdict || "Buy this if it fits your Sony use case better than the other models.",
+        skip: firstLine(product.skip_if) || "Skip it if another Sony model fits your main use case better."
+      };
+    }
 
     if (title.includes("p31i")) {
       return {
@@ -565,14 +622,14 @@ function renderBrandGuideDecision(root) {
     }
 
     return {
-      label: product.label || "Soundcore Pick",
-      fit: product.buyer_fit || product.verdict || "Buy this if it matches your main use case better than the other Soundcore models.",
-      skip: firstLine(product.skip_if) || "Skip it if another Soundcore model fits your main use case better."
+      label: product.label || "Brand Pick",
+      fit: product.buyer_fit || product.verdict || "Buy this if it matches your main use case better than the other models.",
+      skip: firstLine(product.skip_if) || "Skip it if another model fits your main use case better."
     };
   }
 
   const cards = picks.map(product => {
-    const fit = soundcoreFit(product);
+    const fit = brandGuideFit(product);
 
     return `
       <article class="brand-guide-card" id="${esc(product.slot || "")}">

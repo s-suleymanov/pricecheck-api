@@ -1178,5 +1178,169 @@
       "href": "/rankings/earbuds/"
     }
   ]
+},
+{
+  "slug": "which-sony-earbuds-should-you-buy",
+  "path": "/guides/earbuds/which-sony-earbuds-should-you-buy/",
+  "type": "brand_guide",
+  "category": "earbuds",
+  "brand": "Sony",
+  "title": "Which Sony Earbuds Should You Buy?",
+  "seo_title": "Which Sony Earbuds Should You Buy? - PriceCheck",
+  "description": "Compare Sony earbuds by buyer fit, current prices, ANC, battery life, LDAC, water resistance, everyday use, workout use, and premium alternatives.",
+  "max_products": 40,
+  "hero": {
+    "eyebrow": "Brand Guide",
+    "heading": "Which Sony Earbuds Should You Buy?",
+    "dek": "A practical guide to choosing the right Sony earbuds based on how you actually use them: premium ANC, lower-price noise cancelling, compact daily use, workouts, or older Sony value."
+  },
+  "quick_answer": [
+    {
+      "label": "Pick WF-1000XM5 if",
+      "body": "You want Sony's premium earbud pick for ANC, LDAC, and higher-end daily listening."
+    },
+    {
+      "label": "Pick WF-C700N if",
+      "body": "You want a lower-price Sony ANC pair instead of paying premium XM5 pricing."
+    },
+    {
+      "label": "Pick WF-C510 if",
+      "body": "You want a cheaper simple Sony pair and do not need ANC."
+    },
+    {
+      "label": "Pick LinkBuds S if",
+      "body": "You want a smaller lightweight Sony ANC earbud."
+    },
+    {
+      "label": "Pick LinkBuds Fit if",
+      "body": "You want a Sony pair focused more on movement and fit."
+    },
+    {
+      "label": "Pick WF-1000XM4 if",
+      "body": "You want older premium Sony value and the price is meaningfully below the XM5."
+    }
+  ],
+  "brand_fit_rules": [
+    {
+      "match": "WF-1000XM5",
+      "order": 10,
+      "label": "Premium ANC Pick",
+      "buyer_fit": "Good for buyers who want Sony's premium earbud pick for ANC, LDAC, and higher-end daily listening."
+    },
+    {
+      "match": "WF-C700N",
+      "order": 20,
+      "label": "Lower-Price ANC Pick",
+      "buyer_fit": "Good for buyers who want Sony noise cancelling without paying premium XM5 pricing."
+    },
+    {
+      "match": "WF-C510",
+      "order": 30,
+      "label": "Cheaper Simple Sony Pick",
+      "buyer_fit": "Good for buyers who want a lower-price Sony pair and do not need ANC."
+    },
+    {
+      "match": "LinkBuds S",
+      "order": 40,
+      "label": "Small Lightweight ANC Pick",
+      "buyer_fit": "Good for buyers who want a smaller Sony earbud with ANC for everyday use."
+    },
+    {
+      "match": "LinkBuds Fit",
+      "order": 50,
+      "label": "Workout Fit Pick",
+      "buyer_fit": "Good for buyers who want a Sony pair focused more on movement, fit, and daily activity."
+    },
+    {
+      "match": "WF-1000XM4",
+      "order": 60,
+      "label": "Older Premium Value Pick",
+      "buyer_fit": "Good for buyers who want older Sony premium value and can find it clearly below XM5 pricing."
+    }
+  ],
+  "comparison_rows": [
+    {
+      "label": "Current Price",
+      "key": "price"
+    },
+    {
+      "label": "ANC",
+      "key": "active_noise_cancelling"
+    },
+    {
+      "label": "Transparency Mode",
+      "key": "transparency_mode"
+    },
+    {
+      "label": "Battery",
+      "key": "battery_life_hours"
+    },
+    {
+      "label": "Case Battery",
+      "key": "battery_life_with_case_hours"
+    },
+    {
+      "label": "Multipoint",
+      "key": "multipoint_pairing"
+    },
+    {
+      "label": "Codec Support",
+      "key": "codec_support"
+    },
+    {
+      "label": "Wireless Charging",
+      "key": "wireless_charging_case"
+    },
+    {
+      "label": "Water Resistance",
+      "key": "water_resistance_rating"
+    },
+    {
+      "label": "Built-In Microphone",
+      "key": "built_in_microphone"
+    },
+    {
+      "label": "Best Seller",
+      "key": "best_seller"
+    }
+  ],
+  "final_verdict": "Most buyers should start by deciding whether they actually need Sony's premium ANC. Pick WF-1000XM5 if you want the premium Sony earbud with ANC and LDAC. Pick WF-C700N if you want Sony ANC for less. Pick WF-C510 if you want a cheaper simple Sony pair and do not need ANC. Pick LinkBuds S if you want a smaller lightweight ANC option. Pick LinkBuds Fit if fit and movement matter more. Pick WF-1000XM4 only if the price is clearly low enough compared with the XM5.",
+  "social_caption": "Which Sony earbuds would you pick? WF-1000XM5 for premium ANC, WF-C700N for lower-price ANC, WF-C510 for a cheaper simple Sony pair, LinkBuds S for lightweight ANC, LinkBuds Fit for movement, and WF-1000XM4 for older premium value.",
+  "video_script": "Which Sony earbuds should you buy? Start with what you actually need. WF-1000XM5 is the premium Sony ANC pick. WF-C700N is the lower-price ANC pick. WF-C510 is the cheaper simple Sony pair if you do not need ANC. LinkBuds S is the smaller lightweight ANC option. LinkBuds Fit is better if movement and fit matter more. WF-1000XM4 only makes sense if the price is clearly lower than the XM5.",
+  "infographic": {
+    "src": "/infographics/earbuds/which-sony-earbuds-should-you-buy-pricecheck.png",
+    "alt": "Which Sony earbuds should you buy infographic comparing Sony earbuds by buyer fit, current price, ANC, LDAC, battery life, water resistance, and use case.",
+    "width": 1080,
+    "height": 1350,
+    "caption": "PriceCheck’s Sony guide focuses on buyer fit first, then current pricing and specs.",
+    "headline": "Which Sony Earbuds Should You Buy?",
+    "subhead": "Start with whether you need premium ANC, lower-price ANC, simple daily use, or a better fit for movement."
+  },
+  "method": {
+    "heading": "How PriceCheck Compares Sony Earbuds",
+    "body": "PriceCheck pulls Sony earbuds from the catalog, groups color variants into the same product family, checks current store prices, and compares specs such as ANC, transparency mode, battery life, case battery, multipoint, codec support, wireless charging, water resistance, microphone support, seller availability, and buyer fit."
+  },
+  "related": [
+    {
+      "label": "Are Sony WF-1000XM5 Worth It?",
+      "href": "/guides/earbuds/sony-wf-1000xm5-worth-it/"
+    },
+    {
+      "label": "Best Earbuds Under $100",
+      "href": "/guides/earbuds/best-under-100/"
+    },
+    {
+      "label": "Best Earbuds For Work Under $100",
+      "href": "/guides/earbuds/best-earbuds-for-work-under-100/"
+    },
+    {
+      "label": "Which Soundcore Earbuds Should You Buy?",
+      "href": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/"
+    },
+    {
+      "label": "All Earbuds Ranked By Value",
+      "href": "/rankings/earbuds/"
+    }
+  ]
 }
 ]
