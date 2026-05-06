@@ -262,1319 +262,1319 @@
       "href": "/rankings/earbuds/"
     }
   ]
-},
-{
-  "slug": "sony-wf-1000xm5-worth-it",
-  "path": "/guides/earbuds/sony-wf-1000xm5-worth-it/",
-  "type": "worth_it",
-  "category": "earbuds",
-  "title": "Are Sony WF-1000XM5 Worth It?",
-  "seo_title": "Are Sony WF-1000XM5 Worth It? - PriceCheck",
-  "description": "Decide whether the Sony WF-1000XM5 are worth buying at today's price, or whether cheaper and newer alternatives make more sense.",
-  "hero": {
-    "eyebrow": "Worth It?",
-    "heading": "Are Sony WF-1000XM5 Worth It?",
-    "dek": "A price-focused guide to Sony WF-1000XM5 earbuds, comparing current price, ANC, LDAC support, battery life, comfort, and cheaper alternatives."
   },
-  "quick_answer": "The Sony WF-1000XM5 are worth it if you want premium ANC, LDAC support, strong sound quality, and a smaller premium earbud design. They are not the best value if the price is near $248, because cheaper earbuds now cover many everyday features well.",
-  "products": [
-    {
-      "slot": "sony_wf_1000xm5",
-      "label": "Sony WF-1000XM5",
-      "brand": "Sony",
-      "match": "WF-1000XM5"
+  {
+    "slug": "sony-wf-1000xm5-worth-it",
+    "path": "/guides/earbuds/sony-wf-1000xm5-worth-it/",
+    "type": "worth_it",
+    "category": "earbuds",
+    "title": "Are Sony WF-1000XM5 Worth It?",
+    "seo_title": "Are Sony WF-1000XM5 Worth It? - PriceCheck",
+    "description": "Decide whether the Sony WF-1000XM5 are worth buying at today's price, or whether cheaper and newer alternatives make more sense.",
+    "hero": {
+      "eyebrow": "Worth It?",
+      "heading": "Are Sony WF-1000XM5 Worth It?",
+      "dek": "A price-focused guide to Sony WF-1000XM5 earbuds, comparing current price, ANC, LDAC support, battery life, comfort, and cheaper alternatives."
     },
-    {
-      "slot": "liberty_4_nc",
-      "label": "soundcore Liberty 4 NC",
-      "brand": "soundcore",
-      "match": "Liberty 4 NC"
-    },
-    {
-      "slot": "airpods_pro_2",
-      "label": "Airpods Pro 2",
-      "brand": "Apple",
-      "match": "Airpods Pro 2",
-      "pci": "YQCKHL1M"
-    },
-    {
-      "slot": "bose_qc_ultra",
-      "label": "Bose QuietComfort Ultra Earbuds",
-      "brand": "Bose",
-      "match": "QuietComfort Ultra Earbuds"
-    },
-    {
-      "slot": "galaxy_buds3_pro",
-      "label": "Samsung Galaxy Buds3 Pro",
-      "brand": "Samsung",
-      "match": "Galaxy Buds3 Pro"
-    }
-  ],
-  "price_ranges": [
-    {
-        "range": "Under $180",
-        "label": "Strong Buy",
-        "min_cents": 0,
-        "max_cents": 17999
-    },
-    {
-        "range": "$180 To $220",
-        "label": "Fair Price",
-        "min_cents": 18000,
-        "max_cents": 22000
-    },
-    {
-        "range": "$220 To $250",
-        "label": "Worth It For Sony Buyers",
-        "min_cents": 22001,
-        "max_cents": 25000
-    },
-    {
-        "range": "Above $250",
-        "label": "Compare Alternatives First",
-        "min_cents": 25001,
-        "max_cents": null
-    }
+    "quick_answer": "The Sony WF-1000XM5 are worth it if you want premium ANC, LDAC support, strong sound quality, and a smaller premium earbud design. They are not the best value if the price is near $248, because cheaper earbuds now cover many everyday features well.",
+    "products": [
+      {
+        "slot": "sony_wf_1000xm5",
+        "label": "Sony WF-1000XM5",
+        "brand": "Sony",
+        "match": "WF-1000XM5"
+      },
+      {
+        "slot": "liberty_4_nc",
+        "label": "soundcore Liberty 4 NC",
+        "brand": "soundcore",
+        "match": "Liberty 4 NC"
+      },
+      {
+        "slot": "airpods_pro_2",
+        "label": "Airpods Pro 2",
+        "brand": "Apple",
+        "match": "Airpods Pro 2",
+        "pci": "YQCKHL1M"
+      },
+      {
+        "slot": "bose_qc_ultra",
+        "label": "Bose QuietComfort Ultra Earbuds",
+        "brand": "Bose",
+        "match": "QuietComfort Ultra Earbuds"
+      },
+      {
+        "slot": "galaxy_buds3_pro",
+        "label": "Samsung Galaxy Buds3 Pro",
+        "brand": "Samsung",
+        "match": "Galaxy Buds3 Pro"
+      }
     ],
-  "pricecheck_verdict": "Recommended for premium ANC and LDAC, but not the best value at this price.",
-  "buy_if": [
-    "You want premium ANC.",
-    "You want LDAC support.",
-    "You prefer Sony sound and app controls.",
-    "You want a smaller premium earbud than older Sony models.",
-    "You care about strong everyday listening quality."
-  ],
-  "skip_if": [
-    "You want the best value under $100.",
-    "You are sensitive to earbud fit.",
-    "You mainly use iPhone and want Apple ecosystem features.",
-    "You want the lowest-price ANC earbuds that are good enough.",
-    "You do not care about LDAC."
-  ],
-  "alternatives": [
-    {
-      "label": "Better Value",
-      "product_slot": "liberty_4_nc",
-      "body": "Much cheaper, still strong for ANC, LDAC, battery, and everyday features."
-    },
-    {
-      "label": "Better iPhone Pick",
-      "product_slot": "airpods_pro_2",
-      "body": "Better for Apple ecosystem features, device switching, and iOS controls."
-    },
-    {
-      "label": "Premium ANC Alternative",
-      "product_slot": "bose_qc_ultra",
-      "body": "Better if ANC is the top priority and you are okay paying premium pricing."
-    },
-    {
-      "label": "Samsung Ecosystem Pick",
-      "product_slot": "galaxy_buds3_pro",
-      "body": "Better if you use Samsung devices and want ecosystem features."
-    }
-  ],
-  "comparison_rows": [
-    {
-      "label": "Current Price",
-      "key": "price"
-    },
-    {
-      "label": "Best For",
-      "key": "best_for",
-      "values": {
-        "sony_wf_1000xm5": "Premium ANC, LDAC, Sony sound",
-        "liberty_4_nc": "Lower-price ANC and features",
-        "airpods_pro_2": "iPhone and Apple ecosystem",
-        "bose_qc_ultra": "Top-priority ANC",
-        "galaxy_buds3_pro": "Samsung ecosystem"
+    "price_ranges": [
+      {
+          "range": "Under $180",
+          "label": "Strong Buy",
+          "min_cents": 0,
+          "max_cents": 17999
+      },
+      {
+          "range": "$180 To $220",
+          "label": "Fair Price",
+          "min_cents": 18000,
+          "max_cents": 22000
+      },
+      {
+          "range": "$220 To $250",
+          "label": "Worth It For Sony Buyers",
+          "min_cents": 22001,
+          "max_cents": 25000
+      },
+      {
+          "range": "Above $250",
+          "label": "Compare Alternatives First",
+          "min_cents": 25001,
+          "max_cents": null
       }
-    },
-    {
-      "label": "ANC",
-      "key": "active_noise_cancelling"
-    },
-    {
-      "label": "Battery",
-      "key": "battery_life_hours"
-    },
-    {
-      "label": "Case Battery",
-      "key": "battery_life_with_case_hours"
-    },
-    {
-      "label": "Water Resistance",
-      "key": "water_resistance_rating"
-    },
-    {
-      "label": "Multipoint",
-      "key": "multipoint_pairing"
-    },
-    {
-      "label": "Codec Support",
-      "key": "codec_support"
-    },
-    {
-      "label": "Wireless Charging",
-      "key": "wireless_charging_case"
-    },
-    {
-      "label": "Ecosystem Fit",
-      "key": "ecosystem_fit",
-      "values": {
-        "sony_wf_1000xm5": "Android and LDAC users",
-        "liberty_4_nc": "Broad everyday use",
-        "airpods_pro_2": "Apple users",
-        "bose_qc_ultra": "ANC-first buyers",
-        "galaxy_buds3_pro": "Samsung users"
+      ],
+    "pricecheck_verdict": "Recommended for premium ANC and LDAC, but not the best value at this price.",
+    "buy_if": [
+      "You want premium ANC.",
+      "You want LDAC support.",
+      "You prefer Sony sound and app controls.",
+      "You want a smaller premium earbud than older Sony models.",
+      "You care about strong everyday listening quality."
+    ],
+    "skip_if": [
+      "You want the best value under $100.",
+      "You are sensitive to earbud fit.",
+      "You mainly use iPhone and want Apple ecosystem features.",
+      "You want the lowest-price ANC earbuds that are good enough.",
+      "You do not care about LDAC."
+    ],
+    "alternatives": [
+      {
+        "label": "Better Value",
+        "product_slot": "liberty_4_nc",
+        "body": "Much cheaper, still strong for ANC, LDAC, battery, and everyday features."
+      },
+      {
+        "label": "Better iPhone Pick",
+        "product_slot": "airpods_pro_2",
+        "body": "Better for Apple ecosystem features, device switching, and iOS controls."
+      },
+      {
+        "label": "Premium ANC Alternative",
+        "product_slot": "bose_qc_ultra",
+        "body": "Better if ANC is the top priority and you are okay paying premium pricing."
+      },
+      {
+        "label": "Samsung Ecosystem Pick",
+        "product_slot": "galaxy_buds3_pro",
+        "body": "Better if you use Samsung devices and want ecosystem features."
       }
-    }
-  ],
-  "final_verdict": "The Sony WF-1000XM5 are still strong premium earbuds, but they make the most sense when the price drops closer to $180 to $220. At $248, they are mainly for buyers who specifically want Sony ANC, LDAC, and premium sound. Most value-focused buyers should compare the Liberty 4 NC or another cheaper ANC model first.",
-  "method": {
-    "heading": "How PriceCheck Evaluates This Page",
-    "body": "PriceCheck evaluates the Sony WF-1000XM5 using current prices, seller availability, normalized specs, and review signals. This page gives the most weight to price, ANC, codec support, battery life, comfort, ecosystem fit, and how well the Sony WF-1000XM5 compare against lower-price alternatives."
-  },
-  "related": [
-    {
-      "label": "Best Earbuds Under $100",
-      "href": "/guides/earbuds/best-under-100/"
+    ],
+    "comparison_rows": [
+      {
+        "label": "Current Price",
+        "key": "price"
+      },
+      {
+        "label": "Best For",
+        "key": "best_for",
+        "values": {
+          "sony_wf_1000xm5": "Premium ANC, LDAC, Sony sound",
+          "liberty_4_nc": "Lower-price ANC and features",
+          "airpods_pro_2": "iPhone and Apple ecosystem",
+          "bose_qc_ultra": "Top-priority ANC",
+          "galaxy_buds3_pro": "Samsung ecosystem"
+        }
+      },
+      {
+        "label": "ANC",
+        "key": "active_noise_cancelling"
+      },
+      {
+        "label": "Battery",
+        "key": "battery_life_hours"
+      },
+      {
+        "label": "Case Battery",
+        "key": "battery_life_with_case_hours"
+      },
+      {
+        "label": "Water Resistance",
+        "key": "water_resistance_rating"
+      },
+      {
+        "label": "Multipoint",
+        "key": "multipoint_pairing"
+      },
+      {
+        "label": "Codec Support",
+        "key": "codec_support"
+      },
+      {
+        "label": "Wireless Charging",
+        "key": "wireless_charging_case"
+      },
+      {
+        "label": "Ecosystem Fit",
+        "key": "ecosystem_fit",
+        "values": {
+          "sony_wf_1000xm5": "Android and LDAC users",
+          "liberty_4_nc": "Broad everyday use",
+          "airpods_pro_2": "Apple users",
+          "bose_qc_ultra": "ANC-first buyers",
+          "galaxy_buds3_pro": "Samsung users"
+        }
+      }
+    ],
+    "final_verdict": "The Sony WF-1000XM5 are still strong premium earbuds, but they make the most sense when the price drops closer to $180 to $220. At $248, they are mainly for buyers who specifically want Sony ANC, LDAC, and premium sound. Most value-focused buyers should compare the Liberty 4 NC or another cheaper ANC model first.",
+    "method": {
+      "heading": "How PriceCheck Evaluates This Page",
+      "body": "PriceCheck evaluates the Sony WF-1000XM5 using current prices, seller availability, normalized specs, and review signals. This page gives the most weight to price, ANC, codec support, battery life, comfort, ecosystem fit, and how well the Sony WF-1000XM5 compare against lower-price alternatives."
+    },
+    "related": [
+      {
+        "label": "Best Earbuds Under $100",
+        "href": "/guides/earbuds/best-under-100/"
 
-    },
-    {
-      "label": "Liberty 4 NC vs Method 360 ANC",
-      "href": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/"
-    },
-    {
-      "label": "All Earbuds Ranked By Value",
-      "href": "/rankings/earbuds/"
-    }
-  ]
-},
-{
-  "slug": "best-first-earbuds-to-buy",
-  "path": "/guides/earbuds/best-first-earbuds-to-buy/",
-  "type": "guide",
-  "category": "earbuds",
-  "title": "Best First Earbuds To Buy",
-  "seo_title": "Best First Earbuds To Buy (2026) - PriceCheck",
-  "description": "Find the best first earbuds to buy using current prices, specs, battery life, ANC, water resistance, multipoint, codec support, and PriceCheck product data.",
-  "price_cap_cents": 15000,
-  "hero": {
-    "eyebrow": "Buying Guide",
-    "heading": "Best First Earbuds To Buy",
-    "dek": "A starter-friendly guide for choosing your first real pair of earbuds, focused on useful features, fair prices, battery life, comfort signals, noise cancelling, workout durability, and easy everyday use."
-  },
-  "quick_answer": {
-    "heading": "Quick Answer",
-    "body": "If this is your first pair of earbuds, start with a lower-price sealed earbud before paying flagship prices. The soundcore P31i is the safest first pick for most buyers, while the Skullcandy Dime Evo is the cheaper simple pick and the JBL Endurance Race 2 is better for workouts.",
-    "infographic": {
-      "src": "/infographics/earbuds/best-first-earbuds-to-buy-pricecheck.png",
-      "alt": "Best first earbuds to buy infographic showing soundcore P31i, Skullcandy Dime Evo, JBL Endurance Race 2, and soundcore P41i as starter earbud picks.",
-      "width": 1080,
-      "height": 1920,
-      "caption": "PriceCheck’s first-earbud picks focus on use case, current pricing, and clear tradeoffs for first-time buyers."
-    },
-    "items": [
+      },
       {
+        "label": "Liberty 4 NC vs Method 360 ANC",
+        "href": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/"
+      },
+      {
+        "label": "All Earbuds Ranked By Value",
+        "href": "/rankings/earbuds/"
+      }
+    ]
+  },
+  {
+    "slug": "best-first-earbuds-to-buy",
+    "path": "/guides/earbuds/best-first-earbuds-to-buy/",
+    "type": "guide",
+    "category": "earbuds",
+    "title": "Best First Earbuds To Buy",
+    "seo_title": "Best First Earbuds To Buy (2026) - PriceCheck",
+    "description": "Find the best first earbuds to buy using current prices, specs, battery life, ANC, water resistance, multipoint, codec support, and PriceCheck product data.",
+    "price_cap_cents": 15000,
+    "hero": {
+      "eyebrow": "Buying Guide",
+      "heading": "Best First Earbuds To Buy",
+      "dek": "A starter-friendly guide for choosing your first real pair of earbuds, focused on useful features, fair prices, battery life, comfort signals, noise cancelling, workout durability, and easy everyday use."
+    },
+    "quick_answer": {
+      "heading": "Quick Answer",
+      "body": "If this is your first pair of earbuds, start with a lower-price sealed earbud before paying flagship prices. The soundcore P31i is the safest first pick for most buyers, while the Skullcandy Dime Evo is the cheaper simple pick and the JBL Endurance Race 2 is better for workouts.",
+      "infographic": {
+        "src": "/infographics/earbuds/best-first-earbuds-to-buy-pricecheck.png",
+        "alt": "Best first earbuds to buy infographic showing soundcore P31i, Skullcandy Dime Evo, JBL Endurance Race 2, and soundcore P41i as starter earbud picks.",
+        "width": 1080,
+        "height": 1920,
+        "caption": "PriceCheck’s first-earbud picks focus on use case, current pricing, and clear tradeoffs for first-time buyers."
+      },
+      "items": [
+        {
+          "label": "Best First Pair",
+          "slot": "best_first_pair"
+        },
+        {
+          "label": "Lowest-Price First Pair",
+          "slot": "lowest_price_first_pair"
+        },
+        {
+          "label": "Long-Battery First Pair",
+          "slot": "long_battery_first_pair"
+        },
+        {
+          "label": "Workout First Pair",
+          "slot": "workout_first_pair"
+        },
+        {
+          "label": "Wireless-Charging First Pair",
+          "slot": "iphone_friendly_first_pair"
+        }
+      ]
+    },
+    "pick_slots": [
+      {
+        "slot": "best_first_pair",
         "label": "Best First Pair",
-        "slot": "best_first_pair"
+        "strategy": "highest_value_score"
       },
       {
+        "slot": "lowest_price_first_pair",
         "label": "Lowest-Price First Pair",
-        "slot": "lowest_price_first_pair"
+        "strategy": "lowest_price_with_acceptable_score"
       },
       {
+        "slot": "long_battery_first_pair",
         "label": "Long-Battery First Pair",
-        "slot": "long_battery_first_pair"
+        "strategy": "best_battery_score"
       },
       {
+        "slot": "workout_first_pair",
         "label": "Workout First Pair",
-        "slot": "workout_first_pair"
+        "strategy": "best_workout_score"
       },
       {
+        "slot": "iphone_friendly_first_pair",
         "label": "Wireless-Charging First Pair",
-        "slot": "iphone_friendly_first_pair"
+        "strategy": "best_iphone_score"
+      }
+    ],
+    "comparison_rows": [
+      {
+        "label": "Price",
+        "key": "price"
+      },
+      {
+        "label": "ANC",
+        "key": "active_noise_cancelling"
+      },
+      {
+        "label": "Transparency Mode",
+        "key": "transparency_mode"
+      },
+      {
+        "label": "Battery",
+        "key": "battery_life_hours"
+      },
+      {
+        "label": "Case Battery",
+        "key": "battery_life_with_case_hours"
+      },
+      {
+        "label": "Water Resistance",
+        "key": "water_resistance_rating"
+      },
+      {
+        "label": "Multipoint",
+        "key": "multipoint_pairing"
+      },
+      {
+        "label": "Codec Support",
+        "key": "codec_support"
+      },
+      {
+        "label": "Wireless Charging",
+        "key": "wireless_charging_case"
+      },
+      {
+        "label": "Built-In Microphone",
+        "key": "built_in_microphone"
+      },
+      {
+        "label": "Driver Size",
+        "key": "driver_size_mm"
+      },
+      {
+        "label": "Best Seller",
+        "key": "best_seller"
+      }
+    ],
+    "method": {
+      "heading": "How PriceCheck Picks First Earbuds",
+      "body": "PriceCheck filters earbuds under $150, groups color variants into the same product family, checks current store prices, and compares the features that matter most for a first pair. This includes ANC, transparency mode, battery life, case battery, water resistance, multipoint pairing, codec support, wireless charging, microphone support, seller availability, and overall value. The goal is to find a safe first pair with useful everyday features, not the most expensive flagship earbud."
+    },
+    "related": [
+      {
+        "label": "All Earbuds Ranked By Value",
+        "href": "/rankings/earbuds/"
+      },
+      {
+        "label": "Best Earbuds Under $100",
+        "href": "/guides/earbuds/best-under-100/"
+      },
+      {
+        "label": "Liberty 4 NC vs Method 360 ANC",
+        "href": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/"
+      },
+      {
+        "label": "Are Sony WF-1000XM5 Worth It?",
+        "href": "/guides/earbuds/sony-wf-1000xm5-worth-it/"
       }
     ]
   },
-  "pick_slots": [
-    {
-      "slot": "best_first_pair",
-      "label": "Best First Pair",
-      "strategy": "highest_value_score"
+  {
+    "slug": "earfun-air-pro-4-vs-soundcore-liberty-4-nc",
+    "path": "/compare/earfun-air-pro-4-vs-soundcore-liberty-4-nc/",
+    "type": "comparison",
+    "category": "earbuds",
+    "title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC",
+    "seo_title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC - PriceCheck",
+    "description": "Compare EarFun Air Pro 4 and soundcore Liberty 4 NC by current price, ANC, battery life, codec support, wireless charging, multipoint, seller availability, and buyer fit.",
+    "hero": {
+      "eyebrow": "Comparison",
+      "heading": "EarFun Air Pro 4 vs Liberty 4 NC",
+      "dek": "A side-by-side comparison of EarFun Air Pro 4 and soundcore Liberty 4 NC earbuds based on price, ANC controls, codec support, wireless charging, battery life, and everyday use."
     },
-    {
-      "slot": "lowest_price_first_pair",
-      "label": "Lowest-Price First Pair",
-      "strategy": "lowest_price_with_acceptable_score"
-    },
-    {
-      "slot": "long_battery_first_pair",
-      "label": "Long-Battery First Pair",
-      "strategy": "best_battery_score"
-    },
-    {
-      "slot": "workout_first_pair",
-      "label": "Workout First Pair",
-      "strategy": "best_workout_score"
-    },
-    {
-      "slot": "iphone_friendly_first_pair",
-      "label": "Wireless-Charging First Pair",
-      "strategy": "best_iphone_score"
-    }
-  ],
-  "comparison_rows": [
-    {
-      "label": "Price",
-      "key": "price"
-    },
-    {
-      "label": "ANC",
-      "key": "active_noise_cancelling"
-    },
-    {
-      "label": "Transparency Mode",
-      "key": "transparency_mode"
-    },
-    {
-      "label": "Battery",
-      "key": "battery_life_hours"
-    },
-    {
-      "label": "Case Battery",
-      "key": "battery_life_with_case_hours"
-    },
-    {
-      "label": "Water Resistance",
-      "key": "water_resistance_rating"
-    },
-    {
-      "label": "Multipoint",
-      "key": "multipoint_pairing"
-    },
-    {
-      "label": "Codec Support",
-      "key": "codec_support"
-    },
-    {
-      "label": "Wireless Charging",
-      "key": "wireless_charging_case"
-    },
-    {
-      "label": "Built-In Microphone",
-      "key": "built_in_microphone"
-    },
-    {
-      "label": "Driver Size",
-      "key": "driver_size_mm"
-    },
-    {
-      "label": "Best Seller",
-      "key": "best_seller"
-    }
-  ],
-  "method": {
-    "heading": "How PriceCheck Picks First Earbuds",
-    "body": "PriceCheck filters earbuds under $150, groups color variants into the same product family, checks current store prices, and compares the features that matter most for a first pair. This includes ANC, transparency mode, battery life, case battery, water resistance, multipoint pairing, codec support, wireless charging, microphone support, seller availability, and overall value. The goal is to find a safe first pair with useful everyday features, not the most expensive flagship earbud."
-  },
-  "related": [
-    {
-      "label": "All Earbuds Ranked By Value",
-      "href": "/rankings/earbuds/"
-    },
-    {
-      "label": "Best Earbuds Under $100",
-      "href": "/guides/earbuds/best-under-100/"
-    },
-    {
-      "label": "Liberty 4 NC vs Method 360 ANC",
-      "href": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/"
-    },
-    {
-      "label": "Are Sony WF-1000XM5 Worth It?",
-      "href": "/guides/earbuds/sony-wf-1000xm5-worth-it/"
-    }
-  ]
-},
-{
-  "slug": "earfun-air-pro-4-vs-soundcore-liberty-4-nc",
-  "path": "/compare/earfun-air-pro-4-vs-soundcore-liberty-4-nc/",
-  "type": "comparison",
-  "category": "earbuds",
-  "title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC",
-  "seo_title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC - PriceCheck",
-  "description": "Compare EarFun Air Pro 4 and soundcore Liberty 4 NC by current price, ANC, battery life, codec support, wireless charging, multipoint, seller availability, and buyer fit.",
-  "hero": {
-    "eyebrow": "Comparison",
-    "heading": "EarFun Air Pro 4 vs Liberty 4 NC",
-    "dek": "A side-by-side comparison of EarFun Air Pro 4 and soundcore Liberty 4 NC earbuds based on price, ANC controls, codec support, wireless charging, battery life, and everyday use."
-  },
-  "products": [
-    {
-      "slot": "earfun_air_pro_4",
-      "label": "EarFun Air Pro 4",
-      "brand": "EarFun",
-      "match": "Air Pro 4"
-    },
-    {
-      "slot": "liberty_4_nc",
-      "label": "soundcore Liberty 4 NC",
-      "brand": "soundcore",
-      "match": "Liberty 4 NC"
-    }
-  ],
-  "quick_answer": [
-    {
-      "label": "Pick EarFun Air Pro 4 if",
-      "product_slot": "earfun_air_pro_4",
-      "body": "ANC controls and codec support matter more to you than wireless charging."
-    },
-    {
-      "label": "Pick Liberty 4 NC if",
-      "product_slot": "liberty_4_nc",
-      "body": "You want the safer everyday pick with wireless charging, LDAC, multipoint, strong battery life, and a practical case."
-    }
-  ],
-  "winners": [
-    {
-      "label": "Overall Pick",
-      "winner_slot": "liberty_4_nc",
-      "reason": "Safer everyday feature mix for most buyers."
-    },
-    {
-      "label": "Everyday Use",
-      "winner_slot": "liberty_4_nc",
-      "reason": "Wireless charging, multipoint, battery life, and a practical case make it easier to recommend for daily use."
-    },
-    {
-      "label": "ANC Controls",
-      "winner_slot": "earfun_air_pro_4",
-      "reason": "Better fit if ANC controls are a priority."
-    },
-    {
-      "label": "Codec Support",
-      "winner_slot": "earfun_air_pro_4",
-      "reason": "Better fit if codec support matters more than wireless charging."
-    },
-    {
-      "label": "Wireless Charging",
-      "winner_slot": "liberty_4_nc",
-      "reason": "Liberty 4 NC is the better pick if wireless charging is important."
-    },
-    {
-      "label": "Multipoint",
-      "winner_slot": "liberty_4_nc",
-      "reason": "Multipoint makes it more useful for switching between devices."
-    },
-    {
-      "label": "Battery",
-      "winner_slot": "liberty_4_nc",
-      "reason": "Stronger everyday battery package based on the available PriceCheck notes."
-    }
-  ],
-  "comparison_rows": [
-    {
-      "label": "Price",
-      "key": "price"
-    },
-    {
-      "label": "Best For",
-      "key": "best_for",
-      "values": {
-        "earfun_air_pro_4": "ANC controls and codec support",
-        "liberty_4_nc": "Everyday use, wireless charging, LDAC, and multipoint"
+    "products": [
+      {
+        "slot": "earfun_air_pro_4",
+        "label": "EarFun Air Pro 4",
+        "brand": "EarFun",
+        "match": "Air Pro 4"
+      },
+      {
+        "slot": "liberty_4_nc",
+        "label": "soundcore Liberty 4 NC",
+        "brand": "soundcore",
+        "match": "Liberty 4 NC"
       }
-    },
-    {
-      "label": "ANC",
-      "key": "active_noise_cancelling"
-    },
-    {
-      "label": "Battery",
-      "key": "battery_life_hours"
-    },
-    {
-      "label": "Case Battery",
-      "key": "battery_life_with_case_hours"
-    },
-    {
-      "label": "Water Resistance",
-      "key": "water_resistance_rating"
-    },
-    {
-      "label": "Multipoint",
-      "key": "multipoint_pairing"
-    },
-    {
-      "label": "Codec Support",
-      "key": "codec_support"
-    },
-    {
-      "label": "Wireless Charging",
-      "key": "wireless_charging_case"
-    },
-    {
-      "label": "Best Seller",
-      "key": "best_seller"
-    }
-  ],
-  "verdict_blocks": [
-    {
-      "heading": "Buy EarFun Air Pro 4 if",
-      "product_slot": "earfun_air_pro_4",
-      "items": [
-        "You care more about ANC controls than wireless charging.",
-        "You want strong codec support.",
-        "You are comparing feature depth before choosing the most convenient everyday case."
-      ]
-    },
-    {
-      "heading": "Buy Liberty 4 NC if",
-      "product_slot": "liberty_4_nc",
-      "items": [
-        "You want the safer everyday pick.",
-        "You care about wireless charging, LDAC, multipoint, and battery life.",
-        "You want a practical case for normal daily use."
-      ]
-    }
-  ],
-  "final_verdict": "The safer pick is soundcore Liberty 4 NC. It is the better everyday choice for most buyers because it has wireless charging, LDAC, multipoint, strong battery life, and a practical case. Choose EarFun Air Pro 4 if ANC controls and codec support matter more to you than wireless charging.",
-  "social_caption": "EarFun Air Pro 4 vs Liberty 4 NC: Liberty 4 NC is the safer everyday pick. EarFun Air Pro 4 is better if ANC controls and codec support matter more than wireless charging.",
-  "video_script": "EarFun Air Pro 4 or Liberty 4 NC? Pick Liberty 4 NC if you want the safer everyday pair with wireless charging, LDAC, multipoint, strong battery life, and a practical case. Pick EarFun Air Pro 4 if ANC controls and codec support matter more to you than wireless charging. My simple answer: most buyers should start with Liberty 4 NC. Compare EarFun Air Pro 4 if control and codec support matter more than convenience.",
-  "infographic": {
-  "src": "/infographics/earbuds/earfun-air-pro-4-vs-soundcore-liberty-4-nc-pricecheck.png",
-  "alt": "EarFun Air Pro 4 vs soundcore Liberty 4 NC comparison infographic showing price, ANC, battery life, case battery, water resistance, multipoint, codec support, wireless charging, store count, and buyer-fit differences.",
-  "width": 1080,
-  "height": 1920,
-  "caption": "PriceCheck’s EarFun Air Pro 4 vs soundcore Liberty 4 NC comparison focuses on current pricing, specs, seller availability, and practical buyer-fit tradeoffs.",
-  "headline": "EarFun Air Pro 4 vs Liberty 4 NC",
-  "subhead": "Liberty 4 NC is the safer everyday pick. EarFun Air Pro 4 is better if ANC controls and codec support matter more than wireless charging.",
-  "sections": [
-    {
-      "label": "Pick Liberty 4 NC If",
-      "items": [
-        "You want the safer everyday pick",
-        "Wireless charging matters",
-        "LDAC matters",
-        "Multipoint matters",
-        "Strong battery life matters",
-        "You want a practical case"
-      ]
-    },
-    {
-      "label": "Pick EarFun Air Pro 4 If",
-      "items": [
-        "ANC controls matter more",
-        "Codec support matters more",
-        "Wireless charging is not a priority",
-        "You want to compare feature depth first"
-      ]
-    },
-    {
-      "label": "Simple Answer",
-      "items": [
-        "Most buyers should start with Liberty 4 NC.",
-        "Compare EarFun Air Pro 4 if ANC controls and codec support are your priority."
-      ]
-    }
-  ]
-},
-  "method": {
-    "heading": "How PriceCheck Compares These Earbuds",
-    "body": "PriceCheck compares EarFun Air Pro 4 and soundcore Liberty 4 NC using current prices, seller availability, normalized specs, and review signals. The main factors are price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, and everyday buyer fit."
-  },
-  "related": [
-    {
-      "label": "Best Earbuds Under $100",
-      "href": "/guides/earbuds/best-under-100/"
-    },
-    {
-      "label": "Best First Earbuds To Buy",
-      "href": "/guides/earbuds/best-first-earbuds-to-buy/"
-    },
-    {
-      "label": "Liberty 4 NC vs Skullcandy Method 360 ANC",
-      "href": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/"
-    },
-    {
-      "label": "All Earbuds Ranked By Value",
-      "href": "/rankings/earbuds/"
-    }
-  ]
-},
-{
-  "slug": "best-earbuds-for-work-under-100",
-  "path": "/guides/earbuds/best-earbuds-for-work-under-100/",
-  "type": "guide",
-  "category": "earbuds",
-  "title": "Best Earbuds For Work Under $100",
-  "seo_title": "Best Earbuds For Work Under $100 - PriceCheck",
-  "description": "Find the best earbuds for work under $100 using current prices, microphone support, multipoint, battery life, transparency mode, ANC, wireless charging, seller availability, and PriceCheck product data.",
-  "price_cap_cents": 10000,
-  "hero": {
-    "eyebrow": "Buying Guide",
-    "heading": "Best Earbuds For Work Under $100",
-    "dek": "A practical guide to earbuds under $100 for work calls, laptop switching, meetings, commuting, and daily use."
-  },
-  "quick_answer": {
-    "heading": "Quick Answer",
-    "body": "For work under $100, prioritize multipoint, built-in microphone support, battery life, and transparency mode before music-only specs. Multipoint is the biggest work feature because it helps you switch between a laptop and phone. Transparency mode also matters because sealed earbuds can make your own voice feel blocked during calls.",
+    ],
+    "quick_answer": [
+      {
+        "label": "Pick EarFun Air Pro 4 if",
+        "product_slot": "earfun_air_pro_4",
+        "body": "ANC controls and codec support matter more to you than wireless charging."
+      },
+      {
+        "label": "Pick Liberty 4 NC if",
+        "product_slot": "liberty_4_nc",
+        "body": "You want the safer everyday pick with wireless charging, LDAC, multipoint, strong battery life, and a practical case."
+      }
+    ],
+    "winners": [
+      {
+        "label": "Overall Pick",
+        "winner_slot": "liberty_4_nc",
+        "reason": "Safer everyday feature mix for most buyers."
+      },
+      {
+        "label": "Everyday Use",
+        "winner_slot": "liberty_4_nc",
+        "reason": "Wireless charging, multipoint, battery life, and a practical case make it easier to recommend for daily use."
+      },
+      {
+        "label": "ANC Controls",
+        "winner_slot": "earfun_air_pro_4",
+        "reason": "Better fit if ANC controls are a priority."
+      },
+      {
+        "label": "Codec Support",
+        "winner_slot": "earfun_air_pro_4",
+        "reason": "Better fit if codec support matters more than wireless charging."
+      },
+      {
+        "label": "Wireless Charging",
+        "winner_slot": "liberty_4_nc",
+        "reason": "Liberty 4 NC is the better pick if wireless charging is important."
+      },
+      {
+        "label": "Multipoint",
+        "winner_slot": "liberty_4_nc",
+        "reason": "Multipoint makes it more useful for switching between devices."
+      },
+      {
+        "label": "Battery",
+        "winner_slot": "liberty_4_nc",
+        "reason": "Stronger everyday battery package based on the available PriceCheck notes."
+      }
+    ],
+    "comparison_rows": [
+      {
+        "label": "Price",
+        "key": "price"
+      },
+      {
+        "label": "Best For",
+        "key": "best_for",
+        "values": {
+          "earfun_air_pro_4": "ANC controls and codec support",
+          "liberty_4_nc": "Everyday use, wireless charging, LDAC, and multipoint"
+        }
+      },
+      {
+        "label": "ANC",
+        "key": "active_noise_cancelling"
+      },
+      {
+        "label": "Battery",
+        "key": "battery_life_hours"
+      },
+      {
+        "label": "Case Battery",
+        "key": "battery_life_with_case_hours"
+      },
+      {
+        "label": "Water Resistance",
+        "key": "water_resistance_rating"
+      },
+      {
+        "label": "Multipoint",
+        "key": "multipoint_pairing"
+      },
+      {
+        "label": "Codec Support",
+        "key": "codec_support"
+      },
+      {
+        "label": "Wireless Charging",
+        "key": "wireless_charging_case"
+      },
+      {
+        "label": "Best Seller",
+        "key": "best_seller"
+      }
+    ],
+    "verdict_blocks": [
+      {
+        "heading": "Buy EarFun Air Pro 4 if",
+        "product_slot": "earfun_air_pro_4",
+        "items": [
+          "You care more about ANC controls than wireless charging.",
+          "You want strong codec support.",
+          "You are comparing feature depth before choosing the most convenient everyday case."
+        ]
+      },
+      {
+        "heading": "Buy Liberty 4 NC if",
+        "product_slot": "liberty_4_nc",
+        "items": [
+          "You want the safer everyday pick.",
+          "You care about wireless charging, LDAC, multipoint, and battery life.",
+          "You want a practical case for normal daily use."
+        ]
+      }
+    ],
+    "final_verdict": "The safer pick is soundcore Liberty 4 NC. It is the better everyday choice for most buyers because it has wireless charging, LDAC, multipoint, strong battery life, and a practical case. Choose EarFun Air Pro 4 if ANC controls and codec support matter more to you than wireless charging.",
+    "social_caption": "EarFun Air Pro 4 vs Liberty 4 NC: Liberty 4 NC is the safer everyday pick. EarFun Air Pro 4 is better if ANC controls and codec support matter more than wireless charging.",
+    "video_script": "EarFun Air Pro 4 or Liberty 4 NC? Pick Liberty 4 NC if you want the safer everyday pair with wireless charging, LDAC, multipoint, strong battery life, and a practical case. Pick EarFun Air Pro 4 if ANC controls and codec support matter more to you than wireless charging. My simple answer: most buyers should start with Liberty 4 NC. Compare EarFun Air Pro 4 if control and codec support matter more than convenience.",
     "infographic": {
-      "src": "/infographics/earbuds/best-earbuds-for-work-under-100-pricecheck.png",
-      "alt": "Best earbuds for work under 100 dollars infographic showing PriceCheck work-focused earbud picks by price, microphone support, multipoint, battery life, transparency mode, ANC, wireless charging, and buyer fit.",
-      "width": 1080,
-      "height": 1920,
-      "caption": "PriceCheck’s work-focused earbud picks prioritize current pricing, multipoint, microphone support, battery life, transparency mode, and practical daily-use tradeoffs."
-    },
-    "items": [
-      {
-        "label": "Best Work Pick",
-        "slot": "best_work_pick"
-      },
-      {
-        "label": "Best Phone And Laptop Pick",
-        "slot": "best_phone_laptop_pick"
-      },
-      {
-        "label": "Best Long-Meeting Pick",
-        "slot": "best_long_meeting_pick"
-      },
-      {
-        "label": "Best Cheap Work Pick",
-        "slot": "best_cheap_work_pick"
-      },
-      {
-        "label": "Best Commute Work Pick",
-        "slot": "best_commute_work_pick"
-      }
-    ]
-  },
-  "pick_slots": [
-    {
-      "slot": "best_work_pick",
-      "label": "Best Work Pick",
-      "strategy": "highest_value_score"
-    },
-    {
-      "slot": "best_phone_laptop_pick",
-      "label": "Best Phone And Laptop Pick",
-      "strategy": "highest_value_score"
-    },
-    {
-      "slot": "best_long_meeting_pick",
-      "label": "Best Long-Meeting Pick",
-      "strategy": "best_battery_score"
-    },
-    {
-      "slot": "best_cheap_work_pick",
-      "label": "Best Cheap Work Pick",
-      "strategy": "lowest_price_with_acceptable_score"
-    },
-    {
-      "slot": "best_commute_work_pick",
-      "label": "Best Commute Work Pick",
-      "strategy": "highest_value_score"
-    }
-  ],
-  "comparison_rows": [
-    {
-      "label": "Price",
-      "key": "price"
-    },
-    {
-      "label": "Built-In Microphone",
-      "key": "built_in_microphone"
-    },
-    {
-      "label": "Multipoint",
-      "key": "multipoint_pairing"
-    },
-    {
-      "label": "Transparency Mode",
-      "key": "transparency_mode"
-    },
-    {
-      "label": "Battery",
-      "key": "battery_life_hours"
-    },
-    {
-      "label": "Case Battery",
-      "key": "battery_life_with_case_hours"
-    },
-    {
-      "label": "ANC",
-      "key": "active_noise_cancelling"
-    },
-    {
-      "label": "Wireless Charging",
-      "key": "wireless_charging_case"
-    },
-    {
-      "label": "Water Resistance",
-      "key": "water_resistance_rating"
-    },
-    {
-      "label": "Codec Support",
-      "key": "codec_support"
-    },
-    {
-      "label": "Best Seller",
-      "key": "best_seller"
-    }
-  ],
-  "buying_notes": [
-    {
-      "heading": "Good For Buyers Who Want",
-      "items": [
-        "Earbuds under $100 for work calls, meetings, and daily use.",
-        "Multipoint for switching between a phone and laptop.",
-        "A built-in microphone for calls without using a separate headset.",
-        "Enough battery life for longer meetings.",
-        "Transparency mode so sealed earbuds feel less closed off during calls.",
-        "ANC for reducing what you hear during work or commuting."
-      ]
-    },
-    {
-      "heading": "Skip It If",
-      "items": [
-        "You need a dedicated boom microphone.",
-        "Your job depends on professional call quality.",
-        "You record podcasts, voiceovers, or client audio.",
-        "You take calls in loud streets every day.",
-        "You want guaranteed hands-on microphone test results."
-      ]
-    }
-  ],
-  "work_buying_advice": {
-    "heading": "What Matters For Work",
-    "body": "For work earbuds, multipoint matters more than most music specs because it helps you move between a laptop and phone. Built-in microphone support is the baseline for calls. Battery life matters for long meetings. Transparency mode helps if sealed earbuds make your own voice feel blocked. ANC is useful for what you hear, but it should not be treated as proof of better microphone quality."
-  },
-  "final_verdict": "The best earbuds for work under $100 should be picked around multipoint, microphone support, battery life, transparency mode, and current price. Multipoint is the biggest work feature because it helps with laptop and phone switching. Transparency mode is also useful because sealed earbuds can make your own voice feel unnatural during calls. If your job depends on call quality, a dedicated headset is still the safer choice.",
-  "social_caption": "Best earbuds for work under $100: prioritize multipoint, mic support, battery life, and transparency mode before music-only specs.",
-  "video_script": "Looking for earbuds for work under $100? Do not start with music specs. Start with multipoint, because switching between your laptop and phone is the biggest work feature. Then check built-in microphone support, battery life, and transparency mode. Transparency mode matters because sealed earbuds can make your own voice feel blocked during calls. ANC helps what you hear, but it does not automatically mean the other person hears you better. My simple answer: for work, prioritize multipoint, mic support, battery, and daily convenience.",
-  "infographic": {
-    "headline": "Best Earbuds For Work Under $100",
-    "subhead": "For work, prioritize multipoint, microphone support, battery life, and transparency mode before music-only specs.",
+    "src": "/infographics/earbuds/earfun-air-pro-4-vs-soundcore-liberty-4-nc-pricecheck.png",
+    "alt": "EarFun Air Pro 4 vs soundcore Liberty 4 NC comparison infographic showing price, ANC, battery life, case battery, water resistance, multipoint, codec support, wireless charging, store count, and buyer-fit differences.",
+    "width": 1080,
+    "height": 1920,
+    "caption": "PriceCheck’s EarFun Air Pro 4 vs soundcore Liberty 4 NC comparison focuses on current pricing, specs, seller availability, and practical buyer-fit tradeoffs.",
+    "headline": "EarFun Air Pro 4 vs Liberty 4 NC",
+    "subhead": "Liberty 4 NC is the safer everyday pick. EarFun Air Pro 4 is better if ANC controls and codec support matter more than wireless charging.",
     "sections": [
       {
-        "label": "Most Important",
+        "label": "Pick Liberty 4 NC If",
         "items": [
-          "Multipoint for phone and laptop",
-          "Built-in microphone",
-          "Long earbud battery life",
-          "Transparency mode",
-          "Reliable current price"
+          "You want the safer everyday pick",
+          "Wireless charging matters",
+          "LDAC matters",
+          "Multipoint matters",
+          "Strong battery life matters",
+          "You want a practical case"
         ]
       },
       {
-        "label": "Helpful, But Secondary",
+        "label": "Pick EarFun Air Pro 4 If",
         "items": [
-          "ANC",
-          "Wireless charging",
-          "Codec support",
-          "Water resistance"
+          "ANC controls matter more",
+          "Codec support matters more",
+          "Wireless charging is not a priority",
+          "You want to compare feature depth first"
         ]
       },
       {
-        "label": "Skip Earbuds If",
+        "label": "Simple Answer",
         "items": [
-          "You need a boom microphone",
-          "Your job depends on call quality",
-          "You record professional audio",
-          "You take calls in loud streets every day"
+          "Most buyers should start with Liberty 4 NC.",
+          "Compare EarFun Air Pro 4 if ANC controls and codec support are your priority."
         ]
       }
     ]
   },
-  "method": {
-    "heading": "How PriceCheck Picks Work Earbuds",
-    "body": "PriceCheck filters earbuds under $100, groups color variants into the same product family, checks current store prices, and compares work-relevant specs such as built-in microphone support, multipoint pairing, battery life, case battery, transparency mode, ANC, wireless charging, water resistance, codec support, seller availability, and overall buyer fit. PriceCheck does not use affiliate links, paid placements, sponsorships, or brand deals."
-  },
-  "related": [
-    {
-      "label": "Best Earbuds Under $100",
-      "href": "/guides/earbuds/best-under-100/"
-    },
-    {
-      "label": "Best First Earbuds To Buy",
-      "href": "/guides/earbuds/best-first-earbuds-to-buy/"
-    },
-    {
-      "label": "EarFun Air Pro 4 vs Liberty 4 NC",
-      "href": "/compare/earfun-air-pro-4-vs-soundcore-liberty-4-nc/"
-    },
-    {
-      "label": "All Earbuds Ranked By Value",
-      "href": "/rankings/earbuds/"
-    }
-  ]
-},
-{
-  "slug": "which-soundcore-earbuds-should-you-buy",
-  "path": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/",
-  "type": "brand_guide",
-  "category": "earbuds",
-  "brand": "soundcore",
-  "title": "Which Soundcore Earbuds Should You Buy?",
-  "seo_title": "Which Soundcore Earbuds Should You Buy? - PriceCheck",
-  "description": "Compare Soundcore earbuds by buyer fit, current prices, ANC, battery life, multipoint, codec support, wireless charging, workout use, and everyday value.",
-  "max_products": 40,
-  "hero": {
-    "eyebrow": "Brand Guide",
-    "heading": "Which Soundcore Earbuds Should You Buy?",
-    "dek": "A practical guide to choosing the right Soundcore earbuds based on how you actually use them: first pair, wireless charging, huge battery, all-around ANC, upgraded features, or smaller older value."
-  },
-  "quick_answer": [
-    {
-      "label": "Pick P31i if",
-      "body": "You want a first pair or lower-price Soundcore earbuds for simple daily use."
-    },
-    {
-      "label": "Pick P40i if",
-      "body": "You want wireless charging without jumping straight to a higher-price Liberty model."
-    },
-    {
-      "label": "Pick P41i if",
-      "body": "You want huge battery life or a phone-charging case."
-    },
-    {
-      "label": "Pick Liberty 4 NC if",
-      "body": "You want the safer all-around ANC pick for most buyers."
-    },
-    {
-      "label": "Pick Liberty 4 Pro if",
-      "body": "You want the upgraded Soundcore pick with the strongest feature set."
-    },
-    {
-      "label": "Pick Space A40 if",
-      "body": "You want a smaller older value pick instead of a newer full-size model."
-    }
-  ],
-  "brand_fit_rules": [
-    {
-      "match": "P31i",
-      "order": 10,
-      "label": "First Pair / Lower Price",
-      "buyer_fit": "Good for buyers who want a first pair or lower-price Soundcore earbuds for simple daily use."
-    },
-    {
-      "match": "P40i",
-      "order": 20,
-      "label": "Wireless Charging Pick",
-      "buyer_fit": "Good for buyers who want wireless charging without jumping straight to a higher-price Liberty model."
-    },
-    {
-      "match": "P41i",
-      "order": 30,
-      "label": "Huge Battery / Phone-Charging Case",
-      "buyer_fit": "Good for buyers who want huge battery life or a case that can help charge a phone."
-    },
-    {
-      "match": "Liberty 4 NC",
-      "order": 40,
-      "label": "Safer All-Around ANC Pick",
-      "buyer_fit": "Good for buyers who want the safer all-around Soundcore pick with ANC, multipoint, LDAC, and everyday convenience."
-    },
-    {
-      "match": "Liberty 4 Pro",
-      "order": 50,
-      "label": "Upgraded Soundcore Pick",
-      "buyer_fit": "Good for buyers who want the upgraded Soundcore model instead of the lower-price everyday picks."
-    },
-    {
-      "match": "Space A40",
-      "order": 60,
-      "label": "Smaller Older Value Pick",
-      "buyer_fit": "Good for buyers who want a smaller older Soundcore value pick instead of a newer full-size model."
-    }
-  ],
-  "comparison_rows": [
-    {
-      "label": "Current Price",
-      "key": "price"
-    },
-    {
-      "label": "Best For",
-      "key": "best_for",
-      "values": {}
-    },
-    {
-      "label": "ANC",
-      "key": "active_noise_cancelling"
-    },
-    {
-      "label": "Transparency Mode",
-      "key": "transparency_mode"
-    },
-    {
-      "label": "Battery",
-      "key": "battery_life_hours"
-    },
-    {
-      "label": "Case Battery",
-      "key": "battery_life_with_case_hours"
-    },
-    {
-      "label": "Multipoint",
-      "key": "multipoint_pairing"
-    },
-    {
-      "label": "Codec Support",
-      "key": "codec_support"
-    },
-    {
-      "label": "Wireless Charging",
-      "key": "wireless_charging_case"
-    },
-    {
-      "label": "Water Resistance",
-      "key": "water_resistance_rating"
-    },
-    {
-      "label": "Built-In Microphone",
-      "key": "built_in_microphone"
-    },
-    {
-      "label": "Best Seller",
-      "key": "best_seller"
-    }
-  ],
-  "final_verdict": "Most buyers should start with the Soundcore model that fits their use case, not the one with the longest spec list. Pick P31i for a first pair or lower price. Pick P40i for wireless charging. Pick P41i for huge battery life or the phone-charging case. Pick Liberty 4 NC for the safer all-around ANC choice. Pick Liberty 4 Pro if you want the upgraded Soundcore model. Pick Space A40 if you want a smaller older value pick.",
-  "social_caption": "Which Soundcore earbuds should you buy? P31i for first pair, P40i for wireless charging, P41i for huge battery, Liberty 4 NC for all-around ANC, Liberty 4 Pro for upgraded Soundcore, and Space A40 for smaller older value.",
-  "video_script": "Which Soundcore earbuds should you buy? The names are confusing, so pick by buyer fit. P31i is for a first pair or lower price. P40i is for wireless charging. P41i is for huge battery life or the phone-charging case. Liberty 4 NC is the safer all-around ANC pick. Liberty 4 Pro is the upgraded Soundcore pick. Space A40 is the smaller older value pick. The simple answer: do not buy by name. Buy by what problem you need the earbuds to solve.",
-  "infographic": {
-    "src": "/infographics/earbuds/which-soundcore-earbuds-should-you-buy-pricecheck.png",
-    "alt": "Which Soundcore earbuds should you buy infographic comparing P31i, P40i, P41i, Liberty 4 NC, Liberty 4 Pro, and Space A40 by buyer fit, current price, specs, and use case.",
-    "width": 1080,
-    "height": 1350,
-    "caption": "PriceCheck’s Soundcore guide focuses on buyer fit first, then current pricing and specs.",
-    "headline": "Which Soundcore Earbuds Should You Buy?",
-    "subhead": "Pick by buyer fit first. Specs only matter when they support how you use the earbuds."
-  },
-  "method": {
-    "heading": "How PriceCheck Compares Soundcore Earbuds",
-    "body": "PriceCheck pulls Soundcore earbuds from the catalog, groups color variants into the same product family, checks current store prices, and compares specs such as ANC, transparency mode, battery life, case battery, multipoint, codec support, wireless charging, water resistance, microphone support, seller availability, and buyer fit."
-  },
-  "related": [
-    {
-      "label": "Best Earbuds Under $100",
-      "href": "/guides/earbuds/best-under-100/"
-    },
-    {
-      "label": "Best First Earbuds To Buy",
-      "href": "/guides/earbuds/best-first-earbuds-to-buy/"
-    },
-    {
-      "label": "Best Earbuds For Work Under $100",
-      "href": "/guides/earbuds/best-earbuds-for-work-under-100/"
-    },
-    {
-      "label": "EarFun Air Pro 4 vs Liberty 4 NC",
-      "href": "/compare/earfun-air-pro-4-vs-soundcore-liberty-4-nc/"
-    },
-    {
-      "label": "All Earbuds Ranked By Value",
-      "href": "/rankings/earbuds/"
-    }
-  ]
-},
-{
-  "slug": "which-sony-earbuds-should-you-buy",
-  "path": "/guides/earbuds/which-sony-earbuds-should-you-buy/",
-  "type": "brand_guide",
-  "category": "earbuds",
-  "brand": "Sony",
-  "title": "Which Sony Earbuds Should You Buy?",
-  "seo_title": "Which Sony Earbuds Should You Buy? - PriceCheck",
-  "description": "Compare Sony earbuds by buyer fit, current prices, ANC, battery life, LDAC, water resistance, everyday use, workout use, and premium alternatives.",
-  "max_products": 40,
-  "hero": {
-    "eyebrow": "Brand Guide",
-    "heading": "Which Sony Earbuds Should You Buy?",
-    "dek": "A practical guide to choosing the right Sony earbuds based on how you actually use them: premium ANC, lower-price noise cancelling, compact daily use, workouts, or older Sony value."
-  },
-  "quick_answer": [
-    {
-      "label": "Pick WF-1000XM5 if",
-      "body": "You want Sony's premium earbud pick for ANC, LDAC, and higher-end daily listening."
-    },
-    {
-      "label": "Pick WF-C700N if",
-      "body": "You want a lower-price Sony ANC pair instead of paying premium XM5 pricing."
-    },
-    {
-      "label": "Pick WF-C510 if",
-      "body": "You want a cheaper simple Sony pair and do not need ANC."
-    },
-    {
-      "label": "Pick LinkBuds S if",
-      "body": "You want a smaller lightweight Sony ANC earbud."
-    },
-    {
-      "label": "Pick LinkBuds Fit if",
-      "body": "You want a Sony pair focused more on movement and fit."
-    },
-    {
-      "label": "Pick WF-1000XM4 if",
-      "body": "You want older premium Sony value and the price is meaningfully below the XM5."
-    }
-  ],
-  "brand_fit_rules": [
-    {
-      "match": "WF-1000XM5",
-      "order": 10,
-      "label": "Premium ANC Pick",
-      "buyer_fit": "Good for buyers who want Sony's premium earbud pick for ANC, LDAC, and higher-end daily listening."
-    },
-    {
-      "match": "WF-C700N",
-      "order": 20,
-      "label": "Lower-Price ANC Pick",
-      "buyer_fit": "Good for buyers who want Sony noise cancelling without paying premium XM5 pricing."
-    },
-    {
-      "match": "WF-C510",
-      "order": 30,
-      "label": "Cheaper Simple Sony Pick",
-      "buyer_fit": "Good for buyers who want a lower-price Sony pair and do not need ANC."
-    },
-    {
-      "match": "LinkBuds S",
-      "order": 40,
-      "label": "Small Lightweight ANC Pick",
-      "buyer_fit": "Good for buyers who want a smaller Sony earbud with ANC for everyday use."
-    },
-    {
-      "match": "LinkBuds Fit",
-      "order": 50,
-      "label": "Workout Fit Pick",
-      "buyer_fit": "Good for buyers who want a Sony pair focused more on movement, fit, and daily activity."
-    },
-    {
-      "match": "WF-1000XM4",
-      "order": 60,
-      "label": "Older Premium Value Pick",
-      "buyer_fit": "Good for buyers who want older Sony premium value and can find it clearly below XM5 pricing."
-    }
-  ],
-  "comparison_rows": [
-    {
-      "label": "Current Price",
-      "key": "price"
-    },
-    {
-      "label": "ANC",
-      "key": "active_noise_cancelling"
-    },
-    {
-      "label": "Transparency Mode",
-      "key": "transparency_mode"
-    },
-    {
-      "label": "Battery",
-      "key": "battery_life_hours"
-    },
-    {
-      "label": "Case Battery",
-      "key": "battery_life_with_case_hours"
-    },
-    {
-      "label": "Multipoint",
-      "key": "multipoint_pairing"
-    },
-    {
-      "label": "Codec Support",
-      "key": "codec_support"
-    },
-    {
-      "label": "Wireless Charging",
-      "key": "wireless_charging_case"
-    },
-    {
-      "label": "Water Resistance",
-      "key": "water_resistance_rating"
-    },
-    {
-      "label": "Built-In Microphone",
-      "key": "built_in_microphone"
-    },
-    {
-      "label": "Best Seller",
-      "key": "best_seller"
-    }
-  ],
-  "final_verdict": "Most buyers should start by deciding whether they actually need Sony's premium ANC. Pick WF-1000XM5 if you want the premium Sony earbud with ANC and LDAC. Pick WF-C700N if you want Sony ANC for less. Pick WF-C510 if you want a cheaper simple Sony pair and do not need ANC. Pick LinkBuds S if you want a smaller lightweight ANC option. Pick LinkBuds Fit if fit and movement matter more. Pick WF-1000XM4 only if the price is clearly low enough compared with the XM5.",
-  "social_caption": "Which Sony earbuds would you pick? WF-1000XM5 for premium ANC, WF-C700N for lower-price ANC, WF-C510 for a cheaper simple Sony pair, LinkBuds S for lightweight ANC, LinkBuds Fit for movement, and WF-1000XM4 for older premium value.",
-  "video_script": "Which Sony earbuds should you buy? Start with what you actually need. WF-1000XM5 is the premium Sony ANC pick. WF-C700N is the lower-price ANC pick. WF-C510 is the cheaper simple Sony pair if you do not need ANC. LinkBuds S is the smaller lightweight ANC option. LinkBuds Fit is better if movement and fit matter more. WF-1000XM4 only makes sense if the price is clearly lower than the XM5.",
-  "infographic": {
-    "src": "/infographics/earbuds/which-sony-earbuds-should-you-buy-pricecheck.png",
-    "alt": "Which Sony earbuds should you buy infographic comparing Sony earbuds by buyer fit, current price, ANC, LDAC, battery life, water resistance, and use case.",
-    "width": 1080,
-    "height": 1350,
-    "caption": "PriceCheck’s Sony guide focuses on buyer fit first, then current pricing and specs.",
-    "headline": "Which Sony Earbuds Should You Buy?",
-    "subhead": "Start with whether you need premium ANC, lower-price ANC, simple daily use, or a better fit for movement."
-  },
-  "method": {
-    "heading": "How PriceCheck Compares Sony Earbuds",
-    "body": "PriceCheck pulls Sony earbuds from the catalog, groups color variants into the same product family, checks current store prices, and compares specs such as ANC, transparency mode, battery life, case battery, multipoint, codec support, wireless charging, water resistance, microphone support, seller availability, and buyer fit."
-  },
-  "related": [
-    {
-      "label": "Are Sony WF-1000XM5 Worth It?",
-      "href": "/guides/earbuds/sony-wf-1000xm5-worth-it/"
-    },
-    {
-      "label": "Best Earbuds Under $100",
-      "href": "/guides/earbuds/best-under-100/"
-    },
-    {
-      "label": "Best Earbuds For Work Under $100",
-      "href": "/guides/earbuds/best-earbuds-for-work-under-100/"
-    },
-    {
-      "label": "Which Soundcore Earbuds Should You Buy?",
-      "href": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/"
-    },
-    {
-      "label": "All Earbuds Ranked By Value",
-      "href": "/rankings/earbuds/"
-    }
-  ]
-},
-{
-  "slug": "which-jbl-earbuds-should-you-buy",
-  "path": "/guides/earbuds/which-jbl-earbuds-should-you-buy/",
-  "type": "brand_guide",
-  "category": "earbuds",
-  "brand": "JBL",
-  "title": "Which JBL Earbuds Should You Buy?",
-  "seo_title": "Which JBL Earbuds Should You Buy? - PriceCheck",
-  "description": "Compare JBL earbuds by buyer fit, current prices, ANC, battery life, water resistance, multipoint, smart case features, workout use, and everyday value.",
-  "max_products": 40,
-  "hero": {
-    "eyebrow": "Brand Guide",
-    "heading": "Which JBL Earbuds Should You Buy?",
-    "dek": "A practical guide to choosing the right JBL earbuds based on how you actually use them: lower-price ANC, everyday noise cancelling, workout fit, smart-case controls, or premium JBL features."
-  },
-  "quick_answer": [
-    {
-      "label": "Pick Vibe Beam 2 if",
-      "body": "You want the lower-price JBL ANC pick with multipoint, app support, and a simple sealed fit."
-    },
-    {
-      "label": "Pick Tune Beam 2 if",
-      "body": "You want an everyday stem-style JBL ANC pair with longer battery life, multipoint, and stronger call-focused specs."
-    },
-    {
-      "label": "Pick Tune Buds 2 if",
-      "body": "You want an everyday bud-style JBL ANC pair instead of a stem design."
-    },
-    {
-      "label": "Pick Endurance Race 2 if",
-      "body": "You want the safer JBL workout pick with IP68 protection, a secure wing fit, and long battery life."
-    },
-    {
-      "label": "Pick Live Beam 3 if",
-      "body": "You want a smart-case JBL upgrade with a stem-style fit, wireless charging, True Adaptive ANC, and app-free controls."
-    },
-    {
-      "label": "Pick Tour Pro 3 if",
-      "body": "You want JBL's premium smart-case model with the strongest feature set, LDAC, an audio transmitter case, and higher-end ANC."
-    }
-  ],
-  "brand_fit_rules": [
-    {
-      "match": "Vibe Beam 2",
-      "order": 10,
-      "label": "Lower-Price ANC Pick",
-      "buyer_fit": "Good for buyers who want the lower-price JBL ANC pick with multipoint, app support, and a simple sealed fit."
-    },
-    {
-      "match": "Tune Beam 2",
-      "order": 20,
-      "label": "Everyday Stem ANC Pick",
-      "buyer_fit": "Good for buyers who want an everyday stem-style JBL ANC pair with long battery life, multipoint, and stronger call-focused specs."
-    },
-    {
-      "match": "Tune Buds 2",
-      "order": 30,
-      "label": "Everyday Bud ANC Pick",
-      "buyer_fit": "Good for buyers who want JBL ANC and long battery life in a bud-style shape instead of a stem design."
-    },
-    {
-      "match": "Endurance Race 2",
-      "order": 40,
-      "label": "Workout Pick",
-      "buyer_fit": "Good for buyers who want the safer JBL workout pick with IP68 protection, a secure wing fit, multipoint, and long battery life."
-    },
-    {
-      "match": "Live Beam 3",
-      "order": 50,
-      "label": "Smart-Case Stem Upgrade",
-      "buyer_fit": "Good for buyers who want a stem-style JBL upgrade with a Smart Charging Case, wireless charging, True Adaptive ANC, and app-free controls."
-    },
-    {
-      "match": "Live Buds 3",
-      "order": 60,
-      "label": "Smart-Case Bud Upgrade",
-      "buyer_fit": "Good for buyers who want a bud-style JBL upgrade with a Smart Charging Case, wireless charging, multipoint, and True Adaptive ANC."
-    },
-    {
-      "match": "Tour Pro 3",
-      "order": 70,
-      "label": "Premium JBL Pick",
-      "buyer_fit": "Good for buyers who want JBL's premium smart-case model with LDAC, an audio transmitter case, True Adaptive Noise Cancelling 2.0, wireless charging, and the strongest JBL feature set."
-    },
-    {
-      "match": "Endurance Peak 3",
-      "order": 80,
-      "label": "Hook-Style Workout Pick",
-      "buyer_fit": "Good for buyers who want a hook-style JBL workout earbud instead of a smaller wing-style sport fit."
-    },
-    {
-      "match": "Live Pro 2",
-      "order": 90,
-      "label": "Older Stem Upgrade Pick",
-      "buyer_fit": "Good for buyers who find it clearly below newer Live or Tour pricing and still want wireless charging, ANC, and a stem-style JBL design."
-    },
-    {
-      "match": "Vibe Beam",
-      "order": 100,
-      "label": "Older Simple JBL Pick",
-      "buyer_fit": "Good for buyers who want a cheaper older JBL pair and do not need the newer Vibe Beam 2 feature set."
-    }
-  ],
-  "comparison_rows": [
-    {
-      "label": "Current Price",
-      "key": "price"
-    },
-    {
-      "label": "Best For",
-      "key": "best_for",
-      "values": {}
-    },
-    {
-      "label": "ANC",
-      "key": "active_noise_cancelling"
-    },
-    {
-      "label": "Transparency Mode",
-      "key": "transparency_mode"
-    },
-    {
-      "label": "Battery",
-      "key": "battery_life_hours"
-    },
-    {
-      "label": "Case Battery",
-      "key": "battery_life_with_case_hours"
-    },
-    {
-      "label": "Multipoint",
-      "key": "multipoint_pairing"
-    },
-    {
-      "label": "Codec Support",
-      "key": "codec_support"
-    },
-    {
-      "label": "Wireless Charging",
-      "key": "wireless_charging_case"
-    },
-    {
-      "label": "Water Resistance",
-      "key": "water_resistance_rating"
-    },
-    {
-      "label": "Built-In Microphone",
-      "key": "built_in_microphone"
-    },
-    {
-      "label": "Driver Size",
-      "key": "driver_size_mm"
-    },
-    {
-      "label": "Best Seller",
-      "key": "best_seller"
-    }
-  ],
-  "final_verdict": "Most buyers should choose JBL earbuds by use case, not by the product name. Pick Vibe Beam 2 for lower-price JBL ANC. Pick Tune Beam 2 if you want an everyday stem-style ANC pair. Pick Tune Buds 2 if you want an everyday bud-style ANC pair. Pick Endurance Race 2 for workouts and secure fit. Pick Live Beam 3 or Live Buds 3 if you want the Smart Charging Case without jumping to Tour pricing. Pick Tour Pro 3 if you want JBL's premium smart-case model and will actually use the audio transmitter case, LDAC, wireless charging, and higher-end ANC features.",
-  "social_caption": "Which JBL earbuds would you buy? Vibe Beam 2 for lower-price ANC, Tune Beam 2 for everyday stem-style ANC, Tune Buds 2 for bud-style ANC, Endurance Race 2 for workouts, Live Beam 3 for smart-case controls, and Tour Pro 3 for the premium JBL feature set.",
-  "video_script": "Which JBL earbuds should you buy? Start with the use case. Vibe Beam 2 is the lower-price ANC pick. Tune Beam 2 is the everyday stem-style ANC pick. Tune Buds 2 is the everyday bud-style ANC pick. Endurance Race 2 is the workout pick. Live Beam 3 is the smart-case upgrade. Tour Pro 3 is the premium JBL pick with the strongest feature set. The simple answer: do not buy by JBL name. Buy by fit, price, and the features you will actually use.",
-  "infographic": {
-    "src": "/infographics/earbuds/which-jbl-earbuds-should-you-buy-pricecheck.png",
-    "alt": "Which JBL earbuds should you buy infographic comparing JBL Vibe Beam 2, Tune Beam 2, Tune Buds 2, Endurance Race 2, Live Beam 3, and Tour Pro 3 by buyer fit, current price, specs, and use case.",
-    "width": 1080,
-    "height": 1350,
-    "caption": "PriceCheck’s JBL guide focuses on buyer fit first, then current pricing and specs.",
-    "headline": "Which JBL Earbuds Should You Buy?",
-    "subhead": "Start with the fit and use case: lower-price ANC, everyday ANC, workout fit, smart-case controls, or premium JBL features.",
-    "cards": [
+    "method": {
+      "heading": "How PriceCheck Compares These Earbuds",
+      "body": "PriceCheck compares EarFun Air Pro 4 and soundcore Liberty 4 NC using current prices, seller availability, normalized specs, and review signals. The main factors are price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, and everyday buyer fit."
+    },
+    "related": [
       {
-        "product_name": "JBL Vibe Beam 2",
-        "label": "Lower-Price ANC Pick",
-        "body": "For buyers who want JBL ANC without paying for the Live or Tour models."
+        "label": "Best Earbuds Under $100",
+        "href": "/guides/earbuds/best-under-100/"
       },
       {
-        "product_name": "JBL Tune Beam 2",
-        "label": "Everyday Stem ANC Pick",
-        "body": "For buyers who want a stem-style JBL pair for daily use, calls, and battery life."
+        "label": "Best First Earbuds To Buy",
+        "href": "/guides/earbuds/best-first-earbuds-to-buy/"
       },
       {
-        "product_name": "JBL Tune Buds 2",
-        "label": "Everyday Bud ANC Pick",
-        "body": "For buyers who want JBL ANC in a bud-style shape instead of a stem."
+        "label": "Liberty 4 NC vs Skullcandy Method 360 ANC",
+        "href": "/compare/soundcore-liberty-4-nc-vs-skullcandy-method-360-anc/"
       },
       {
-        "product_name": "JBL Endurance Race 2",
-        "label": "Workout Pick",
-        "body": "For buyers who care most about secure fit, sweat protection, and movement."
+        "label": "All Earbuds Ranked By Value",
+        "href": "/rankings/earbuds/"
+      }
+    ]
+  },
+  {
+    "slug": "best-earbuds-for-work-under-100",
+    "path": "/guides/earbuds/best-earbuds-for-work-under-100/",
+    "type": "guide",
+    "category": "earbuds",
+    "title": "Best Earbuds For Work Under $100",
+    "seo_title": "Best Earbuds For Work Under $100 - PriceCheck",
+    "description": "Find the best earbuds for work under $100 using current prices, microphone support, multipoint, battery life, transparency mode, ANC, wireless charging, seller availability, and PriceCheck product data.",
+    "price_cap_cents": 10000,
+    "hero": {
+      "eyebrow": "Buying Guide",
+      "heading": "Best Earbuds For Work Under $100",
+      "dek": "A practical guide to earbuds under $100 for work calls, laptop switching, meetings, commuting, and daily use."
+    },
+    "quick_answer": {
+      "heading": "Quick Answer",
+      "body": "For work under $100, prioritize multipoint, built-in microphone support, battery life, and transparency mode before music-only specs. Multipoint is the biggest work feature because it helps you switch between a laptop and phone. Transparency mode also matters because sealed earbuds can make your own voice feel blocked during calls.",
+      "infographic": {
+        "src": "/infographics/earbuds/best-earbuds-for-work-under-100-pricecheck.png",
+        "alt": "Best earbuds for work under 100 dollars infographic showing PriceCheck work-focused earbud picks by price, microphone support, multipoint, battery life, transparency mode, ANC, wireless charging, and buyer fit.",
+        "width": 1080,
+        "height": 1920,
+        "caption": "PriceCheck’s work-focused earbud picks prioritize current pricing, multipoint, microphone support, battery life, transparency mode, and practical daily-use tradeoffs."
+      },
+      "items": [
+        {
+          "label": "Best Work Pick",
+          "slot": "best_work_pick"
+        },
+        {
+          "label": "Best Phone And Laptop Pick",
+          "slot": "best_phone_laptop_pick"
+        },
+        {
+          "label": "Best Long-Meeting Pick",
+          "slot": "best_long_meeting_pick"
+        },
+        {
+          "label": "Best Cheap Work Pick",
+          "slot": "best_cheap_work_pick"
+        },
+        {
+          "label": "Best Commute Work Pick",
+          "slot": "best_commute_work_pick"
+        }
+      ]
+    },
+    "pick_slots": [
+      {
+        "slot": "best_work_pick",
+        "label": "Best Work Pick",
+        "strategy": "highest_value_score"
       },
       {
-        "product_name": "JBL Live Beam 3",
-        "label": "Smart-Case Upgrade",
-        "body": "For buyers who want case controls, wireless charging, and stronger everyday features."
+        "slot": "best_phone_laptop_pick",
+        "label": "Best Phone And Laptop Pick",
+        "strategy": "highest_value_score"
       },
       {
-        "product_name": "JBL Tour Pro 3",
-        "label": "Premium JBL Pick",
-        "body": "For buyers who want the strongest JBL feature set and will use the audio transmitter case."
+        "slot": "best_long_meeting_pick",
+        "label": "Best Long-Meeting Pick",
+        "strategy": "best_battery_score"
+      },
+      {
+        "slot": "best_cheap_work_pick",
+        "label": "Best Cheap Work Pick",
+        "strategy": "lowest_price_with_acceptable_score"
+      },
+      {
+        "slot": "best_commute_work_pick",
+        "label": "Best Commute Work Pick",
+        "strategy": "highest_value_score"
       }
     ],
-    "footer": "No sponsored rankings. Full guide at pricechecktool.com"
+    "comparison_rows": [
+      {
+        "label": "Price",
+        "key": "price"
+      },
+      {
+        "label": "Built-In Microphone",
+        "key": "built_in_microphone"
+      },
+      {
+        "label": "Multipoint",
+        "key": "multipoint_pairing"
+      },
+      {
+        "label": "Transparency Mode",
+        "key": "transparency_mode"
+      },
+      {
+        "label": "Battery",
+        "key": "battery_life_hours"
+      },
+      {
+        "label": "Case Battery",
+        "key": "battery_life_with_case_hours"
+      },
+      {
+        "label": "ANC",
+        "key": "active_noise_cancelling"
+      },
+      {
+        "label": "Wireless Charging",
+        "key": "wireless_charging_case"
+      },
+      {
+        "label": "Water Resistance",
+        "key": "water_resistance_rating"
+      },
+      {
+        "label": "Codec Support",
+        "key": "codec_support"
+      },
+      {
+        "label": "Best Seller",
+        "key": "best_seller"
+      }
+    ],
+    "buying_notes": [
+      {
+        "heading": "Good For Buyers Who Want",
+        "items": [
+          "Earbuds under $100 for work calls, meetings, and daily use.",
+          "Multipoint for switching between a phone and laptop.",
+          "A built-in microphone for calls without using a separate headset.",
+          "Enough battery life for longer meetings.",
+          "Transparency mode so sealed earbuds feel less closed off during calls.",
+          "ANC for reducing what you hear during work or commuting."
+        ]
+      },
+      {
+        "heading": "Skip It If",
+        "items": [
+          "You need a dedicated boom microphone.",
+          "Your job depends on professional call quality.",
+          "You record podcasts, voiceovers, or client audio.",
+          "You take calls in loud streets every day.",
+          "You want guaranteed hands-on microphone test results."
+        ]
+      }
+    ],
+    "work_buying_advice": {
+      "heading": "What Matters For Work",
+      "body": "For work earbuds, multipoint matters more than most music specs because it helps you move between a laptop and phone. Built-in microphone support is the baseline for calls. Battery life matters for long meetings. Transparency mode helps if sealed earbuds make your own voice feel blocked. ANC is useful for what you hear, but it should not be treated as proof of better microphone quality."
+    },
+    "final_verdict": "The best earbuds for work under $100 should be picked around multipoint, microphone support, battery life, transparency mode, and current price. Multipoint is the biggest work feature because it helps with laptop and phone switching. Transparency mode is also useful because sealed earbuds can make your own voice feel unnatural during calls. If your job depends on call quality, a dedicated headset is still the safer choice.",
+    "social_caption": "Best earbuds for work under $100: prioritize multipoint, mic support, battery life, and transparency mode before music-only specs.",
+    "video_script": "Looking for earbuds for work under $100? Do not start with music specs. Start with multipoint, because switching between your laptop and phone is the biggest work feature. Then check built-in microphone support, battery life, and transparency mode. Transparency mode matters because sealed earbuds can make your own voice feel blocked during calls. ANC helps what you hear, but it does not automatically mean the other person hears you better. My simple answer: for work, prioritize multipoint, mic support, battery, and daily convenience.",
+    "infographic": {
+      "headline": "Best Earbuds For Work Under $100",
+      "subhead": "For work, prioritize multipoint, microphone support, battery life, and transparency mode before music-only specs.",
+      "sections": [
+        {
+          "label": "Most Important",
+          "items": [
+            "Multipoint for phone and laptop",
+            "Built-in microphone",
+            "Long earbud battery life",
+            "Transparency mode",
+            "Reliable current price"
+          ]
+        },
+        {
+          "label": "Helpful, But Secondary",
+          "items": [
+            "ANC",
+            "Wireless charging",
+            "Codec support",
+            "Water resistance"
+          ]
+        },
+        {
+          "label": "Skip Earbuds If",
+          "items": [
+            "You need a boom microphone",
+            "Your job depends on call quality",
+            "You record professional audio",
+            "You take calls in loud streets every day"
+          ]
+        }
+      ]
+    },
+    "method": {
+      "heading": "How PriceCheck Picks Work Earbuds",
+      "body": "PriceCheck filters earbuds under $100, groups color variants into the same product family, checks current store prices, and compares work-relevant specs such as built-in microphone support, multipoint pairing, battery life, case battery, transparency mode, ANC, wireless charging, water resistance, codec support, seller availability, and overall buyer fit. PriceCheck does not use affiliate links, paid placements, sponsorships, or brand deals."
+    },
+    "related": [
+      {
+        "label": "Best Earbuds Under $100",
+        "href": "/guides/earbuds/best-under-100/"
+      },
+      {
+        "label": "Best First Earbuds To Buy",
+        "href": "/guides/earbuds/best-first-earbuds-to-buy/"
+      },
+      {
+        "label": "EarFun Air Pro 4 vs Liberty 4 NC",
+        "href": "/compare/earfun-air-pro-4-vs-soundcore-liberty-4-nc/"
+      },
+      {
+        "label": "All Earbuds Ranked By Value",
+        "href": "/rankings/earbuds/"
+      }
+    ]
   },
-  "method": {
-    "heading": "How PriceCheck Compares JBL Earbuds",
-    "body": "PriceCheck pulls JBL earbuds from the catalog, groups color variants into the same product family, checks current store prices, and compares specs such as ANC, transparency mode, battery life, case battery, multipoint, codec support, wireless charging, water resistance, microphone support, seller availability, and buyer fit."
+  {
+    "slug": "which-soundcore-earbuds-should-you-buy",
+    "path": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/",
+    "type": "brand_guide",
+    "category": "earbuds",
+    "brand": "soundcore",
+    "title": "Which Soundcore Earbuds Should You Buy?",
+    "seo_title": "Which Soundcore Earbuds Should You Buy? - PriceCheck",
+    "description": "Compare Soundcore earbuds by buyer fit, current prices, ANC, battery life, multipoint, codec support, wireless charging, workout use, and everyday value.",
+    "max_products": 40,
+    "hero": {
+      "eyebrow": "Brand Guide",
+      "heading": "Which Soundcore Earbuds Should You Buy?",
+      "dek": "A practical guide to choosing the right Soundcore earbuds based on how you actually use them: first pair, wireless charging, huge battery, all-around ANC, upgraded features, or smaller older value."
+    },
+    "quick_answer": [
+      {
+        "label": "Pick P31i if",
+        "body": "You want a first pair or lower-price Soundcore earbuds for simple daily use."
+      },
+      {
+        "label": "Pick P40i if",
+        "body": "You want wireless charging without jumping straight to a higher-price Liberty model."
+      },
+      {
+        "label": "Pick P41i if",
+        "body": "You want huge battery life or a phone-charging case."
+      },
+      {
+        "label": "Pick Liberty 4 NC if",
+        "body": "You want the safer all-around ANC pick for most buyers."
+      },
+      {
+        "label": "Pick Liberty 4 Pro if",
+        "body": "You want the upgraded Soundcore pick with the strongest feature set."
+      },
+      {
+        "label": "Pick Space A40 if",
+        "body": "You want a smaller older value pick instead of a newer full-size model."
+      }
+    ],
+    "brand_fit_rules": [
+      {
+        "match": "P31i",
+        "order": 10,
+        "label": "First Pair / Lower Price",
+        "buyer_fit": "Good for buyers who want a first pair or lower-price Soundcore earbuds for simple daily use."
+      },
+      {
+        "match": "P40i",
+        "order": 20,
+        "label": "Wireless Charging Pick",
+        "buyer_fit": "Good for buyers who want wireless charging without jumping straight to a higher-price Liberty model."
+      },
+      {
+        "match": "P41i",
+        "order": 30,
+        "label": "Huge Battery / Phone-Charging Case",
+        "buyer_fit": "Good for buyers who want huge battery life or a case that can help charge a phone."
+      },
+      {
+        "match": "Liberty 4 NC",
+        "order": 40,
+        "label": "Safer All-Around ANC Pick",
+        "buyer_fit": "Good for buyers who want the safer all-around Soundcore pick with ANC, multipoint, LDAC, and everyday convenience."
+      },
+      {
+        "match": "Liberty 4 Pro",
+        "order": 50,
+        "label": "Upgraded Soundcore Pick",
+        "buyer_fit": "Good for buyers who want the upgraded Soundcore model instead of the lower-price everyday picks."
+      },
+      {
+        "match": "Space A40",
+        "order": 60,
+        "label": "Smaller Older Value Pick",
+        "buyer_fit": "Good for buyers who want a smaller older Soundcore value pick instead of a newer full-size model."
+      }
+    ],
+    "comparison_rows": [
+      {
+        "label": "Current Price",
+        "key": "price"
+      },
+      {
+        "label": "Best For",
+        "key": "best_for",
+        "values": {}
+      },
+      {
+        "label": "ANC",
+        "key": "active_noise_cancelling"
+      },
+      {
+        "label": "Transparency Mode",
+        "key": "transparency_mode"
+      },
+      {
+        "label": "Battery",
+        "key": "battery_life_hours"
+      },
+      {
+        "label": "Case Battery",
+        "key": "battery_life_with_case_hours"
+      },
+      {
+        "label": "Multipoint",
+        "key": "multipoint_pairing"
+      },
+      {
+        "label": "Codec Support",
+        "key": "codec_support"
+      },
+      {
+        "label": "Wireless Charging",
+        "key": "wireless_charging_case"
+      },
+      {
+        "label": "Water Resistance",
+        "key": "water_resistance_rating"
+      },
+      {
+        "label": "Built-In Microphone",
+        "key": "built_in_microphone"
+      },
+      {
+        "label": "Best Seller",
+        "key": "best_seller"
+      }
+    ],
+    "final_verdict": "Most buyers should start with the Soundcore model that fits their use case, not the one with the longest spec list. Pick P31i for a first pair or lower price. Pick P40i for wireless charging. Pick P41i for huge battery life or the phone-charging case. Pick Liberty 4 NC for the safer all-around ANC choice. Pick Liberty 4 Pro if you want the upgraded Soundcore model. Pick Space A40 if you want a smaller older value pick.",
+    "social_caption": "Which Soundcore earbuds should you buy? P31i for first pair, P40i for wireless charging, P41i for huge battery, Liberty 4 NC for all-around ANC, Liberty 4 Pro for upgraded Soundcore, and Space A40 for smaller older value.",
+    "video_script": "Which Soundcore earbuds should you buy? The names are confusing, so pick by buyer fit. P31i is for a first pair or lower price. P40i is for wireless charging. P41i is for huge battery life or the phone-charging case. Liberty 4 NC is the safer all-around ANC pick. Liberty 4 Pro is the upgraded Soundcore pick. Space A40 is the smaller older value pick. The simple answer: do not buy by name. Buy by what problem you need the earbuds to solve.",
+    "infographic": {
+      "src": "/infographics/earbuds/which-soundcore-earbuds-should-you-buy-pricecheck.png",
+      "alt": "Which Soundcore earbuds should you buy infographic comparing P31i, P40i, P41i, Liberty 4 NC, Liberty 4 Pro, and Space A40 by buyer fit, current price, specs, and use case.",
+      "width": 1080,
+      "height": 1350,
+      "caption": "PriceCheck’s Soundcore guide focuses on buyer fit first, then current pricing and specs.",
+      "headline": "Which Soundcore Earbuds Should You Buy?",
+      "subhead": "Pick by buyer fit first. Specs only matter when they support how you use the earbuds."
+    },
+    "method": {
+      "heading": "How PriceCheck Compares Soundcore Earbuds",
+      "body": "PriceCheck pulls Soundcore earbuds from the catalog, groups color variants into the same product family, checks current store prices, and compares specs such as ANC, transparency mode, battery life, case battery, multipoint, codec support, wireless charging, water resistance, microphone support, seller availability, and buyer fit."
+    },
+    "related": [
+      {
+        "label": "Best Earbuds Under $100",
+        "href": "/guides/earbuds/best-under-100/"
+      },
+      {
+        "label": "Best First Earbuds To Buy",
+        "href": "/guides/earbuds/best-first-earbuds-to-buy/"
+      },
+      {
+        "label": "Best Earbuds For Work Under $100",
+        "href": "/guides/earbuds/best-earbuds-for-work-under-100/"
+      },
+      {
+        "label": "EarFun Air Pro 4 vs Liberty 4 NC",
+        "href": "/compare/earfun-air-pro-4-vs-soundcore-liberty-4-nc/"
+      },
+      {
+        "label": "All Earbuds Ranked By Value",
+        "href": "/rankings/earbuds/"
+      }
+    ]
   },
-  "related": [
-    {
-      "label": "Best Earbuds Under $100",
-      "href": "/guides/earbuds/best-under-100/"
+  {
+    "slug": "which-sony-earbuds-should-you-buy",
+    "path": "/guides/earbuds/which-sony-earbuds-should-you-buy/",
+    "type": "brand_guide",
+    "category": "earbuds",
+    "brand": "Sony",
+    "title": "Which Sony Earbuds Should You Buy?",
+    "seo_title": "Which Sony Earbuds Should You Buy? - PriceCheck",
+    "description": "Compare Sony earbuds by buyer fit, current prices, ANC, battery life, LDAC, water resistance, everyday use, workout use, and premium alternatives.",
+    "max_products": 40,
+    "hero": {
+      "eyebrow": "Brand Guide",
+      "heading": "Which Sony Earbuds Should You Buy?",
+      "dek": "A practical guide to choosing the right Sony earbuds based on how you actually use them: premium ANC, lower-price noise cancelling, compact daily use, workouts, or older Sony value."
     },
-    {
-      "label": "Best First Earbuds To Buy",
-      "href": "/guides/earbuds/best-first-earbuds-to-buy/"
+    "quick_answer": [
+      {
+        "label": "Pick WF-1000XM5 if",
+        "body": "You want Sony's premium earbud pick for ANC, LDAC, and higher-end daily listening."
+      },
+      {
+        "label": "Pick WF-C700N if",
+        "body": "You want a lower-price Sony ANC pair instead of paying premium XM5 pricing."
+      },
+      {
+        "label": "Pick WF-C510 if",
+        "body": "You want a cheaper simple Sony pair and do not need ANC."
+      },
+      {
+        "label": "Pick LinkBuds S if",
+        "body": "You want a smaller lightweight Sony ANC earbud."
+      },
+      {
+        "label": "Pick LinkBuds Fit if",
+        "body": "You want a Sony pair focused more on movement and fit."
+      },
+      {
+        "label": "Pick WF-1000XM4 if",
+        "body": "You want older premium Sony value and the price is meaningfully below the XM5."
+      }
+    ],
+    "brand_fit_rules": [
+      {
+        "match": "WF-1000XM5",
+        "order": 10,
+        "label": "Premium ANC Pick",
+        "buyer_fit": "Good for buyers who want Sony's premium earbud pick for ANC, LDAC, and higher-end daily listening."
+      },
+      {
+        "match": "WF-C700N",
+        "order": 20,
+        "label": "Lower-Price ANC Pick",
+        "buyer_fit": "Good for buyers who want Sony noise cancelling without paying premium XM5 pricing."
+      },
+      {
+        "match": "WF-C510",
+        "order": 30,
+        "label": "Cheaper Simple Sony Pick",
+        "buyer_fit": "Good for buyers who want a lower-price Sony pair and do not need ANC."
+      },
+      {
+        "match": "LinkBuds S",
+        "order": 40,
+        "label": "Small Lightweight ANC Pick",
+        "buyer_fit": "Good for buyers who want a smaller Sony earbud with ANC for everyday use."
+      },
+      {
+        "match": "LinkBuds Fit",
+        "order": 50,
+        "label": "Workout Fit Pick",
+        "buyer_fit": "Good for buyers who want a Sony pair focused more on movement, fit, and daily activity."
+      },
+      {
+        "match": "WF-1000XM4",
+        "order": 60,
+        "label": "Older Premium Value Pick",
+        "buyer_fit": "Good for buyers who want older Sony premium value and can find it clearly below XM5 pricing."
+      }
+    ],
+    "comparison_rows": [
+      {
+        "label": "Current Price",
+        "key": "price"
+      },
+      {
+        "label": "ANC",
+        "key": "active_noise_cancelling"
+      },
+      {
+        "label": "Transparency Mode",
+        "key": "transparency_mode"
+      },
+      {
+        "label": "Battery",
+        "key": "battery_life_hours"
+      },
+      {
+        "label": "Case Battery",
+        "key": "battery_life_with_case_hours"
+      },
+      {
+        "label": "Multipoint",
+        "key": "multipoint_pairing"
+      },
+      {
+        "label": "Codec Support",
+        "key": "codec_support"
+      },
+      {
+        "label": "Wireless Charging",
+        "key": "wireless_charging_case"
+      },
+      {
+        "label": "Water Resistance",
+        "key": "water_resistance_rating"
+      },
+      {
+        "label": "Built-In Microphone",
+        "key": "built_in_microphone"
+      },
+      {
+        "label": "Best Seller",
+        "key": "best_seller"
+      }
+    ],
+    "final_verdict": "Most buyers should start by deciding whether they actually need Sony's premium ANC. Pick WF-1000XM5 if you want the premium Sony earbud with ANC and LDAC. Pick WF-C700N if you want Sony ANC for less. Pick WF-C510 if you want a cheaper simple Sony pair and do not need ANC. Pick LinkBuds S if you want a smaller lightweight ANC option. Pick LinkBuds Fit if fit and movement matter more. Pick WF-1000XM4 only if the price is clearly low enough compared with the XM5.",
+    "social_caption": "Which Sony earbuds would you pick? WF-1000XM5 for premium ANC, WF-C700N for lower-price ANC, WF-C510 for a cheaper simple Sony pair, LinkBuds S for lightweight ANC, LinkBuds Fit for movement, and WF-1000XM4 for older premium value.",
+    "video_script": "Which Sony earbuds should you buy? Start with what you actually need. WF-1000XM5 is the premium Sony ANC pick. WF-C700N is the lower-price ANC pick. WF-C510 is the cheaper simple Sony pair if you do not need ANC. LinkBuds S is the smaller lightweight ANC option. LinkBuds Fit is better if movement and fit matter more. WF-1000XM4 only makes sense if the price is clearly lower than the XM5.",
+    "infographic": {
+      "src": "/infographics/earbuds/which-sony-earbuds-should-you-buy-pricecheck.png",
+      "alt": "Which Sony earbuds should you buy infographic comparing Sony earbuds by buyer fit, current price, ANC, LDAC, battery life, water resistance, and use case.",
+      "width": 1080,
+      "height": 1350,
+      "caption": "PriceCheck’s Sony guide focuses on buyer fit first, then current pricing and specs.",
+      "headline": "Which Sony Earbuds Should You Buy?",
+      "subhead": "Start with whether you need premium ANC, lower-price ANC, simple daily use, or a better fit for movement."
     },
-    {
-      "label": "Best Earbuds For Work Under $100",
-      "href": "/guides/earbuds/best-earbuds-for-work-under-100/"
+    "method": {
+      "heading": "How PriceCheck Compares Sony Earbuds",
+      "body": "PriceCheck pulls Sony earbuds from the catalog, groups color variants into the same product family, checks current store prices, and compares specs such as ANC, transparency mode, battery life, case battery, multipoint, codec support, wireless charging, water resistance, microphone support, seller availability, and buyer fit."
     },
-    {
-      "label": "Which Soundcore Earbuds Should You Buy?",
-      "href": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/"
+    "related": [
+      {
+        "label": "Are Sony WF-1000XM5 Worth It?",
+        "href": "/guides/earbuds/sony-wf-1000xm5-worth-it/"
+      },
+      {
+        "label": "Best Earbuds Under $100",
+        "href": "/guides/earbuds/best-under-100/"
+      },
+      {
+        "label": "Best Earbuds For Work Under $100",
+        "href": "/guides/earbuds/best-earbuds-for-work-under-100/"
+      },
+      {
+        "label": "Which Soundcore Earbuds Should You Buy?",
+        "href": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/"
+      },
+      {
+        "label": "All Earbuds Ranked By Value",
+        "href": "/rankings/earbuds/"
+      }
+    ]
+  },
+  {
+    "slug": "which-jbl-earbuds-should-you-buy",
+    "path": "/guides/earbuds/which-jbl-earbuds-should-you-buy/",
+    "type": "brand_guide",
+    "category": "earbuds",
+    "brand": "JBL",
+    "title": "Which JBL Earbuds Should You Buy?",
+    "seo_title": "Which JBL Earbuds Should You Buy? - PriceCheck",
+    "description": "Compare JBL earbuds by buyer fit, current prices, ANC, battery life, water resistance, multipoint, smart case features, workout use, and everyday value.",
+    "max_products": 40,
+    "hero": {
+      "eyebrow": "Brand Guide",
+      "heading": "Which JBL Earbuds Should You Buy?",
+      "dek": "A practical guide to choosing the right JBL earbuds based on how you actually use them: lower-price ANC, everyday noise cancelling, workout fit, smart-case controls, or premium JBL features."
     },
-    {
-      "label": "Which Sony Earbuds Should You Buy?",
-      "href": "/guides/earbuds/which-sony-earbuds-should-you-buy/"
+    "quick_answer": [
+      {
+        "label": "Pick Vibe Beam 2 if",
+        "body": "You want the lower-price JBL ANC pick with multipoint, app support, and a simple sealed fit."
+      },
+      {
+        "label": "Pick Tune Beam 2 if",
+        "body": "You want an everyday stem-style JBL ANC pair with longer battery life, multipoint, and stronger call-focused specs."
+      },
+      {
+        "label": "Pick Tune Buds 2 if",
+        "body": "You want an everyday bud-style JBL ANC pair instead of a stem design."
+      },
+      {
+        "label": "Pick Endurance Race 2 if",
+        "body": "You want the safer JBL workout pick with IP68 protection, a secure wing fit, and long battery life."
+      },
+      {
+        "label": "Pick Live Beam 3 if",
+        "body": "You want a smart-case JBL upgrade with a stem-style fit, wireless charging, True Adaptive ANC, and app-free controls."
+      },
+      {
+        "label": "Pick Tour Pro 3 if",
+        "body": "You want JBL's premium smart-case model with the strongest feature set, LDAC, an audio transmitter case, and higher-end ANC."
+      }
+    ],
+    "brand_fit_rules": [
+      {
+        "match": "Vibe Beam 2",
+        "order": 10,
+        "label": "Lower-Price ANC Pick",
+        "buyer_fit": "Good for buyers who want the lower-price JBL ANC pick with multipoint, app support, and a simple sealed fit."
+      },
+      {
+        "match": "Tune Beam 2",
+        "order": 20,
+        "label": "Everyday Stem ANC Pick",
+        "buyer_fit": "Good for buyers who want an everyday stem-style JBL ANC pair with long battery life, multipoint, and stronger call-focused specs."
+      },
+      {
+        "match": "Tune Buds 2",
+        "order": 30,
+        "label": "Everyday Bud ANC Pick",
+        "buyer_fit": "Good for buyers who want JBL ANC and long battery life in a bud-style shape instead of a stem design."
+      },
+      {
+        "match": "Endurance Race 2",
+        "order": 40,
+        "label": "Workout Pick",
+        "buyer_fit": "Good for buyers who want the safer JBL workout pick with IP68 protection, a secure wing fit, multipoint, and long battery life."
+      },
+      {
+        "match": "Live Beam 3",
+        "order": 50,
+        "label": "Smart-Case Stem Upgrade",
+        "buyer_fit": "Good for buyers who want a stem-style JBL upgrade with a Smart Charging Case, wireless charging, True Adaptive ANC, and app-free controls."
+      },
+      {
+        "match": "Live Buds 3",
+        "order": 60,
+        "label": "Smart-Case Bud Upgrade",
+        "buyer_fit": "Good for buyers who want a bud-style JBL upgrade with a Smart Charging Case, wireless charging, multipoint, and True Adaptive ANC."
+      },
+      {
+        "match": "Tour Pro 3",
+        "order": 70,
+        "label": "Premium JBL Pick",
+        "buyer_fit": "Good for buyers who want JBL's premium smart-case model with LDAC, an audio transmitter case, True Adaptive Noise Cancelling 2.0, wireless charging, and the strongest JBL feature set."
+      },
+      {
+        "match": "Endurance Peak 3",
+        "order": 80,
+        "label": "Hook-Style Workout Pick",
+        "buyer_fit": "Good for buyers who want a hook-style JBL workout earbud instead of a smaller wing-style sport fit."
+      },
+      {
+        "match": "Live Pro 2",
+        "order": 90,
+        "label": "Older Stem Upgrade Pick",
+        "buyer_fit": "Good for buyers who find it clearly below newer Live or Tour pricing and still want wireless charging, ANC, and a stem-style JBL design."
+      },
+      {
+        "match": "Vibe Beam",
+        "order": 100,
+        "label": "Older Simple JBL Pick",
+        "buyer_fit": "Good for buyers who want a cheaper older JBL pair and do not need the newer Vibe Beam 2 feature set."
+      }
+    ],
+    "comparison_rows": [
+      {
+        "label": "Current Price",
+        "key": "price"
+      },
+      {
+        "label": "Best For",
+        "key": "best_for",
+        "values": {}
+      },
+      {
+        "label": "ANC",
+        "key": "active_noise_cancelling"
+      },
+      {
+        "label": "Transparency Mode",
+        "key": "transparency_mode"
+      },
+      {
+        "label": "Battery",
+        "key": "battery_life_hours"
+      },
+      {
+        "label": "Case Battery",
+        "key": "battery_life_with_case_hours"
+      },
+      {
+        "label": "Multipoint",
+        "key": "multipoint_pairing"
+      },
+      {
+        "label": "Codec Support",
+        "key": "codec_support"
+      },
+      {
+        "label": "Wireless Charging",
+        "key": "wireless_charging_case"
+      },
+      {
+        "label": "Water Resistance",
+        "key": "water_resistance_rating"
+      },
+      {
+        "label": "Built-In Microphone",
+        "key": "built_in_microphone"
+      },
+      {
+        "label": "Driver Size",
+        "key": "driver_size_mm"
+      },
+      {
+        "label": "Best Seller",
+        "key": "best_seller"
+      }
+    ],
+    "final_verdict": "Most buyers should choose JBL earbuds by use case, not by the product name. Pick Vibe Beam 2 for lower-price JBL ANC. Pick Tune Beam 2 if you want an everyday stem-style ANC pair. Pick Tune Buds 2 if you want an everyday bud-style ANC pair. Pick Endurance Race 2 for workouts and secure fit. Pick Live Beam 3 or Live Buds 3 if you want the Smart Charging Case without jumping to Tour pricing. Pick Tour Pro 3 if you want JBL's premium smart-case model and will actually use the audio transmitter case, LDAC, wireless charging, and higher-end ANC features.",
+    "social_caption": "Which JBL earbuds would you buy? Vibe Beam 2 for lower-price ANC, Tune Beam 2 for everyday stem-style ANC, Tune Buds 2 for bud-style ANC, Endurance Race 2 for workouts, Live Beam 3 for smart-case controls, and Tour Pro 3 for the premium JBL feature set.",
+    "video_script": "Which JBL earbuds should you buy? Start with the use case. Vibe Beam 2 is the lower-price ANC pick. Tune Beam 2 is the everyday stem-style ANC pick. Tune Buds 2 is the everyday bud-style ANC pick. Endurance Race 2 is the workout pick. Live Beam 3 is the smart-case upgrade. Tour Pro 3 is the premium JBL pick with the strongest feature set. The simple answer: do not buy by JBL name. Buy by fit, price, and the features you will actually use.",
+    "infographic": {
+      "src": "/infographics/earbuds/which-jbl-earbuds-should-you-buy-pricecheck.png",
+      "alt": "Which JBL earbuds should you buy infographic comparing JBL Vibe Beam 2, Tune Beam 2, Tune Buds 2, Endurance Race 2, Live Beam 3, and Tour Pro 3 by buyer fit, current price, specs, and use case.",
+      "width": 1080,
+      "height": 1350,
+      "caption": "PriceCheck’s JBL guide focuses on buyer fit first, then current pricing and specs.",
+      "headline": "Which JBL Earbuds Should You Buy?",
+      "subhead": "Start with the fit and use case: lower-price ANC, everyday ANC, workout fit, smart-case controls, or premium JBL features.",
+      "cards": [
+        {
+          "product_name": "JBL Vibe Beam 2",
+          "label": "Lower-Price ANC Pick",
+          "body": "For buyers who want JBL ANC without paying for the Live or Tour models."
+        },
+        {
+          "product_name": "JBL Tune Beam 2",
+          "label": "Everyday Stem ANC Pick",
+          "body": "For buyers who want a stem-style JBL pair for daily use, calls, and battery life."
+        },
+        {
+          "product_name": "JBL Tune Buds 2",
+          "label": "Everyday Bud ANC Pick",
+          "body": "For buyers who want JBL ANC in a bud-style shape instead of a stem."
+        },
+        {
+          "product_name": "JBL Endurance Race 2",
+          "label": "Workout Pick",
+          "body": "For buyers who care most about secure fit, sweat protection, and movement."
+        },
+        {
+          "product_name": "JBL Live Beam 3",
+          "label": "Smart-Case Upgrade",
+          "body": "For buyers who want case controls, wireless charging, and stronger everyday features."
+        },
+        {
+          "product_name": "JBL Tour Pro 3",
+          "label": "Premium JBL Pick",
+          "body": "For buyers who want the strongest JBL feature set and will use the audio transmitter case."
+        }
+      ],
+      "footer": "No sponsored rankings. Full guide at pricechecktool.com"
     },
-    {
-      "label": "All Earbuds Ranked By Value",
-      "href": "/rankings/earbuds/"
-    }
-  ]
-}
+    "method": {
+      "heading": "How PriceCheck Compares JBL Earbuds",
+      "body": "PriceCheck pulls JBL earbuds from the catalog, groups color variants into the same product family, checks current store prices, and compares specs such as ANC, transparency mode, battery life, case battery, multipoint, codec support, wireless charging, water resistance, microphone support, seller availability, and buyer fit."
+    },
+    "related": [
+      {
+        "label": "Best Earbuds Under $100",
+        "href": "/guides/earbuds/best-under-100/"
+      },
+      {
+        "label": "Best First Earbuds To Buy",
+        "href": "/guides/earbuds/best-first-earbuds-to-buy/"
+      },
+      {
+        "label": "Best Earbuds For Work Under $100",
+        "href": "/guides/earbuds/best-earbuds-for-work-under-100/"
+      },
+      {
+        "label": "Which Soundcore Earbuds Should You Buy?",
+        "href": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/"
+      },
+      {
+        "label": "Which Sony Earbuds Should You Buy?",
+        "href": "/guides/earbuds/which-sony-earbuds-should-you-buy/"
+      },
+      {
+        "label": "All Earbuds Ranked By Value",
+        "href": "/rankings/earbuds/"
+      }
+    ]
+  }
 ]
