@@ -483,9 +483,136 @@ function renderPickCards() {
   }).join("");
 }
 
+function brandGuideBoolSpec(value) {
+  if (typeof value === "boolean") return value;
+
+  const text = String(value ?? "").trim().toLowerCase();
+
+  return ["true", "yes", "1", "included"].includes(text);
+}
+
+function brandGuideBatterySpec(value) {
+  const n = Number(value);
+
+  if (!Number.isFinite(n) || n <= 0) return "N/A";
+
+  const display = Number.isInteger(n) ? String(n) : n.toFixed(1);
+
+  return `${display} Hours`;
+}
+
+function brandGuideWaterSpec(value) {
+  const text = String(value ?? "").trim();
+
+  if (!text) return "N/A";
+
+  return text.toUpperCase();
+}
+
+function brandGuideCodecLabel(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\bsbc\b/gi, "SBC")
+    .replace(/\baac\b/gi, "AAC")
+    .replace(/\bldac\b/gi, "LDAC")
+    .replace(/\blc3\b/gi, "LC3")
+    .replace(/\baptx\b/gi, "aptX");
+}
+
+function brandGuideCodecSpec(value) {
+  if (Array.isArray(value)) {
+    const codecs = value
+      .map(item => brandGuideCodecLabel(item))
+      .filter(Boolean);
+
+    return codecs.length ? codecs.join(", ") : "N/A";
+  }
+
+  const text = String(value ?? "").trim();
+
+  if (!text) return "N/A";
+
+  const parts = text
+    .replace(/\s+and\s+/gi, ",")
+    .split(/[,\n|/]+/)
+    .map(item => brandGuideCodecLabel(item))
+    .filter(Boolean);
+
+  return parts.length ? parts.join(", ") : brandGuideCodecLabel(text);
+}
+
+function brandGuideSpecValue(key, value) {
+  if (key === "active_noise_cancelling") {
+    return brandGuideBoolSpec(value) ? "Included" : "Not Included";
+  }
+
+  if (key === "battery_life_hours") {
+    return brandGuideBatterySpec(value);
+  }
+
+  if (key === "water_resistance_rating") {
+    return brandGuideWaterSpec(value);
+  }
+
+  if (key === "multipoint_pairing") {
+    return brandGuideBoolSpec(value) ? "Included" : "Not Included";
+  }
+
+  if (key === "codec_support") {
+    return brandGuideCodecSpec(value);
+  }
+
+  return "N/A";
+}
+
+function renderBrandGuideSpecBoxes(product) {
+  const specs = product && product.specs_norm && typeof product.specs_norm === "object"
+    ? product.specs_norm
+    : {};
+
+  const items = [
+    {
+      key: "active_noise_cancelling",
+      label: "ANC"
+    },
+    {
+      key: "battery_life_hours",
+      label: "Battery Life"
+    },
+    {
+      key: "water_resistance_rating",
+      label: "Water Resistance"
+    },
+    {
+      key: "multipoint_pairing",
+      label: "Multipoint"
+    },
+    {
+      key: "codec_support",
+      label: "Codec"
+    }
+  ];
+
+  return `
+    <div class="brand-guide-spec-grid" aria-label="${esc(product.title || "Product")} key specs">
+      ${items.map(item => {
+        return `
+          <div class="brand-guide-spec-card">
+            <strong>${esc(brandGuideSpecValue(item.key, specs[item.key]))}</strong>
+            <span>${esc(item.label)}</span>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
 function renderBrandGuideDecision(root) {
   const parentSection = root.closest(".buying-section");
   const kicker = parentSection ? $(".buying-kicker", parentSection) : null;
+  const isEarbudsBrandGuide = String(page.category || page.category_label || "")
+    .toLowerCase()
+    .includes("earbud");
 
   if (kicker) kicker.textContent = "Best For Each Buyer";
 
@@ -630,6 +757,7 @@ function renderBrandGuideDecision(root) {
 
   const cards = picks.map(product => {
     const fit = brandGuideFit(product);
+    const specBoxes = isEarbudsBrandGuide ? renderBrandGuideSpecBoxes(product) : "";
 
     return `
       <article class="brand-guide-card" id="${esc(product.slot || "")}">
@@ -642,10 +770,7 @@ function renderBrandGuideDecision(root) {
           <h3>${esc(product.title)}</h3>
           <p>${esc(fit.fit)}</p>
 
-          <div class="brand-guide-card__meta">
-            <span class="buying-pill">${esc(product.price)}</span>
-            <span class="buying-pill">${esc(storeCountText(product.store_count))}</span>
-          </div>
+          ${specBoxes}
 
           <p class="brand-guide-card__skip">
             <span class="brand-guide-card__skip-icon" aria-hidden="true">
@@ -656,7 +781,10 @@ function renderBrandGuideDecision(root) {
             <span>${esc(fit.skip)}</span>
           </p>
 
-          <a class="brand-guide-card__link" href="${esc(product.dashboard_url)}">View Full Page</a>
+          <div class="brand-guide-card__action">
+            <span class="brand-guide-card__price">From ${esc(product.price)}</span>
+            <a class="brand-guide-card__link" href="${esc(product.dashboard_url)}">View Full Page</a>
+          </div>
         </div>
       </article>
     `;
@@ -953,42 +1081,23 @@ function renderWorthItDecision(root) {
   }
 
   function setupRevealAnimations() {
-  const items = Array.from(document.querySelectorAll([
-    ".buying-hero",
-    ".quick-pick",
-    ".buying-section",
-    ".buying-card",
-    ".buying-table-wrap",
-    ".buying-method",
-    ".buying-related:not([hidden])"
-  ].join(",")));
+    const items = Array.from(document.querySelectorAll([
+      ".buying-hero",
+      ".quick-pick",
+      ".buying-section",
+      ".buying-card",
+      ".brand-guide-card",
+      ".buying-table-wrap",
+      ".buying-method",
+      ".buying-related:not([hidden])"
+    ].join(",")));
 
-  if (!items.length) return;
-
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    items.forEach(item => item.classList.add("is-visible"));
-    return;
-  }
-
-  items.forEach((item, index) => {
-    item.classList.add("buying-reveal");
-    item.style.setProperty("--buying-reveal-delay", `${Math.min(index * 45, 220)}ms`);
-  });
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-
-      entry.target.classList.add("is-visible");
-      observer.unobserve(entry.target);
+    items.forEach(item => {
+      item.classList.remove("buying-reveal");
+      item.classList.add("is-visible");
+      item.style.removeProperty("--buying-reveal-delay");
     });
-  }, {
-    threshold: 0.12,
-    rootMargin: "0px 0px -60px 0px"
-  });
-
-  items.forEach(item => observer.observe(item));
-}
+  }
 
   function init() {
       renderHero();

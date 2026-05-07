@@ -1297,7 +1297,6 @@ body {
   justify-content: center;
   width: fit-content;
   min-height: 42px;
-  margin-top: 16px;
   padding: 0 18px;
   border-radius: 999px;
   background: #111827;
@@ -1453,5 +1452,97 @@ body {
     margin-top: 10px;
     font-size: 14px;
     gap: 8px;
+  }
+}
+
+/* Earbud brand guide spec boxes */
+
+.buying-page .brand-guide-spec-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 4px;
+}
+
+.buying-page .brand-guide-spec-card {
+  display: flex;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  min-height: 104px;
+  padding: 12px;
+  border: 1px solid #e3e8f2;
+  border-radius: 18px;
+  background: #f8fafc;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.buying-page .brand-guide-spec-card strong {
+  display: block;
+  color: var(--buying-text);
+  font-size: clamp(18px, 1.7vw, 23px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  font-weight: 750;
+  word-break: break-word;
+}
+
+.buying-page .brand-guide-spec-card span {
+  display: block;
+  margin-top: 8px;
+  color: var(--buying-muted);
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 650;
+}
+
+@media (max-width: 900px) {
+  .buying-page .brand-guide-spec-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .buying-page .brand-guide-spec-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .buying-page .brand-guide-spec-card {
+    min-height: 96px;
+  }
+
+  .buying-page .brand-guide-spec-card strong {
+    font-size: 20px;
+  }
+}
+
+/* Brand guide price + action row */
+
+.buying-page .brand-guide-card__action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.buying-page .brand-guide-card__price {
+  color: var(--buying-text);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .buying-page .brand-guide-card__action {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .buying-page .brand-guide-card__price {
+    font-size: 20px;
   }
 }
