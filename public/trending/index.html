@@ -18,6 +18,7 @@
 
   <script src="/search.js" defer></script>
   <script src="/partials/partials.js" defer></script>
+  <script src="/trending/trending.js" defer></script>
 </head>
 
 <body class="pc-home pc-trending-page" data-side-active="trending" style="margin:0;">
@@ -55,15 +56,22 @@
 
   <div class="nav-actions">
   <button
-    class="btn btn--outline"
-    type="button"
-    data-signin-open="1"
-    data-auth-signedout-only="1"
-    aria-haspopup="dialog"
-    aria-controls="pcSignInModal"
-    hidden
-  >
-    Sign in
+      class="btn btn--outline nav-signin-btn"
+      type="button"
+      data-signin-open="1"
+      data-auth-signedout-only="1"
+      aria-haspopup="dialog"
+      aria-controls="pcSignInModal"
+      aria-label="Sign in"
+      hidden
+    >
+      <span class="nav-signin-btn__text">Sign in</span>
+
+      <span class="nav-signin-btn__icon" aria-hidden="true">
+        <svg viewBox="0 -960 960 960" width="20" height="20" focusable="false">
+          <path fill="currentColor" d="M367-527q-47-47-47-113t47-113q47-47 113-47t113 47q47 47 47 113t-47 113q-47 47-113 47t-113-47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm296.5-343.5Q560-607 560-640t-23.5-56.5Q513-720 480-720t-56.5 23.5Q400-673 400-640t23.5 56.5Q447-560 480-560t56.5-23.5ZM480-640Zm0 400Z"/>
+        </svg>
+      </span>
   </button>
 
   <button
@@ -201,21 +209,89 @@
   <main class="home-center" role="main">
     <div class="home-center__inner">
       <div class="pc-trending-layout pc-page-layout">
-        <section class="pc-trending-main" aria-label="Trending">
-          <div id="pcAuthPageShell" hidden aria-hidden="true">
-            <section class="pc-trending-hero" aria-labelledby="pcTrendingTitle">
-              <div class="pc-trending-hero__center">
-                <div class="pc-trending-hero__card">
-                  <h1 id="pcTrendingTitle" class="pc-trending-hero__title">Trending</h1>
-                  <p class="pc-trending-hero__feature">This section is being rebuilt.</p>
-                  <p class="pc-trending-hero__message">
-                    The next version of trend tracking, market movement, and product momentum lives here.
-                  </p>
-                </div>
-              </div>
-            </section>
-          </div>
-        </section>
+
+        <section class="pc-trending-main" aria-label="Trending earbuds">
+        <section class="pc-market-shell" aria-labelledby="pcTrendingTitle">
+          <h1 id="pcTrendingTitle" class="pc-market-title">Trending</h1>
+
+     <div class="pc-market-indexes" id="pcMarketIndexes">
+  <article class="pc-index-card">
+    <div class="pc-index-copy">
+      <span>All</span>
+      <em class="pc-index-count">Loading</em>
+    </div>
+    <div class="pc-index-chart">
+      <svg class="pc-index-spark" viewBox="0 0 170 56" aria-hidden="true"></svg>
+    </div>
+  </article>
+
+  <article class="pc-index-card">
+    <div class="pc-index-copy">
+      <span>Technology</span>
+      <em class="pc-index-count">Loading</em>
+    </div>
+    <div class="pc-index-chart">
+      <svg class="pc-index-spark" viewBox="0 0 170 56" aria-hidden="true"></svg>
+    </div>
+  </article>
+
+  <article class="pc-index-card is-active">
+    <div class="pc-index-copy">
+      <span>Earbuds</span>
+      <em class="pc-index-count">Loading</em>
+    </div>
+    <div class="pc-index-chart">
+      <svg class="pc-index-spark" viewBox="0 0 170 56" aria-hidden="true"></svg>
+    </div>
+  </article>
+
+  <article class="pc-index-card">
+    <div class="pc-index-copy">
+      <span>Headphones</span>
+      <em class="pc-index-count">Loading</em>
+    </div>
+    <div class="pc-index-chart">
+      <svg class="pc-index-spark" viewBox="0 0 170 56" aria-hidden="true"></svg>
+    </div>
+  </article>
+</div>
+
+    <section class="pc-market-grid">
+      <article class="pc-market-card pc-market-card--main">
+        <div class="pc-card-head">
+          <h2>Earbuds 100</h2>
+        </div>
+
+        <div class="pc-market-tablewrap">
+          <table class="pc-market-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Product</th>
+                <th>Price</th>
+                <th>30d</th>
+                <th>Signal</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="pcEarbuds100">
+              <tr><td colspan="6">Loading</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <aside class="pc-market-card pc-market-card--side">
+        <div class="pc-card-head">
+          <h2>Companies</h2>
+        </div>
+        <div id="pcCompanies" class="pc-company-list">
+          <div class="pc-empty">Loading</div>
+        </div>
+      </aside>
+    </section>
+  </section>
+</section>
 
       <aside class="home-side" aria-label="Home sidebar">
     <div class="home-side__inner">

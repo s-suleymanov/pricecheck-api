@@ -1,124 +1,440 @@
 .pc-trending-page .home-side__inner{
-  opacity: 1 !important;
-  visibility: visible !important;
+  opacity:1;
+  visibility:visible;
 }
 
 .pc-trending-page .home-center__inner{
-  width: 100%;
+  width:100%;
 }
 
 .pc-trending-page .pc-trending-layout{
-  display: grid;
-  grid-template-columns: var(--pc-side-w) minmax(0, 1fr);
-  grid-template-areas: "side main";
-  gap: 24px;
-  align-items: start;
-  width: 100%;
-  padding-top: 70px;
-  padding-left: 20px;
-  padding-right: 20px;
-  box-sizing: border-box;
+  display:grid;
+  grid-template-columns:var(--pc-side-w) minmax(0,1fr);
+  grid-template-areas:"side main";
+  gap:24px;
+  align-items:start;
+  width:100%;
+  padding:70px 20px 56px;
+  box-sizing:border-box;
 }
 
 .pc-trending-page .home-side{
-  grid-area: side;
+  grid-area:side;
 }
 
 .pc-trending-page .pc-trending-main{
-  grid-area: main;
-  min-width: 0;
+  grid-area:main;
+  min-width:0;
 }
 
-.pc-trending-page .pc-trending-main{
-  min-width: 0;
+/* Main shell */
+
+.pc-market-shell{
+  width:100%;
+  max-width:1180px;
 }
 
-.pc-trending-page .pc-trending-hero{
-  min-height: calc(150vh - 180px);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 56px 24px 80px;
+.pc-market-title{
+  margin:28px 0 18px;
+  color:#111827;
+  font-size:clamp(34px,5vw,56px);
+  line-height:1;
+  letter-spacing:-.04em;
+  font-weight:650;
 }
 
-.pc-trending-page .pc-trending-hero__center{
-  width: 100%;
-  max-width: 860px;
+/* Top index cards */
+
+.pc-market-indexes{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin:0 0 14px;
 }
 
-.pc-trending-page .pc-trending-hero__eyebrow{
-  margin: 0 0 12px;
-  font-size: 13px;
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+.pc-index-card{
+  min-height:118px;
+  display:grid;
+  grid-template-columns:minmax(0,0.82fr) minmax(120px,1.18fr);
+  align-items:center;
+  gap:12px;
+  padding:14px;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 1px 2px rgba(17,24,39,.05);
+}
+
+.pc-index-card.is-active{
+}
+
+.pc-index-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+}
+
+.pc-index-copy > span{
+  display: block;
   color: #6b7280;
+  font-size: 16px;
+  line-height: 24px;
+  font-style: normal;
+  font-weight: 500;
 }
 
-.pc-trending-page .pc-trending-hero__title{
-  margin: 0 0 14px;
-  font-size: clamp(36px, 5vw, 56px);
-  line-height: 1.05;
-  font-weight: 600;
-  color: #111827;
+.pc-index-change,
+.pc-index-count{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  min-height:22px;
+  margin:8px 0 0;
+  font-style:normal;
+  font-size:18px;
+  line-height:1;
+  font-weight:500;
 }
 
-.pc-trending-page .pc-trending-hero__feature{
-  margin: 0 0 12px;
-  font-size: 20px;
-  line-height: 1.5;
-  font-weight: 600;
-  color: #111827;
+.pc-index-count{
+  color:#111827;
 }
 
-.pc-trending-page .pc-trending-hero__message{
-  margin: 0;
+.pc-index-arrow{
+  width:20px;
+  height:20px;
+  display:block;
+  flex:0 0 auto;
+}
+
+.pc-index-chart{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+}
+
+.pc-index-spark{
+  display:block;
+  width:100%;
+  max-width:170px;
+  height:56px;
+  margin:0;
+}
+
+.pc-index-spark__line{
+  fill:none;
+  stroke:#111827;
+  stroke-width:2.6;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+/* Main grid */
+
+.pc-market-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 320px;
+  gap:14px;
+  align-items:start;
+}
+
+.pc-market-card{
+  min-width:0;
+  background:#fff;
+  border-radius:18px;
+}
+
+.pc-market-card--main{
+  overflow:hidden;
+}
+
+.pc-market-card--side{
+  padding:16px;
+}
+
+.pc-card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:16px 16px 0;
+  margin:0 0 12px;
+}
+
+.pc-market-card--side .pc-card-head{
+  padding:0;
+}
+
+.pc-card-head h2{
+  margin:0;
+  color:#111827;
+  font-size:25px;
+  line-height:1.2;
+  font-weight:500;
+}
+
+/* Table */
+
+.pc-market-tablewrap{
+  width:100%;
+  overflow:auto;
+}
+
+.pc-market-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:16px;
+}
+
+.pc-market-table th,
+.pc-market-table td{
+  padding:11px 12px;
+  border-bottom:1px solid #eef0f3;
+  text-align:left;
+  vertical-align:middle;
+}
+
+.pc-market-table th{
+  color:#6b7280;
+  background:#f9fafb;
+  font-size:16px;
+  font-weight:500;
+}
+
+.pc-market-table td{
+  color:#111827;
+}
+
+.pc-market-product{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:220px;
+  color:#111827;
+  text-decoration:none;
+}
+
+.pc-market-product img,
+.pc-product-dot{
+  width:50px;
+  height:50px;
+  flex:0 0 auto;
+  background:#fff;
+  object-fit:contain;
+}
+
+.pc-product-dot{
+  display:block;
+  background:#111827;
+}
+
+.pc-market-product strong{
+  display:block;
+  max-width:280px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-weight:500;
   font-size: 18px;
-  line-height: 1.7;
-  color: #4b5563;
 }
 
-@media (max-width: 1100px){
+.pc-market-product small{
+  display:block;
+  margin-top:2px;
+  color:#6b7280;
+  font-size:16px;
+}
+
+.pc-rank{
+  color:#6b7280;
+  font-weight:500;
+  font-size: 20px;
+  white-space:nowrap;
+}
+
+.pc-view{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px 8px;
+  border-radius:999px;
+  background:#111827;
+  color:#fff;
+  text-decoration:none;
+  font-size:16px;
+  font-weight:500;
+  white-space:nowrap;
+}
+
+.pc-view:hover{
+  background:#000;
+}
+
+/* Companies */
+
+.pc-company-list{
+  display:grid;
+  gap:2px;
+}
+
+.pc-company-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  min-height: 70px;
+  padding:10px 0;
+  border-bottom:1px solid #eef0f3;
+  color:inherit;
+  text-decoration:none;
+}
+
+.pc-company-row:last-child{
+  border-bottom:0;
+}
+
+.pc-company-row strong{
+  display:block;
+  color:#111827;
+  font-size:18px;
+  font-weight: 500;
+}
+
+.pc-company-row small{
+  display:block;
+  margin-top:2px;
+  color:#6b7280;
+  font-size:12px;
+}
+
+.pc-company-row em{
+  font-style:normal;
+  font-weight:500;
+  font-size:18px;
+  white-space:nowrap;
+}
+
+/* Movement colors */
+
+.pc-move-down{
+  color:#047857;
+}
+
+.pc-move-up{
+  color:#b45309;
+}
+
+.pc-move-flat{
+  color:#6b7280;
+}
+
+.pc-empty{
+  color:#6b7280;
+  font-size:14px;
+}
+
+/* Hide old leftover sections if old HTML is still cached */
+
+.pc-trending-head,
+.pc-trending-sub,
+.pc-trending-updated,
+.pc-trending-kpis,
+.pc-trending-card,
+.pc-trending-split,
+.pc-trending-mainrow,
+.pc-trending-rail,
+.pc-market-chart-card{
+  display:none;
+}
+
+/* Responsive */
+
+@media(max-width:1100px){
   .pc-trending-page .pc-trending-layout{
-    grid-template-columns: 1fr;
-    padding-left: 16px;
-    padding-right: 16px;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"main";
+    gap:0;
+    padding-left:16px;
+    padding-right:16px;
+  }
+
+  .pc-trending-page .pc-trending-main{
+    grid-area:main;
+    width:100%;
+    min-width:0;
   }
 
   .pc-trending-page .home-side{
-    position: static;
-    top: auto;
-    height: auto;
-    min-height: 0;
+    display:none;
+  }
+
+  .pc-market-shell{
+    max-width:none;
+  }
+
+  .pc-market-indexes{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .pc-market-grid{
+    grid-template-columns:1fr;
   }
 }
 
-@media (max-width: 640px){
+@media(max-width:700px){
   .pc-trending-page .pc-trending-layout{
-    padding-left: 12px;
-    padding-right: 12px;
+    padding:56px 12px 42px;
   }
 
-  .pc-trending-page .pc-trending-hero{
-    min-height: auto;
-    padding: 32px 8px 48px;
+  .pc-market-title{
+    margin:22px 0 16px;
+    font-weight:500;
   }
 
-  .pc-trending-page .pc-trending-hero__card{
-    border-radius: 18px;
-    padding: 22px;
+  .pc-market-indexes{
+    grid-template-columns:1fr;
   }
 
-  .pc-trending-page .pc-trending-hero__title{
-    font-size: clamp(30px, 9vw, 42px);
+  .pc-index-card{
+    grid-template-columns:minmax(0,1fr) 120px;
   }
 
-  .pc-trending-page .pc-trending-hero__feature{
-    font-size: 17px;
+  .pc-market-table th,
+  .pc-market-table td{
+    padding:10px 8px;
   }
 
-  .pc-trending-page .pc-trending-hero__message{
-    font-size: 16px;
+  .pc-market-table th:nth-child(4),
+  .pc-market-table td:nth-child(4),
+  .pc-market-table th:nth-child(5),
+  .pc-market-table td:nth-child(5),
+  .pc-market-table th:nth-child(6),
+  .pc-market-table td:nth-child(6){
+    display:none;
+  }
+
+  .pc-market-product{
+    min-width:0;
+    gap:8px;
+  }
+
+  .pc-market-product img,
+  .pc-product-dot{
+    width:42px;
+    height:42px;
+  }
+
+  .pc-market-product strong{
+    max-width:132px;
+    font-size:16px;
+  }
+
+  .pc-market-product small{
+    font-size:14px;
+  }
+
+  .pc-rank{
+    font-size:18px;
   }
 }

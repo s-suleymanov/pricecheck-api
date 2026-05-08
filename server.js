@@ -41,6 +41,7 @@ app.use(require("./routes/uninstall"));
 app.use(require("./routes/support"));
 app.use(require("./routes/seller"));
 app.use(require("./routes/search"));
+app.use(require("./routes/trending"));
 app.use(require("./routes/home"));
 app.use(require("./routes/auth"));
 app.use(require("./routes/follows"));
