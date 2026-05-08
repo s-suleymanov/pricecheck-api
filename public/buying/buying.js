@@ -473,7 +473,6 @@ function renderPickCards() {
         <div class="buying-card__side">
           <div>
             <div class="buying-price">${esc(product.price)}</div>
-            <div class="buying-seller">${esc(sellerText(product))}</div>
           </div>
 
           <a class="buying-button" href="${esc(product.dashboard_url)}">See More</a>
