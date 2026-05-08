@@ -35,7 +35,6 @@ app.use(express.static(path.join(__dirname, "public")));
 // feature routers
 app.use(require("./routes/browse"));
 app.use(require("./routes/dashboard"));
-app.use(require("./routes/research"));
 app.use(require("./routes/admin"));
 app.use(require("./routes/sitemap"));
 app.use(require("./routes/uninstall"));
