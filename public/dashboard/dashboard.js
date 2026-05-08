@@ -2815,10 +2815,7 @@ function renderRankBadge(data, categorySlug) {
     return;
   }
 
-  const fallbackUrl = `/rankings/${categorySlug}/`;
-  const href = safeHttpHref(data?.url || fallbackUrl, { sameOrigin: true }) || fallbackUrl;
-
-  el.href = href;
+  el.href = "/trending/";
   el.innerHTML = `
     <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
       <path d="${escapeHtml(RANK_GEM_ICON_PATH)}"></path>

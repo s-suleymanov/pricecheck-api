@@ -2,19 +2,11 @@
   const $ = (s, ctx = document) => ctx.querySelector(s);
 
   const els = {
-    rankings: $("#pcExploreRankings"),
     bestLists: $("#pcExploreBestLists"),
     brandGuides: $("#pcExploreBrandGuides"),
     worthIt: $("#pcExploreGuides"),
     comparisons: $("#pcExploreComparisons")
   };
-
-  const STATIC_RANKINGS = [
-    {
-      title: "Earbuds",
-      href: "/rankings/earbuds/"
-    }
-  ];
 
   const STATIC_BEST_LISTS = [
     {
@@ -37,8 +29,12 @@
       href: "/guides/earbuds/which-soundcore-earbuds-should-you-buy/"
     },
     {
-        title: "Which Sony Earbuds Should You Buy?",
-        href: "/guides/earbuds/which-sony-earbuds-should-you-buy/"
+      title: "Which Sony Earbuds Should You Buy?",
+      href: "/guides/earbuds/which-sony-earbuds-should-you-buy/"
+    },
+    {
+      title: "Which JBL Earbuds Should You Buy?",
+      href: "/guides/earbuds/which-jbl-earbuds-should-you-buy/"
     }
   ];
 
@@ -67,25 +63,20 @@
     });
   }
 
-  function normalizeRankingTitle(item) {
-    const href = String(item.href || "").toLowerCase();
-
-    if (href === "/rankings/earbuds/" || href.includes("/rankings/earbuds/")) {
-      return {
-        ...item,
-        title: "Earbuds"
-      };
-    }
-
-    return item;
-  }
-
   function isSoundcoreGuide(item) {
     return String(item.href || "").includes("/which-soundcore-earbuds-should-you-buy/");
   }
 
-  function isWorkGuide(item) {
-    return String(item.href || "").includes("/best-earbuds-for-work-under-100/");
+  function isSonyGuide(item) {
+    return String(item.href || "").includes("/which-sony-earbuds-should-you-buy/");
+  }
+
+  function isJblGuide(item) {
+    return String(item.href || "").includes("/which-jbl-earbuds-should-you-buy/");
+  }
+
+  function isBrandGuide(item) {
+    return isSoundcoreGuide(item) || isSonyGuide(item) || isJblGuide(item);
   }
 
   function isStaticBestList(item) {
@@ -112,7 +103,6 @@
   }
 
   async function loadExplore() {
-    renderCards(els.rankings, STATIC_RANKINGS);
     renderCards(els.bestLists, STATIC_BEST_LISTS);
     renderCards(els.brandGuides, STATIC_BRAND_GUIDES);
 
@@ -125,27 +115,19 @@
 
       const data = await res.json();
 
-      const rankings = [
-        ...STATIC_RANKINGS,
-        ...cleanItems(data.rankings).map(normalizeRankingTitle)
-      ];
-
       const bestLists = [
         ...STATIC_BEST_LISTS,
         ...cleanItems(data.guides).filter(item => {
-            return !String(item.href || "").includes("/which-sony-earbuds-should-you-buy/")
-            && !String(item.href || "").includes("/which-soundcore-earbuds-should-you-buy/")
-            && !isStaticBestList(item);
+          return !isBrandGuide(item) && !isStaticBestList(item);
         })
-    ];
+      ];
 
       const brandGuides = [
         ...STATIC_BRAND_GUIDES,
         ...cleanItems(data.brand_guides),
-        ...cleanItems(data.guides).filter(isSoundcoreGuide)
+        ...cleanItems(data.guides).filter(isBrandGuide)
       ];
 
-      renderCards(els.rankings, rankings);
       renderCards(els.bestLists, bestLists);
       renderCards(els.brandGuides, brandGuides);
       renderCards(els.worthIt, data.worth_it);
