@@ -317,7 +317,6 @@
   position: relative;
   min-height: 132px;
   padding: 18px;
-  border: 1px solid rgba(17, 24, 39, 0.08);
   border-radius: 22px;
   background: var(--pc-explore-card-bg);
   color: #111827;
