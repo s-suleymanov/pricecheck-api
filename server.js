@@ -39,6 +39,7 @@ app.use(require("./routes/admin"));
 app.use(require("./routes/sitemap"));
 app.use(require("./routes/uninstall"));
 app.use(require("./routes/support"));
+app.use(require("./routes/compare"));
 app.use(require("./routes/seller"));
 app.use(require("./routes/search"));
 app.use(require("./routes/trending"));

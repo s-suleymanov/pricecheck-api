@@ -1078,20 +1078,15 @@ function findPageConfig(category, slug) {
   });
 }
 
-function findComparisonPageConfig(slug) {
-  if (!fs.existsSync(BUYING_PAGES_PATH)) {
-    const err = new Error(`Missing buying pages JSON file at ${BUYING_PAGES_PATH}`);
-    err.status = 500;
-    throw err;
-  }
+function comparisonExplorePath(page) {
+  const products = Array.isArray(page.products) ? page.products : [];
+  const left = products[0] || {};
+  const right = products[1] || {};
 
-  const raw = fs.readFileSync(BUYING_PAGES_PATH, "utf8");
-  const pages = JSON.parse(raw);
+  const leftSlug = slugify(left.slug || left.label || left.match || "left-product");
+  const rightSlug = slugify(right.slug || right.label || right.match || "right-product");
 
-  return pages.find(page => {
-    return String(page.type || "").toLowerCase() === "comparison"
-      && String(page.slug || "").toLowerCase() === String(slug || "").toLowerCase();
-  });
+  return `/compare/${leftSlug}/versus/${rightSlug}/`;
 }
 
 function explorePagePath(page) {
@@ -1099,11 +1094,11 @@ function explorePagePath(page) {
   const category = slugify(page.category || "");
   const slug = slugify(page.slug || "");
 
-  if (page.path) return page.path;
-
   if (type === "comparison") {
-    return `/compare/${slug}/`;
+    return comparisonExplorePath(page);
   }
+
+  if (page.path) return page.path;
 
   return `/guides/${category}/${slug}/`;
 }
@@ -1825,53 +1820,6 @@ router.get(["/guides/:category/:slug", "/guides/:category/:slug/"], async (req, 
       .replace(/__BUYING_HERO_EYEBROW__/g, esc(heroText(payload, "eyebrow", "Buying Guide")))
       .replace(/__BUYING_HERO_HEADING__/g, esc(heroText(payload, "heading", "Buying Guide")))
       .replace(/__BUYING_HERO_DEK__/g, esc(heroText(payload, "dek", "")));
-
-    return res.type("html").send(html);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get("/api/buying/compare/:slug", async (req, res, next) => {
-  try {
-    const slug = slugify(req.params.slug || "");
-    const pageConfig = findComparisonPageConfig(slug);
-
-    if (!pageConfig) return res.status(404).json({ error: "Comparison page not found." });
-
-    const payload = await buildComparisonPagePayload(pageConfig);
-
-    return res.json(payload);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get(["/compare/:slug", "/compare/:slug/"], async (req, res, next) => {
-  try {
-    const slug = slugify(req.params.slug || "");
-    const pageConfig = findComparisonPageConfig(slug);
-
-    if (!pageConfig) return next();
-
-    const payload = await buildComparisonPagePayload(pageConfig);
-
-    if (!payload.picks.length) return next();
-
-    const pageTitle = pageConfig.seo_title || `${pageConfig.title} - PriceCheck`;
-    const desc = pageConfig.description || "";
-    const canonicalUrl = payload.page.canonical_url;
-    const firstImage = payload.picks[0]?.image_url || DEFAULT_IMAGE;
-
-    let html = fs.readFileSync(BUYING_TEMPLATE_PATH, "utf8");
-
-    html = html
-      .replace(/__BUYING_PAGE_JSON__/g, safeJsonForHtml(payload))
-      .replace(/__PAGE_TITLE__/g, esc(pageTitle))
-      .replace(/__PAGE_DESCRIPTION__/g, esc(desc))
-      .replace(/__CANONICAL_URL__/g, esc(canonicalUrl))
-      .replace(/__OG_IMAGE__/g, esc(firstImage))
-      .replace(/__JSON_LD__/g, safeJsonForHtml(payload.json_ld));
 
     return res.type("html").send(html);
   } catch (err) {
