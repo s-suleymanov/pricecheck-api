@@ -1052,20 +1052,154 @@ function buildComparisonRows(pageConfig, picks) {
 }
 
 function buildItemListJsonLd(page, picks, canonicalUrl) {
-  return {
+  function centsToPrice(cents) {
+    const n = Number(cents);
+
+    if (!Number.isFinite(n) || n <= 0) return null;
+
+    return Number((n / 100).toFixed(2));
+  }
+
+  function fullUrl(raw, fallback = canonicalUrl) {
+    const value = String(raw || "").trim();
+
+    if (!value || value === "#") return fallback;
+
+    try {
+      return new URL(value, SITE_ORIGIN).toString();
+    } catch {
+      return fallback;
+    }
+  }
+
+  function cleanObject(value) {
+    if (Array.isArray(value)) {
+      const arr = value
+        .map(cleanObject)
+        .filter(item => item !== undefined && item !== null && item !== "");
+
+      return arr.length ? arr : undefined;
+    }
+
+    if (value && typeof value === "object") {
+      const out = {};
+
+      for (const [key, item] of Object.entries(value)) {
+        const cleaned = cleanObject(item);
+
+        if (cleaned !== undefined && cleaned !== null && cleaned !== "") {
+          out[key] = cleaned;
+        }
+      }
+
+      return Object.keys(out).length ? out : undefined;
+    }
+
+    if (value === undefined || value === null || value === "") return undefined;
+
+    return value;
+  }
+
+  function buildProductOffer(product) {
+    const sellers = Array.isArray(product.sellers)
+      ? product.sellers
+          .map(seller => {
+            const price = centsToPrice(seller.price_cents);
+
+            if (price == null) return null;
+
+            return {
+              ...seller,
+              price
+            };
+          })
+          .filter(Boolean)
+      : [];
+
+    if (sellers.length > 1) {
+      const prices = sellers.map(seller => seller.price);
+      const lowPrice = Math.min(...prices);
+      const highPrice = Math.max(...prices);
+
+      return {
+        "@type": "AggregateOffer",
+        lowPrice,
+        highPrice,
+        offerCount: sellers.length,
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+        url: fullUrl(product.dashboard_url)
+      };
+    }
+
+    const seller = sellers[0] || null;
+    const fallbackPrice = centsToPrice(product.price_cents);
+    const price = seller ? seller.price : fallbackPrice;
+
+    if (price == null) return null;
+
+    return cleanObject({
+      "@type": "Offer",
+      url: fullUrl(seller?.url || product.dashboard_url),
+      price,
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      seller: seller?.store
+        ? {
+            "@type": "Organization",
+            name: seller.store
+          }
+        : undefined
+    });
+  }
+
+  const itemListElement = picks.map((product, index) => {
+    const productUrl = fullUrl(product.dashboard_url);
+    const offer = buildProductOffer(product);
+
+    if (!offer) {
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        name: product.title,
+        url: productUrl
+      };
+    }
+
+    return cleanObject({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "Product",
+        "@id": `${productUrl}#product`,
+        name: product.title,
+        image: product.image_url ? [fullUrl(product.image_url)] : undefined,
+        description: product.verdict || page.description || "",
+        brand: product.brand
+          ? {
+              "@type": "Brand",
+              name: product.brand
+            }
+          : undefined,
+        sku: product.pci || product.upc || undefined,
+        gtin12: product.upc && /^\d{12}$/.test(String(product.upc))
+          ? String(product.upc)
+          : undefined,
+        url: productUrl,
+        offers: offer
+      }
+    });
+  });
+
+  return cleanObject({
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: page.title,
     description: page.description || "",
     url: canonicalUrl,
     numberOfItems: picks.length,
-    itemListElement: picks.map((p, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: p.title,
-      url: `${SITE_ORIGIN}${p.dashboard_url}`
-    }))
-  };
+    itemListElement
+  });
 }
 
 function findPageConfig(category, slug) {
