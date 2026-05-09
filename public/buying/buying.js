@@ -205,11 +205,87 @@
     return picks[0] || null;
     }
 
-    function getProductDisplayLabel(product) {
+        function getProductDisplayLabel(product) {
     if (!product) return "Product";
 
     return product.label || product.title || product.model_name || product.brand || "Product";
     }
+
+  function getPageInfographic() {
+    const quickAnswer = page.quick_answer &&
+      typeof page.quick_answer === "object" &&
+      !Array.isArray(page.quick_answer)
+        ? page.quick_answer
+        : {};
+
+    if (page.infographic && typeof page.infographic === "object") {
+      return page.infographic;
+    }
+
+    if (quickAnswer.infographic && typeof quickAnswer.infographic === "object") {
+      return quickAnswer.infographic;
+    }
+
+    return null;
+  }
+
+  function getInfographicStorageKey() {
+    return page.slug
+      ? `pc-infographic-hidden:${page.slug}`
+      : `pc-infographic-hidden:${location.pathname}`;
+  }
+
+  function isInfographicHidden(storageKey) {
+    try {
+      return localStorage.getItem(storageKey) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  function renderHeroInfographic() {
+    const root = $("#buyingHeroInfographic");
+
+    if (!root) return;
+
+    const infographic = getPageInfographic();
+    const src = String(infographic?.src || "").trim();
+    const storageKey = getInfographicStorageKey();
+
+    if (!src || isInfographicHidden(storageKey)) {
+      root.hidden = true;
+      root.innerHTML = "";
+      return;
+    }
+
+    root.hidden = false;
+    root.innerHTML = `
+      <button
+        class="buying-hero-infographic__hide"
+        type="button"
+        data-hide-infographic="1"
+      >
+        Hide
+      </button>
+
+      <a
+        class="buying-hero-infographic__media"
+        href="${esc(src)}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img
+          src="${esc(src)}"
+          alt="${esc(infographic.alt || page.title || "PriceCheck infographic")}"
+          width="${esc(infographic.width || 1080)}"
+          height="${esc(infographic.height || 1350)}"
+          onerror="this.closest('#buyingHeroInfographic').hidden = true;"
+          loading="eager"
+          decoding="async"
+        >
+      </a>
+    `;
+  }
 
     function getWorthRangeState(item, priceCents) {
     const min = Number(item.min_cents ?? 0);
@@ -250,6 +326,7 @@
     rankedCount.remove();
     }
 
+    renderHeroInfographic();
   }
 
 function renderQuickAnswer() {
@@ -264,124 +341,58 @@ function renderQuickAnswer() {
 
   if (isWorthIt) {
     root.classList.add("buying-quick__grid--worth");
+    root.classList.remove("buying-quick__grid--compare");
 
     const target = getTargetProduct();
-    const targetLabel = getProductDisplayLabel(target);
 
     root.innerHTML = `
-    <div class="quick-pick quick-pick--worth">
+      <div class="quick-pick quick-pick--worth">
         <span>${esc(page.quick_answer_heading || "Quick Answer")}</span>
         <small>${esc(page.quick_answer || page.description || "")}</small>
         ${target ? `<a class="buying-button worth-quick-button" href="${esc(target.dashboard_url)}">View Full Page</a>` : ""}
-    </div>
+      </div>
     `;
 
     return;
   }
-  
+
   if ((isComparison || isBrandGuide) && Array.isArray(page.quick_answer) && page.quick_answer.length) {
-      root.classList.add("buying-quick__grid--compare");
-      root.classList.remove("buying-quick__grid--worth");
+    root.classList.add("buying-quick__grid--compare");
+    root.classList.remove("buying-quick__grid--worth");
 
-      const infographic = page.infographic && typeof page.infographic === "object"
-        ? page.infographic
-        : null;
+    root.innerHTML = page.quick_answer.map(item => {
+      return `
+        <div class="quick-pick quick-pick--compare">
+          <span>${esc(item.label || "")}</span>
+          <small>${esc(item.body || "")}</small>
+        </div>
+      `;
+    }).join("");
 
-      const infographicSrc = String(infographic?.src || "").trim();
-
-      const infographicId = page.slug
-        ? `pc-infographic-hidden:${page.slug}`
-        : `pc-infographic-hidden:${location.pathname}`;
-
-      const infographicHidden = infographicSrc && localStorage.getItem(infographicId) === "1";
-
-      const infographicHtml = infographicSrc && !infographicHidden
-        ? `
-          <figure class="buying-infographic" data-buying-infographic data-infographic-storage-key="${esc(infographicId)}">
-            <button class="buying-infographic__hide" type="button" data-hide-infographic="1">
-              Hide infographic
-            </button>
-
-            <img
-              src="${esc(infographicSrc)}"
-              alt="${esc(infographic.alt || "")}"
-              width="${esc(infographic.width || 1080)}"
-              height="${esc(infographic.height || 1920)}"
-              loading="lazy"
-              decoding="async"
-            >
-
-            ${infographic.caption ? `<figcaption>${esc(infographic.caption)}</figcaption>` : ""}
-          </figure>
-        `
-        : "";
-
-      root.innerHTML = page.quick_answer.map(item => {
-        return `
-          <div class="quick-pick quick-pick--compare">
-            <span>${esc(item.label || "")}</span>
-            <small>${esc(item.body || "")}</small>
-          </div>
-        `;
-      }).join("") + infographicHtml;
-
-      return;
-    }
+    return;
+  }
 
   root.classList.remove("buying-quick__grid--compare");
   root.classList.remove("buying-quick__grid--worth");
 
- const quickAnswer = page.quick_answer && typeof page.quick_answer === "object"
-  ? page.quick_answer
-  : {};
+  const quickAnswer = page.quick_answer &&
+    typeof page.quick_answer === "object" &&
+    !Array.isArray(page.quick_answer)
+      ? page.quick_answer
+      : {};
 
-const quickAnswerBody = String(quickAnswer.body || "").trim();
+  const quickAnswerBody = String(quickAnswer.body || "").trim();
 
-const quickAnswerHtml = quickAnswerBody
-  ? `
-    <div class="buying-quick__answer">
-      <strong>${esc(quickAnswer.heading || "Quick Answer")}</strong>
-      <p>${esc(quickAnswerBody)}</p>
-    </div>
-  `
-  : "";
+  const quickAnswerHtml = quickAnswerBody
+    ? `
+      <div class="buying-quick__answer">
+        <strong>${esc(quickAnswer.heading || "Quick Answer")}</strong>
+        <p>${esc(quickAnswerBody)}</p>
+      </div>
+    `
+    : "";
 
-const infographic = page.infographic && typeof page.infographic === "object"
-  ? page.infographic
-  : quickAnswer.infographic && typeof quickAnswer.infographic === "object"
-    ? quickAnswer.infographic
-    : null;
-
-const infographicSrc = String(infographic?.src || "").trim();
-
-const infographicId = page.slug
-  ? `pc-infographic-hidden:${page.slug}`
-  : `pc-infographic-hidden:${location.pathname}`;
-
-const infographicHidden = infographicSrc && localStorage.getItem(infographicId) === "1";
-
-const infographicHtml = infographicSrc && !infographicHidden
-  ? `
-    <figure class="buying-infographic" data-buying-infographic data-infographic-storage-key="${esc(infographicId)}">
-      <button class="buying-infographic__hide" type="button" data-hide-infographic="1">
-        Hide infographic
-      </button>
-
-      <img
-        src="${esc(infographicSrc)}"
-        alt="${esc(infographic.alt || "")}"
-        width="${esc(infographic.width || 1080)}"
-        height="${esc(infographic.height || 1920)}"
-        loading="lazy"
-        decoding="async"
-      >
-
-      ${infographic.caption ? `<figcaption>${esc(infographic.caption)}</figcaption>` : ""}
-    </figure>
-  `
-  : "";
-
-  root.innerHTML = quickAnswerHtml + infographicHtml + picks.map(product => {
+  root.innerHTML = quickAnswerHtml + picks.map(product => {
     return `
       <a class="quick-pick" href="#${esc(product.slot || "")}">
         <span>${esc(product.label)}</span>
@@ -397,10 +408,10 @@ function wireInfographicControls() {
     const button = event.target?.closest?.("[data-hide-infographic]");
     if (!button) return;
 
-    const figure = button.closest("[data-buying-infographic]");
-    if (!figure) return;
+    const root = button.closest("#buyingHeroInfographic") || button.closest("[data-buying-infographic]");
+    if (!root) return;
 
-    const storageKey = figure.getAttribute("data-infographic-storage-key");
+    const storageKey = root.getAttribute("data-infographic-storage-key") || getInfographicStorageKey();
 
     if (storageKey) {
       try {
@@ -408,7 +419,8 @@ function wireInfographicControls() {
       } catch {}
     }
 
-    figure.remove();
+    root.hidden = true;
+    root.innerHTML = "";
   });
 }
 
