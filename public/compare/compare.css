@@ -74,7 +74,6 @@ body.h2h-body {
   color: var(--h2h-muted);
   font-size: 24px;
   line-height: 1.55;
-  font-weight: 500;
 }
 
 .h2h-updated {
