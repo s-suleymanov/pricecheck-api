@@ -1576,5 +1576,211 @@
         "href": "/rankings/earbuds/"
       }
     ]
-  }
+  },
+  {
+  "slug": "soundcore-liberty-4-nc-vs-space-a40",
+  "path": "/compare/soundcore-liberty-4-nc/versus/space-a40/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "soundcore Liberty 4 NC vs Space A40",
+  "seo_title": "soundcore Liberty 4 NC vs Space A40 - PriceCheck",
+  "description": "Compare soundcore Liberty 4 NC and soundcore Space A40 by current price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, seller availability, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Liberty 4 NC vs Space A40",
+    "dek": "A side-by-side comparison of soundcore Liberty 4 NC and Space A40 earbuds based on price, ANC, battery life, fit, wireless charging, LDAC, multipoint, and everyday buyer fit."
+  },
+  "products": [
+    {
+      "slot": "liberty_4_nc",
+      "label": "soundcore Liberty 4 NC",
+      "brand": "soundcore",
+      "match": "Liberty 4 NC"
+    },
+    {
+      "slot": "space_a40",
+      "label": "soundcore Space A40",
+      "brand": "soundcore",
+      "match": "Space A40"
+    }
+  ],
+  "quick_answer": [
+    {
+      "label": "Pick Liberty 4 NC if",
+      "product_slot": "liberty_4_nc",
+      "body": "You want the safer all-around Soundcore pick with newer ANC positioning and the price is close to Space A40."
+    },
+    {
+      "label": "Pick Space A40 if",
+      "product_slot": "space_a40",
+      "body": "You want the smaller older Soundcore value pick and do not want to pay extra for features both models already share."
+    }
+  ],
+  "winners": [
+    {
+      "label": "Overall Pick",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Better all-around pick for most buyers because it is the newer, safer Soundcore ANC choice."
+    },
+    {
+      "label": "Lower-Price Pick",
+      "winner_slot": "space_a40",
+      "reason": "Better when it is clearly cheaper because it still covers the core Soundcore features."
+    },
+    {
+      "label": "ANC Features",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Adaptive ANC 2.0 gives Liberty 4 NC the stronger noise-cancelling feature case."
+    },
+    {
+      "label": "Compact Fit",
+      "winner_slot": "space_a40",
+      "reason": "Better if you want the smaller older Soundcore shape instead of the Liberty stem-style design."
+    },
+    {
+      "label": "Everyday Use",
+      "winner_slot": "liberty_4_nc",
+      "reason": "Better if the prices are close and you want the safer current pick."
+    },
+    {
+      "label": "Shared Features",
+      "winner_slot": "space_a40",
+      "reason": "Better if your priorities are only LDAC, multipoint, wireless charging, IPX4, and 10/50-hour battery because Space A40 also covers those basics."
+    }
+  ],
+  "comparison_rows": [
+    {
+      "label": "Price",
+      "key": "price"
+    },
+    {
+      "label": "Best For",
+      "key": "best_for",
+      "values": {
+        "liberty_4_nc": "Safer all-around ANC pick",
+        "space_a40": "Smaller older value pick"
+      }
+    },
+    {
+      "label": "ANC",
+      "key": "active_noise_cancelling"
+    },
+    {
+      "label": "Transparency Mode",
+      "key": "transparency_mode"
+    },
+    {
+      "label": "Battery",
+      "key": "battery_life_hours"
+    },
+    {
+      "label": "Case Battery",
+      "key": "battery_life_with_case_hours"
+    },
+    {
+      "label": "Water Resistance",
+      "key": "water_resistance_rating"
+    },
+    {
+      "label": "Multipoint",
+      "key": "multipoint_pairing"
+    },
+    {
+      "label": "Codec Support",
+      "key": "codec_support"
+    },
+    {
+      "label": "Wireless Charging",
+      "key": "wireless_charging_case"
+    }
+  ],
+  "verdict_blocks": [
+    {
+      "heading": "Buy Liberty 4 NC if",
+      "product_slot": "liberty_4_nc",
+      "items": [
+        "You want the safer all-around Soundcore pick.",
+        "You care about newer ANC positioning and a current Liberty-series model.",
+        "The price is close to Space A40 and you do not need the smaller older design."
+      ]
+    },
+    {
+      "heading": "Buy Space A40 if",
+      "product_slot": "space_a40",
+      "items": [
+        "You want the smaller older Soundcore value pick.",
+        "It is clearly cheaper than Liberty 4 NC.",
+        "You do not want to pay extra for shared features like LDAC, multipoint, wireless charging, IPX4, and 10/50-hour battery."
+      ]
+    }
+  ],
+  "final_verdict": "The safer pick is soundcore Liberty 4 NC. It is the better all-around choice for most buyers when the prices are close because it has the newer Liberty-series ANC positioning and a more current feature package. Choose Space A40 if you want the smaller older Soundcore value pick or the current price is clearly lower. Do not pay extra for Liberty 4 NC only for LDAC, multipoint, wireless charging, IPX4, or 10/50-hour battery because Space A40 also covers those basics.",
+  "social_caption": "Liberty 4 NC vs Space A40: Liberty 4 NC is the safer all-around Soundcore pick when prices are close. Space A40 is the smaller older value pick if it is clearly cheaper.",
+  "video_script": "Liberty 4 NC or Space A40? Pick Liberty 4 NC if you want the safer all-around Soundcore pair and the prices are close. Pick Space A40 if you want the smaller older value pick and it is clearly cheaper. The important part: do not pay extra for Liberty 4 NC just for LDAC, multipoint, wireless charging, IPX4, or 10/50-hour battery, because Space A40 also covers those basics.",
+  "infographic": {
+    "src": "/infographics/earbuds/soundcore-liberty-4-nc-vs-space-a40.png",
+    "alt": "soundcore Liberty 4 NC vs Space A40 comparison infographic showing price, ANC, battery life, case battery, water resistance, multipoint, codec support, wireless charging, seller availability, and buyer-fit differences.",
+    "width": 1080,
+    "height": 1920,
+    "caption": "PriceCheck’s Liberty 4 NC vs Space A40 comparison focuses on current pricing, specs, seller availability, and practical buyer-fit tradeoffs.",
+    "headline": "Liberty 4 NC vs Space A40",
+    "subhead": "Liberty 4 NC is the safer all-around pick when prices are close. Space A40 is the smaller older value pick if it is clearly cheaper.",
+    "sections": [
+      {
+        "label": "Pick Liberty 4 NC If",
+        "items": [
+          "You want the safer all-around pick",
+          "Newer ANC matters",
+          "You prefer the Liberty-series model",
+          "The price is close to Space A40",
+          "You do not need the smaller older design"
+        ]
+      },
+      {
+        "label": "Pick Space A40 If",
+        "items": [
+          "It is clearly cheaper",
+          "You want the smaller older design",
+          "You still want ANC",
+          "You still want LDAC",
+          "You still want multipoint",
+          "You still want wireless charging"
+        ]
+      },
+      {
+        "label": "Do Not Overpay For",
+        "items": [
+          "LDAC",
+          "Multipoint",
+          "Wireless charging",
+          "IPX4",
+          "10/50-hour battery",
+          "Both models cover these basics"
+        ]
+      }
+    ]
+  },
+  "method": {
+    "heading": "How PriceCheck Compares These Earbuds",
+    "body": "PriceCheck compares soundcore Liberty 4 NC and soundcore Space A40 using current prices, seller availability, normalized specs, and review signals. The main factors are price, ANC, battery life, case battery, wireless charging, multipoint, codec support, water resistance, fit, and everyday buyer fit."
+  },
+  "related": [
+    {
+      "label": "Which Soundcore Earbuds Should You Buy?",
+      "href": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/"
+    },
+    {
+      "label": "Best Earbuds Under $100",
+      "href": "/guides/earbuds/best-under-100/"
+    },
+    {
+      "label": "Best Earbuds For Work Under $100",
+      "href": "/guides/earbuds/best-earbuds-for-work-under-100/"
+    },
+    {
+      "label": "EarFun Air Pro 4 vs Liberty 4 NC",
+      "href": "/compare/earfun-air-pro-4-vs-soundcore-liberty-4-nc/"
+    }
+  ]
+}
 ]
