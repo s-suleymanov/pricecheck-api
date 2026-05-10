@@ -54,8 +54,8 @@
 
 .pc-index-card{
   min-height:118px;
-  display:grid;
-  grid-template-columns:minmax(0,0.82fr) minmax(120px,1.18fr);
+  display: flex;
+  flex-direction: row;
   align-items:center;
   gap:12px;
   padding:14px;
@@ -350,6 +350,13 @@
 
 /* Responsive */
 
+@media(max-width:1500px){
+  .pc-index-card{
+    flex-direction: column;
+    align-items: start;
+  }
+}
+
 @media(max-width:1100px){
   .pc-trending-page .pc-trending-layout{
     grid-template-columns:minmax(0,1fr);
@@ -373,10 +380,6 @@
     max-width:none;
   }
 
-  .pc-market-indexes{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-
   .pc-market-grid{
     grid-template-columns:1fr;
   }
@@ -392,12 +395,8 @@
     font-weight:500;
   }
 
-  .pc-market-indexes{
-    grid-template-columns:1fr;
-  }
-
   .pc-index-card{
-    grid-template-columns:minmax(0,1fr) 120px;
+    flex-direction: column;
   }
 
   .pc-market-table th,
