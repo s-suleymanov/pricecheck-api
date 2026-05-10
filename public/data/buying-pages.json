@@ -3443,5 +3443,296 @@
       "href": "/guides/earbuds/best-first-earbuds-to-buy/"
     }
   ]
+},
+{
+  "slug": "jbl-endurance-race-2-worth-it",
+  "path": "/guides/earbuds/jbl-endurance-race-2-worth-it/",
+  "type": "worth_it",
+  "category": "earbuds",
+  "title": "Are JBL Endurance Race 2 Worth It?",
+  "seo_title": "Are JBL Endurance Race 2 Worth It? Price, Pros, Cons, and Alternatives | PriceCheck",
+  "description": "JBL Endurance Race 2 are worth it under $80 if you want workout earbuds with IP68 protection, ANC, secure fit, and long battery life.",
+  "hero": {
+    "eyebrow": "Worth It?",
+    "heading": "Are JBL Endurance Race 2 Worth It?",
+    "dek": "A price-focused guide to JBL Endurance Race 2 earbuds, comparing current price, workout fit, IP68 protection, ANC, Smart Ambient, battery life, call features, and alternatives."
+  },
+  "quick_answer": "JBL Endurance Race 2 are worth it under $80 if you want workout earbuds with IP68 protection, a secure wing-style fit, ANC, Smart Ambient, multipoint, and long battery life. They make the most sense for gym, running, sweat, rain, and active use. They are less compelling if you only want normal everyday earbuds, wireless charging, advanced codec support, or the smallest possible case.",
+  "products": [
+    {
+      "slot": "jbl_endurance_race_2",
+      "label": "JBL Endurance Race 2",
+      "brand": "JBL",
+      "match": "Endurance Race 2"
+    },
+    {
+      "slot": "jbl_endurance_peak_4",
+      "label": "JBL Endurance Peak 4",
+      "brand": "JBL",
+      "match": "Endurance Peak 4"
+    },
+    {
+      "slot": "jbl_tune_buds_2",
+      "label": "JBL Tune Buds 2",
+      "brand": "JBL",
+      "match": "Tune Buds 2"
+    },
+    {
+      "slot": "jbl_vibe_beam_2",
+      "label": "JBL Vibe Beam 2",
+      "brand": "JBL",
+      "match": "Vibe Beam 2"
+    },
+    {
+      "slot": "jbl_live_beam_3",
+      "label": "JBL Live Beam 3",
+      "brand": "JBL",
+      "match": "Live Beam 3"
+    },
+    {
+      "slot": "liberty_4_nc",
+      "label": "soundcore Liberty 4 NC",
+      "brand": "soundcore",
+      "match": "Liberty 4 NC"
+    },
+    {
+      "slot": "airpods_pro_2",
+      "label": "AirPods Pro 2",
+      "brand": "Apple",
+      "match": "AirPods Pro 2"
+    }
+  ],
+  "price_ranges": [
+    {
+      "range": "Under $70",
+      "label": "Strong Buy",
+      "min_cents": 0,
+      "max_cents": 6999
+    },
+    {
+      "range": "$70 To $90",
+      "label": "Fair For Workout Buyers",
+      "min_cents": 7000,
+      "max_cents": 9000
+    },
+    {
+      "range": "Above $90",
+      "label": "Compare Alternatives First",
+      "min_cents": 9001,
+      "max_cents": null
+    }
+  ],
+  "pricecheck_verdict": "Worth it under $80 if you want workout earbuds with IP68 protection, secure fit, ANC, Smart Ambient, multipoint, and long battery life. Compare first above $90.",
+  "buy_if": [
+    "You want workout earbuds with a more secure fit.",
+    "You need IP68 dust and water protection.",
+    "You run, lift, commute, or train in rain and sweat.",
+    "You want ANC with Smart Ambient for workout awareness.",
+    "You want long battery life for gym, travel, and daily use.",
+    "You want multipoint for phone and laptop switching."
+  ],
+  "skip_if": [
+    "You are paying above $90.",
+    "You only need normal everyday earbuds.",
+    "You want wireless charging.",
+    "You care most about LDAC or aptX support.",
+    "You want the smallest possible case.",
+    "You use iPhone and want Apple ecosystem features."
+  ],
+  "alternatives": [
+    {
+      "label": "Hook-Style Workout Pick",
+      "product_slot": "jbl_endurance_peak_4",
+      "body": "Pick JBL Endurance Peak 4 if you want the safer workout fit with ear hooks. Endurance Race 2 are better if you want a smaller wing-style sport earbud, but Peak 4 makes more sense if locked-in movement matters most."
+    },
+    {
+      "label": "Everyday Bud ANC Pick",
+      "product_slot": "jbl_tune_buds_2",
+      "body": "Pick JBL Tune Buds 2 if you want JBL ANC in a normal bud-style shape instead of a workout-focused design. Endurance Race 2 are better for sweat, movement, and secure fit."
+    },
+    {
+      "label": "Lower-Price JBL ANC Pick",
+      "product_slot": "jbl_vibe_beam_2",
+      "body": "Pick JBL Vibe Beam 2 if you want cheaper JBL ANC and do not need IP68 protection or the sport fit. Endurance Race 2 are the better pick for workouts and rougher daily use."
+    },
+    {
+      "label": "Smart-Case JBL Pick",
+      "product_slot": "jbl_live_beam_3",
+      "body": "Pick JBL Live Beam 3 if you want a more premium JBL daily earbud with smart-case controls, wireless charging, and stronger everyday features. Endurance Race 2 are better if workout durability matters more."
+    },
+    {
+      "label": "Safer Everyday ANC Pick",
+      "product_slot": "liberty_4_nc",
+      "body": "Pick soundcore Liberty 4 NC if you want the safer all-around ANC earbud for daily use. Endurance Race 2 are better when workout fit and IP68 protection matter more than overall feature depth."
+    },
+    {
+      "label": "Better iPhone Pick",
+      "product_slot": "airpods_pro_2",
+      "body": "Pick AirPods Pro 2 if you use iPhone and want Apple ecosystem features, easier device switching, and stronger iOS convenience. Endurance Race 2 are better for workout durability and lower pricing."
+    }
+  ],
+  "comparison_rows": [
+    {
+      "label": "Current Price",
+      "key": "price"
+    },
+    {
+      "label": "Best For",
+      "key": "best_for",
+      "values": {
+        "jbl_endurance_race_2": "Workout fit and IP68 protection",
+        "jbl_endurance_peak_4": "Hook-style workout fit",
+        "jbl_tune_buds_2": "Everyday bud-style JBL ANC",
+        "jbl_vibe_beam_2": "Lower-price JBL ANC",
+        "jbl_live_beam_3": "Smart-case JBL upgrade",
+        "liberty_4_nc": "Safer everyday ANC pick",
+        "airpods_pro_2": "Apple ecosystem"
+      }
+    },
+    {
+      "label": "ANC",
+      "key": "active_noise_cancelling"
+    },
+    {
+      "label": "Transparency Mode",
+      "key": "transparency_mode"
+    },
+    {
+      "label": "Battery",
+      "key": "battery_life_hours"
+    },
+    {
+      "label": "Case Battery",
+      "key": "battery_life_with_case_hours"
+    },
+    {
+      "label": "Water Resistance",
+      "key": "water_resistance_rating"
+    },
+    {
+      "label": "Multipoint",
+      "key": "multipoint_pairing"
+    },
+    {
+      "label": "Codec Support",
+      "key": "codec_support"
+    },
+    {
+      "label": "Wireless Charging",
+      "key": "wireless_charging_case"
+    },
+    {
+      "label": "Built-In Microphone",
+      "key": "built_in_microphone"
+    },
+    {
+      "label": "Driver Size",
+      "key": "driver_size_mm"
+    }
+  ],
+  "faq": [
+    {
+      "question": "What price makes JBL Endurance Race 2 worth it?",
+      "answer": "They are strongest under $70 and fair around $70 to $90 for workout buyers. Above $90, compare JBL Endurance Peak 4, JBL Tune Buds 2, Liberty 4 NC, or AirPods Pro 2 first."
+    },
+    {
+      "question": "Are JBL Endurance Race 2 good for workouts?",
+      "answer": "Yes. Workouts are the main reason to buy them. The secure wing-style fit, IP68 protection, ANC, Smart Ambient, Sports Mode, and long battery life make them a better gym pick than normal everyday earbuds."
+    },
+    {
+      "question": "Are JBL Endurance Race 2 waterproof?",
+      "answer": "Yes. The earbuds have an IP68 dustproof and waterproof rating. The charging case is IPX2 water-resistant, so the case is not protected at the same level as the earbuds."
+    },
+    {
+      "question": "Do JBL Endurance Race 2 have ANC?",
+      "answer": "Yes. They have Active Noise Cancelling and Smart Ambient, so you can reduce background noise or let in outside sound when you need awareness."
+    },
+    {
+      "question": "Do JBL Endurance Race 2 support wireless charging?",
+      "answer": "Wireless charging is not the main reason to buy Endurance Race 2. If wireless charging matters more than workout durability, compare JBL Live Beam 3, soundcore Liberty 4 NC, or soundcore Space A40."
+    },
+    {
+      "question": "Are JBL Endurance Race 2 better than JBL Tune Buds 2?",
+      "answer": "Endurance Race 2 are better for workouts, sweat, rain, and secure fit. Tune Buds 2 are better if you want a normal everyday JBL ANC earbud instead of a sport-focused design."
+    },
+    {
+      "question": "Are JBL Endurance Race 2 good for iPhone?",
+      "answer": "They work with iPhone, but they are not an Apple ecosystem pick. Buy them for workout fit, IP68 protection, ANC, and battery life, not Apple-specific features."
+    },
+    {
+      "question": "Are JBL Endurance Race 2 good for Android?",
+      "answer": "Yes. Android buyers get the main benefits: ANC, Smart Ambient, multipoint, Fast Pair, IP68 protection, JBL app controls, and long battery life."
+    }
+  ],
+  "final_verdict": "JBL Endurance Race 2 are worth buying if workout fit is the priority. They make the most sense under $80 for buyers who want IP68 protection, a secure wing-style fit, ANC, Smart Ambient, Sports Mode, multipoint, and long battery life. They are not the right pick if you only want normal everyday earbuds, wireless charging, Apple ecosystem features, or advanced codec support. For workouts, they are a clear JBL pick. For normal daily use, compare Tune Buds 2, Live Beam 3, Liberty 4 NC, or AirPods Pro 2 first.",
+  "social_caption": "JBL Endurance Race 2 are worth it under $80 if you want workout earbuds with secure fit, IP68 protection, ANC, Smart Ambient, and long battery life.",
+  "video_script": "Are JBL Endurance Race 2 worth it? Yes, if you want workout earbuds under $80. You get IP68 protection, a secure wing-style fit, ANC, Smart Ambient, multipoint, and long battery life. Skip them if you only want normal daily earbuds, wireless charging, or Apple ecosystem features. PriceCheck’s simple answer: buy them for workouts, not as the default everyday pick.",
+  "infographic": {
+    "src": "/infographics/earbuds/jbl-endurance-race-2-worth-it-pricecheck.png",
+    "alt": "Are JBL Endurance Race 2 worth it infographic showing workout fit, IP68 protection, ANC, Smart Ambient, battery life, wireless charging limitation, and everyday earbud alternatives.",
+    "width": 1080,
+    "height": 1350,
+    "caption": "PriceCheck’s JBL Endurance Race 2 worth-it infographic focuses on the main buying decision: workout fit and IP68 protection versus normal everyday earbud features.",
+    "headline": "Are JBL Endurance Race 2 Worth It?",
+    "subhead": "Yes, if you want workout earbuds with secure fit under $80.",
+    "sections": [
+      {
+        "label": "Buy If",
+        "items": [
+          "You want workout earbuds",
+          "Secure fit matters",
+          "You need IP68 protection",
+          "ANC and awareness matter",
+          "You want long battery life"
+        ]
+      },
+      {
+        "label": "Skip If",
+        "items": [
+          "You are paying above $90",
+          "You only need daily earbuds",
+          "Wireless charging matters",
+          "LDAC or aptX matters",
+          "You want Apple ecosystem features"
+        ]
+      },
+      {
+        "label": "Simple Answer",
+        "items": [
+          "Strong buy under $70",
+          "Fair around $70 to $90",
+          "Buy for workouts",
+          "Compare Tune Buds 2 for daily use"
+        ]
+      }
+    ],
+    "footer": "No sponsored rankings. Full guide at pricechecktool.com"
+  },
+  "method": {
+    "heading": "How PriceCheck Evaluates This Page",
+    "body": "PriceCheck evaluates JBL Endurance Race 2 using current retailer prices, seller coverage, normalized specs, product positioning, and buyer-relevant alternatives. This page gives the most weight to price, workout fit, IP68 protection, ANC, Smart Ambient, battery life, multipoint, case features, codec support, and whether the buyer needs a sport-focused earbud instead of a normal daily-use pair."
+  },
+  "related": [
+    {
+      "label": "Which JBL Earbuds Should You Buy?",
+      "href": "/guides/earbuds/which-jbl-earbuds-should-you-buy/"
+    },
+    {
+      "label": "Best Earbuds Under $100",
+      "href": "/guides/earbuds/best-under-100/"
+    },
+    {
+      "label": "Best First Earbuds To Buy",
+      "href": "/guides/earbuds/best-first-earbuds-to-buy/"
+    },
+    {
+      "label": "Best Earbuds For Work Under $100",
+      "href": "/guides/earbuds/best-earbuds-for-work-under-100/"
+    },
+    {
+      "label": "Which Soundcore Earbuds Should You Buy?",
+      "href": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/"
+    }
+  ]
 }
 ]
