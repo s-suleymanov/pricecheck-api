@@ -395,8 +395,29 @@
     font-weight:500;
   }
 
+  .pc-market-indexes{
+    display:flex;
+    gap:12px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;
+    margin-right:-12px;
+    padding-left:12px;
+    padding-right:12px;
+    padding-bottom:8px;
+  }
+
+  .pc-market-indexes::-webkit-scrollbar{
+    display:none;
+  }
+
   .pc-index-card{
-    flex-direction: column;
+    flex:0 0 150px;
+    min-width:150px;
+    min-height:118px;
+    flex-direction:column;
+    scroll-snap-align:start;
   }
 
   .pc-market-table th,
