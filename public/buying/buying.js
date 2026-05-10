@@ -176,10 +176,10 @@
 
     if (!seller || !seller.store) return "Best seller unavailable";
 
-    const rating = seller.rating ? ` · ${seller.rating}★` : "";
+    const rating = seller.rating ? ` · ★${seller.rating}` : "";
     const reviews = seller.review_count ? ` · ${Number(seller.review_count).toLocaleString()} Reviews` : "";
 
-    return `Best seller: ${seller.store}${rating}${reviews}`;
+    return `${seller.store}${rating}${reviews}`;
   }
 
   function storeCountText(count) {
@@ -1072,6 +1072,40 @@ function renderWorthItDecision(root) {
     }
   }
 
+    function renderFaqs() {
+    const faqs = Array.isArray(page.faq)
+      ? page.faq
+      : Array.isArray(page.faqs)
+        ? page.faqs
+        : [];
+
+    const section = $("#faqSection");
+    const list = $("#faqList");
+
+    if (!section || !list) return;
+
+    const validFaqs = faqs.filter(item => {
+      return String(item.question || "").trim() && String(item.answer || "").trim();
+    });
+
+    if (!validFaqs.length) {
+      section.hidden = true;
+      list.innerHTML = "";
+      return;
+    }
+
+    section.hidden = false;
+
+    list.innerHTML = validFaqs.map(item => {
+      return `
+        <article class="buying-faq__item">
+          <h3>${esc(item.question)}</h3>
+          <p>${esc(item.answer)}</p>
+        </article>
+      `;
+    }).join("");
+  }
+
   function renderRelated() {
     const related = Array.isArray(page.related) ? page.related : [];
     const section = $("#relatedSection");
@@ -1100,6 +1134,7 @@ function renderWorthItDecision(root) {
       ".brand-guide-card",
       ".buying-table-wrap",
       ".buying-method",
+      ".buying-faq:not([hidden])",
       ".buying-related:not([hidden])"
     ].join(",")));
 
@@ -1116,6 +1151,7 @@ function renderWorthItDecision(root) {
       renderPickCards();
       renderComparisonTable();
       renderMethod();
+      renderFaqs();
       renderRelated();
       wireInfographicControls();
       setupRevealAnimations();

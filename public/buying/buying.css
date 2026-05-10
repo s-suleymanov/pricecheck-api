@@ -94,7 +94,7 @@ body {
 .buying-kicker {
   margin: 0 0 10px;
   color: #697386;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 550;
   text-transform: capitalize;
 }
@@ -269,9 +269,48 @@ body {
 
 .buying-section,
 .buying-method,
+.buying-faq,
 .buying-related {
   padding: 28px;
   border-radius: 28px;
+}
+
+.buying-faq__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.buying-faq__item {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 210px;
+  padding: 22px;
+  border: 1px solid var(--buying-line);
+  border-radius: 24px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.buying-faq__item h3 {
+  margin: 0;
+  color: var(--buying-text);
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+}
+
+.buying-faq__item p {
+  flex: 1;
+  margin: 12px 0 0;
+  color: var(--buying-muted);
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 500;
 }
 
 .buying-section__head {
@@ -535,6 +574,7 @@ body {
 
   .buying-section,
   .buying-method,
+  .buying-faq,
   .buying-related {
     padding: 12px;
   }
@@ -964,9 +1004,17 @@ body {
 }
 
 .worth-price-range-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.worth-price-range-card {
+  flex: 1 1 210px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .worth-price-range-card {
@@ -1029,7 +1077,7 @@ body {
 .worth-current-card__seller {
   margin: 6px 0 0;
   color: var(--buying-muted);
-  font-size: 16px;
+  font-size: 18px;
   text-transform: capitalize;
 }
 
@@ -1037,7 +1085,7 @@ body {
   max-width: 720px;
   margin: 14px 0 0;
   color: var(--buying-muted);
-  font-size: 17px;
+  font-size: 20px;
   line-height: 1.5;
 }
 
@@ -1080,26 +1128,27 @@ body {
 
 .worth-alt-card {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  gap: 16px;
-  padding: 18px;
+  grid-template-columns: 170px minmax(0, 1fr);
+  align-items: center;
+  padding: 22px;
   border: 1px solid var(--buying-line);
-  border-radius: 22px;
+  border-radius: 24px;
   background: #ffffff;
 }
 
 .worth-alt-card__image {
   display: grid;
   place-items: center;
-  width: 100px;
-  height: 100px;
-  border-radius: 18px;
+  width: 170px;
+  height: 170px;
+  border-radius: 22px;
   overflow: hidden;
 }
 
 .worth-alt-card__image img {
-  width: 100px;
-  height: 100px;
+  display: block;
+  width: 150px;
+  height: 150px;
   object-fit: contain;
 }
 
@@ -1107,7 +1156,7 @@ body {
   margin: 0 0 6px;
   color: var(--buying-blue);
   font-size: 18px;
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .worth-alt-card h3 {
@@ -1120,7 +1169,7 @@ body {
 .worth-alt-card p {
   margin: 8px 0 0;
   color: var(--buying-muted);
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1.45;
 }
 
@@ -1166,7 +1215,7 @@ body {
   display: inline-flex;
   margin-top: 10px;
   color: var(--buying-text);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 550;
   text-decoration: none;
 }
@@ -1183,15 +1232,18 @@ body {
   max-width: 900px;
   margin: 0;
   color: var(--buying-muted);
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.55;
 }
 
 @media (max-width: 900px) {
-  .worth-price-range-grid,
   .worth-decision-grid,
   .worth-alt-grid {
     grid-template-columns: 1fr;
+  }
+
+  .worth-price-range-card {
+    flex-basis: 100%;
   }
 
   .worth-current-card {
