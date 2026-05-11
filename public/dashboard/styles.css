@@ -3767,9 +3767,9 @@ button.pc-lineup-model{
   .dashboard-page .dashboard-toc {
     position: fixed;
     left: 0;
-    top: 59px;
+    top: 55px;
     bottom: 0;
-    height: calc(100dvh - 59px);
+    height: calc(100dvh - 55px);
     width: 56px;
     z-index: 50;
   }
