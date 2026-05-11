@@ -807,6 +807,10 @@ em {
     gap: 0 !important;
   }
 
+  .nav-search__input{
+    height: 44px !important;
+  }
+
   .nav-signin-btn__text{
     display: none !important;
   }
