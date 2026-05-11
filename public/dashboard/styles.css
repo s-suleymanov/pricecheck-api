@@ -5477,7 +5477,7 @@ body {
 /* Dashboard two-column sticky layout */
 .dashboard-split-wrap{
   overflow: visible;
-  margin-top: 70px;
+  margin-top: 66px;
 }
 
 .dashboard-loading-card{
