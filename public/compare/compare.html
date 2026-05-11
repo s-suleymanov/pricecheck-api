@@ -1,84 +1,95 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
+  <head>
+    <meta charset="utf-8" />
 
-  <title>__PAGE_TITLE__</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="__PAGE_DESCRIPTION__">
-  <meta name="robots" content="__ROBOTS__">
-  <link rel="canonical" href="__CANONICAL_URL__">
+    <title>__PAGE_TITLE__</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="__PAGE_DESCRIPTION__" />
+    <meta name="robots" content="__ROBOTS__" />
+    <link rel="canonical" href="__CANONICAL_URL__" />
 
-  <link rel="icon" type="image/png" href="/logo/logo.png">
+    <link rel="icon" type="image/png" href="/logo/logo.png" />
 
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="PriceCheck">
-  <meta property="og:title" content="__PAGE_TITLE__">
-  <meta property="og:description" content="__PAGE_DESCRIPTION__">
-  <meta property="og:url" content="__CANONICAL_URL__">
-  <meta property="og:image" content="__OG_IMAGE__">
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PriceCheck" />
+    <meta property="og:title" content="__PAGE_TITLE__" />
+    <meta property="og:description" content="__PAGE_DESCRIPTION__" />
+    <meta property="og:url" content="__CANONICAL_URL__" />
+    <meta property="og:image" content="__OG_IMAGE__" />
 
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="__PAGE_TITLE__">
-  <meta name="twitter:description" content="__PAGE_DESCRIPTION__">
-  <meta name="twitter:image" content="__OG_IMAGE__">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="__PAGE_TITLE__" />
+    <meta name="twitter:description" content="__PAGE_DESCRIPTION__" />
+    <meta name="twitter:image" content="__OG_IMAGE__" />
 
-  <script type="application/ld+json">__JSON_LD__</script>
+    <script type="application/ld+json">
+      __JSON_LD__
+    </script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap"
+      rel="stylesheet"
+    />
 
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/compare/compare.css">
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/compare/compare.css" />
 
-  <script src="/search.js" defer></script>
-  <script src="/partials/partials.js" defer></script>
+    <script src="/search.js" defer></script>
+    <script src="/partials/partials.js" defer></script>
 
-  <script>
-    window.__HEAD_TO_HEAD__ = __HEAD_TO_HEAD_JSON__;
-  </script>
+    <script>
+      window.__HEAD_TO_HEAD__ = __HEAD_TO_HEAD_JSON__;
+    </script>
 
-  <script src="/compare/compare.js" defer></script>
-</head>
+    <script src="/compare/compare.js" defer></script>
+  </head>
 
-<body class="h2h-body">
-  <header id="siteHeader" class="nav">
-    <a class="logo-head" href="/" aria-label="Go to PriceCheck home">
-      <img src="/logo/logo2.png" alt="PriceCheck Logo" class="logo">
-      <div class="brand">
-        <span class="wordmark" data-pc-wordmark="1">PriceCheck</span>
-        <span class="edition" data-pc-edition="1">Beta</span>
-      </div>
-    </a>
+  <body class="h2h-body">
+    <header id="siteHeader" class="nav">
+      <a class="logo-head" href="/" aria-label="Go to PriceCheck home">
+        <img src="/logo/logo2.png" alt="PriceCheck Logo" class="logo" />
+        <div class="brand">
+          <span class="wordmark" data-pc-wordmark="1">PriceCheck</span>
+          <span class="edition" data-pc-edition="1">Beta</span>
+        </div>
+      </a>
 
-    <div class="nav-searchwrap" role="search" aria-label="Search PriceCheck">
-      <form class="nav-search" action="#" method="GET">
-        <input
-          class="nav-search__input"
-          type="search"
-          name="q"
-          placeholder="Search or paste URL, UPC, PCI, ASIN, SKU"
-          data-placeholder-desktop="Search or paste URL, UPC, PCI, ASIN, SKU"
-          data-placeholder-mobile="Search PriceCheck"
-          autocomplete="off"
-          spellcheck="false"
+      <div class="nav-searchwrap" role="search" aria-label="Search PriceCheck">
+        <form class="nav-search" action="#" method="GET">
+          <input
+            class="nav-search__input"
+            type="search"
+            name="q"
+            placeholder="Search or paste URL, UPC, PCI, ASIN, SKU"
+            data-placeholder-desktop="Search or paste URL, UPC, PCI, ASIN, SKU"
+            data-placeholder-mobile="Search PriceCheck"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </form>
+
+        <button
+          class="nav-ai"
+          type="button"
+          title="PriceAI"
+          data-pc-plus="1"
+          aria-label="AI"
         >
-      </form>
+          <img
+            class="nav-ai__icon"
+            src="/logo/ai.png"
+            alt="PriceAI"
+            loading="lazy"
+            decoding="async"
+          />
+        </button>
+      </div>
 
-      <button
-        class="nav-ai"
-        type="button"
-        title="PriceAI"
-        data-pc-plus="1"
-        aria-label="AI"
-      >
-        <img class="nav-ai__icon" src="/logo/ai.svg" alt="PriceAI" loading="lazy" decoding="async">
-      </button>
-    </div>
-
-     <div class="nav-actions">
-      <button
+      <div class="nav-actions">
+        <button
           class="btn btn--outline nav-signin-btn"
           type="button"
           data-signin-open="1"
@@ -91,8 +102,16 @@
           <span class="nav-signin-btn__text">Sign in</span>
 
           <span class="nav-signin-btn__icon" aria-hidden="true">
-            <svg viewBox="0 -960 960 960" width="20" height="20" focusable="false">
-              <path fill="currentColor" d="M367-527q-47-47-47-113t47-113q47-47 113-47t113 47q47 47 47 113t-47 113q-47 47-113 47t-113-47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm296.5-343.5Q560-607 560-640t-23.5-56.5Q513-720 480-720t-56.5 23.5Q400-673 400-640t23.5 56.5Q447-560 480-560t56.5-23.5ZM480-640Zm0 400Z"/>
+            <svg
+              viewBox="0 -960 960 960"
+              width="20"
+              height="20"
+              focusable="false"
+            >
+              <path
+                fill="currentColor"
+                d="M367-527q-47-47-47-113t47-113q47-47 113-47t113 47q47 47 47 113t-47 113q-47 47-113 47t-113-47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm296.5-343.5Q560-607 560-640t-23.5-56.5Q513-720 480-720t-56.5 23.5Q400-673 400-640t23.5 56.5Q447-560 480-560t56.5-23.5ZM480-640Zm0 400Z"
+              />
             </svg>
           </span>
         </button>
@@ -113,7 +132,7 @@
             class="pc-account-trigger__img"
             alt=""
             hidden
-          >
+          />
           <span
             id="pcAccountTriggerFallback"
             class="pc-account-trigger__fallback"
@@ -129,7 +148,7 @@
           <a class="pc-account-menu__item" href="/settings/">Settings</a>
           <a class="pc-account-menu__item" href="/support/">Support</a>
           <a class="pc-account-menu__item" href="/upgrade/">Upgrade</a>
-              <a
+          <a
             class="pc-account-menu__item"
             href="https://chromewebstore.google.com/detail/pricecheck-your-all-in-on/ikpdkmnglgckdhlkcboeccifjpikcfcf?authuser=0&hl=en"
             target="_blank"
@@ -149,45 +168,58 @@
           </button>
         </div>
       </div>
-  </header>
+    </header>
 
-  <main class="h2h-page">
-  <section class="h2h-hero">
-    <div class="h2h-hero__copy">
-      <a class="h2h-eyebrow" id="h2hEyebrow" href="https://www.pricechecktool.com/explore/">Comparison</a>
-      <h1 id="h2hTitle">Product Comparison</h1>
-      <p class="h2h-dek" id="h2hDek"></p>
-      <p class="h2h-updated" id="h2hUpdated"></p>
-    </div>
+    <main class="h2h-page">
+      <section class="h2h-hero">
+        <div class="h2h-hero__copy">
+          <a
+            class="h2h-eyebrow"
+            id="h2hEyebrow"
+            href="https://www.pricechecktool.com/explore/"
+            >Comparison</a
+          >
+          <h1 id="h2hTitle">Product Comparison</h1>
+          <p class="h2h-dek" id="h2hDek"></p>
+          <p class="h2h-updated" id="h2hUpdated"></p>
+        </div>
 
-  <aside class="h2h-hero-infographic" id="h2hHeroInfographic" hidden></aside>
-  </section>
-
-    <section class="h2h-products" id="h2hProducts"></section>
-
-    <div class="h2h-compare-area">
-      <div class="h2h-column-head" id="h2hColumnHead" aria-label="Comparison columns"></div>
-
-      <section class="h2h-section" id="h2hQuickAnswer" hidden></section>
-
-      <section class="h2h-section h2h-section--quick-body">
-        <div class="h2h-highlight-grid" id="h2hHighlights"></div>
+        <aside
+          class="h2h-hero-infographic"
+          id="h2hHeroInfographic"
+          hidden
+        ></aside>
       </section>
 
-    <section class="h2h-section">
-      <div class="h2h-section__head">
-        <h2>Current Prices</h2>
+      <section class="h2h-products" id="h2hProducts"></section>
+
+      <div class="h2h-compare-area">
+        <div
+          class="h2h-column-head"
+          id="h2hColumnHead"
+          aria-label="Comparison columns"
+        ></div>
+
+        <section class="h2h-section" id="h2hQuickAnswer" hidden></section>
+
+        <section class="h2h-section h2h-section--quick-body">
+          <div class="h2h-highlight-grid" id="h2hHighlights"></div>
+        </section>
+
+        <section class="h2h-section">
+          <div class="h2h-section__head">
+            <h2>Current Prices</h2>
+          </div>
+          <div class="h2h-sellers" id="h2hSellers"></div>
+        </section>
+
+        <section class="h2h-section" id="h2hWinners" hidden></section>
+
+        <section class="h2h-section" id="h2hVerdicts" hidden></section>
+
+        <div id="h2hSections"></div>
       </div>
-      <div class="h2h-sellers" id="h2hSellers"></div>
-    </section>
-
-    <section class="h2h-section" id="h2hWinners" hidden></section>
-
-    <section class="h2h-section" id="h2hVerdicts" hidden></section>
-
-    <div id="h2hSections"></div>
-  </div>
-</main>
-<div id="site-footer"></div>
-</body>
+    </main>
+    <div id="site-footer"></div>
+  </body>
 </html>
