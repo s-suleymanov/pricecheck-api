@@ -109,17 +109,6 @@ function syncShortlistButtons(root = document) {
       document.body.dataset.shortlistBrowseBound = "1";
 
       document.body.addEventListener("click", (e) => {
-        const specsPromoBtn = e.target.closest("[data-open-specs='1']");
-        if (specsPromoBtn) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (state.activeTab !== "specs") {
-            state.activeTab = "specs";
-            renderBrowseRail();
-            render().catch(() => {});
-          }
-          return;
-        }
 
         const saveBtn = e.target.closest("[data-shortlist-toggle='1']");
         if (saveBtn) {
@@ -728,7 +717,6 @@ rail.innerHTML = `
     next: null,
     pager: null,
     sidecol: null,
-    sideSpecsPromo: null,
     categoryPanel: null,
     brandPanel: null,
     familyPanel: null,
@@ -743,7 +731,6 @@ rail.innerHTML = `
     els.next = $("#next");
     els.pager = document.querySelector(".pager");
     els.sidecol = $("#sidecol");
-    els.sideSpecsPromo = $("#sideSpecsPromo");
     els.categoryPanel = $("#categoryPanel");
     els.brandPanel = $("#brandPanel");
     els.familyPanel = $("#familyPanel");
@@ -848,37 +835,6 @@ const state = {
   function showEmpty(show) {
     if (els.empty) els.empty.hidden = !show;
   }
-
-  function syncSideSpecsPromo() {
-  if (!els.sideSpecsPromo) return;
-
-  const shouldShow =
-    state.activeTab === "stores" &&
-    !state.detailOpen &&
-    !!state.category &&
-    !els.categoryPanel?.hidden;
-
-  els.sideSpecsPromo.hidden = !shouldShow;
-
-  if (!shouldShow) {
-    els.sideSpecsPromo.innerHTML = "";
-    return;
-  }
-
-  els.sideSpecsPromo.innerHTML = `
-    <button type="button" class="side-specs-promo-card" data-open-specs="1">
-      <div class="side-specs-promo__icon">
-        <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-          <path d="M440-120v-240h80v80h320v80H520v80h-80Zm-320-80v-80h240v80H120Zm160-160v-80H120v-80h160v-80h80v240h-80Zm160-80v-80h400v80H440Zm160-160v-240h80v80h160v80H680v80h-80Zm-480-80v-80h400v80H120Z"></path>
-        </svg>
-      </div>
-      <div class="side-specs-promo__body">
-        <div class="side-specs-promo__title">Specs are now available!</div>
-        <div class="side-specs-promo__text">Compare key product specs side by side.</div>
-      </div>
-    </button>
-  `;
-}
 
   // ----------------------------
   // URL parsing + building
@@ -1195,8 +1151,6 @@ const state = {
       els.familyPanel.innerHTML = "";
       els.familyPanel.hidden = true;
     }
-
-    syncSideSpecsPromo();
   }
 
   function hydratePostPaintUi() {
@@ -1220,7 +1174,6 @@ const state = {
 
     await renderCategoryPanel();
     await renderBrandPanel();
-    syncSideSpecsPromo();
     setPager();
   }
 
@@ -2775,7 +2728,6 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     if (sidebar) {
       await renderCategoryPanel();
       await renderBrandPanel();
-      syncSideSpecsPromo();
     }
 
     setPager();
@@ -3265,7 +3217,6 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     if (els.categoryPanel) els.categoryPanel.hidden = true;
     if (els.brandPanel) els.brandPanel.hidden = true;
     if (els.familyPanel) els.familyPanel.hidden = true;
-    syncSideSpecsPromo();
   }
 
   async function restoreFacetPanelsAfterDetail() {
