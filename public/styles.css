@@ -373,7 +373,7 @@ body{
 }
 .hero__stack{max-width:980px; margin:0 auto}
 .display{
-  font-size:clamp(56px, 5vw, 144px);
+  font-size:clamp(80px, 5vw, 144px);
   line-height:1.2; letter-spacing:-.02em; margin:0 0 20px; font-weight:500;
 }
 .accent{
