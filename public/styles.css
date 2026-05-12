@@ -224,7 +224,7 @@
   background:#dbeafe;
   color:#1d4ed8;
   font-size:14px;
-  font-weight:800;
+  font-weight:500;
   line-height:1;
   letter-spacing:-0.01em;
   white-space:nowrap;
@@ -242,7 +242,7 @@
   .home-deal__coupon::before{
     content: "C";
     font-size: 14px;
-    font-weight: 800;
+    font-weight: 500;
     line-height: 1;
   }
 }
@@ -2272,7 +2272,7 @@ body.pc-signin-open{
 }
 
 .nav-signin-btn{
-  min-width: 110px;
+  min-width: 100px;
   gap: 8px;
   height: 40px;
   white-space: nowrap;
