@@ -256,77 +256,6 @@ function storeForKind(kind) {
   return null;
 }
 
-async function getRecommendationForSelectedVariant(client, selectedKeys, colorGroupKeys = null) {
-  const pci = String(selectedKeys?.pci || '').trim();
-  const upc = String(selectedKeys?.upc || '').trim();
-
-  const groupPcis = (Array.isArray(colorGroupKeys?.pcis) ? colorGroupKeys.pcis : [])
-    .map(v => String(v || '').trim().toUpperCase())
-    .filter(Boolean);
-
-  const groupUpcs = (Array.isArray(colorGroupKeys?.upcs) ? colorGroupKeys.upcs : [])
-    .map(v => String(v || '').trim())
-    .filter(Boolean);
-
-  if (!pci && !upc && !groupPcis.length && !groupUpcs.length) return null;
-
-  const r = await client.query(
-    `
-    select
-      overall_score,
-      verdict,
-      summary,
-      strengths,
-      weaknesses,
-      score_breakdown,
-      updated_at
-    from public.product_recommendations
-    where
-      (
-        (
-          coalesce(array_length($1::text[], 1), 0) > 0
-          and pci is not null
-          and btrim(pci) <> ''
-          and upper(btrim(pci)) = any($1::text[])
-        )
-        or
-        (
-          coalesce(array_length($2::text[], 1), 0) > 0
-          and upc is not null
-          and btrim(upc) <> ''
-          and public.norm_upc(upc) = any(
-            array(
-              select public.norm_upc(x)
-              from unnest($2::text[]) as x
-            )
-          )
-        )
-        or
-        ($3 <> '' and pci is not null and btrim(pci) <> '' and upper(btrim(pci)) = upper(btrim($3)))
-        or
-        ($4 <> '' and upc is not null and btrim(upc) <> '' and public.norm_upc(upc) = public.norm_upc($4))
-      )
-    order by updated_at desc, id desc
-    limit 1
-    `,
-    [groupPcis, groupUpcs, pci, upc]
-  );
-
-  if (!r.rowCount) return null;
-
-  const row = r.rows[0];
-
-  return {
-    overall_score: Number(row.overall_score || 0),
-    verdict: row.verdict || null,
-    summary: row.summary || null,
-    strengths: Array.isArray(row.strengths) ? row.strengths : [],
-    weaknesses: Array.isArray(row.weaknesses) ? row.weaknesses : [],
-    score_breakdown: Array.isArray(row.score_breakdown) ? row.score_breakdown : [],
-    updated_at: row.updated_at || null
-  };
-}
-
 async function getFamiliesForBrand(client, brandRaw) {
   const brand = String(brandRaw || '').trim();
   if (!brand) return [];
@@ -1980,11 +1909,6 @@ router.get('/api/compare/:key', async (req, res) => {
 
     // 7) price history (only if PCI/UPC exists)
     const history = await getPriceHistoryDailyAndStats(client, selectedKeys, 90);
-    const recommendation = await getRecommendationForSelectedVariant(
-      client,
-      selectedKeys,
-      colorGroupKeys
-    );
     const meta = selectedCatalog || catalogIdentity || null;
     const listingTitle = seed?.seed_listing?.title ? String(seed.seed_listing.title).trim() : '';
 
@@ -2055,7 +1979,6 @@ const valueSnapshot = meta ? await getValueSnapshot(client, meta, selectedKeys, 
         selected_upc: selectedKeys.upc || null,
         selected_asin: null
       },
-      recommendation,
       value_snapshot: valueSnapshot,
       variants,
       families,

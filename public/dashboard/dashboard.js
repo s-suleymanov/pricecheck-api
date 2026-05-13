@@ -62,7 +62,6 @@
     mediaItems: [],
     activeMediaIndex: 0,
     mediaBound: false,
-    recommendation: null,
     valueSnapshot: null,
     community: {
       tips: [],
@@ -89,13 +88,6 @@
   let _dashboardBottomPanelHeight = 300;
   let _dashboardBottomPanelTab = 'reviews';
   let _dashboardBottomPanelDragCleanup = null;
-
-  state.recommendation = null;
-
-  const recommendationCard = document.getElementById('recommendationCard');
-  const recommendationContent = document.getElementById('recommendationContent');
-  if (recommendationCard) recommendationCard.hidden = true;
-  if (recommendationContent) recommendationContent.innerHTML = '';
 
   const PRODUCT_HEADER_TOC_ICON_PATH = 'M240-200h120v-240h240v240h120v-360L480-740 240-560v360Zm-80 80v-480l320-240 320 240v480H520v-240h-80v240H160Zm320-350Z';
   const QA_REPLY_ICON_PATH = 'M760-200v-160q0-50-35-85t-85-35H273l144 144-57 56-240-240 240-240 57 56-144 144h367q83 0 141.5 58.5T840-360v160h-80Z';
@@ -1663,144 +1655,6 @@ function closeDashboardBottomPanel() {
   syncDashboardReviewsTocButton();
 }
 
-function clampRecommendationScore(n) {
-  const v = Number(n);
-  if (!Number.isFinite(v)) return 0;
-  return Math.max(0, Math.min(100, Math.round(v)));
-}
-
-function recommendationTone(score) {
-  const n = clampRecommendationScore(score);
-  if (n >= 85) return 'great';
-  if (n >= 70) return 'good';
-  if (n >= 50) return 'mixed';
-  return 'low';
-}
-
-function recommendationLabel(score) {
-  const n = clampRecommendationScore(score);
-  if (n >= 90) return 'Strong buy';
-  if (n >= 80) return 'Recommended';
-  if (n >= 65) return 'Consider';
-  if (n >= 50) return 'Mixed';
-  return 'Caution';
-}
-
-function renderRecommendationBreakdown(items) {
-  const list = Array.isArray(items) ? items : [];
-  if (!list.length) return '';
-
-  return `
-    <div class="pc-rec-breakdown">
-      ${list.slice(0, 4).map((item) => {
-        const label = String(item?.label || '').trim();
-        const score = clampRecommendationScore(item?.score);
-        if (!label) return '';
-
-        return `
-          <div class="pc-rec-metric">
-            <div class="pc-rec-metric__ring">
-              <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
-                <circle class="pc-rec-metric__track" cx="60" cy="60" r="48"></circle>
-                <circle
-                  class="pc-rec-metric__value pc-rec-metric__value--${recommendationTone(score)}"
-                  cx="60"
-                  cy="60"
-                  r="48"
-                  pathLength="100"
-                  stroke-dasharray="${score} 100"
-                ></circle>
-              </svg>
-              <span>${score}</span>
-            </div>
-            <div class="pc-rec-metric__label">${escapeHtml(label)}</div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
-}
-
-function renderRecommendationList(title, items, kind) {
-  const list = Array.isArray(items)
-    ? items.map(v => String(v || '').trim()).filter(Boolean)
-    : [];
-
-  return `
-    <div class="pc-rec-list-card">
-      <div class="pc-rec-list-card__title pc-rec-list-card__title--${kind}">
-        ${escapeHtml(title)} <span class="pc-rec-list-card__count">(${list.length})</span>
-      </div>
-
-      ${
-        list.length
-          ? `<div class="pc-rec-list">
-              ${list.map(item => `
-                <div class="pc-rec-list__item pc-rec-list__item--${kind}">
-                  <span class="pc-rec-list__dot" aria-hidden="true"></span>
-                  <span>${escapeHtml(item)}</span>
-                </div>
-              `).join('')}
-            </div>`
-          : `<div class="note">Nothing added yet.</div>`
-      }
-    </div>
-  `;
-}
-
-function renderRecommendationCard() {
-  const card = document.getElementById('recommendationCard');
-  const el = document.getElementById('recommendationContent');
-  if (!card || !el) return;
-
-  const rec = state.recommendation;
-  if (!rec) {
-    card.hidden = true;
-    el.innerHTML = '';
-    return;
-  }
-
-  const score = clampRecommendationScore(rec.overall_score);
-  const tone = recommendationTone(score);
-  const verdict = String(rec.verdict || recommendationLabel(score)).trim();
-  const summary = String(rec.summary || '').trim();
-
-  card.hidden = false;
-  el.innerHTML = `
-    <div class="pc-rec pc-rec--${tone}">
-      <div class="pc-rec-top">
-        <div class="pc-rec-score-wrap">
-          <div class="pc-rec-score-box">${score}</div>
-          <div class="pc-rec-score-scale">/ 100</div>
-        </div>
-
-        <div class="pc-rec-main">
-          <div class="pc-rec-verdict-row">
-            <div class="pc-rec-verdict">${escapeHtml(verdict)}</div>
-          </div>
-
-          <div class="pc-rec-bar">
-            <div class="pc-rec-bar__fill pc-rec-bar__fill--${tone}" style="width:${score}%"></div>
-          </div>
-
-          ${summary ? `<p class="pc-rec-summary">${escapeHtml(summary)}</p>` : ''}
-        </div>
-      </div>
-
-      ${renderRecommendationBreakdown(rec.score_breakdown)}
-
-      <div class="pc-rec-lists">
-        ${renderRecommendationList('Pros', rec.strengths, 'pro')}
-        ${renderRecommendationList('Cons', rec.weaknesses, 'con')}
-      </div>
-
-      <div class="pc-rec-warning">
-        <strong>Note:</strong> This section may reflect subjective opinions from sources such as YouTube, Reddit, and partner sites. Use Specs, Price History, Sellers, and Expert Reviews for more objective evaluation.
-      </div>
-    </div>
-  `;
-}
-
 function startDashboardBottomPanelResize(event) {
   if (!_dashboardBottomPanelEl) return;
   event.preventDefault();
@@ -1826,27 +1680,6 @@ function startDashboardBottomPanelResize(event) {
   window.addEventListener('mouseup', onUp);
 
   _dashboardBottomPanelDragCleanup = onUp;
-}
-
-function buildSidebarRecommendationTocButton() {
-  const rec = state.recommendation;
-  if (!rec) return '';
-
-  const score = clampRecommendationScore(rec.overall_score);
-  const tone = recommendationTone(score);
-  const label = recommendationLabel(score);
-
-  return `
-    <button
-      type="button"
-      class="dashboard-toc__btn dashboard-toc__btn--score dashboard-toc__btn--score-${tone}"
-      id="dashboardTocRecommendationBtn"
-      aria-label="Recommendation score ${score}"
-      data-tooltip="Score"
-    >
-      <span class="dashboard-toc__score">${score}</span>
-    </button>
-  `;
 }
 
 function buildDashboardToc() {
@@ -1903,8 +1736,6 @@ function buildDashboardToc() {
             <path d="M240-400h320v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z"></path>
           </svg>
         </button>
-
-        ${buildSidebarRecommendationTocButton()}
       </div>
     </div>
   `;
@@ -1930,16 +1761,6 @@ function buildDashboardToc() {
 
       openDashboardBottomPanel();
       setDashboardBottomPanelTab('reviews');
-    });
-  }
-
-  const recommendationBtn = document.getElementById('dashboardTocRecommendationBtn');
-  if (recommendationBtn) {
-    recommendationBtn.addEventListener('click', () => {
-      const target = document.getElementById('recommendationCard');
-      if (!target || target.hidden) return;
-
-      scrollToDashboardCard(target);
     });
   }
 
@@ -4737,9 +4558,6 @@ async function run(raw, options = {}){
     state.history = (data.history && Array.isArray(data.history.daily)) ? data.history.daily : [];
     state.historyStats = (data.history && data.history.stats) ? data.history.stats : null;
     state.lineup = (data.lineup && typeof data.lineup === 'object') ? data.lineup : null;
-    state.recommendation = (data.recommendation && typeof data.recommendation === 'object')
-    ? data.recommendation
-    : null;
     state.valueSnapshot = data.value_snapshot || null;
     state.selectedLineupFamily = String(data?.lineup?.current_family?.model_number || '').trim() || null;
     state.selectedFileIndex = -1;
@@ -4818,7 +4636,6 @@ async function run(raw, options = {}){
        if (isStaleRun(runToken)) return;
 
     hydrateHeader();
-    renderRecommendationCard();
     drawChart();
     renderCouponsCard();
     renderTopSpecPills();
