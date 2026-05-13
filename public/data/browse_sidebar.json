@@ -1,0 +1,223 @@
+{
+  "earbuds": {
+    "label": "Earbuds",
+    "product_count": 308,
+    "price": ["Under $50", "$50-$100", "$100-$150", "$150-$200", "$200+"],
+    "brand_primary": ["Apple", "Sony", "Soundcore", "Samsung", "JBL", "Beats", "Bose", "Google", "Skullcandy", "OnePlus"],
+    "fit": [
+      {
+        "label": "In-Ear",
+        "filter": {
+          "id": "fit-in-ear",
+          "op": "eq",
+          "keys": ["fit"],
+          "value": "In-Ear"
+        }
+      },
+      {
+        "label": "Open-Ear",
+        "filter": {
+          "id": "fit-open-ear",
+          "op": "eq",
+          "keys": ["fit"],
+          "value": "Open-Ear"
+        }
+      },
+      {
+        "label": "Ear Hook",
+        "filter": {
+          "id": "fit-ear-hook",
+          "op": "eq",
+          "keys": ["fit_style"],
+          "value": "Ear Hook"
+        }
+      }
+    ],
+    "noise": [
+      {
+        "label": "ANC",
+        "filter": {
+          "id": "anc",
+          "op": "bool",
+          "keys": ["active_noise_cancelling"],
+          "value": true
+        }
+      },
+      {
+        "label": "No ANC",
+        "filter": {
+          "id": "no-anc",
+          "op": "bool",
+          "keys": ["active_noise_cancelling"],
+          "value": false
+        }
+      }
+    ],
+    "spec_rows": [
+      {
+        "label": "Earbud Battery",
+        "items": [
+          {
+            "label": "5h+",
+            "filter": {
+              "id": "earbud-battery-5",
+              "op": "gte",
+              "keys": ["battery_life_hours"],
+              "value": 5
+            }
+          },
+          {
+            "label": "7h+",
+            "filter": {
+              "id": "earbud-battery-7",
+              "op": "gte",
+              "keys": ["battery_life_hours"],
+              "value": 7
+            }
+          },
+          {
+            "label": "9h+",
+            "filter": {
+              "id": "earbud-battery-9",
+              "op": "gte",
+              "keys": ["battery_life_hours"],
+              "value": 9
+            }
+          },
+          {
+            "label": "11h+",
+            "filter": {
+              "id": "earbud-battery-11",
+              "op": "gte",
+              "keys": ["battery_life_hours"],
+              "value": 11
+            }
+          }
+        ]
+      },
+      {
+        "label": "Case Battery",
+        "items": [
+          {
+            "label": "24h+",
+            "filter": {
+              "id": "case-battery-24",
+              "op": "gte",
+              "keys": ["battery_life_with_case_hours"],
+              "value": 24
+            }
+          },
+          {
+            "label": "30h+",
+            "filter": {
+              "id": "case-battery-30",
+              "op": "gte",
+              "keys": ["battery_life_with_case_hours"],
+              "value": 30
+            }
+          },
+          {
+            "label": "40h+",
+            "filter": {
+              "id": "case-battery-40",
+              "op": "gte",
+              "keys": ["battery_life_with_case_hours"],
+              "value": 40
+            }
+          },
+          {
+            "label": "50h+",
+            "filter": {
+              "id": "case-battery-50",
+              "op": "gte",
+              "keys": ["battery_life_with_case_hours"],
+              "value": 50
+            }
+          }
+        ]
+      },
+      {
+        "label": "Water Resistance",
+        "items": [
+          {
+            "label": "IPX4",
+            "filter": {
+              "id": "water-ipx4",
+              "op": "eq",
+              "keys": ["water_resistance_rating"],
+              "value": "IPX4"
+            }
+          },
+          {
+            "label": "IP54",
+            "filter": {
+              "id": "water-ip54",
+              "op": "eq",
+              "keys": ["water_resistance_rating"],
+              "value": "IP54"
+            }
+          },
+          {
+            "label": "IP55",
+            "filter": {
+              "id": "water-ip55",
+              "op": "eq",
+              "keys": ["water_resistance_rating"],
+              "value": "IP55"
+            }
+          },
+          {
+            "label": "IP57",
+            "filter": {
+              "id": "water-ip57",
+              "op": "eq",
+              "keys": ["water_resistance_rating"],
+              "value": "IP57"
+            }
+          }
+        ]
+      },
+      {
+        "label": "Features",
+        "items": [
+          {
+            "label": "Transparency Mode",
+            "filter": {
+              "id": "transparency-mode",
+              "op": "bool",
+              "keys": ["transparency_mode"],
+              "value": true
+            }
+          },
+          {
+            "label": "Multipoint",
+            "filter": {
+              "id": "multipoint",
+              "op": "bool",
+              "keys": ["multipoint_pairing"],
+              "value": true
+            }
+          },
+          {
+            "label": "Wireless Charging",
+            "filter": {
+              "id": "wireless-charging",
+              "op": "bool",
+              "keys": ["wireless_charging_case"],
+              "value": true
+            }
+          },
+          {
+            "label": "Microphone",
+            "filter": {
+              "id": "microphone",
+              "op": "bool",
+              "keys": ["built_in_microphone"],
+              "value": true
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

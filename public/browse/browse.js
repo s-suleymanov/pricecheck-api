@@ -134,29 +134,6 @@ function syncShortlistButtons(root = document) {
     syncShortlistButtons(document);
   }
 
-  function aboutHtmlFull(about) {
-    let firstParagraph = "";
-
-    if (typeof about === "string") {
-      firstParagraph = about.trim();
-    } else if (about && typeof about === "object") {
-      firstParagraph = Array.isArray(about.paragraphs)
-        ? String(about.paragraphs.find((p) => String(p || "").trim()) || "").trim()
-        : "";
-    }
-
-    if (!firstParagraph) return "";
-
-    return `
-      <div class="detail-about">
-        <div class="side-label">Summary</div>
-        <div class="detail-about-paragraphs">
-          <p>${escapeHtml(firstParagraph)}</p>
-        </div>
-      </div>
-    `;
-  }
-
   function safeHref(raw, { sameOrigin = false } = {}) {
   const s = String(raw ?? "").trim();
   if (!s) return "";
@@ -206,8 +183,6 @@ function browseTrackingContext() {
     page_url: location.href,
     referrer: document.referrer || "",
     viewport: `${window.innerWidth}x${window.innerHeight}`,
-
-    active_tab: state.activeTab || "",
     browse_q: state.q || "",
     browse_brand: state.brand || "",
     browse_category: state.category || "",
@@ -288,7 +263,6 @@ function trackBrowseCardImpressions(root = document) {
       const signature = [
         location.pathname,
         location.search,
-        state.activeTab || "",
         state.page || 1,
         dashboardKey,
         position
@@ -356,353 +330,281 @@ function initBrowseTracking() {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
   }  
 
-  function isPlainObject(v) {
-  return !!v && typeof v === "object" && !Array.isArray(v);
-}
+  function asPlainSpecObject(v) {
+    if (!v) return {};
+    if (typeof v === "object" && !Array.isArray(v)) return v;
 
-function isBooleanLikeSpecValue(v) {
-  if (typeof v === "boolean") return true;
-  const s = String(v ?? "").trim().toLowerCase();
-  return s === "yes" || s === "no" || s === "true" || s === "false";
-}
+    if (typeof v === "string") {
+      try {
+        const parsed = JSON.parse(v);
 
-function specValueIsTrue(v) {
-  if (typeof v === "boolean") return v === true;
-  const s = String(v ?? "").trim().toLowerCase();
-  return s === "yes" || s === "true";
-}
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return parsed;
+        }
 
-function formatSpecLabel(label) {
-  return String(label ?? "").trim();
-}
-
-function formatSpecValue(value) {
-  if (value == null) return "";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
-  return String(value).trim();
-}
-
-function hashSpecKey(str) {
-  const s = String(str || "").trim().toLowerCase();
-  let h = 0;
-
-  for (let i = 0; i < s.length; i++) {
-    h = ((h << 5) - h) + s.charCodeAt(i);
-    h |= 0;
-  }
-
-  return Math.abs(h);
-}
-
-function specPillVars(key) {
-  const h = hashSpecKey(key) % 360;
-
-  const bg = `hsla(${h}, 72%, 92%, 1)`;
-  const border = `hsla(${h}, 58%, 72%, 1)`;
-  const text = `hsla(${h}, 62%, 34%, 1)`;
-
-  return `--spec-pill-bg:${bg};--spec-pill-border:${border};--spec-pill-text:${text};`;
-}
-
-function splitSpecsForCard(specs, selectedSpecKeys = []) {
-  if (!isPlainObject(specs)) {
-    return { pills: [], rows: [], availableKeys: [] };
-  }
-
-  const pills = [];
-  const nonBinaryRows = [];
-
-  for (const [rawKey, rawValue] of Object.entries(specs)) {
-    const key = formatSpecLabel(rawKey);
-    if (!key) continue;
-
-    if (isBooleanLikeSpecValue(rawValue)) {
-      if (specValueIsTrue(rawValue)) {
-        pills.push({ key, value: true });
+        if (typeof parsed === "string") {
+          try {
+            const parsedAgain = JSON.parse(parsed);
+            return parsedAgain && typeof parsedAgain === "object" && !Array.isArray(parsedAgain)
+              ? parsedAgain
+              : {};
+          } catch (_e) {
+            return {};
+          }
+        }
+      } catch (_e) {
+        return {};
       }
-      continue;
     }
 
-    const value = formatSpecValue(rawValue);
-    if (!value) continue;
-
-    nonBinaryRows.push({ key, value });
+    return {};
   }
 
-  const availableKeys = nonBinaryRows.map((row) => row.key);
-
-  const byKey = new Map(
-    nonBinaryRows.map((row) => [row.key.toLowerCase(), row])
-  );
-
-  const selected = (Array.isArray(selectedSpecKeys) ? selectedSpecKeys : [])
-    .map((x) => formatSpecLabel(x))
-    .filter(Boolean)
-    .slice(0, 4);
-
-  let rows = [];
-
-  if (selected.length) {
-    rows = selected.map((key) => {
-      const hit = byKey.get(key.toLowerCase());
-      return {
-        key,
-        value: hit ? hit.value : ""
-      };
-    });
-  } else {
-    rows = nonBinaryRows.slice(0, 4).map((row) => ({
-      key: row.key,
-      value: row.value
-    }));
+  function specKeyNorm(key) {
+    return String(key ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "");
   }
 
-  return {
-    pills,
-    rows,
-    availableKeys
-  };
-}
+  function specValueIsPresent(value) {
+    return value !== null && value !== undefined && String(value).trim() !== "";
+  }
 
-function collectTopSpecKeys(results) {
-  const counts = new Map();
+  function readSpecValues(obj, keys) {
+    const source = asPlainSpecObject(obj);
+    const wanted = new Set((Array.isArray(keys) ? keys : []).map(specKeyNorm));
+    const out = [];
 
-  for (const r of Array.isArray(results) ? results : []) {
-    const split = splitSpecsForCard(r?.specs, []);
-    for (const key of split.availableKeys) {
-      counts.set(key, (counts.get(key) || 0) + 1);
+    for (const [rawKey, rawValue] of Object.entries(source)) {
+      if (!wanted.has(specKeyNorm(rawKey))) continue;
+      if (!specValueIsPresent(rawValue)) continue;
+      out.push(rawValue);
     }
+
+    return out;
   }
 
-  return Array.from(counts.entries())
-    .sort((a, b) => {
-      if (b[1] !== a[1]) return b[1] - a[1];
-      return a[0].localeCompare(b[0]);
-    })
-    .map(([key]) => key);
-}
+  function readSpecValuesAny(sources, keys) {
+    const out = [];
 
-function ensureSpecsTopSelection() {
-  const available = new Set(state.specsTopKeys);
-  state.selectedSpecsTopKeys = (state.selectedSpecsTopKeys || []).filter((k) => available.has(k));
+    for (const source of Array.isArray(sources) ? sources : []) {
+      out.push(...readSpecValues(source, keys));
+    }
 
-  if (!state.selectedSpecsTopKeys.length) {
-    state.selectedSpecsTopKeys = state.specsTopKeys.slice(0, 4);
-  }
-}
-
-function renderSpecsTopbar() {
-  const el = document.getElementById("conditionFilter");
-  if (!el) return;
-
-  if (state.activeTab !== "specs") return;
-
-  const keys = Array.isArray(state.specsTopKeys) ? state.specsTopKeys : [];
-  if (!keys.length) {
-    el.hidden = true;
-    el.innerHTML = "";
-    return;
+    return out;
   }
 
-  el.hidden = false;
-  el.innerHTML = `
-    <div class="browse-topbar browse-topbar--specs">
-      <div class="browse-topbar__left browse-topbar__left--specs">
-        ${keys.map((key) => {
-          const active = state.selectedSpecsTopKeys.includes(key);
+  function readFirstSpecValueAny(sources, keys) {
+    const values = readSpecValuesAny(sources, keys);
+    return values.length ? values[0] : null;
+  }
+
+  function coerceSpecBoolean(value) {
+    if (value === true) return true;
+    if (value === false) return false;
+
+    const s = String(value ?? "").trim().toLowerCase();
+    if (!s) return null;
+
+    if (
+      s === "true" ||
+      s === "yes" ||
+      s === "included" ||
+      s === "y" ||
+      s === "1" ||
+      s === "anc" ||
+      s === "active noise canceling" ||
+      s === "active noise cancelling"
+    ) {
+      return true;
+    }
+
+    if (
+      s === "false" ||
+      s === "no" ||
+      s === "not included" ||
+      s === "none" ||
+      s === "n" ||
+      s === "0"
+    ) {
+      return false;
+    }
+
+    return null;
+  }
+
+  function readSpecBooleanAny(sources, keys) {
+    const values = readSpecValuesAny(sources, keys);
+    let sawFalse = false;
+
+    for (const value of values) {
+      const bool = coerceSpecBoolean(value);
+
+      if (bool === true) return true;
+      if (bool === false) sawFalse = true;
+    }
+
+    return sawFalse ? false : null;
+  }
+
+  function formatSpecBoolean(value) {
+    const bool = coerceSpecBoolean(value);
+    if (bool === true) return "Yes";
+    if (bool === false) return "No";
+    return "";
+  }
+
+  function formatSpecHours(value) {
+    if (!specValueIsPresent(value)) return "";
+
+    const s = String(value).trim();
+
+    if (/^\d+(\.\d+)?\s*h$/i.test(s)) {
+      return s.replace(/\s+/g, "");
+    }
+
+    if (/^\d+(\.\d+)?\s*hours?$/i.test(s)) {
+      return s.replace(/\s*hours?$/i, "h").replace(/\s+/g, "");
+    }
+
+    const n = Number(s);
+    if (!Number.isFinite(n)) return s;
+
+    return `${n}h`;
+  }
+  
+  function cardSpecCategoryKey(category) {
+    return String(category || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  function shouldShowCardSpecSquares(category) {
+    return cardSpecCategoryKey(category) === "earbuds";
+  }
+
+  function formatFitValue(value) {
+    if (!specValueIsPresent(value)) return "";
+
+    const s = String(value)
+      .trim()
+      .replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ");
+
+    const low = s.toLowerCase();
+
+    if (low === "in ear" || low === "inear") return "In Ear";
+    if (low === "open ear" || low === "openear") return "Open Ear";
+    if (low === "over ear" || low === "overear") return "Over Ear";
+    if (low === "on ear" || low === "onear") return "On Ear";
+
+    return s.replace(/\b\w/g, (m) => m.toUpperCase());
+  }
+
+  function getCardSpecSquares(normSpecsInput, rawSpecsInput) {
+    const normSpecs = asPlainSpecObject(normSpecsInput);
+    const rawSpecs = asPlainSpecObject(rawSpecsInput);
+    const sources = [normSpecs, rawSpecs];
+
+    const fit = readFirstSpecValueAny(sources, [
+      "fit",
+      "fit_type",
+      "fit_rating",
+      "fit_style",
+      "Fit",
+      "Fit Type",
+      "Earbud Fit",
+      "Form Factor",
+      "Earbud Type"
+    ]);
+
+    const noiseBool = readSpecBooleanAny(sources, [
+      "active_noise_cancelling",
+      "active_noise_canceling",
+      "Noise Canceling",
+      "Noise Cancelling",
+      "Active Noise Canceling",
+      "Active Noise Cancelling",
+      "ANC"
+    ]);
+
+    const earbudBattery = readFirstSpecValueAny(sources, [
+      "battery_life_hours",
+      "Battery Life Hours",
+      "Earbud Battery",
+      "Earbud Battery Life",
+      "Battery Life",
+      "Battery Life Earbuds"
+    ]);
+
+    const caseBattery = readFirstSpecValueAny(sources, [
+      "battery_life_with_case_hours",
+      "Case Battery",
+      "Case Battery Life",
+      "Battery Life With Case",
+      "Total Battery",
+      "Total Battery Life"
+    ]);
+
+    const waterResistance = readFirstSpecValueAny(sources, [
+      "water_resistance_rating",
+      "Water Resistance",
+      "Water Resistant",
+      "IP Rating",
+      "Ingress Protection"
+    ]);
+
+        return [
+      {
+        label: "",
+        value: formatFitValue(fit)
+      },
+      {
+        label: "",
+        value: noiseBool === null ? "" : noiseBool ? "ANC" : "No ANC"
+      },
+      {
+        label: "Earbud Battery",
+        value: formatSpecHours(earbudBattery)
+      },
+      {
+        label: "Case Battery",
+        value: formatSpecHours(caseBattery)
+      },
+      {
+        label: "",
+        value: waterResistance ? String(waterResistance).trim() : ""
+      }
+    ];
+  }
+
+  function renderCardSpecSquares(normSpecs, rawSpecs, category) {
+    if (!shouldShowCardSpecSquares(category)) return "";
+
+    const items = getCardSpecSquares(normSpecs, rawSpecs)
+      .filter((item) => String(item.value || "").trim());
+
+    if (!items.length) return "";
+
+    return `
+      <div class="card-spec-squares" aria-label="Key specs">
+        ${items.map((item) => {
+          const hasLabel = !!String(item.label || "").trim();
+          const hasValue = !!String(item.value || "").trim();
+
           return `
-            <button
-              type="button"
-              class="spec-top-pill${active ? " is-active" : ""}"
-              data-spec-top-key="${escapeHtml(key)}"
-            >
-              ${escapeHtml(key)}
-            </button>
+            <div class="card-spec-square ${hasLabel ? "" : "card-spec-square--value-only"}">
+              <div class="card-spec-square__value">${hasValue ? escapeHtml(item.value) : "&nbsp;"}</div>
+              ${hasLabel ? `<div class="card-spec-square__label">${escapeHtml(item.label)}</div>` : ""}
+            </div>
           `;
         }).join("")}
       </div>
-    </div>
-  `;
-
-    el.querySelectorAll("[data-spec-top-key]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const key = String(btn.getAttribute("data-spec-top-key") || "").trim();
-      if (!key) return;
-
-      const current = Array.isArray(state.selectedSpecsTopKeys)
-        ? [...state.selectedSpecsTopKeys]
-        : [];
-
-      const alreadySelected = current.includes(key);
-
-      if (alreadySelected) {
-        state.selectedSpecsTopKeys = current.filter((k) => k !== key);
-
-        if (!state.selectedSpecsTopKeys.length) {
-          state.selectedSpecsTopKeys = state.specsTopKeys.slice(0, 4);
-        }
-
-        render().catch(() => {});
-        return;
-      }
-
-      if (current.length >= 4) {
-        window.alert("You can compare up to 4 specs at a time. Remove one first to add another.");
-        return;
-      }
-
-      state.selectedSpecsTopKeys = [...current, key];
-
-      render().catch(() => {});
-    });
-  });
-}
-
-  function isBrowseRailSignedIn() {
-    try {
-      const raw = localStorage.getItem("pc_auth_user");
-      if (!raw) return false;
-
-      const user = JSON.parse(raw);
-      return !!String(user?.email || "").trim();
-    } catch (_e) {
-      return false;
-    }
-  }
-
-  const BROWSE_RAIL_FIXED_TABS = [
-    { key: "stores",   label: "Stores",   pathData: "M841-518v318q0 33-23.5 56.5T761-120H201q-33 0-56.5-23.5T121-200v-318q-23-21-35.5-54t-.5-72l42-136q8-26 28.5-43t47.5-17h556q27 0 47 16.5t29 43.5l42 136q12 39-.5 71T841-518Zm-272-42q27 0 41-18.5t11-41.5l-22-140h-78v148q0 21 14 36.5t34 15.5Zm-180 0q23 0 37.5-15.5T441-612v-148h-78l-22 140q-4 24 10.5 42t37.5 18Zm-178 0q18 0 31.5-13t16.5-33l22-154h-78l-40 134q-6 20 6.5 43t41.5 23Zm540 0q29 0 42-23t6-43l-42-134h-76l22 154q3 20 16.5 33t31.5 13ZM201-200h560v-282q-5 2-6.5 2H751q-27 0-47.5-9T663-518q-18 18-41 28t-49 10q-27 0-50.5-10T481-518q-17 18-39.5 28T393-480q-29 0-52.5-10T299-518q-21 21-41.5 29.5T211-480h-4.5q-2.5 0-5.5-2v282Zm560 0H201h560Z",   active: true  },
-    { key: "specs",    label: "Specs",    pathData: "M440-120v-240h80v80h320v80H520v80h-80Zm-320-80v-80h240v80H120Zm160-160v-80H120v-80h160v-80h80v240h-80Zm160-80v-80h400v80H440Zm160-160v-240h80v80h160v80H680v80h-80Zm-480-80v-80h400v80H120Z",    active: false },
-    { key: "intel",    label: "Intel",    pathData: "M324-111.5Q251-143 197-197t-85.5-127Q80-397 80-480t31.5-156Q143-709 197-763t127-85.5Q397-880 480-880t156 31.5Q709-817 763-763t85.5 127Q880-563 880-480t-31.5 156Q817-251 763-197t-127 85.5Q563-80 480-80t-156-31.5ZM480-160q56 0 105.5-17.5T676-227l-57-57q-29 21-64.5 32.5T480-240q-100 0-170-70t-70-170q0-100 70-170t170-70q100 0 170 70t70 170q0 39-12 75t-33 65l57 57q32-41 50-91t18-106q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-160q22 0 42.5-5.5T561-342l-61-61q-5 2-10 2.5t-10 .5q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 6-.5 11.5T557-458l60 60q11-18 17-38.5t6-43.5q0-66-47-113t-113-47q-66 0-113 47t-47 113q0 66 47 113t113 47Z",    active: false },
-    { key: "history",  label: "History",  pathData: "M120-240q-33 0-56.5-23.5T40-320q0-33 23.5-56.5T120-400h10.5q4.5 0 9.5 2l182-182q-2-5-2-9.5V-600q0-33 23.5-56.5T400-680q33 0 56.5 23.5T480-600q0 2-2 20l102 102q5-2 9.5-2h21q4.5 0 9.5 2l142-142q-2-5-2-9.5V-640q0-33 23.5-56.5T840-720q33 0 56.5 23.5T920-640q0 33-23.5 56.5T840-560h-10.5q-4.5 0-9.5-2L678-420q2 5 2 9.5v10.5q0 33-23.5 56.5T600-320q-33 0-56.5-23.5T520-400v-10.5q0-4.5 2-9.5L420-522q-5 2-9.5 2H400q-2 0-20-2L198-340q2 5 2 9.5v10.5q0 33-23.5 56.5T120-240Z",  active: false },
-    { key: "media",    label: "Media",    pathData: "m380-300 280-180-280-180v360ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z",    active: false }
-  ];
-
-  const BROWSE_RAIL_ARROW_SVG = `
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <polyline points="9 6 15 12 9 18"></polyline>
-    </svg>
-  `;
-
-  function createBrowseRailIconMarkup(pathData) {
-    const d = String(pathData || "").trim();
-    if (!d) return '<span class="browse-rail__placeholder"></span>';
-
-    return `
-      <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
-        <path d="${escapeHtml(d)}"></path>
-      </svg>
     `;
-  }
-
-  function stepBrowsePage(delta) {
-    if (state.loading) return;
-
-    const pages = Number.isFinite(state.pages) ? state.pages : 1;
-    const nextPage = Math.max(1, Math.min(pages, state.page + delta));
-
-    if (nextPage === state.page) return;
-
-    state.page = nextPage;
-    state.animateNextRender = false;
-    startPageTransitionUI();
-
-    writeUrl({ replace: false });
-    load();
-  }
-
-  function renderBrowseRail() {
-    const rail = document.getElementById("browseRail");
-    if (!rail) return;
-
-    const pages = Number.isFinite(state.pages) ? state.pages : 1;
-    const showPrev = state.page > 1;
-    const showNext = state.page < pages;
-
-    rail.hidden = false;
-rail.innerHTML = `
-  <div class="browse-rail__inner">
-    <div class="browse-rail__main">
-      <div class="browse-rail__tabs">
-        ${BROWSE_RAIL_FIXED_TABS.map((tab) => {
-          const isActive = tab.key === state.activeTab;
-          return `
-          <button
-            type="button"
-            class="browse-rail__btn${isActive ? " is-active" : ""}"
-            data-browse-rail-tab="${escapeHtml(tab.key)}"
-            aria-label="${escapeHtml(tab.label)}"
-            title="${escapeHtml(tab.label)}"
-            ${isActive ? 'aria-current="page"' : ""}
-          >
-            ${createBrowseRailIconMarkup(tab.pathData)}
-            </button>
-        `;
-        }).join("")}
-      </div>
-    </div>
-
-    <div class="browse-rail__pager">
-      ${showPrev ? `
-        <button
-          type="button"
-          class="browse-rail__btn browse-rail__arrow browse-rail__arrow--prev"
-          id="browseRailPrevBtn"
-          aria-label="Previous page"
-          title="Previous page"
-          ${state.loading ? "disabled" : ""}
-        >
-          ${BROWSE_RAIL_ARROW_SVG}
-        </button>
-      ` : ""}
-
-      ${showNext ? `
-        <button
-          type="button"
-          class="browse-rail__btn browse-rail__arrow"
-          id="browseRailNextBtn"
-          aria-label="Next page"
-          title="Next page"
-          ${state.loading ? "disabled" : ""}
-        >
-          ${BROWSE_RAIL_ARROW_SVG}
-        </button>
-      ` : ""}
-    </div>
-  </div>
-`;
-
-    rail.querySelector("#browseRailPrevBtn")?.addEventListener("click", () => {
-      stepBrowsePage(-1);
-    });
-
-    rail.querySelector("#browseRailNextBtn")?.addEventListener("click", () => {
-      stepBrowsePage(1);
-    });
-
-    rail.querySelectorAll("[data-browse-rail-tab]").forEach((btn) => {
-  btn.addEventListener("click", (e) => {
-    const key = String(btn.getAttribute("data-browse-rail-tab") || "").trim().toLowerCase();
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (key === "stores" || key === "specs") {
-      if (state.activeTab === key) return;
-      state.activeTab = key;
-      renderBrowseRail();
-      render().catch(() => {});
-      return;
-    }
-
-    if (!isBrowseRailSignedIn()) {
-      if (typeof window.pcOpenSignIn === "function") {
-        window.pcOpenSignIn();
-      }
-      return;
-    }
-  });
-});
   }
 
   // ----------------------------
@@ -713,9 +615,6 @@ rail.innerHTML = `
     grid: null,
     empty: null,
     emptyInline: null,
-    prev: null,
-    next: null,
-    pager: null,
     sidecol: null,
     categoryPanel: null,
     brandPanel: null,
@@ -727,9 +626,6 @@ rail.innerHTML = `
     els.grid = $("#grid");
     els.empty = $("#empty");
     els.emptyInline = $("#emptyInline");
-    els.prev = $("#prev");
-    els.next = $("#next");
-    els.pager = document.querySelector(".pager");
     els.sidecol = $("#sidecol");
     els.categoryPanel = $("#categoryPanel");
     els.brandPanel = $("#brandPanel");
@@ -744,9 +640,6 @@ const state = {
     page: 1,
     limit: 36,
     sort: "recommended",
-    activeTab: "stores",
-    specsTopKeys: [],
-    selectedSpecsTopKeys: [],
 
     // main filters (URL)
     brand: "",
@@ -759,6 +652,10 @@ const state = {
     colorNorm: "",
 
     condition: "new",      // "new" | "refurbished" | "bundle"
+    priceMinCents: null,
+    priceMaxCents: null,
+    specFilters: {},
+    openSpecRows: {},
     hasRefurbished: false,
     hasBundle: false,
 
@@ -769,6 +666,8 @@ const state = {
 
     sideBrands: [],
     sideBrandsFacetKey: "",
+    sideStatic: null,
+    sideStaticKey: "",
 
     familyPanelKey: "",
     familyVariants: [],
@@ -791,6 +690,7 @@ const state = {
 
     // request / ui
     loading: false,
+    loadingMore: false,
     lastReqId: 0,
     lastError: "",
     animateNextRender: true,
@@ -929,16 +829,23 @@ const state = {
 
     const sp = new URLSearchParams();
 
-    if (state.condition && state.condition !== "new") sp.set("condition", state.condition);
+  if (state.condition && state.condition !== "new") sp.set("condition", state.condition);
+  if (Number.isFinite(state.priceMinCents)) sp.set("price_min", String(state.priceMinCents));
+  if (Number.isFinite(state.priceMaxCents)) sp.set("price_max", String(state.priceMaxCents));
 
-    if (state.sort && state.sort !== "recommended") sp.set("sort", state.sort);
-
-    const qs = sp.toString();
-    const url = qs ? `${path}?${qs}` : path;
-
-    if (replace) history.replaceState({}, "", url);
-    else history.pushState({}, "", url);
+  const activeSpecFilters = Object.values(state.specFilters || {}).filter(Boolean);
+  if (activeSpecFilters.length) {
+    sp.set("filters", JSON.stringify(activeSpecFilters));
   }
+
+  if (state.sort && state.sort !== "recommended") sp.set("sort", state.sort);
+
+      const qs = sp.toString();
+      const url = qs ? `${path}?${qs}` : path;
+
+      if (replace) history.replaceState({}, "", url);
+      else history.pushState({}, "", url);
+    }
 
   function readUrl() {
     // Back-compat: old query string format
@@ -1007,6 +914,25 @@ const state = {
     const _sp = new URLSearchParams(location.search);
     const _cond = _sp.get("condition");
     state.condition = (_cond === "refurbished" || _cond === "bundle") ? _cond : "new";
+
+    state.priceMinCents = cleanPriceCents(_sp.get("price_min"));
+    state.priceMaxCents = cleanPriceCents(_sp.get("price_max"));
+
+    state.specFilters = {};
+
+    const rawFilters = _sp.get("filters");
+    if (rawFilters) {
+      try {
+        const parsedFilters = JSON.parse(rawFilters);
+        if (Array.isArray(parsedFilters)) {
+          parsedFilters.forEach((f) => {
+            const id = String(f?.id || "").trim();
+            if (id) state.specFilters[id] = f;
+          });
+        }
+      } catch (_e) {}
+    }
+
     const _sort = String(_sp.get("sort") || "").trim().toLowerCase();
     state.sort =
       _sort === "lowest-price" ||
@@ -1053,23 +979,185 @@ const state = {
     }
   }
 
-  // ----------------------------
-  // Pager
-  // ----------------------------
+
    function setPager() {
-    const pages = Number.isFinite(state.pages) ? state.pages : 1;
-    const shouldShow = pages > 1;
-
-    if (els.pager) els.pager.style.display = shouldShow ? "flex" : "none";
-    if (els.prev) els.prev.disabled = !shouldShow || state.loading || state.page <= 1;
-    if (els.next) els.next.disabled = !shouldShow || state.loading || state.page >= pages;
-
-    renderBrowseRail();
   }
 
   function setLoading(on) {
     state.loading = !!on;
     setPager();
+  }
+
+    function hasMoreBrowseResults() {
+    return !state.lastError &&
+      Array.isArray(state.results) &&
+      state.results.length > 0 &&
+      Number(state.page || 1) < Number(state.pages || 1);
+  }
+
+  function ensureInfiniteSentinel() {
+    if (!els.grid) return null;
+
+    let sentinel = document.getElementById("browseInfiniteSentinel");
+    if (sentinel) return sentinel;
+
+    sentinel = document.createElement("div");
+    sentinel.id = "browseInfiniteSentinel";
+    sentinel.className = "browse-infinite-sentinel";
+    sentinel.innerHTML = `
+      <div id="browseInfiniteStatus" class="browse-infinite-status" hidden></div>
+    `;
+
+    els.grid.insertAdjacentElement("afterend", sentinel);
+    return sentinel;
+  }
+
+  function setInfiniteStatus(text, { show = false } = {}) {
+    const sentinel = ensureInfiniteSentinel();
+    const status = sentinel ? sentinel.querySelector("#browseInfiniteStatus") : null;
+    if (!status) return;
+
+    status.textContent = text || "";
+    status.hidden = !show;
+  }
+
+  function updateInfiniteScroll() {
+    const sentinel = ensureInfiniteSentinel();
+    if (!sentinel) return;
+
+    if (_infiniteObserver) {
+      _infiniteObserver.disconnect();
+      _infiniteObserver = null;
+    }
+
+    if (!hasMoreBrowseResults()) {
+      if (Array.isArray(state.results) && state.results.length > 0) {
+        setInfiniteStatus("End of Results", { show: true });
+      } else {
+        setInfiniteStatus("", { show: false });
+      }
+      return;
+    }
+
+    setInfiniteStatus("", { show: false });
+
+    _infiniteObserver = new IntersectionObserver((entries) => {
+      const hit = entries.some((entry) => entry.isIntersecting);
+      if (!hit) return;
+      loadMoreResults();
+    }, {
+      root: null,
+      rootMargin: "80px 0px 80px 0px",
+      threshold: 0.01
+    });
+
+    _infiniteObserver.observe(sentinel);
+  }
+
+  function browsePageUrlFor(pageNum) {
+    if (state.brand || state.category) {
+      const qs = new URLSearchParams({
+        page: String(pageNum),
+        limit: String(state.limit),
+      });
+
+      if (state.brand) qs.set("brand", state.brand);
+      if (state.category) qs.set("category", state.category);
+      if (state.family) qs.set("family", state.family);
+      if (state.variant) qs.set("variant", state.variant);
+      if (state.color) qs.set("color", state.color);
+      qs.set("condition", state.condition || "new");
+      if (Number.isFinite(state.priceMinCents)) qs.set("price_min", String(state.priceMinCents));
+      if (Number.isFinite(state.priceMaxCents)) qs.set("price_max", String(state.priceMaxCents));
+
+      const activeSpecFilters = Object.values(state.specFilters || {}).filter(Boolean);
+      if (activeSpecFilters.length) {
+        qs.set("spec_filters", JSON.stringify(activeSpecFilters));
+      }
+      if (state.sort) qs.set("sort", state.sort);
+      return `/api/browse?${qs.toString()}`;
+    }
+
+    const qs = new URLSearchParams({
+      q: state.q,
+      page: String(pageNum),
+      limit: String(state.limit),
+      condition: state.condition || "new",
+    });
+
+    if (state.sort) qs.set("sort", state.sort);
+
+    return `/api/search?${qs.toString()}`;
+  }
+
+  async function loadMoreResults() {
+    if (state.loading || state.loadingMore) return;
+    if (!hasMoreBrowseResults()) {
+      updateInfiniteScroll();
+      return;
+    }
+
+    const baseReqId = state.lastReqId;
+    const nextPage = Number(state.page || 1) + 1;
+    const currentCount = Array.isArray(state.results) ? state.results.length : 0;
+    const remaining = Math.max(0, Number(state.total || 0) - currentCount);
+    const nextBatchSize = Math.min(Number(state.limit || 36), remaining || Number(state.limit || 36));
+
+    state.loadingMore = true;
+    setInfiniteStatus("Loading...", { show: true });
+
+    try {
+      if (_infiniteLoadingController) _infiniteLoadingController.abort();
+    } catch (_e) {}
+
+    _infiniteLoadingController = new AbortController();
+
+    try {
+      const data = await apiJson(browsePageUrlFor(nextPage), {
+        signal: _infiniteLoadingController.signal
+      });
+
+      if (baseReqId !== state.lastReqId) return;
+
+      const nextRows = Array.isArray(data.results) ? data.results : [];
+
+      state.page = nextPage;
+      state.total = typeof data.total === "number" ? data.total : state.total;
+      state.pages = typeof data.pages === "number" ? data.pages : state.pages;
+      state.results = Array.isArray(state.results)
+        ? state.results.concat(nextRows)
+        : nextRows;
+
+      if (nextRows.length && els.grid) {
+        els.grid.insertAdjacentHTML("beforeend", nextRows.map(cardProduct).join(""));
+
+        syncShortlistButtons(els.grid || document);
+        setupVariantHydrator(els.grid);
+        trackBrowseCardImpressions(els.grid);
+        window.PriceCheckShortlist?.renderRail?.();
+      }
+
+      state.loadingMore = false;
+
+      if (hasMoreBrowseResults()) {
+        setInfiniteStatus("", { show: false });
+      } else {
+        setInfiniteStatus("End of Results", { show: true });
+      }
+
+      updateInfiniteScroll();
+    } catch (e) {
+      if (baseReqId !== state.lastReqId) return;
+
+      const msg = e && e.name === "AbortError" ? "" : "Could not load more products.";
+      state.loadingMore = false;
+
+      if (msg) {
+        setInfiniteStatus(msg, { show: true });
+      }
+
+      updateInfiniteScroll();
+    }
   }
 
   function hardScrollTop() {
@@ -1100,6 +1188,8 @@ const state = {
   // API (abortable)
   // ----------------------------
   let _activeLoadController = null;
+  let _infiniteObserver = null;
+  let _infiniteLoadingController = null;
 
   async function apiJson(url, { signal } = {}) {
     const res = await fetch(url, { headers: { Accept: "application/json" }, signal });
@@ -1247,31 +1337,14 @@ const img = rawImg
 
     const brand = (r.brand || "").trim();
     const brandLine = brand ? brand : "";
-
-    let aboutText = "";
-
-    if (typeof r.about === "string") {
-      aboutText = r.about.trim();
-    } else if (r.about && typeof r.about === "object") {
-      const paragraphs = Array.isArray(r.about.paragraphs) ? r.about.paragraphs : [];
-      const bullets = Array.isArray(r.about.bullets) ? r.about.bullets : [];
-
-      aboutText =
-        String(paragraphs.find(Boolean) || bullets.find(Boolean) || "").trim();
-    }
-
-    const hasAbout = !!aboutText;
-
-    const aboutHtml = hasAbout
-      ? `<div class="about-snippet">${escapeHtml(aboutText)}</div>`
-      : "";
+    const specSquaresHtml = renderCardSpecSquares(r.norm_specs, r.specs, r.category);
 
     const inner = `
       <div class="thumb">${img}${recScoreBadgeHtml(r.overall_score)}</div>
       <div class="body">
         <div class="subtitle">${escapeHtml(brandLine)}</div>
-        <div class="name ${hasAbout ? "name--with-about" : "name--no-about"}">${escapeHtml(displayName)}</div>
-        ${aboutHtml}
+        <div class="name name--no-about">${escapeHtml(displayName)}</div>
+        ${specSquaresHtml}
         <div class="card-variants" data-card-variants="1"></div>
         <div class="price-row">
           <div class="price">${fmtPrice(r.best_price_cents)}</div>
@@ -1289,7 +1362,6 @@ const img = rawImg
           data-title="${escapeHtml(displayName)}"
           data-brand="${escapeHtml(brandLine)}"
           data-img="${escapeHtml(String(r.image_url || ""))}"
-          data-about="${escapeHtml(aboutText)}">
           ${inner}
         </div>
       `;
@@ -1304,7 +1376,6 @@ const img = rawImg
         data-title="${escapeHtml(displayName)}"
         data-brand="${escapeHtml(brandLine)}"
         data-img="${escapeHtml(String(r.image_url || ""))}"
-        data-about="${escapeHtml(aboutText)}">
         ${inner}
       </a>
     `;
@@ -1330,108 +1401,7 @@ const img = rawImg
       </div>
     `;
   }
-
-  function cardProductSpecs(r) {
-  const dashKey = String(r.dashboard_key || "").trim();
-  const displayName = r.model_name || r.title || r.model_number || "Untitled";
-
-  const rawImg = String(r.image_url || "").trim();
-const img320 = dealImageUrl(rawImg, 320);
-const img640 = dealImageUrl(rawImg, 640);
-
-const img = rawImg
-  ? `<img
-      class="img"
-      src="${escapeHtml(img320)}"
-      srcset="${escapeHtml(img320)} 320w, ${escapeHtml(img640)} 640w"
-      sizes="(max-width: 560px) 50vw, (max-width: 980px) 33vw, 260px"
-      width="320"
-      height="320"
-      alt=""
-      loading="lazy"
-      decoding="async"
-    >`
-  : `<div class="img ph"></div>`;
-
-  const brand = (r.brand || "").trim();
-  const brandLine = brand ? brand : "";
-
-  const { pills, rows } = splitSpecsForCard(r.specs, state.selectedSpecsTopKeys);
-
-  const pillsHtml = pills.length
-  ? `
-    <div class="spec-card-pills">
-      ${pills.map((p) => `
-        <span
-          class="spec-pill"
-          style="${specPillVars(p.key)}"
-        >${escapeHtml(p.key)}</span>
-      `).join("")}
-    </div>
-  `
-  : "";
-
-  const rowsHtml = rows.length
-    ? `
-      <div class="spec-card-grid">
-        ${rows.map((row) => `
-          <div class="spec-card-stat">
-            <div class="spec-card-stat-label">${escapeHtml(row.key)}</div>
-            <div class="spec-card-stat-value">${escapeHtml(row.value)}</div>
-          </div>
-        `).join("")}
-      </div>
-    `
-    : "";
-
-  const priceHtml = typeof r.best_price_cents === "number"
-    ? fmtPrice(r.best_price_cents)
-    : "";
-
-  const inner = `
-  <div class="thumb">${img}${recScoreBadgeHtml(r.overall_score)}</div>
-  <div class="body spec-card-body">
-    <div class="spec-card-main">
-      <div class="spec-card-head">
-        <div class="spec-card-titlewrap">
-          <div class="subtitle">${escapeHtml(brandLine)}</div>
-          <div class="name name--no-about">${escapeHtml(displayName)}</div>
-        </div>
-        <div class="spec-card-price">${escapeHtml(priceHtml)}</div>
-      </div>
-
-      ${pillsHtml}
-      ${rowsHtml}
-    </div>
-  </div>
-`;
-
-  if (!dashKey) {
-    return `
-      <div class="card item spec-card is-disabled"
-        aria-disabled="true"
-        data-title="${escapeHtml(displayName)}"
-        data-brand="${escapeHtml(brandLine)}"
-        data-img="${escapeHtml(String(r.image_url || ""))}">
-        ${inner}
-      </div>
-    `;
-  }
-
-  const href = dashPathFromKeyAndTitle(dashKey, displayName);
-
-  return `
-    <a class="card item spec-card"
-      href="${escapeHtml(href)}"
-      data-dash-key="${escapeHtml(dashKey)}"
-      data-title="${escapeHtml(displayName)}"
-      data-brand="${escapeHtml(brandLine)}"
-      data-img="${escapeHtml(String(r.image_url || ""))}">
-      ${inner}
-    </a>
-  `;
-}
-
+  
   function cardFacet(f) {
     const img = f.image_url
       ? `<img class="img" src="${escapeHtml(f.image_url)}" alt="">`
@@ -2287,15 +2257,476 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     state.sideFacetKey = key;
   }
 
-  async function loadCategoryPanelFacets(reqId, { signal } = {}) {
-    if (!state.category) {
-      state.sideBrands = [];
-      state.sideBrandsFacetKey = "";
+    let _browseSidebarDataPromise = null;
+
+  function sidebarCategoryKey(category) {
+    return String(category || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  async function loadBrowseSidebarData() {
+    if (_browseSidebarDataPromise) return _browseSidebarDataPromise;
+
+    _browseSidebarDataPromise = fetch("/data/browse_sidebar.json", {
+      headers: { Accept: "application/json" }
+    })
+      .then((res) => res.ok ? res.json() : {})
+      .catch(() => ({}));
+
+    return _browseSidebarDataPromise;
+  }
+
+    function sidebarButton(label, extraAttrs = "") {
+    const text = String(label || "").trim();
+    if (!text) return "";
+
+    return `
+      <button type="button" class="browse-side-chip" ${extraAttrs}>
+        ${escapeHtml(text)}
+      </button>
+    `;
+  }
+
+  function renderSimpleFilterGroup(title, items) {
+    const list = Array.isArray(items) ? items.filter(Boolean) : [];
+    if (!list.length) return "";
+
+    return `
+      <div class="browse-main-filter-group">
+        <div class="browse-main-filter-title">${escapeHtml(title)}</div>
+        <div class="browse-side-chips">
+          ${list.map((item) => sidebarButton(item)).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+    function cleanPriceCents(v) {
+    const raw = String(v ?? "").trim();
+    if (!raw) return null;
+
+    const n = Number.parseInt(raw, 10);
+    if (!Number.isFinite(n)) return null;
+
+    return Math.max(0, Math.min(100000000, n));
+  }
+
+  function dollarsToCents(v) {
+    const n = Number(String(v ?? "").replace(/,/g, ""));
+    if (!Number.isFinite(n)) return null;
+    return Math.round(n * 100);
+  }
+
+  function priceFilterFromItem(item) {
+    if (!item) return null;
+
+    if (typeof item === "object") {
+      const label = String(item.label || "").trim();
+      if (!label) return null;
+
+      const min = cleanPriceCents(item.min_cents);
+      const max = cleanPriceCents(item.max_cents);
+
+      return { label, min, max };
+    }
+
+    const label = String(item || "").trim();
+    if (!label) return null;
+
+    const nums = Array.from(label.matchAll(/\$?\s*([\d,]+(?:\.\d{1,2})?)/g))
+      .map((m) => dollarsToCents(m[1]))
+      .filter((n) => Number.isFinite(n));
+
+    if (/under/i.test(label) && nums.length >= 1) {
+      return {
+        label,
+        min: null,
+        max: Math.max(0, nums[0] - 1)
+      };
+    }
+
+    if (/\+/.test(label) && nums.length >= 1) {
+      return {
+        label,
+        min: nums[0],
+        max: null
+      };
+    }
+
+    if (nums.length >= 2) {
+      return {
+        label,
+        min: nums[0],
+        max: nums[1]
+      };
+    }
+
+    return null;
+  }
+
+  function samePriceFilter(filter) {
+    const curMin = Number.isFinite(state.priceMinCents) ? state.priceMinCents : null;
+    const curMax = Number.isFinite(state.priceMaxCents) ? state.priceMaxCents : null;
+
+    const nextMin = Number.isFinite(filter?.min) ? filter.min : null;
+    const nextMax = Number.isFinite(filter?.max) ? filter.max : null;
+
+    return curMin === nextMin && curMax === nextMax;
+  }
+
+  function renderPriceFilterGroup(items) {
+    const filters = (Array.isArray(items) ? items : [])
+      .map(priceFilterFromItem)
+      .filter(Boolean);
+
+    if (!filters.length) return "";
+
+    return `
+      <div class="browse-main-filter-group">
+        <div class="browse-main-filter-title">Price</div>
+        <div class="browse-side-chips">
+          ${filters.map((filter) => {
+            const active = samePriceFilter(filter);
+
+            return `
+              <button
+                type="button"
+                class="browse-side-chip ${active ? "is-active" : ""}"
+                data-price-filter="1"
+                data-price-min="${Number.isFinite(filter.min) ? filter.min : ""}"
+                data-price-max="${Number.isFinite(filter.max) ? filter.max : ""}">
+                ${escapeHtml(filter.label)}
+              </button>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderBrandFilterGroup(brands) {
+    const list = Array.isArray(brands) ? brands.filter(Boolean) : [];
+    if (!list.length) return "";
+
+    return `
+      <div class="browse-main-filter-group">
+        <div class="browse-main-filter-title">Brand</div>
+        <div class="browse-side-chips">
+          ${list.map((brand) => {
+            const b = String(brand || "").trim();
+            const active = state.brand && state.brand.toLowerCase() === b.toLowerCase();
+
+            return `
+              <button
+                type="button"
+                class="browse-side-chip ${active ? "is-active" : ""}"
+                data-side-set="brand"
+                data-side-value="${escapeHtml(b)}">
+                ${escapeHtml(b)}
+              </button>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+    function browseChevronSvg(direction = "right") {
+    const path = direction === "down"
+      ? "M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z"
+      : "M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z";
+
+    return `
+      <svg
+        class="browse-spec-row__chevron-icon"
+        viewBox="0 -960 960 960"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="${path}"></path>
+      </svg>
+    `;
+  }
+
+  function specRowKey(row, index) {
+    const explicit = String(row?.id || row?.key || "").trim();
+    if (explicit) return explicit;
+
+    const label = String(row?.label || "").trim().toLowerCase();
+    return label || `row-${index}`;
+  }
+
+  function filterIsActive(filter) {
+    const id = String(filter?.id || "").trim();
+    return !!(id && state.specFilters && state.specFilters[id]);
+  }
+
+  function specRowHasActiveFilter(row) {
+    const items = Array.isArray(row?.items) ? row.items : [];
+
+    return items.some((item) => {
+      const filter = item && typeof item === "object" ? item.filter : null;
+      return filterIsActive(filter);
+    });
+  }
+
+  function specRowShouldBeOpen(row, index) {
+    const key = specRowKey(row, index);
+    return !!state.openSpecRows?.[key] || specRowHasActiveFilter(row);
+  }
+
+  function renderSpecControlRow(row, index) {
+    const label = String(row?.label || "").trim();
+    if (!label) return "";
+
+    const items = Array.isArray(row?.items) ? row.items.filter(Boolean) : [];
+    const bodyId = `browseSpecRow${index}`;
+    const rowKey = specRowKey(row, index);
+    const isOpen = specRowShouldBeOpen(row, index);
+
+    return `
+      <div
+        class="browse-spec-row ${isOpen ? "is-open" : ""}"
+        data-browse-spec-row="1"
+        data-browse-spec-row-key="${escapeHtml(rowKey)}"
+      >
+        <button
+          type="button"
+          class="browse-spec-row__head"
+          data-browse-spec-toggle="1"
+          aria-expanded="${isOpen ? "true" : "false"}"
+          aria-controls="${escapeHtml(bodyId)}"
+        >
+          <span>${escapeHtml(label)}</span>
+          <span class="browse-spec-row__chevron" aria-hidden="true">${browseChevronSvg(isOpen ? "down" : "right")}</span>
+        </button>
+
+        <div id="${escapeHtml(bodyId)}" class="browse-spec-row__body" ${isOpen ? "" : "hidden"}>
+          <div class="browse-side-chips">
+            ${items.map((item) => sidebarFilterButton(item)).join("")}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function sidebarFilterButton(item) {
+  const label = typeof item === "string"
+    ? String(item || "").trim()
+    : String(item?.label || "").trim();
+
+  if (!label) return "";
+
+  const filter = item && typeof item === "object" ? item.filter : null;
+  const filterId = String(filter?.id || "").trim();
+  const active = !!(filterId && state.specFilters && state.specFilters[filterId]);
+
+  const filterAttr = filter
+    ? `data-spec-filter="${escapeHtml(JSON.stringify(filter))}"`
+    : "";
+
+  return `
+    <button
+      type="button"
+      class="browse-side-chip ${active ? "is-active" : ""}"
+      ${filterAttr}>
+      ${escapeHtml(label)}
+    </button>
+  `;
+}
+
+function renderOpenSpecGroup(title, items) {
+  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (!list.length) return "";
+
+  return `
+    <div class="browse-spec-row browse-spec-row--open-static">
+      <div class="browse-spec-row__head browse-spec-row__head--static">
+        <span>${escapeHtml(title)}</span>
+      </div>
+
+      <div class="browse-spec-row__body">
+        <div class="browse-side-chips">
+          ${list.map((item) => sidebarFilterButton(item)).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+    function renderBrowseSpecsPanel() {
+    if (!els.brandPanel) return;
+
+    const cfg = state.sideStatic || {};
+    const rows = Array.isArray(cfg.spec_rows) ? cfg.spec_rows : [];
+
+    if (!state.category || (!rows.length && !Array.isArray(cfg.fit) && !Array.isArray(cfg.noise))) {
+      els.brandPanel.innerHTML = "";
+      els.brandPanel.hidden = true;
       return;
     }
 
-    const key = state.category.toLowerCase();
-    if (state.sideBrandsFacetKey === key && Array.isArray(state.sideBrands) && state.sideBrands.length) return;
+    els.brandPanel.hidden = false;
+    els.brandPanel.classList.add("sidecard--specs");
+    els.brandPanel.innerHTML = `
+      <div class="browse-spec-list">
+        ${renderOpenSpecGroup("Fit", cfg.fit)}
+        ${renderOpenSpecGroup("Noise", cfg.noise)}
+        ${rows.map((row, index) => renderSpecControlRow(row, index)).join("")}
+      </div>
+    `;
+    if (els.familyPanel) {
+      els.familyPanel.innerHTML = "";
+      els.familyPanel.hidden = true;
+    }
+
+    initBrowseSidebarControls();
+  }
+
+  function initBrowseSidebarControls() {
+    if (document.body.dataset.browseSidebarControlsBound === "1") return;
+    document.body.dataset.browseSidebarControlsBound = "1";
+
+    document.addEventListener("click", (e) => {
+      const toggle = e.target.closest("[data-browse-spec-toggle='1']");
+      if (!toggle) return;
+
+      const row = toggle.closest("[data-browse-spec-row='1']");
+      const bodyId = toggle.getAttribute("aria-controls") || "";
+      const body = bodyId ? document.getElementById(bodyId) : null;
+      if (!row || !body) return;
+
+      const isOpen = row.classList.toggle("is-open");
+      const rowKey = String(row.getAttribute("data-browse-spec-row-key") || "").trim();
+
+      state.openSpecRows = state.openSpecRows || {};
+      if (rowKey) {
+        if (isOpen) state.openSpecRows[rowKey] = true;
+        else delete state.openSpecRows[rowKey];
+      }
+
+      toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      body.hidden = !isOpen;
+
+      const chevron = toggle.querySelector(".browse-spec-row__chevron");
+      if (chevron) {
+        chevron.innerHTML = browseChevronSvg(isOpen ? "down" : "right");
+      }
+    });
+  }
+
+  function renderSidebarGroup(title, items) {
+    const list = Array.isArray(items) ? items.filter(Boolean) : [];
+    if (!list.length) return "";
+
+    return `
+      <div class="browse-side-group">
+        <div class="browse-side-heading">${escapeHtml(title)}</div>
+        <div class="browse-side-chips">
+          ${list.map((item) => sidebarButton(item)).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSidebarBrandGroup(brands) {
+    const list = Array.isArray(brands) ? brands.filter(Boolean) : [];
+    if (!list.length) return "";
+
+    return `
+      <div class="browse-side-group">
+        <div class="browse-side-heading">Brand</div>
+        <div class="browse-side-chips">
+          ${list.map((brand) => {
+            const b = String(brand || "").trim();
+            const active = state.brand && state.brand.toLowerCase() === b.toLowerCase();
+
+            return `
+              <button
+                type="button"
+                class="browse-side-chip ${active ? "is-active" : ""}"
+                data-side-set="brand"
+                data-side-value="${escapeHtml(b)}">
+                ${escapeHtml(b)}
+              </button>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPriceDistribution(buckets) {
+    const list = Array.isArray(buckets) ? buckets.filter(Boolean) : [];
+    if (!list.length) return "";
+
+    const maxCount = Math.max(...list.map((b) => Number(b.count || 0)), 1);
+
+    return `
+      <div class="browse-side-group">
+        <div class="browse-side-heading">Price</div>
+
+        <div class="browse-price-bars" aria-label="Price distribution">
+          ${list.map((bucket) => {
+            const count = Math.max(0, Number(bucket.count || 0));
+            const height = Math.max(10, Math.round((count / maxCount) * 46));
+
+            return `
+              <button
+                type="button"
+                class="browse-price-bar"
+                title="${escapeHtml(bucket.label || "")}"
+                aria-label="${escapeHtml(bucket.label || "")}"
+                style="--bar-h:${height}px">
+              </button>
+            `;
+          }).join("")}
+        </div>
+
+        <div class="browse-side-chips browse-side-chips--price">
+          ${list.map((bucket) => sidebarButton(bucket.label)).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+    async function loadCategoryPanelFacets(reqId, { signal } = {}) {
+    if (!state.category) {
+      state.sideBrands = [];
+      state.sideBrandsFacetKey = "";
+      state.sideStatic = null;
+      state.sideStaticKey = "";
+      return;
+    }
+
+    const key = sidebarCategoryKey(state.category);
+
+    if (
+      state.sideBrandsFacetKey === key &&
+      state.sideStaticKey === key &&
+      state.sideStatic
+    ) {
+      return;
+    }
+
+    const staticData = await loadBrowseSidebarData();
+    if (signal?.aborted || reqId !== state.lastReqId) return;
+
+    const staticConfig = staticData && staticData[key] ? staticData[key] : null;
+
+    if (staticConfig) {
+      state.sideStatic = staticConfig;
+      state.sideStaticKey = key;
+      state.sideBrands = Array.isArray(staticConfig.brand_primary) ? staticConfig.brand_primary : [];
+      state.sideBrandsFacetKey = key;
+      return;
+    }
+
+    state.sideStatic = null;
+    state.sideStaticKey = "";
 
     const qs = new URLSearchParams({ category: state.category });
     const data = await apiJson(`/api/category_panel?${qs.toString()}`, { signal });
@@ -2305,69 +2736,45 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     state.sideBrandsFacetKey = key;
   }
 
-  // ----------------------------
-  // Sidebar renderers (3 panels)
-  // ----------------------------
-  async function renderCategoryPanel() {
-  if (!els.sidecol || !els.categoryPanel) return;
+    async function renderCategoryPanel() {
+    if (!els.sidecol || !els.categoryPanel) return;
 
-  const catName = String(state.category || "").trim();
-  if (!catName) {
-    els.categoryPanel.innerHTML = "";
-    els.categoryPanel.hidden = true;
-    return;
-  }
+    const catName = String(state.category || "").trim();
 
-  const brands = (Array.isArray(state.sideBrands) ? state.sideBrands : []).slice(0, 12);
+    if (!catName) {
+      els.categoryPanel.innerHTML = "";
+      els.categoryPanel.hidden = true;
+      return;
+    }
 
-  const brandButtons = await Promise.all(
-    brands.map(async (b) => {
-      const brandName = String(b || "").trim();
-      if (!brandName) return "";
+    const cfg = state.sideStatic || {};
+    const title = cfg.label || catName;
 
-      const active = state.brand && state.brand.toLowerCase() === brandName.toLowerCase();
-      const logoUrl = await storeLogoUrlForKey(brandName);
-      const label = escapeHtml(brandName);
+    const staticCount = Number(cfg.product_count);
+    const total = Number.isFinite(staticCount)
+      ? staticCount
+      : typeof state.total === "number"
+        ? state.total
+        : 0;
 
-      return `
-        <button
-          type="button"
-          class="brand-icon-btn ${active ? "is-active" : ""}"
-          data-side-set="brand"
-          data-side-value="${label}"
-          aria-label="${label}"
-          title="${label}"
-        >
-          ${
-            logoUrl
-              ? `<img
-                  class="brand-icon-img"
-                  src="${escapeHtml(logoUrl)}"
-                  alt="${label}"
-                  loading="lazy"
-                  onerror="this.closest('button')?.remove()"
-                >`
-              : `<span class="brand-icon-fallback">${label.slice(0, 1).toUpperCase()}</span>`
-          }
-        </button>
-      `;
-    })
-  );
+    const primaryBrands = Array.isArray(cfg.brand_primary) && cfg.brand_primary.length
+      ? cfg.brand_primary
+      : (Array.isArray(state.sideBrands) ? state.sideBrands.slice(0, 5) : []);
 
-  els.categoryPanel.hidden = false;
-  els.categoryPanel.innerHTML = `
-    <h2 class="side-title">${escapeHtml(catName)}</h2>
+    els.sidecol.hidden = false;
+    els.categoryPanel.hidden = false;
 
-    ${brandButtons.filter(Boolean).length ? `
-      <div class="side-block">
-        <div class="side-label">Top Brands</div>
-        <div class="brand-icon-grid">
-          ${brandButtons.filter(Boolean).join("")}
-        </div>
+    els.categoryPanel.innerHTML = `
+      <div class="browse-side-head">
+        <h2 class="browse-side-title">${escapeHtml(title)}</h2>
       </div>
-    ` : ""}
-  `;
-}
+
+      ${renderPriceFilterGroup(cfg.price)}
+      ${renderBrandFilterGroup(primaryBrands)}
+    `;
+
+    initBrowseSidebarControls();
+  }
 
   async function renderBrandPanel() {
     if (!els.sidecol || !els.brandPanel) return;
@@ -2376,9 +2783,19 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     const hasBrand = !!String(state.brand || "").trim();
     const hasFamily = !!String(state.family || "").trim();
 
+    if (hasCategory && state.sideStatic) {
+      renderBrowseSpecsPanel();
+      return;
+    }
+
     els.sidecol.hidden = !(hasCategory || hasBrand || hasFamily);
 
     if (!hasBrand) {
+      if (state.category && state.sideStatic) {
+        renderBrowseSpecsPanel();
+        return;
+      }
+
       els.brandPanel.innerHTML = "";
       els.brandPanel.hidden = true;
       if (els.familyPanel) {
@@ -2537,11 +2954,6 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     const el = document.getElementById("conditionFilter");
     if (!el) return;
 
-    if (state.activeTab === "specs") {
-      renderSpecsTopbar();
-      return;
-    }
-
     const showToggles = (state.hasRefurbished || state.hasBundle) && !state.lastError;
     const showSort = !state.lastError && (state.brand || state.category || state.q);
     const show = showToggles || showSort;
@@ -2609,20 +3021,6 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   async function render({ sidebar = true, shortlist = true } = {}) {
     if (!els.grid) return;
 
-    if (state.activeTab === "specs") {
-      state.specsTopKeys = collectTopSpecKeys(state.results);
-      ensureSpecsTopSelection();
-    }
-
-    const layoutEl = document.querySelector(".layout");
-    if (layoutEl) {
-      layoutEl.classList.toggle("layout--specs", state.activeTab === "specs");
-    }
-
-    if (els.sidecol) {
-      els.sidecol.hidden = state.activeTab === "specs";
-    }
-
     const q = (state.value || state.q || "").trim();
     const isPaged = state.page > 1;
 
@@ -2673,7 +3071,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     if (Array.isArray(state.results) && state.results.length) {
       for (let i = 0; i < state.results.length; i++) {
         const r = state.results[i];
-        parts.push(state.activeTab === "specs" ? cardProductSpecs(r) : cardProduct(r));
+        parts.push(cardProduct(r));
       }
     }
 
@@ -2722,7 +3120,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
     if (shortlist) {
       syncShortlistButtons(els.grid || document);
-      renderShortlistRail();
+      window.PriceCheckShortlist?.renderRail?.();
     }
 
     if (sidebar) {
@@ -2731,6 +3129,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     }
 
     setPager();
+    updateInfiniteScroll();
   }
 
   // ----------------------------
@@ -2748,6 +3147,12 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
     setLoading(true);
 
+    state.loadingMore = false;
+    try {
+      if (_infiniteLoadingController) _infiniteLoadingController.abort();
+    } catch (_e) {}
+    setInfiniteStatus("", { show: false });
+
     state.lastError = "";
     state.results = [];
     state.also = [];
@@ -2756,7 +3161,10 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     state.kind = "product";
     state.value = "";
     state.didYouMean = null;
-    clearSidebarState();
+
+    if (!state.category) {
+      clearSidebarState();
+    }
 
     try {
       if (!state.q && !state.brand && !state.category) {
@@ -2788,6 +3196,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         await renderCategoryPanel();
         await renderBrandPanel();
         setPager();
+        updateInfiniteScroll();
 
         try {
           window.dispatchEvent(new CustomEvent("pc:browse_results", { detail: { show: false, total: 0 } }));
@@ -2807,6 +3216,14 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         if (state.variant) qs.set("variant", state.variant);
         if (state.color) qs.set("color", state.color);
         qs.set("condition", state.condition || "new");
+        if (Number.isFinite(state.priceMinCents)) qs.set("price_min", String(state.priceMinCents));
+        if (Number.isFinite(state.priceMaxCents)) qs.set("price_max", String(state.priceMaxCents));
+
+        const activeSpecFilters = Object.values(state.specFilters || {}).filter(Boolean);
+        if (activeSpecFilters.length) {
+          qs.set("spec_filters", JSON.stringify(activeSpecFilters));
+        }
+
         if (state.sort) qs.set("sort", state.sort);
 
         const data = await apiJson(`/api/browse?${qs.toString()}`, { signal });
@@ -2924,6 +3341,9 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     state.sellerLogoUrl = "";
 
     state.condition = "new";
+    state.priceMinCents = null;
+    state.priceMaxCents = null;
+    state.specFilters = {};
     state.page = 1;
     writeUrl({ replace: false });
     load();
@@ -3310,14 +3730,6 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
     // Sync selected label/color from the current variant key (if available)
     const curVar = findByKey(variants, state.detailDashKey);
-    const cardAbout = state.detailSourceCardEl
-      ? String(state.detailSourceCardEl.getAttribute("data-about") || "").trim()
-      : "";
-
-    const detailAbout =
-      aboutHtmlFull(curVar?.about) ||
-      aboutHtmlFull(data?.about) ||
-      aboutHtmlFull(cardAbout);
 
     if (!curVar) {
       state.detailSelectedVariantLabel = "";
@@ -3430,7 +3842,6 @@ async function applyCardVariantSelection(cardEl, nextKey) {
       ${variantRow}
 
       ${colorsRow}
-      ${detailAbout}
 
       <div class="detail-block" style="margin-top:12px;">
         ${offerRows}
@@ -3698,33 +4109,6 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
   // Wire UI events
   // ----------------------------
   function wire() {
-    if (els.prev) {
-      els.prev.addEventListener("click", () => {
-        stepBrowsePage(-1);
-      });
-    }
-
-    if (els.next) {
-      els.next.addEventListener("click", () => {
-        stepBrowsePage(1);
-      });
-    }
-
-  document.getElementById("conditionFilter")?.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-condition]");
-    if (!btn) return;
-
-    const picked = btn.getAttribute("data-condition");
-    const next = picked === "refurbished" ? true : false;
-
-    state.refurbished = state.refurbished === next ? null : next;
-    state.page = 1;
-    state.animateNextRender = false;
-    startPageTransitionUI();
-    writeUrl({ replace: false });
-    load();
-  });
-
     if (els.grid) {
       els.grid.addEventListener("click", (e) => {
         // 1) facet cards
@@ -3800,8 +4184,62 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
 
     if (els.sidecol) {
       els.sidecol.addEventListener("click", (e) => {
-        const setBtn = e.target.closest("button[data-side-set][data-side-value]");
-        if (!setBtn) return;
+      const priceBtn = e.target.closest("button[data-price-filter='1']");
+      if (priceBtn) {
+        e.preventDefault();
+
+        const min = cleanPriceCents(priceBtn.getAttribute("data-price-min"));
+        const max = cleanPriceCents(priceBtn.getAttribute("data-price-max"));
+
+        const active =
+          (Number.isFinite(state.priceMinCents) ? state.priceMinCents : null) === min &&
+          (Number.isFinite(state.priceMaxCents) ? state.priceMaxCents : null) === max;
+
+        if (active) {
+          state.priceMinCents = null;
+          state.priceMaxCents = null;
+        } else {
+          state.priceMinCents = min;
+          state.priceMaxCents = max;
+        }
+
+        state.page = 1;
+        writeUrl({ replace: false });
+        load();
+        return;
+      }
+
+      const specBtn = e.target.closest("button[data-spec-filter]");
+      if (specBtn) {
+        e.preventDefault();
+
+        let filter = null;
+
+        try {
+          filter = JSON.parse(specBtn.getAttribute("data-spec-filter") || "");
+        } catch (_e) {
+          filter = null;
+        }
+
+        const id = String(filter?.id || "").trim();
+        if (!id) return;
+
+        state.specFilters = state.specFilters || {};
+
+        if (state.specFilters[id]) {
+          delete state.specFilters[id];
+        } else {
+          state.specFilters[id] = filter;
+        }
+
+        state.page = 1;
+        writeUrl({ replace: false });
+        load();
+        return;
+      }
+
+      const setBtn = e.target.closest("button[data-side-set][data-side-value]");
+      if (!setBtn) return;
 
         const which = String(setBtn.getAttribute("data-side-set") || "");
         const value = norm(setBtn.getAttribute("data-side-value"));
@@ -4007,6 +4445,9 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
     state.sellerLogoUrl = "";
 
     state.condition = "new";
+    state.priceMinCents = null;
+    state.priceMaxCents = null;
+    state.specFilters = {};
 
     if (state.detailOpen) await closeDetail();
 
@@ -4024,7 +4465,6 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
     initBrowseTracking();
     readUrl();
     wire();
-    renderBrowseRail();
 
     await loadNameOverridesOnce();
 

@@ -24,6 +24,285 @@ function cleanEventInt(v, fallback = null) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function cleanPriceCents(v) {
+  const raw = String(v ?? "").trim();
+  if (!raw) return null;
+
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n)) return null;
+
+  return Math.max(0, Math.min(100000000, n));
+}
+
+function normalizeFilterText(v) {
+  return String(v ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function waterRatingScore(v) {
+  const s = String(v ?? "").trim().toUpperCase().replace(/\s+/g, "");
+  if (!s) return null;
+
+  const ipx = s.match(/^IPX([0-9])$/);
+  if (ipx) return 10 + Number(ipx[1]);
+
+  const ip = s.match(/^IP([0-9])([0-9])$/);
+  if (ip) return Number(ip[1]) * 10 + Number(ip[2]);
+
+  return null;
+}
+
+function parseSpecFilters(raw) {
+  if (!raw) return [];
+
+  let parsed = [];
+  try {
+    parsed = JSON.parse(String(raw));
+  } catch (_e) {
+    return [];
+  }
+
+  if (!Array.isArray(parsed)) return [];
+
+  return parsed
+    .map((f) => {
+      const id = limitText(f.id, 80);
+      const op = limitText(f.op, 20).toLowerCase();
+
+      const keys = Array.isArray(f.keys)
+        ? f.keys
+            .map((k) => normalizeFilterText(limitText(k, 120)))
+            .filter(Boolean)
+            .slice(0, 16)
+        : [];
+
+      if (!id || !keys.length) return null;
+
+      if (
+        op !== "eq" &&
+        op !== "bool" &&
+        op !== "gte" &&
+        op !== "contains" &&
+        op !== "rating_gte"
+      ) {
+        return null;
+      }
+
+      if (op === "bool") {
+        return {
+          id,
+          op,
+          keys,
+          value: f.value === true || String(f.value).toLowerCase() === "true",
+        };
+      }
+
+      if (op === "gte") {
+        const n = Number(f.value);
+        if (!Number.isFinite(n)) return null;
+
+        return {
+          id,
+          op,
+          keys,
+          value: n,
+        };
+      }
+
+      if (op === "rating_gte") {
+        const score = waterRatingScore(f.value);
+        if (!Number.isFinite(score)) return null;
+
+        return {
+          id,
+          op,
+          keys,
+          value: score,
+        };
+      }
+
+      const value = limitText(f.value, 120);
+      if (!value) return null;
+
+      return {
+        id,
+        op,
+        keys,
+        value,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 24);
+}
+
+function buildSpecFilterSql(filters, startParamIndex) {
+  const clauses = [];
+  const params = [];
+  let p = startParamIndex;
+
+  const specValuesSql = `
+    SELECT
+      regexp_replace(lower(kv.key), '[^a-z0-9]+', '', 'g') AS key_norm,
+      kv.value AS value_json,
+      kv.value::text AS value_text
+    FROM jsonb_each(
+      CASE
+        WHEN jsonb_typeof(c.specs_norm) = 'object' THEN c.specs_norm
+        ELSE '{}'::jsonb
+      END
+    ) AS kv(key, value)
+
+    UNION ALL
+
+    SELECT
+      regexp_replace(lower(kv.key), '[^a-z0-9]+', '', 'g') AS key_norm,
+      kv.value AS value_json,
+      kv.value::text AS value_text
+    FROM jsonb_each(
+      CASE
+        WHEN jsonb_typeof(c.specs) = 'object' THEN c.specs
+        ELSE '{}'::jsonb
+      END
+    ) AS kv(key, value)
+  `;
+
+  const normalizedValueSql = `
+    regexp_replace(
+      lower(
+        trim(both '"' from sv.value_text)
+      ),
+      '[^a-z0-9]+',
+      '',
+      'g'
+    )
+  `;
+
+  for (const filter of filters) {
+    if (filter.op === "eq") {
+      const keysParam = `$${p++}`;
+      const valueParam = `$${p++}`;
+
+      params.push(filter.keys, normalizeFilterText(filter.value));
+
+      clauses.push(`
+        AND EXISTS (
+          SELECT 1
+          FROM (${specValuesSql}) sv
+          WHERE sv.key_norm = ANY(${keysParam}::text[])
+            AND ${normalizedValueSql} = ${valueParam}
+        )
+      `);
+    }
+
+    if (filter.op === "contains") {
+      const keysParam = `$${p++}`;
+      const valueParam = `$${p++}`;
+
+      params.push(filter.keys, normalizeFilterText(filter.value));
+
+      clauses.push(`
+        AND EXISTS (
+          SELECT 1
+          FROM (${specValuesSql}) sv
+          WHERE sv.key_norm = ANY(${keysParam}::text[])
+            AND (
+              ${normalizedValueSql} = ${valueParam}
+              OR EXISTS (
+                SELECT 1
+                FROM jsonb_array_elements_text(
+                  CASE
+                    WHEN jsonb_typeof(sv.value_json) = 'array' THEN sv.value_json
+                    ELSE '[]'::jsonb
+                  END
+                ) AS arr(v)
+                WHERE regexp_replace(lower(arr.v), '[^a-z0-9]+', '', 'g') = ${valueParam}
+              )
+            )
+        )
+      `);
+    }
+
+    if (filter.op === "bool") {
+      const keysParam = `$${p++}`;
+      const valueParam = `$${p++}`;
+
+      params.push(filter.keys, filter.value);
+
+      clauses.push(`
+        AND EXISTS (
+          SELECT 1
+          FROM (${specValuesSql}) sv
+          WHERE sv.key_norm = ANY(${keysParam}::text[])
+            AND (
+              (
+                ${valueParam}::boolean = true
+                AND ${normalizedValueSql} IN ('true','yes','included','1')
+              )
+              OR
+              (
+                ${valueParam}::boolean = false
+                AND ${normalizedValueSql} IN ('false','no','notincluded','0','none')
+              )
+            )
+        )
+      `);
+    }
+
+    if (filter.op === "gte") {
+      const keysParam = `$${p++}`;
+      const valueParam = `$${p++}`;
+
+      params.push(filter.keys, filter.value);
+
+      clauses.push(`
+        AND EXISTS (
+          SELECT 1
+          FROM (${specValuesSql}) sv
+          WHERE sv.key_norm = ANY(${keysParam}::text[])
+            AND NULLIF(
+              regexp_replace(sv.value_text, '[^0-9.]', '', 'g'),
+              ''
+            )::numeric >= ${valueParam}::numeric
+        )
+      `);
+    }
+
+    if (filter.op === "rating_gte") {
+      const keysParam = `$${p++}`;
+      const valueParam = `$${p++}`;
+
+      params.push(filter.keys, filter.value);
+
+      clauses.push(`
+        AND EXISTS (
+          SELECT 1
+          FROM (${specValuesSql}) sv
+          WHERE sv.key_norm = ANY(${keysParam}::text[])
+            AND (
+              CASE
+                WHEN upper(trim(both '"' from sv.value_text)) ~ '^IPX[0-9]$'
+                  THEN 10 + substring(upper(trim(both '"' from sv.value_text)) from '^IPX([0-9])$')::int
+                WHEN upper(trim(both '"' from sv.value_text)) ~ '^IP[0-9][0-9]$'
+                  THEN
+                    substring(upper(trim(both '"' from sv.value_text)) from '^IP([0-9])')::int * 10
+                    + substring(upper(trim(both '"' from sv.value_text)) from '^IP[0-9]([0-9])$')::int
+                ELSE NULL
+              END
+            ) >= ${valueParam}::int
+        )
+      `);
+    }
+  }
+
+  return {
+    sql: clauses.join("\n"),
+    params,
+  };
+}
+
 // Helper SQL snippet: normalize version for grouping.
 const VERSION_NORM_SQL = "COALESCE(NULLIF(lower(btrim(c.version)), ''), '')";
 
@@ -70,6 +349,11 @@ router.get("/api/browse", async (req, res) => {
   const conditionParam = normText(req.query.condition).toLowerCase();
   const condition = (conditionParam === "refurbished" || conditionParam === "bundle") ? conditionParam : "new";
 
+  const priceMinCents = cleanPriceCents(req.query.price_min);
+  const priceMaxCents = cleanPriceCents(req.query.price_max);
+
+  const specFilters = parseSpecFilters(req.query.spec_filters);
+
   if (hasBrand && hasCategory) {
     type = "combo";
     value = `${brand} ${category}`;
@@ -96,6 +380,27 @@ router.get("/api/browse", async (req, res) => {
       family || "", variant || "", color || "",
     ];
 
+    const countSpecFilterBlock = buildSpecFilterSql(specFilters, 11);
+    const listSpecFilterBlock = buildSpecFilterSql(specFilters, 14);
+
+    const countParams = [
+      ...baseParams,
+      condition,
+      priceMinCents,
+      priceMaxCents,
+      ...countSpecFilterBlock.params,
+    ];
+
+    const browseParams = [
+      ...baseParams,
+      condition,
+      limit,
+      offset,
+      sortKey,
+      priceMinCents,
+      priceMaxCents,
+      ...listSpecFilterBlock.params,
+    ];
     const detectSql = `
       SELECT
         COUNT(*) FILTER (WHERE c.is_refurbished = false AND c.is_bundle = false)::int > 0 AS has_new,
@@ -117,7 +422,7 @@ router.get("/api/browse", async (req, res) => {
         )
     `;
 
-    const countSql = `
+        const countSql = `
       WITH base AS (
         SELECT DISTINCT
           upper(btrim(c.model_number)) AS model_number_norm,
@@ -135,20 +440,50 @@ router.get("/api/browse", async (req, res) => {
             OR ($8 = 'refurbished' AND c.is_refurbished = true)
             OR ($8 = 'bundle'      AND c.is_bundle = true)
           )
+          ${countSpecFilterBlock.sql}
           AND (
             ($1 = 'brand'    AND lower(btrim(c.brand))    = lower(btrim($2)))
             OR ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
             OR ($1 = 'combo'    AND lower(btrim(c.brand))    = lower(btrim($3))
                                 AND lower(btrim(c.category)) = lower(btrim($4)))
           )
+      ),
+
+      listing_rollup AS (
+        SELECT
+          b.model_number_norm,
+          b.version_norm,
+          MIN(l.current_price_cents) FILTER (
+            WHERE l.current_price_cents IS NOT NULL
+          ) AS best_price_cents
+        FROM base b
+        LEFT JOIN public.catalog c
+          ON upper(btrim(c.model_number)) = b.model_number_norm
+         AND COALESCE(NULLIF(lower(btrim(c.version)), ''), '') = b.version_norm
+        LEFT JOIN public.listings l
+          ON (
+            (c.pci IS NOT NULL AND btrim(c.pci) <> '' AND l.pci IS NOT NULL AND btrim(l.pci) <> ''
+              AND upper(btrim(l.pci)) = upper(btrim(c.pci)))
+            OR
+            (c.upc IS NOT NULL AND btrim(c.upc) <> '' AND l.upc IS NOT NULL AND btrim(l.upc) <> ''
+              AND public.norm_upc(l.upc) = public.norm_upc(c.upc))
+          )
+        GROUP BY b.model_number_norm, b.version_norm
       )
-      SELECT COUNT(*)::int AS total FROM base
+
+      SELECT COUNT(*)::int AS total
+      FROM base b
+      LEFT JOIN listing_rollup lr
+        ON lr.model_number_norm = b.model_number_norm
+       AND lr.version_norm = b.version_norm
+      WHERE ($9::int IS NULL OR (lr.best_price_cents IS NOT NULL AND lr.best_price_cents >= $9::int))
+        AND ($10::int IS NULL OR (lr.best_price_cents IS NOT NULL AND lr.best_price_cents <= $10::int))
     `;
 
     const [detectRow, total] = await Promise.all([
       client.query(detectSql, baseParams).then(r => r.rows?.[0] ?? {}),
-      client.query(countSql, [...baseParams, condition])
-            .then(r => r.rows?.[0]?.total ?? 0),
+      client.query(countSql, countParams)
+        .then(r => r.rows?.[0]?.total ?? 0),
     ]);
 
     const listSql = `
@@ -169,6 +504,7 @@ router.get("/api/browse", async (req, res) => {
           NULLIF(btrim(c.pci), '') AS pci,
           NULLIF(btrim(c.upc), '') AS upc,
           c.specs,
+          c.specs_norm AS norm_specs,
           c.is_refurbished,
           c.is_bundle,
           c.created_at,
@@ -186,6 +522,7 @@ router.get("/api/browse", async (req, res) => {
             OR ($8 = 'refurbished' AND c.is_refurbished = true)
             OR ($8 = 'bundle'      AND c.is_bundle = true)
           )
+          ${listSpecFilterBlock.sql}
           AND (
             ($1 = 'brand'    AND lower(btrim(c.brand))    = lower(btrim($2)))
             OR ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
@@ -253,8 +590,8 @@ router.get("/api/browse", async (req, res) => {
           a.category,
           a.image_url,
           a.dropship_warning,
-          NULLIF(btrim(pr.summary), '') AS about,
           a.specs,
+          a.norm_specs,
           a.is_refurbished,
           a.is_bundle,
           a.dashboard_key,
@@ -279,11 +616,10 @@ router.get("/api/browse", async (req, res) => {
           ON lr.model_number_norm = a.model_number_norm
         AND lr.version_norm = a.version_norm
         LEFT JOIN LATERAL (
-          SELECT picked_score.overall_score, picked_score.summary
+          SELECT picked_score.overall_score
           FROM (
             SELECT
               pr2.overall_score,
-              pr2.summary,
               0 AS priority,
               pr2.updated_at,
               pr2.id
@@ -309,7 +645,6 @@ router.get("/api/browse", async (req, res) => {
 
             SELECT
               pr3.overall_score,
-              pr3.summary,
               1 AS priority,
               pr3.updated_at,
               pr3.id
@@ -333,37 +668,21 @@ router.get("/api/browse", async (req, res) => {
 
       ranked AS (
         SELECT
-          s.*,
-          ROW_NUMBER() OVER (
-            PARTITION BY lower(COALESCE(s.brand, ''))
-            ORDER BY
-              s.browse_score DESC,
-              lower(COALESCE(s.model_name, '')),
-              s.model_number_norm,
-              s.version_norm
-          ) AS brand_pos,
-          ROW_NUMBER() OVER (
-            PARTITION BY s.model_number_norm
-            ORDER BY
-              s.browse_score DESC,
-              lower(COALESCE(s.model_name, '')),
-              s.version_norm
-          ) AS family_pos
+          s.*
         FROM scored s
       ),
 
       ordered AS (
         SELECT *
         FROM ranked
+        WHERE ($12::int IS NULL OR (best_price_cents IS NOT NULL AND best_price_cents >= $12::int))
+          AND ($13::int IS NULL OR (best_price_cents IS NOT NULL AND best_price_cents <= $13::int))
         ORDER BY
           CASE
             WHEN $11 = 'lowest-price' THEN CASE WHEN best_price_cents IS NULL THEN 1 ELSE 0 END
             WHEN $11 = 'highest-price' THEN CASE WHEN best_price_cents IS NULL THEN 1 ELSE 0 END
             ELSE 0
           END ASC,
-
-          CASE WHEN $1 = 'category' THEN brand_pos  ELSE 0 END ASC,
-          CASE WHEN $1 = 'category' THEN family_pos ELSE 0 END ASC,
 
           CASE WHEN $11 = 'lowest-price'  THEN best_price_cents END ASC NULLS LAST,
           CASE WHEN $11 = 'highest-price' THEN best_price_cents END DESC NULLS LAST,
@@ -390,22 +709,15 @@ router.get("/api/browse", async (req, res) => {
         dashboard_key,
         best_price_cents,
         overall_score,
-        about,
         specs,
+        norm_specs,
         is_refurbished,
         is_bundle
       FROM ordered
       LIMIT $9 OFFSET $10
     `;
 
-    const { rows } = await client.query(listSql, [
-      type, value, brand, category,
-      family || "", variant || "", color || "",
-      condition,
-      limit,
-      offset,
-      sortKey,
-    ]);
+    const { rows } = await client.query(listSql, browseParams);
 
     res.json({
       ok: true,
@@ -422,6 +734,9 @@ router.get("/api/browse", async (req, res) => {
       has_refurbished: !!detectRow.has_refurbished,
       has_bundle: !!detectRow.has_bundle,
       condition,
+      price_min: priceMinCents,
+      price_max: priceMaxCents,
+      spec_filters: specFilters,
       results: rows || [],
     });
   } catch (e) {
@@ -702,7 +1017,6 @@ router.get("/api/shortlist_specs", async (req, res) => {
         a.dashboard_key,
         lr.best_price_cents,
         pr.overall_score,
-        NULLIF(btrim(pr.summary), '') AS about,
         a.specs,
         a.is_refurbished,
         a.is_bundle
@@ -711,11 +1025,10 @@ router.get("/api/shortlist_specs", async (req, res) => {
         ON lr.model_number_norm = a.model_number_norm
        AND lr.version_norm = a.version_norm
       LEFT JOIN LATERAL (
-        SELECT picked_score.overall_score, picked_score.summary
+        SELECT picked_score.overall_score
         FROM (
           SELECT
             pr2.overall_score,
-            pr2.summary,
             0 AS priority,
             pr2.updated_at,
             pr2.id
@@ -741,7 +1054,6 @@ router.get("/api/shortlist_specs", async (req, res) => {
 
           SELECT
             pr3.overall_score,
-            pr3.summary,
             1 AS priority,
             pr3.updated_at,
             pr3.id
