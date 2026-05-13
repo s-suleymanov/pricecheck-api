@@ -249,8 +249,8 @@ body{
 @media (min-width: 861px){
   body.has-detail .sidecol{
     position: sticky;
-    top: var(--pc-detail-top, 74px);
-    height: calc(100vh - var(--pc-detail-top, 80px));
+    top: var(--pc-detail-top, 66px);
+    height: calc(100vh - var(--pc-detail-top, 68px));
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
