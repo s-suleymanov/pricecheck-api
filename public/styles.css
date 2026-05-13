@@ -434,7 +434,7 @@ body{
 
 .edition{
   margin-top:4px;
-  font-size: 15px;
+  font-size: 14px;
   white-space: nowrap;
   line-height:1;
   color:var(--muted);
