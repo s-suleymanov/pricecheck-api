@@ -2475,7 +2475,15 @@ async function applyCardVariantSelection(cardEl, nextKey) {
 
   function specRowShouldBeOpen(row, index) {
     const key = specRowKey(row, index);
-    return !!state.openSpecRows?.[key] || specRowHasActiveFilter(row);
+    const hasExplicitState = Object.prototype.hasOwnProperty.call(state.openSpecRows || {}, key);
+
+    if (hasExplicitState) {
+      return state.openSpecRows[key] === true;
+    }
+
+    if (specRowHasActiveFilter(row)) return true;
+
+    return row?.default_open === true || row?.defaultOpen === true;
   }
 
   function renderSpecControlRow(row, index) {
@@ -2538,24 +2546,26 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   `;
 }
 
-function renderOpenSpecGroup(title, items) {
-  const list = Array.isArray(items) ? items.filter(Boolean) : [];
-  if (!list.length) return "";
+  function renderOpenSpecGroup(title, items) {
+    const list = Array.isArray(items) ? items.filter(Boolean) : [];
+    if (!list.length) return "";
 
-  return `
-    <div class="browse-spec-row browse-spec-row--open-static">
-      <div class="browse-spec-row__head browse-spec-row__head--static">
-        <span>${escapeHtml(title)}</span>
-      </div>
+    const id = String(title || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
 
-      <div class="browse-spec-row__body">
-        <div class="browse-side-chips">
-          ${list.map((item) => sidebarFilterButton(item)).join("")}
-        </div>
-      </div>
-    </div>
-  `;
-}
+    return renderSpecControlRow(
+      {
+        id: id || title,
+        label: title,
+        items: list,
+        default_open: true
+      },
+      id || title
+    );
+  }
 
     function renderBrowseSpecsPanel() {
     if (!els.brandPanel) return;
@@ -2604,8 +2614,7 @@ function renderOpenSpecGroup(title, items) {
 
       state.openSpecRows = state.openSpecRows || {};
       if (rowKey) {
-        if (isOpen) state.openSpecRows[rowKey] = true;
-        else delete state.openSpecRows[rowKey];
+        state.openSpecRows[rowKey] = isOpen;
       }
 
       toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");

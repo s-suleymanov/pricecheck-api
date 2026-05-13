@@ -1325,6 +1325,7 @@ h1{
 .name{
   font-weight: 500;
   padding-top: 4px;
+  padding-bottom: 4px;
   font-size: 22px;
   overflow: hidden;
   text-overflow: ellipsis;
