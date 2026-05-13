@@ -412,7 +412,6 @@
       <a class="home-deal__link" href="${href}" aria-label="${title}">
           <div class="home-deal__media">
             ${imgTag}
-            ${recScoreBadgeHtml(item.overall_score)}
           </div>
           <div class="home-deal__body">
             <div class="home-deal__icons" aria-hidden="true">
@@ -428,27 +427,6 @@
           </div>
         </a>
       </article>
-    `;
-  }
-
-    function recScoreTone(score) {
-    const n = Number(score);
-    if (!Number.isFinite(n)) return "";
-    if (n >= 85) return "great";
-    if (n >= 70) return "good";
-    if (n >= 55) return "mixed";
-    return "low";
-  }
-
-  function recScoreBadgeHtml(score) {
-    const n = Number(score);
-    if (!Number.isFinite(n) || n <= 0) return "";
-
-    const tone = recScoreTone(n);
-    return `
-      <div class="home-deal__score home-deal__score--${tone}" aria-label="Overall score ${Math.round(n)}">
-        ${Math.round(n)}
-      </div>
     `;
   }
 

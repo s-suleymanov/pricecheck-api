@@ -189,7 +189,6 @@ async function rebuildTodayHomeFeed(client) {
       max_price_cents,
       store_count,
       score,
-      overall_score,
       has_coupon,
       stores
     )
@@ -298,71 +297,6 @@ async function rebuildTodayHomeFeed(client) {
       ORDER BY key, created_at DESC NULLS LAST, id DESC
     ),
 
-    rec_exact AS (
-      SELECT DISTINCT ON (key)
-        key,
-        overall_score
-      FROM (
-        SELECT
-          'pci:' || upper(btrim(pr.pci)) AS key,
-          pr.overall_score,
-          pr.updated_at,
-          pr.id
-        FROM public.product_recommendations pr
-        WHERE pr.pci IS NOT NULL
-          AND btrim(pr.pci) <> ''
-
-        UNION ALL
-
-        SELECT
-          'upc:' || btrim(pr.upc) AS key,
-          pr.overall_score,
-          pr.updated_at,
-          pr.id
-        FROM public.product_recommendations pr
-        WHERE pr.upc IS NOT NULL
-          AND btrim(pr.upc) <> ''
-      ) r
-      ORDER BY key, updated_at DESC NULLS LAST, id DESC
-    ),
-
-    rec_family AS (
-      SELECT DISTINCT ON (model_number_norm, version_norm)
-        model_number_norm,
-        version_norm,
-        overall_score
-      FROM (
-        SELECT
-          upper(btrim(c_same.model_number)) AS model_number_norm,
-          COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') AS version_norm,
-          pr.overall_score,
-          pr.updated_at,
-          pr.id
-        FROM public.catalog c_same
-        JOIN public.product_recommendations pr
-          ON (
-            (
-              pr.pci IS NOT NULL
-              AND btrim(pr.pci) <> ''
-              AND c_same.pci IS NOT NULL
-              AND btrim(c_same.pci) <> ''
-              AND upper(btrim(pr.pci)) = upper(btrim(c_same.pci))
-            )
-            OR
-            (
-              pr.upc IS NOT NULL
-              AND btrim(pr.upc) <> ''
-              AND c_same.upc IS NOT NULL
-              AND btrim(c_same.upc) <> ''
-              AND public.norm_upc(pr.upc) = public.norm_upc(c_same.upc)
-            )
-          )
-        WHERE c_same.model_number IS NOT NULL
-          AND btrim(c_same.model_number) <> ''
-      ) rf
-      ORDER BY model_number_norm, version_norm, updated_at DESC NULLS LAST, id DESC
-    ),
-
     with_cat AS (
       SELECT
         a.key,
@@ -459,7 +393,6 @@ async function rebuildTodayHomeFeed(client) {
       SELECT
         g.*,
         COALESCE(sa.stores, ARRAY[]::text[]) AS stores,
-        COALESCE(rex.overall_score, rf.overall_score) AS overall_score,
         (
           CASE
             WHEN lower(COALESCE(g.category, '')) LIKE '%earbud%'
@@ -484,19 +417,12 @@ async function rebuildTodayHomeFeed(client) {
               3000::numeric,
               ((g.max_price_cents - g.min_price_cents)::numeric * 10000 / NULLIF(g.max_price_cents, 0))
             )
-
-          + COALESCE(COALESCE(rex.overall_score, rf.overall_score), 0) * 35
           + g.store_count * 450
           + CASE WHEN g.has_coupon THEN 500 ELSE 0 END
         )::int AS score
       FROM grouped g
       LEFT JOIN sa
         ON sa.key = g.key
-      LEFT JOIN rec_exact rex
-        ON rex.key = g.key
-      LEFT JOIN rec_family rf
-        ON rf.model_number_norm = g.model_number_norm
-       AND rf.version_norm = COALESCE(g.version_norm, '')
       WHERE g.store_count >= 2
         AND g.max_price_cents > g.min_price_cents
         AND NULLIF(btrim(g.title), '') IS NOT NULL
@@ -525,7 +451,6 @@ async function rebuildTodayHomeFeed(client) {
         max_price_cents,
         store_count,
         score,
-        overall_score,
         has_coupon,
         stores
       FROM scored
@@ -543,7 +468,6 @@ async function rebuildTodayHomeFeed(client) {
       max_price_cents,
       store_count,
       score,
-      overall_score,
       has_coupon,
       stores
     FROM ranked
@@ -620,7 +544,6 @@ async function sendHomeFeed(req, res) {
         max_price_cents,
         store_count,
         score,
-        overall_score,
         has_coupon,
         stores
       FROM public.home_feed_daily
