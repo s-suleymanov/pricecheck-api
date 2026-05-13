@@ -111,7 +111,7 @@
       return;
     }
     wordmark.textContent = "PriceCheck";
-    edition.textContent  = "Beta";
+    edition.textContent  = "Know before you buy";
   }
 
   function renderAccountTrigger(user) {

@@ -433,7 +433,9 @@ body{
 }
 
 .edition{
-  margin-top:2px;
+  margin-top:4px;
+  font-size: 15px;
+  white-space: nowrap;
   line-height:1;
   color:var(--muted);
 }
