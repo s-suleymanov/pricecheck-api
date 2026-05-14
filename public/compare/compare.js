@@ -131,7 +131,6 @@
       "Avg Rating": "Average Rating",
       "Max Review Count": "Review Count",
       "Store Count": "Stores",
-      "Overall Score": "PriceCheck Score",
       "Best Price": "Lowest Price"
     };
 
@@ -242,7 +241,6 @@
     "water_resistance_rating",
     "codec_support",
     "driver_size_mm",
-    "overall_score",
     "avg_rating",
     "max_review_count",
     "store_count",
@@ -349,28 +347,6 @@
     return firstText(product.slot, product.product_slot, fallback);
   }
 
-  function productSummary(product) {
-    const rec = product.recommendation || {};
-    const verdict = product.verdict_json && typeof product.verdict_json === "object"
-      ? product.verdict_json
-      : {};
-
-    const text = firstText(
-      product.summary,
-      product.verdict,
-      rec.summary,
-      rec.verdict,
-      verdict.summary,
-      verdict.verdict,
-      verdict.short_verdict
-    );
-
-    if (!text) return "";
-
-    const cleaned = text.replace(/\s+/g, " ").trim();
-    return cleaned.length > 180 ? `${cleaned.slice(0, 180).trim()}…` : cleaned;
-  }
-
   function colorNames(product) {
     const colors = Array.isArray(product.colors_available)
       ? product.colors_available
@@ -397,7 +373,6 @@
     if (product.specs_norm && Object.prototype.hasOwnProperty.call(product.specs_norm, key)) return product.specs_norm[key];
     if (product.specs && Object.prototype.hasOwnProperty.call(product.specs, key)) return product.specs[key];
     if (product.dimensions && Object.prototype.hasOwnProperty.call(product.dimensions, key)) return product.dimensions[key];
-    if (product.recommendation && Object.prototype.hasOwnProperty.call(product.recommendation, key)) return product.recommendation[key];
     if (product.ratings && Object.prototype.hasOwnProperty.call(product.ratings, key)) return product.ratings[key];
 
     return undefined;
@@ -428,7 +403,6 @@
     if (key === "store_count") return product.store_count ? `${product.store_count} Stores` : "";
     if (key === "best_seller") return bestSellerLabel(product);
     if (key === "colors" || key === "available_colors") return colorNames(product).join(", ");
-    if (key === "overall_score") return product.recommendation?.overall_score ?? "";
     if (key === "avg_rating") return product.ratings?.avg_rating ?? "";
     if (key === "max_review_count") return product.ratings?.max_review_count ?? "";
 

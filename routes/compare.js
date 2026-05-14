@@ -135,18 +135,6 @@ function normalizeJsonArray(value) {
   return [];
 }
 
-function recommendationPayload(row) {
-  return {
-    overall_score: row.rec_overall_score ?? null,
-    verdict: row.rec_verdict || "",
-    summary: row.rec_summary || "",
-    strengths: normalizeJsonArray(row.rec_strengths),
-    weaknesses: normalizeJsonArray(row.rec_weaknesses),
-    score_breakdown: normalizeJsonArray(row.rec_score_breakdown),
-    updated_at: row.rec_updated_at || ""
-  };
-}
-
 function productLookupFromConfig(config = {}) {
   const keys = ["pci", "upc", "asin", "tcin", "wal", "bby", "sku"];
 
@@ -212,8 +200,7 @@ function productPayload(row, config, requested) {
     specs_norm: normalizeJson(row.specs_norm, {}),
     specs: normalizeJson(row.specs, {}),
     dimensions: normalizeJson(row.dimensions, {}),
-    verdict_json: normalizeJson(row.catalog_verdict, {}),
-    recommendation: recommendationPayload(row)
+    verdict_json: normalizeJson(row.catalog_verdict, {})
   };
 }
 
@@ -505,30 +492,6 @@ async function getCompareProduct(config = {}) {
         ROUND(AVG(rating)::numeric, 2) AS avg_rating,
         MAX(review_count) AS max_review_count
       FROM seller_rows
-    ),
-    rec AS (
-      SELECT pr.*
-      FROM public.product_recommendations pr
-      JOIN candidate_catalog c
-        ON (
-          (
-            c.pci IS NOT NULL
-            AND btrim(c.pci) <> ''
-            AND pr.pci IS NOT NULL
-            AND btrim(pr.pci) <> ''
-            AND upper(btrim(c.pci)) = upper(btrim(pr.pci))
-          )
-          OR
-          (
-            c.upc IS NOT NULL
-            AND btrim(c.upc) <> ''
-            AND pr.upc IS NOT NULL
-            AND btrim(pr.upc) = btrim(c.upc)
-          )
-        )
-      ORDER BY
-        pr.updated_at DESC NULLS LAST
-      LIMIT 1
     )
     SELECT
       c.id,
@@ -559,21 +522,11 @@ async function getCompareProduct(config = {}) {
       COALESCE(ss.store_count, 0) AS store_count,
       ss.avg_rating,
       ss.max_review_count,
-
-      rec.overall_score AS rec_overall_score,
-      rec.verdict AS rec_verdict,
-      rec.summary AS rec_summary,
-      rec.strengths AS rec_strengths,
-      rec.weaknesses AS rec_weaknesses,
-      rec.score_breakdown AS rec_score_breakdown,
-      rec.updated_at AS rec_updated_at,
-
       '[]'::jsonb AS expert_reviews,
       '[]'::jsonb AS review_distribution
     FROM candidate_catalog c
     LEFT JOIN color_summary cs ON TRUE
     LEFT JOIN seller_summary ss ON TRUE
-    LEFT JOIN rec ON TRUE
     LIMIT 1
     `,
     [kind, value, store, brand]
