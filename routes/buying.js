@@ -419,8 +419,6 @@ function extractVerdict(row) {
   const v = readVerdictJson(row);
 
   return (
-    row.rec_verdict ||
-    row.rec_summary ||
     v.verdict ||
     v.summary ||
     v.short_verdict ||
@@ -442,10 +440,6 @@ function extractBuyIf(row) {
 
   if (arr.length) return arr.slice(0, 2);
 
-  const strengths = normalizeTextArray(row.rec_strengths);
-
-  if (strengths.length) return strengths.slice(0, 2);
-
   return [buildFallbackBuyIf(row)];
 }
 
@@ -462,10 +456,6 @@ function extractSkipIf(row) {
   const arr = normalizeTextArray(fromCatalog);
 
   if (arr.length) return arr.slice(0, 2);
-
-  const weaknesses = normalizeTextArray(row.rec_weaknesses);
-
-  if (weaknesses.length) return weaknesses.slice(0, 2);
 
   return [buildFallbackSkipIf(row)];
 }
@@ -893,43 +883,8 @@ async function getBrandGuideCandidates(pageConfig) {
         cr.id DESC
     )
     SELECT
-      p.*,
-      pr.verdict AS rec_verdict,
-      pr.summary AS rec_summary,
-      pr.strengths AS rec_strengths,
-      pr.weaknesses AS rec_weaknesses,
-      pr.overall_score AS rec_overall_score
+      p.*
     FROM picked p
-    LEFT JOIN LATERAL (
-      SELECT pr.*
-      FROM public.product_recommendations pr
-      WHERE
-        (
-          p.pci IS NOT NULL
-          AND btrim(p.pci) <> ''
-          AND pr.pci IS NOT NULL
-          AND btrim(pr.pci) <> ''
-          AND upper(btrim(pr.pci)) = upper(btrim(p.pci))
-        )
-        OR
-        (
-          p.upc IS NOT NULL
-          AND btrim(p.upc) <> ''
-          AND pr.upc IS NOT NULL
-          AND btrim(pr.upc) <> ''
-          AND public.norm_upc(pr.upc) = public.norm_upc(p.upc)
-        )
-      ORDER BY
-        CASE
-          WHEN p.pci IS NOT NULL
-           AND pr.pci IS NOT NULL
-           AND upper(btrim(pr.pci)) = upper(btrim(p.pci))
-          THEN 0
-          ELSE 1
-        END,
-        pr.updated_at DESC NULLS LAST
-      LIMIT 1
-    ) pr ON TRUE
     LIMIT $3::int
     `,
     [terms, brand, maxProducts]
@@ -1480,43 +1435,8 @@ async function getRankedCandidates(pageConfig) {
         cr.id DESC
     )
     SELECT
-      p.*,
-      pr.verdict AS rec_verdict,
-      pr.summary AS rec_summary,
-      pr.strengths AS rec_strengths,
-      pr.weaknesses AS rec_weaknesses,
-      pr.overall_score AS rec_overall_score
+      p.*
     FROM picked p
-    LEFT JOIN LATERAL (
-      SELECT pr.*
-      FROM public.product_recommendations pr
-      WHERE
-        (
-          p.pci IS NOT NULL
-          AND btrim(p.pci) <> ''
-          AND pr.pci IS NOT NULL
-          AND btrim(pr.pci) <> ''
-          AND upper(btrim(pr.pci)) = upper(btrim(p.pci))
-        )
-        OR
-        (
-          p.upc IS NOT NULL
-          AND btrim(p.upc) <> ''
-          AND pr.upc IS NOT NULL
-          AND btrim(pr.upc) <> ''
-          AND public.norm_upc(pr.upc) = public.norm_upc(p.upc)
-        )
-      ORDER BY
-        CASE
-          WHEN p.pci IS NOT NULL
-           AND pr.pci IS NOT NULL
-           AND upper(btrim(pr.pci)) = upper(btrim(p.pci))
-          THEN 0
-          ELSE 1
-        END,
-        pr.updated_at DESC NULLS LAST
-      LIMIT 1
-    ) pr ON TRUE
     LIMIT 300
     `,
     [terms, priceCapCents]
@@ -1740,43 +1660,8 @@ async function getComparisonProduct(pageConfig, productConfig) {
         cr.id DESC
     )
     SELECT
-      p.*,
-      pr.verdict AS rec_verdict,
-      pr.summary AS rec_summary,
-      pr.strengths AS rec_strengths,
-      pr.weaknesses AS rec_weaknesses,
-      pr.overall_score AS rec_overall_score
+      p.*
     FROM picked p
-    LEFT JOIN LATERAL (
-      SELECT pr.*
-      FROM public.product_recommendations pr
-      WHERE
-        (
-          p.pci IS NOT NULL
-          AND btrim(p.pci) <> ''
-          AND pr.pci IS NOT NULL
-          AND btrim(pr.pci) <> ''
-          AND upper(btrim(pr.pci)) = upper(btrim(p.pci))
-        )
-        OR
-        (
-          p.upc IS NOT NULL
-          AND btrim(p.upc) <> ''
-          AND pr.upc IS NOT NULL
-          AND btrim(pr.upc) <> ''
-          AND public.norm_upc(pr.upc) = public.norm_upc(p.upc)
-        )
-      ORDER BY
-        CASE
-          WHEN p.pci IS NOT NULL
-           AND pr.pci IS NOT NULL
-           AND upper(btrim(pr.pci)) = upper(btrim(p.pci))
-          THEN 0
-          ELSE 1
-        END,
-        pr.updated_at DESC NULLS LAST
-      LIMIT 1
-    ) pr ON TRUE
     LIMIT 1
     `,
     [terms, pci, upc, matchText, brandText]

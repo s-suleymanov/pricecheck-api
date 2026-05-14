@@ -596,7 +596,6 @@ router.get("/api/browse", async (req, res) => {
           a.is_bundle,
           a.dashboard_key,
           lr.best_price_cents,
-          pr.overall_score,
           COALESCE(lr.priced_listing_count, 0) AS priced_listing_count,
           COALESCE(lr.priced_store_count, 0) AS priced_store_count,
           CASE WHEN a.image_url IS NOT NULL THEN 1 ELSE 0 END AS has_image,
@@ -615,55 +614,6 @@ router.get("/api/browse", async (req, res) => {
         LEFT JOIN listing_rollup lr
           ON lr.model_number_norm = a.model_number_norm
         AND lr.version_norm = a.version_norm
-        LEFT JOIN LATERAL (
-          SELECT picked_score.overall_score
-          FROM (
-            SELECT
-              pr2.overall_score,
-              0 AS priority,
-              pr2.updated_at,
-              pr2.id
-            FROM public.product_recommendations pr2
-            WHERE
-              (
-                a.pci IS NOT NULL
-                AND btrim(a.pci) <> ''
-                AND pr2.pci IS NOT NULL
-                AND btrim(pr2.pci) <> ''
-                AND upper(btrim(pr2.pci)) = upper(btrim(a.pci))
-              )
-              OR
-              (
-                a.upc IS NOT NULL
-                AND btrim(a.upc) <> ''
-                AND pr2.upc IS NOT NULL
-                AND btrim(pr2.upc) <> ''
-                AND public.norm_upc(pr2.upc) = public.norm_upc(a.upc)
-              )
-
-            UNION ALL
-
-            SELECT
-              pr3.overall_score,
-              1 AS priority,
-              pr3.updated_at,
-              pr3.id
-            FROM public.catalog c_same
-            JOIN public.product_recommendations pr3
-              ON (
-                (pr3.pci IS NOT NULL AND btrim(pr3.pci) <> '' AND c_same.pci IS NOT NULL AND btrim(c_same.pci) <> '' AND upper(btrim(pr3.pci)) = upper(btrim(c_same.pci)))
-                OR
-                (pr3.upc IS NOT NULL AND btrim(pr3.upc) <> '' AND c_same.upc IS NOT NULL AND btrim(c_same.upc) <> '' AND public.norm_upc(pr3.upc) = public.norm_upc(c_same.upc))
-              )
-            WHERE
-              a.model_number_norm IS NOT NULL
-              AND a.model_number_norm <> ''
-              AND upper(btrim(c_same.model_number)) = a.model_number_norm
-              AND COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') = a.version_norm
-          ) picked_score
-          ORDER BY picked_score.priority ASC, picked_score.updated_at DESC NULLS LAST, picked_score.id DESC
-          LIMIT 1
-        ) pr ON true
       ),
 
       ranked AS (
@@ -708,7 +658,6 @@ router.get("/api/browse", async (req, res) => {
         dropship_warning,
         dashboard_key,
         best_price_cents,
-        overall_score,
         specs,
         norm_specs,
         is_refurbished,
@@ -1016,7 +965,6 @@ router.get("/api/shortlist_specs", async (req, res) => {
         a.dropship_warning,
         a.dashboard_key,
         lr.best_price_cents,
-        pr.overall_score,
         a.specs,
         a.is_refurbished,
         a.is_bundle
@@ -1024,55 +972,6 @@ router.get("/api/shortlist_specs", async (req, res) => {
       LEFT JOIN listing_rollup lr
         ON lr.model_number_norm = a.model_number_norm
        AND lr.version_norm = a.version_norm
-      LEFT JOIN LATERAL (
-        SELECT picked_score.overall_score
-        FROM (
-          SELECT
-            pr2.overall_score,
-            0 AS priority,
-            pr2.updated_at,
-            pr2.id
-          FROM public.product_recommendations pr2
-          WHERE
-            (
-              a.pci IS NOT NULL
-              AND btrim(a.pci) <> ''
-              AND pr2.pci IS NOT NULL
-              AND btrim(pr2.pci) <> ''
-              AND upper(btrim(pr2.pci)) = upper(btrim(a.pci))
-            )
-            OR
-            (
-              a.upc IS NOT NULL
-              AND btrim(a.upc) <> ''
-              AND pr2.upc IS NOT NULL
-              AND btrim(pr2.upc) <> ''
-              AND public.norm_upc(pr2.upc) = public.norm_upc(a.upc)
-            )
-
-          UNION ALL
-
-          SELECT
-            pr3.overall_score,
-            1 AS priority,
-            pr3.updated_at,
-            pr3.id
-          FROM public.catalog c_same
-          JOIN public.product_recommendations pr3
-            ON (
-              (pr3.pci IS NOT NULL AND btrim(pr3.pci) <> '' AND c_same.pci IS NOT NULL AND btrim(c_same.pci) <> '' AND upper(btrim(pr3.pci)) = upper(btrim(c_same.pci)))
-              OR
-              (pr3.upc IS NOT NULL AND btrim(pr3.upc) <> '' AND c_same.upc IS NOT NULL AND btrim(c_same.upc) <> '' AND public.norm_upc(pr3.upc) = public.norm_upc(c_same.upc))
-            )
-          WHERE
-            a.model_number_norm IS NOT NULL
-            AND a.model_number_norm <> ''
-            AND upper(btrim(c_same.model_number)) = a.model_number_norm
-            AND COALESCE(NULLIF(lower(btrim(c_same.version)), ''), '') = a.version_norm
-        ) picked_score
-        ORDER BY picked_score.priority ASC, picked_score.updated_at DESC NULLS LAST, picked_score.id DESC
-        LIMIT 1
-      ) pr ON true
       ORDER BY lower(COALESCE(a.brand, '')), lower(COALESCE(a.model_name, a.model_number, ''))
     `;
 
