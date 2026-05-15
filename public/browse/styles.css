@@ -1510,6 +1510,7 @@ h1{
 .card.item .name--no-about{
   -webkit-line-clamp: 2;
   line-clamp: 2;
+  align-items: center;
 }
 
 @media (max-width: 1079px){
@@ -1838,4 +1839,24 @@ h1{
 
 .browse-spec-row--open-static .browse-spec-row__body{
   padding: 0 0 13px;
+}
+
+.browse-card-title-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.browse-card-title-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.model-year {
+  flex: 0 0 auto;
+  font-size: 16px;
+  font-weight: 500;
+  color: #8a94a6;
 }

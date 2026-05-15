@@ -1336,14 +1336,21 @@ const img = rawImg
     const bundleBadge = r.is_bundle ? `<span class="card-badge card-badge--bundle"><svg viewBox="0 -960 960 960" width="13" height="13" aria-hidden="true" style="vertical-align:-1px;fill:currentColor"><path d="M240-400v80h-80q-33 0-56.5-23.5T80-400v-400q0-33 23.5-56.5T160-880h400q33 0 56.5 23.5T640-800v80h-80v-80H160v400h80ZM400-80q-33 0-56.5-23.5T320-160v-400q0-33 23.5-56.5T400-640h400q33 0 56.5 23.5T880-560v400q0 33-23.5 56.5T800-80H400Zm0-80h400v-400H400v400Zm200-200Z"/></svg> Bundle</span>` : "";
 
     const brand = (r.brand || "").trim();
+    const modelYear = String(r.model_year || "").trim();
     const brandLine = brand ? brand : "";
+    const modelYearHtml = modelYear
+      ? `<span class="model-year">${escapeHtml(modelYear)}</span>`
+      : "";
     const specSquaresHtml = renderCardSpecSquares(r.norm_specs, r.specs, r.category);
 
     const inner = `
       <div class="thumb">${img}</div>
       <div class="body">
         <div class="subtitle">${escapeHtml(brandLine)}</div>
-        <div class="name name--no-about">${escapeHtml(displayName)}</div>
+        <div class="name name--no-about browse-card-title-line">
+          <span class="browse-card-title-text">${escapeHtml(displayName)}</span>
+          ${modelYearHtml}
+        </div>
         ${specSquaresHtml}
         <div class="card-variants" data-card-variants="1"></div>
         <div class="price-row">
