@@ -757,10 +757,6 @@ h1{
   .browse-page .browse-rail__arrow--prev svg{
     transform:rotate(180deg);
   }
-
-  .browse-page #site-footer{
-    margin-left:56px;
-  }
 }
 
 @media (max-width: 1279px){
