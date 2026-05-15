@@ -208,6 +208,15 @@
             }
           },
           {
+            "label": "LE Audio",
+            "filter": {
+              "id": "le-audio",
+              "op": "bool",
+              "keys": ["le_audio"],
+              "value": true
+            }
+          },
+          {
             "label": "Microphone",
             "filter": {
               "id": "microphone",
