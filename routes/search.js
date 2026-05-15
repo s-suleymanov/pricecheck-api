@@ -826,13 +826,11 @@ router.get("/api/search", async (req, res) => {
       scored AS (
         SELECT
           a.*,
-          ch.best_price_cents,
-          NULL::integer AS overall_score,
-          NULL::text AS about
+          ch.best_price_cents
         FROM anchors a
         LEFT JOIN cheapest ch
           ON ch.model_number_norm = a.model_number_norm
-         AND ch.version_norm = a.version_norm
+        AND ch.version_norm = a.version_norm
       )
           SELECT
             s.model_number,
@@ -842,12 +840,10 @@ router.get("/api/search", async (req, res) => {
             s.category,
             s.image_url,
             s.dropship_warning,
-            s.about,
             s.is_refurbished,
             s.is_bundle,
             s.dashboard_key,
-            s.best_price_cents,
-            s.overall_score
+            s.best_price_cents
           FROM scored s
           ORDER BY s.brand NULLS LAST, s.category NULLS LAST, s.model_name NULLS LAST, s.model_number_norm, s.version_norm
       `;
@@ -1013,13 +1009,11 @@ router.get("/api/search", async (req, res) => {
     scored AS (
       SELECT
         a.*,
-        ch.best_price_cents,
-        NULL::integer AS overall_score,
-        NULL::text AS about
+        ch.best_price_cents
       FROM anchors a
       LEFT JOIN cheapest ch
         ON ch.model_number_norm = a.model_number_norm
-       AND ch.version_norm = a.version_norm
+      AND ch.version_norm = a.version_norm
     )
     SELECT
       s.model_number,
@@ -1028,13 +1022,11 @@ router.get("/api/search", async (req, res) => {
       s.brand,
       s.category,
       s.image_url,
-      s.dropship_warning,a
-      s.about,
+      s.dropship_warning,
       s.is_refurbished,
       s.is_bundle,
       s.dashboard_key,
-      s.best_price_cents,
-      s.overall_score
+      s.best_price_cents
     FROM scored s
     ORDER BY s.brand NULLS LAST, s.category NULLS LAST, s.model_name NULLS LAST, s.model_number_norm, s.version_norm
   `;
