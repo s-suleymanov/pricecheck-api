@@ -96,6 +96,7 @@ function parseSpecFilters(raw) {
         op !== "eq" &&
         op !== "bool" &&
         op !== "gte" &&
+        op !== "lte" &&
         op !== "contains" &&
         op !== "rating_gte"
       ) {
@@ -277,6 +278,25 @@ function buildSpecFilterSql(filters, startParamIndex) {
               regexp_replace(sv.value_text, '[^0-9.]', '', 'g'),
               ''
             )::numeric >= ${valueParam}::numeric
+        )
+      `);
+    }
+
+    if (filter.op === "lte") {
+      const keysParam = `$${p++}`;
+      const valueParam = `$${p++}`;
+
+      params.push(filter.keys, filter.value);
+
+      clauses.push(`
+        AND EXISTS (
+          SELECT 1
+          FROM (${specValuesSql}) sv
+          WHERE sv.key_norm = ANY(${keysParam}::text[])
+            AND NULLIF(
+              regexp_replace(sv.value_text, '[^0-9.]', '', 'g'),
+              ''
+            )::numeric <= ${valueParam}::numeric
         )
       `);
     }

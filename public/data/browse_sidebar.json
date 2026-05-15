@@ -138,6 +138,102 @@
         ]
       },
       {
+        "label": "Microphones",
+        "items": [
+          {
+            "label": "4+",
+            "filter": {
+              "id": "microphones-4",
+              "op": "gte",
+              "keys": ["microphone_count"],
+              "value": 4
+            }
+          },
+          {
+            "label": "6+",
+            "filter": {
+              "id": "microphones-6",
+              "op": "gte",
+              "keys": ["microphone_count"],
+              "value": 6
+            }
+          },
+          {
+            "label": "8+",
+            "filter": {
+              "id": "microphones-8",
+              "op": "gte",
+              "keys": ["microphone_count"],
+              "value": 8
+            }
+          }
+        ]
+      },
+      {
+        "label": "Earbud Weight",
+        "items": [
+          {
+            "label": "Under 5g",
+            "filter": {
+              "id": "earbud-weight-under-5",
+              "op": "lte",
+              "keys": ["earbud_weight_g"],
+              "value": 5
+            }
+          },
+          {
+            "label": "Under 6g",
+            "filter": {
+              "id": "earbud-weight-under-6",
+              "op": "lte",
+              "keys": ["earbud_weight_g"],
+              "value": 6
+            }
+          },
+          {
+            "label": "Under 7g",
+            "filter": {
+              "id": "earbud-weight-under-7",
+              "op": "lte",
+              "keys": ["earbud_weight_g"],
+              "value": 7
+            }
+          }
+        ]
+      },
+      {
+        "label": "Earbud Charge Time",
+        "items": [
+          {
+            "label": "Under 1h",
+            "filter": {
+              "id": "earbud-charge-under-1",
+              "op": "lte",
+              "keys": ["Earbud Charge Time"],
+              "value": 1
+            }
+          },
+          {
+            "label": "Under 1.5h",
+            "filter": {
+              "id": "earbud-charge-under-1-5",
+              "op": "lte",
+              "keys": ["Earbud Charge Time"],
+              "value": 1.5
+            }
+          },
+          {
+            "label": "Under 2h",
+            "filter": {
+              "id": "earbud-charge-under-2",
+              "op": "lte",
+              "keys": ["Earbud Charge Time"],
+              "value": 2
+            }
+          }
+        ]
+      },
+      {
         "label": "Water Resistance",
         "items": [
           {
@@ -174,6 +270,47 @@
               "op": "eq",
               "keys": ["water_resistance_rating"],
               "value": "IP57"
+            }
+          }
+        ]
+      },
+      {
+        "label": "Codec",
+        "items": [
+          {
+            "label": "LDAC",
+            "filter": {
+              "id": "codec-ldac",
+              "op": "contains",
+              "keys": ["codec_support"],
+              "value": "LDAC"
+            }
+          },
+          {
+            "label": "aptX",
+            "filter": {
+              "id": "codec-aptx",
+              "op": "contains",
+              "keys": ["codec_support"],
+              "value": "aptX"
+            }
+          },
+          {
+            "label": "AAC",
+            "filter": {
+              "id": "codec-aac",
+              "op": "contains",
+              "keys": ["codec_support"],
+              "value": "AAC"
+            }
+          },
+          {
+            "label": "LC3",
+            "filter": {
+              "id": "codec-lc3",
+              "op": "contains",
+              "keys": ["codec_support"],
+              "value": "LC3"
             }
           }
         ]
