@@ -654,6 +654,7 @@ const state = {
     condition: "new",      // "new" | "refurbished" | "bundle"
     priceMinCents: null,
     priceMaxCents: null,
+    year: null,
     specFilters: {},
     openSpecRows: {},
     hasRefurbished: false,
@@ -832,6 +833,7 @@ const state = {
   if (state.condition && state.condition !== "new") sp.set("condition", state.condition);
   if (Number.isFinite(state.priceMinCents)) sp.set("price_min", String(state.priceMinCents));
   if (Number.isFinite(state.priceMaxCents)) sp.set("price_max", String(state.priceMaxCents));
+  if (Number.isFinite(state.year)) sp.set("year", String(state.year));
 
   const activeSpecFilters = Object.values(state.specFilters || {}).filter(Boolean);
   if (activeSpecFilters.length) {
@@ -917,6 +919,7 @@ const state = {
 
     state.priceMinCents = cleanPriceCents(_sp.get("price_min"));
     state.priceMaxCents = cleanPriceCents(_sp.get("price_max"));
+    state.year = cleanModelYear(_sp.get("year"));
 
     state.specFilters = {};
 
@@ -1069,6 +1072,7 @@ const state = {
       qs.set("condition", state.condition || "new");
       if (Number.isFinite(state.priceMinCents)) qs.set("price_min", String(state.priceMinCents));
       if (Number.isFinite(state.priceMaxCents)) qs.set("price_max", String(state.priceMaxCents));
+      if (Number.isFinite(state.year)) qs.set("year", String(state.year));
 
       const activeSpecFilters = Object.values(state.specFilters || {}).filter(Boolean);
       if (activeSpecFilters.length) {
@@ -2300,6 +2304,17 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     return Math.max(0, Math.min(100000000, n));
   }
 
+  function cleanModelYear(v) {
+    const raw = String(v ?? "").trim();
+    if (!raw) return null;
+
+    const n = Number.parseInt(raw, 10);
+    if (!Number.isFinite(n)) return null;
+
+    if (n < 1990 || n > 2100) return null;
+    return n;
+  }
+
   function dollarsToCents(v) {
     const n = Number(String(v ?? "").replace(/,/g, ""));
     if (!Number.isFinite(n)) return null;
@@ -2384,6 +2399,62 @@ async function applyCardVariantSelection(cardEl, nextKey) {
                 data-price-filter="1"
                 data-price-min="${Number.isFinite(filter.min) ? filter.min : ""}"
                 data-price-max="${Number.isFinite(filter.max) ? filter.max : ""}">
+                ${escapeHtml(filter.label)}
+              </button>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function yearFilterFromItem(item) {
+    if (item == null) return null;
+
+    if (typeof item === "object") {
+      const value = cleanModelYear(item.value ?? item.year ?? item.label);
+      if (!Number.isFinite(value)) return null;
+
+      const label = String(item.label || value).trim();
+      return { label, value };
+    }
+
+    const value = cleanModelYear(item);
+    if (!Number.isFinite(value)) return null;
+
+    return {
+      label: String(value),
+      value
+    };
+  }
+
+  function sameYearFilter(filter) {
+    const curYear = Number.isFinite(state.year) ? state.year : null;
+    const nextYear = Number.isFinite(filter?.value) ? filter.value : null;
+
+    return curYear === nextYear;
+  }
+
+  function renderYearFilterGroup(items) {
+    const filters = (Array.isArray(items) ? items : [])
+      .map(yearFilterFromItem)
+      .filter(Boolean);
+
+    if (!filters.length) return "";
+
+    return `
+      <div class="browse-main-filter-group">
+        <div class="browse-main-filter-title">Year</div>
+        <div class="browse-side-chips">
+          ${filters.map((filter) => {
+            const active = sameYearFilter(filter);
+
+            return `
+              <button
+                type="button"
+                class="browse-side-chip ${active ? "is-active" : ""}"
+                data-year-filter="1"
+                data-year="${escapeHtml(filter.value)}">
                 ${escapeHtml(filter.label)}
               </button>
             `;
@@ -2765,6 +2836,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
       </div>
 
       ${renderPriceFilterGroup(cfg.price)}
+      ${renderYearFilterGroup(cfg.year)}
       ${renderBrandFilterGroup(primaryBrands)}
     `;
 
@@ -3213,6 +3285,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         qs.set("condition", state.condition || "new");
         if (Number.isFinite(state.priceMinCents)) qs.set("price_min", String(state.priceMinCents));
         if (Number.isFinite(state.priceMaxCents)) qs.set("price_max", String(state.priceMaxCents));
+        if (Number.isFinite(state.year)) qs.set("year", String(state.year));
 
         const activeSpecFilters = Object.values(state.specFilters || {}).filter(Boolean);
         if (activeSpecFilters.length) {
@@ -4204,6 +4277,21 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
         return;
       }
 
+      const yearBtn = e.target.closest("button[data-year-filter='1']");
+        if (yearBtn) {
+          e.preventDefault();
+
+          const year = cleanModelYear(yearBtn.getAttribute("data-year"));
+          if (!Number.isFinite(year)) return;
+
+          state.year = Number.isFinite(state.year) && state.year === year ? null : year;
+
+          state.page = 1;
+          writeUrl({ replace: false });
+          load();
+          return;
+        }
+
       const specBtn = e.target.closest("button[data-spec-filter]");
       if (specBtn) {
         e.preventDefault();
@@ -4442,6 +4530,7 @@ async function updateCardPriceFromAllOffers(cardEl, offers) {
     state.condition = "new";
     state.priceMinCents = null;
     state.priceMaxCents = null;
+    state.year = null;
     state.specFilters = {};
 
     if (state.detailOpen) await closeDetail();

@@ -34,6 +34,17 @@ function cleanPriceCents(v) {
   return Math.max(0, Math.min(100000000, n));
 }
 
+function cleanModelYear(v) {
+  const raw = String(v ?? "").trim();
+  if (!raw) return null;
+
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n)) return null;
+
+  if (n < 1990 || n > 2100) return null;
+  return n;
+}
+
 function normalizeFilterText(v) {
   return String(v ?? "")
     .trim()
@@ -351,6 +362,7 @@ router.get("/api/browse", async (req, res) => {
 
   const priceMinCents = cleanPriceCents(req.query.price_min);
   const priceMaxCents = cleanPriceCents(req.query.price_max);
+  const modelYear = cleanModelYear(req.query.year);
 
   const specFilters = parseSpecFilters(req.query.spec_filters);
 
@@ -377,11 +389,11 @@ router.get("/api/browse", async (req, res) => {
   try {
     const baseParams = [
       type, value, brand, category,
-      family || "", variant || "", color || "",
+      family || "", variant || "", color || "", modelYear,
     ];
 
-    const countSpecFilterBlock = buildSpecFilterSql(specFilters, 11);
-    const listSpecFilterBlock = buildSpecFilterSql(specFilters, 14);
+    const countSpecFilterBlock = buildSpecFilterSql(specFilters, 12);
+    const listSpecFilterBlock = buildSpecFilterSql(specFilters, 15);
 
     const countParams = [
       ...baseParams,
@@ -414,6 +426,7 @@ router.get("/api/browse", async (req, res) => {
               AND lower(btrim(c.variant)) = lower(btrim($6))))
         AND ($7 = '' OR (c.color IS NOT NULL AND btrim(c.color) <> ''
               AND lower(btrim(c.color)) = lower(btrim($7))))
+        AND ($8::int IS NULL OR c.model_year::int = $8::int)
         AND (
           ($1 = 'brand'    AND lower(btrim(c.brand))    = lower(btrim($2)))
           OR ($1 = 'category' AND lower(btrim(c.category)) = lower(btrim($2)))
@@ -422,7 +435,7 @@ router.get("/api/browse", async (req, res) => {
         )
     `;
 
-        const countSql = `
+    const countSql = `
       WITH base AS (
         SELECT DISTINCT
           upper(btrim(c.model_number)) AS model_number_norm,
@@ -435,10 +448,11 @@ router.get("/api/browse", async (req, res) => {
                 AND lower(btrim(c.variant)) = lower(btrim($6))))
           AND ($7 = '' OR (c.color IS NOT NULL AND btrim(c.color) <> ''
                 AND lower(btrim(c.color)) = lower(btrim($7))))
+          AND ($8::int IS NULL OR c.model_year::int = $8::int)
           AND (
-            ($8 = 'new'         AND c.is_refurbished = false AND c.is_bundle = false)
-            OR ($8 = 'refurbished' AND c.is_refurbished = true)
-            OR ($8 = 'bundle'      AND c.is_bundle = true)
+            ($9 = 'new'         AND c.is_refurbished = false AND c.is_bundle = false)
+            OR ($9  = 'refurbished' AND c.is_refurbished = true)
+            OR ($9 = 'bundle'      AND c.is_bundle = true)
           )
           ${countSpecFilterBlock.sql}
           AND (
@@ -476,8 +490,8 @@ router.get("/api/browse", async (req, res) => {
       LEFT JOIN listing_rollup lr
         ON lr.model_number_norm = b.model_number_norm
        AND lr.version_norm = b.version_norm
-      WHERE ($9::int IS NULL OR (lr.best_price_cents IS NOT NULL AND lr.best_price_cents >= $9::int))
-        AND ($10::int IS NULL OR (lr.best_price_cents IS NOT NULL AND lr.best_price_cents <= $10::int))
+      WHERE ($10::int IS NULL OR (lr.best_price_cents IS NOT NULL AND lr.best_price_cents >= $10::int))
+        AND ($11::int IS NULL OR (lr.best_price_cents IS NOT NULL AND lr.best_price_cents <= $11::int))
     `;
 
     const [detectRow, total] = await Promise.all([
@@ -518,10 +532,11 @@ router.get("/api/browse", async (req, res) => {
                 AND lower(btrim(c.variant)) = lower(btrim($6))))
           AND ($7 = '' OR (c.color IS NOT NULL AND btrim(c.color) <> ''
                 AND lower(btrim(c.color)) = lower(btrim($7))))
+          AND ($8::int IS NULL OR c.model_year::int = $8::int)      
           AND (
-            ($8 = 'new'         AND c.is_refurbished = false AND c.is_bundle = false)
-            OR ($8 = 'refurbished' AND c.is_refurbished = true)
-            OR ($8 = 'bundle'      AND c.is_bundle = true)
+            ($9 = 'new'         AND c.is_refurbished = false AND c.is_bundle = false)
+            OR ($9 = 'refurbished' AND c.is_refurbished = true)
+            OR ($9 = 'bundle'      AND c.is_bundle = true)
           )
           ${listSpecFilterBlock.sql}
           AND (
@@ -627,22 +642,22 @@ router.get("/api/browse", async (req, res) => {
       ordered AS (
         SELECT *
         FROM ranked
-        WHERE ($12::int IS NULL OR (best_price_cents IS NOT NULL AND best_price_cents >= $12::int))
-          AND ($13::int IS NULL OR (best_price_cents IS NOT NULL AND best_price_cents <= $13::int))
+        WHERE ($13::int IS NULL OR (best_price_cents IS NOT NULL AND best_price_cents >= $13::int))
+          AND ($14::int IS NULL OR (best_price_cents IS NOT NULL AND best_price_cents <= $14::int))
         ORDER BY
           CASE
-            WHEN $11 = 'lowest-price' THEN CASE WHEN best_price_cents IS NULL THEN 1 ELSE 0 END
-            WHEN $11 = 'highest-price' THEN CASE WHEN best_price_cents IS NULL THEN 1 ELSE 0 END
+            WHEN $12 = 'lowest-price' THEN CASE WHEN best_price_cents IS NULL THEN 1 ELSE 0 END
+            WHEN $12 = 'highest-price' THEN CASE WHEN best_price_cents IS NULL THEN 1 ELSE 0 END
             ELSE 0
           END ASC,
 
-          CASE WHEN $11 = 'lowest-price'  THEN best_price_cents END ASC NULLS LAST,
-          CASE WHEN $11 = 'highest-price' THEN best_price_cents END DESC NULLS LAST,
-          CASE WHEN $11 = 'az' THEN lower(COALESCE(model_name, model_number, 'zzzzzz')) END ASC,
+          CASE WHEN $12 = 'lowest-price'  THEN best_price_cents END ASC NULLS LAST,
+          CASE WHEN $12 = 'highest-price' THEN best_price_cents END DESC NULLS LAST,
+          CASE WHEN $12 = 'az' THEN lower(COALESCE(model_name, model_number, 'zzzzzz')) END ASC,
 
-          CASE WHEN $11 = 'recommended' THEN browse_score END DESC,
-          CASE WHEN $11 = 'recommended' THEN priced_store_count END DESC,
-          CASE WHEN $11 = 'recommended' THEN priced_listing_count END DESC,
+          CASE WHEN $12 = 'recommended' THEN browse_score END DESC,
+          CASE WHEN $12 = 'recommended' THEN priced_store_count END DESC,
+          CASE WHEN $12 = 'recommended' THEN priced_listing_count END DESC,
 
           lower(COALESCE(brand, 'zzzzzz')) ASC,
           lower(COALESCE(model_name, model_number, 'zzzzzz')) ASC,
@@ -666,7 +681,7 @@ router.get("/api/browse", async (req, res) => {
         is_refurbished,
         is_bundle
       FROM ordered
-      LIMIT $9 OFFSET $10
+      LIMIT $10 OFFSET $11
     `;
 
     const { rows } = await client.query(listSql, browseParams);
@@ -688,6 +703,7 @@ router.get("/api/browse", async (req, res) => {
       condition,
       price_min: priceMinCents,
       price_max: priceMaxCents,
+      year: modelYear,
       spec_filters: specFilters,
       results: rows || [],
     });
