@@ -2836,8 +2836,8 @@ async function applyCardVariantSelection(cardEl, nextKey) {
       </div>
 
       ${renderPriceFilterGroup(cfg.price)}
-      ${renderYearFilterGroup(cfg.year)}
       ${renderBrandFilterGroup(primaryBrands)}
+      ${renderYearFilterGroup(cfg.year)}
     `;
 
     initBrowseSidebarControls();
