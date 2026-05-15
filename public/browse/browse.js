@@ -475,6 +475,24 @@ function initBrowseTracking() {
     return `${n}h`;
   }
   
+  function formatWaterResistanceLabel(value) {
+    const s = String(value ?? "").trim().toUpperCase().replace(/\s+/g, "");
+    if (!s) return "";
+
+    if (s === "IPX4") return "Sweat + Splash";
+    if (s === "IPX5" || s === "IPX6") return "Water";
+    if (s === "IPX7" || s === "IPX8") return "Water";
+
+    if (s === "IP54") return "Dust + Splash";
+    if (s === "IP55" || s === "IP56") return "Dust + Water";
+    if (s === "IP57" || s === "IP58") return "Dust + Water";
+
+    if (/^IPX[0-9]$/.test(s)) return "Water";
+    if (/^IP[0-9][0-9]$/.test(s)) return "Dust + Water";
+
+    return "Water";
+  }
+  
   function cardSpecCategoryKey(category) {
     return String(category || "")
       .trim()
@@ -576,8 +594,8 @@ function initBrowseTracking() {
         value: formatSpecHours(caseBattery)
       },
       {
-        label: "",
-        value: waterResistance ? String(waterResistance).trim() : ""
+        label: formatWaterResistanceLabel(waterResistance),
+        value: waterResistance ? String(waterResistance).trim().toUpperCase() : ""
       }
     ];
   }
