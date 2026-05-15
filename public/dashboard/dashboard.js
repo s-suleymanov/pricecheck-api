@@ -490,14 +490,30 @@ function renderTopSpecPills(){
   const specs = getCurrentSpecsObject();
   const pills = buildTopSpecPills(specs, configList);
 
-  if (!pills.length) {
+  const cur = getCurrentVariant() || null;
+  const rawModelYear = cur?.model_year ?? state.identity?.model_year ?? null;
+  const modelYearNum = Number(rawModelYear);
+
+  const modelYearPill =
+    Number.isInteger(modelYearNum) && modelYearNum > 0
+      ? {
+          text: String(modelYearNum),
+          label: 'Model Year'
+        }
+      : null;
+
+  const displayPills = modelYearPill
+    ? [...pills.slice(0, 4), modelYearPill]
+    : pills;
+
+  if (!displayPills.length) {
     host.hidden = true;
     host.innerHTML = '';
     return;
   }
 
   host.hidden = false;
-  host.innerHTML = pills
+  host.innerHTML = displayPills
     .map(pill => `
       <span
         class="ph-spec-pill"

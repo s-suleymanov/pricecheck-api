@@ -734,7 +734,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
   if (pci) {
     const r = await client.query(
       `
-      select id, upc, pci, model_name, model_number, brand, category, image_url,
+      select id, upc, pci, model_name, model_number, model_year, brand, category, image_url,
         version, color, variant, dimensions, specs, specs_norm, media, marketing_images, timeline, files, contents, verdict, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
@@ -753,7 +753,7 @@ async function resolveCatalogIdentity(client, seedKeys) {
   if (upc) {
     const r = await client.query(
       `
-      select id, upc, pci, model_name, model_number, brand, category, image_url,
+      select id, upc, pci, model_name, model_number, model_year, brand, category, image_url,
         version, color, variant, dimensions, specs, specs_norm, media, marketing_images, timeline, files, contents, verdict, created_at,
         dropship_warning, recall_url, coverage_warning
       from public.catalog
@@ -842,6 +842,7 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
       pci: row.pci || null,
       model_name: row.model_name || null,
       model_number: row.model_number || null,
+      model_year: row.model_year == null ? null : Number(row.model_year),
       variant_label: (row.version && row.color) ? `${row.version} • ${row.color}` : (row.version || row.color || 'Default'),
       version: row.version || null,
       variant: row.variant || null,
@@ -871,8 +872,8 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
 
   const r = await client.query(
     `
-    select id, upc, pci, model_name, model_number, brand, category, image_url,
-      version, color, variant, dimensions, specs, specs_norm, media, timeline, files, contents, verdict, created_at
+    select id, upc, pci, model_name, model_number, model_year, brand, category, image_url,
+    version, color, variant, dimensions, specs, specs_norm, media, timeline, files, contents, verdict, created_at
     from public.catalog
     where model_number is not null and btrim(model_number) <> ''
       and upper(btrim(model_number)) = upper(btrim($1))
@@ -915,6 +916,7 @@ async function getVariantsFromCatalog(client, catalogIdentity) {
         pci: row.pci || null,
         model_name: row.model_name || null,
         model_number: row.model_number || null,
+        model_year: row.model_year == null ? null : Number(row.model_year),
         variant_label: label,
         version: row.version || null,
         variant: row.variant || null,
@@ -1953,6 +1955,7 @@ const valueSnapshot = meta ? await getValueSnapshot(client, meta, selectedKeys, 
         // catalog meta (fallback to listing title for model_name if catalog missing)
         model_number: meta?.model_number || null,
         model_name: (meta?.model_name || listingTitle || null),
+        model_year: meta?.model_year == null ? null : Number(meta.model_year),
         brand: meta?.brand || null,
         category: meta?.category || null,
         image_url: meta?.image_url || null,
