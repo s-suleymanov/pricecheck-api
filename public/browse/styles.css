@@ -1510,7 +1510,6 @@ h1{
 .card.item .name--no-about{
   -webkit-line-clamp: 2;
   line-clamp: 2;
-  align-items: center;
 }
 
 @media (max-width: 1079px){
@@ -1842,21 +1841,22 @@ h1{
 }
 
 .browse-card-title-line {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+  display: block;
   min-width: 0;
 }
 
 .browse-card-title-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: inline;
 }
 
 .model-year {
-  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  vertical-align: 0.12em;
   font-size: 16px;
+  line-height: 1;
   font-weight: 500;
   color: #8a94a6;
+  white-space: nowrap;
 }
