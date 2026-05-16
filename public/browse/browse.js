@@ -492,7 +492,7 @@ function initBrowseTracking() {
 
     return "Water";
   }
-  
+
   function cardSpecCategoryKey(category) {
     return String(category || "")
       .trim()
@@ -2621,7 +2621,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
   `;
 }
 
-  function renderOpenSpecGroup(title, items) {
+  function renderOpenSpecGroup(title, items, { defaultOpen = true } = {}) {
     const list = Array.isArray(items) ? items.filter(Boolean) : [];
     if (!list.length) return "";
 
@@ -2636,7 +2636,7 @@ async function applyCardVariantSelection(cardEl, nextKey) {
         id: id || title,
         label: title,
         items: list,
-        default_open: true
+        default_open: defaultOpen
       },
       id || title
     );
@@ -2648,7 +2648,15 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     const cfg = state.sideStatic || {};
     const rows = Array.isArray(cfg.spec_rows) ? cfg.spec_rows : [];
 
-    if (!state.category || (!rows.length && !Array.isArray(cfg.fit) && !Array.isArray(cfg.noise))) {
+    if (
+      !state.category ||
+      (
+        !rows.length &&
+        !Array.isArray(cfg.fit) &&
+        !Array.isArray(cfg.form) &&
+        !Array.isArray(cfg.noise)
+      )
+    ) {
       els.brandPanel.innerHTML = "";
       els.brandPanel.hidden = true;
       return;
@@ -2658,8 +2666,9 @@ async function applyCardVariantSelection(cardEl, nextKey) {
     els.brandPanel.classList.add("sidecard--specs");
     els.brandPanel.innerHTML = `
       <div class="browse-spec-list">
-        ${renderOpenSpecGroup("Fit", cfg.fit)}
-        ${renderOpenSpecGroup("Noise", cfg.noise)}
+        ${renderOpenSpecGroup("Fit", cfg.fit, { defaultOpen: true })}
+        ${renderOpenSpecGroup("Form", cfg.form, { defaultOpen: true })}
+        ${renderOpenSpecGroup("Noise Cancellation", cfg.noise, { defaultOpen: false })}
         ${rows.map((row, index) => renderSpecControlRow(row, index)).join("")}
       </div>
     `;

@@ -25,6 +25,53 @@
         }
       }
     ],
+    "form": [
+      {
+        "label": "Stem",
+        "filter": {
+          "id": "form-stem",
+          "op": "eq",
+          "keys": ["form"],
+          "value": "Stem"
+        }
+      },
+      {
+        "label": "Bud",
+        "filter": {
+          "id": "form-bud",
+          "op": "eq",
+          "keys": ["form"],
+          "value": "Bud"
+        }
+      },
+      {
+        "label": "Ear Hook",
+        "filter": {
+          "id": "form-ear-hook",
+          "op": "eq",
+          "keys": ["form"],
+          "value": "Ear Hook"
+        }
+      },
+      {
+        "label": "Clip-On",
+        "filter": {
+          "id": "form-clip-on",
+          "op": "eq",
+          "keys": ["form"],
+          "value": "Clip-On"
+        }
+      },
+      {
+        "label": "Neckband",
+        "filter": {
+          "id": "form-neckband",
+          "op": "eq",
+          "keys": ["form"],
+          "value": "Neckband"
+        }
+      }
+    ],
     "noise": [
       {
         "label": "ANC",
@@ -129,6 +176,47 @@
         ]
       },
       {
+        "label": "Water Resistance",
+        "items": [
+          {
+            "label": "IPX4",
+            "filter": {
+              "id": "water-ipx4",
+              "op": "eq",
+              "keys": ["water_resistance_rating"],
+              "value": "IPX4"
+            }
+          },
+          {
+            "label": "IP54",
+            "filter": {
+              "id": "water-ip54",
+              "op": "eq",
+              "keys": ["water_resistance_rating"],
+              "value": "IP54"
+            }
+          },
+          {
+            "label": "IP55",
+            "filter": {
+              "id": "water-ip55",
+              "op": "eq",
+              "keys": ["water_resistance_rating"],
+              "value": "IP55"
+            }
+          },
+          {
+            "label": "IP57",
+            "filter": {
+              "id": "water-ip57",
+              "op": "eq",
+              "keys": ["water_resistance_rating"],
+              "value": "IP57"
+            }
+          }
+        ]
+      },
+      {
         "label": "Microphones",
         "items": [
           {
@@ -225,88 +313,6 @@
         ]
       },
       {
-        "label": "Water Resistance",
-        "items": [
-          {
-            "label": "IPX4",
-            "filter": {
-              "id": "water-ipx4",
-              "op": "eq",
-              "keys": ["water_resistance_rating"],
-              "value": "IPX4"
-            }
-          },
-          {
-            "label": "IP54",
-            "filter": {
-              "id": "water-ip54",
-              "op": "eq",
-              "keys": ["water_resistance_rating"],
-              "value": "IP54"
-            }
-          },
-          {
-            "label": "IP55",
-            "filter": {
-              "id": "water-ip55",
-              "op": "eq",
-              "keys": ["water_resistance_rating"],
-              "value": "IP55"
-            }
-          },
-          {
-            "label": "IP57",
-            "filter": {
-              "id": "water-ip57",
-              "op": "eq",
-              "keys": ["water_resistance_rating"],
-              "value": "IP57"
-            }
-          }
-        ]
-      },
-      {
-        "label": "Codec",
-        "items": [
-          {
-            "label": "LDAC",
-            "filter": {
-              "id": "codec-ldac",
-              "op": "contains",
-              "keys": ["codec_support"],
-              "value": "LDAC"
-            }
-          },
-          {
-            "label": "aptX",
-            "filter": {
-              "id": "codec-aptx",
-              "op": "contains",
-              "keys": ["codec_support"],
-              "value": "aptX"
-            }
-          },
-          {
-            "label": "AAC",
-            "filter": {
-              "id": "codec-aac",
-              "op": "contains",
-              "keys": ["codec_support"],
-              "value": "AAC"
-            }
-          },
-          {
-            "label": "LC3",
-            "filter": {
-              "id": "codec-lc3",
-              "op": "contains",
-              "keys": ["codec_support"],
-              "value": "LC3"
-            }
-          }
-        ]
-      },
-      {
         "label": "Features",
         "items": [
           {
@@ -342,15 +348,6 @@
               "id": "le-audio",
               "op": "bool",
               "keys": ["le_audio"],
-              "value": true
-            }
-          },
-          {
-            "label": "Microphone",
-            "filter": {
-              "id": "microphone",
-              "op": "bool",
-              "keys": ["built_in_microphone"],
               "value": true
             }
           }
