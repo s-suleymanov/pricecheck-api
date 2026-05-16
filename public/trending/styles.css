@@ -233,6 +233,7 @@
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
+  margin-top: 2px;
   font-weight:500;
   font-size: 18px;
 }
