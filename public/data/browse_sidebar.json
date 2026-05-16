@@ -23,15 +23,6 @@
           "keys": ["fit"],
           "value": "Open-Ear"
         }
-      },
-      {
-        "label": "Ear Hook",
-        "filter": {
-          "id": "fit-ear-hook",
-          "op": "eq",
-          "keys": ["fit_style"],
-          "value": "Ear Hook"
-        }
       }
     ],
     "noise": [
