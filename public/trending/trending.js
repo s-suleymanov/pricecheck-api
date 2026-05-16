@@ -120,8 +120,8 @@
       <a class="pc-market-product" href="${escapeHtml(item.href || "#")}">
         ${image}
         <span>
-          <strong>${escapeHtml(item.title || "Unknown Earbuds")}</strong>
           <small>${escapeHtml(item.brand || "Unknown")}</small>
+          <strong>${escapeHtml(item.title || "Unknown Earbuds")}</strong>
         </span>
       </a>
     `;
