@@ -3,7 +3,7 @@
     "label": "Earbuds",
     "product_count": 308,
     "price": ["Under $50", "$50-$100", "$100-$150", "$150-$200", "$200+"],
-    "year": ["2026", "2025", "2024", "2023", "2022", "2021"],
+    "year": ["2026", "2025", "2024", "2023", "2022"],
     "brand_primary": ["Apple", "Sony", "Soundcore", "Samsung", "JBL", "Beats", "Bose", "Google", "Skullcandy", "OnePlus"],
     "fit": [
       {
