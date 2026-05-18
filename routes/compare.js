@@ -95,7 +95,7 @@ function storeForKind(kind) {
 function money(cents) {
   const n = Number(cents);
 
-  if (!Number.isFinite(n) || n <= 0) return "N/A";
+  if (!Number.isFinite(n) || n <= 0) return "Not Listed";
 
   return `$${(n / 100).toFixed(2)}`;
 }
@@ -477,7 +477,7 @@ async function getCompareProduct(config = {}) {
               'price', CASE
                 WHEN price_cents IS NOT NULL AND price_cents > 0
                 THEN ('$' || to_char(price_cents / 100.0, 'FM999999990.00'))
-                ELSE 'N/A'
+                ELSE 'More Specs'
               END,
               'rating', rating,
               'review_count', review_count,
@@ -559,6 +559,79 @@ function findComparisonPage(reqPath) {
     || null;
 }
 
+function comparisonProductKey(config = {}) {
+  const lookup = productLookupFromConfig(config);
+
+  if (lookup.kind && lookup.value) {
+    return `${lookup.kind}:${String(lookup.value).trim().toLowerCase()}`;
+  }
+
+  const fallback = String(config.label || config.match || config.slug || "product").trim();
+  return `match:${slugify(fallback)}`;
+}
+
+function comparisonProductLabel(config = {}) {
+  return String(config.label || config.title || config.match || config.slug || "Product")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function comparisonProductOption(config, pageConfig, selected = false) {
+  return {
+    key: comparisonProductKey(config),
+    label: comparisonProductLabel(config),
+    path: comparisonCanonicalPath(pageConfig),
+    selected
+  };
+}
+
+function buildCompareOptions(pageConfig) {
+  const currentProducts = Array.isArray(pageConfig.products) ? pageConfig.products : [];
+  const currentLeft = currentProducts[0] || {};
+  const currentRight = currentProducts[1] || {};
+  const currentLeftKey = comparisonProductKey(currentLeft);
+  const currentRightKey = comparisonProductKey(currentRight);
+
+  const pages = loadBuyingPages()
+    .filter(page => page && page.type === "comparison" && page.category === "earbuds");
+
+  function collectOptions(fixedKey, selectedKey, selectedConfig) {
+    const options = new Map();
+
+    options.set(selectedKey, comparisonProductOption(selectedConfig, pageConfig, true));
+
+    for (const page of pages) {
+      const products = Array.isArray(page.products) ? page.products : [];
+      if (products.length < 2) continue;
+
+      const first = products[0] || {};
+      const second = products[1] || {};
+      const firstKey = comparisonProductKey(first);
+      const secondKey = comparisonProductKey(second);
+
+      if (firstKey === fixedKey && secondKey) {
+        options.set(secondKey, comparisonProductOption(second, page, secondKey === selectedKey));
+      }
+
+      if (secondKey === fixedKey && firstKey) {
+        options.set(firstKey, comparisonProductOption(first, page, firstKey === selectedKey));
+      }
+    }
+
+    return Array.from(options.values())
+      .sort((a, b) => {
+        if (a.selected && !b.selected) return -1;
+        if (!a.selected && b.selected) return 1;
+        return a.label.localeCompare(b.label);
+      });
+  }
+
+  return {
+    left: collectOptions(currentRightKey, currentLeftKey, currentLeft),
+    right: collectOptions(currentLeftKey, currentRightKey, currentRight)
+  };
+}
+
 function buildJsonLd(payload, canonicalUrl) {
   return {
     "@context": "https://schema.org",
@@ -622,7 +695,8 @@ async function buildComparisonPayload(req) {
       generated_at: new Date().toISOString()
     },
     left,
-    right
+    right,
+    compare_options: buildCompareOptions(pageConfig)
   };
 
   payload.json_ld = buildJsonLd(payload, canonicalUrl);
