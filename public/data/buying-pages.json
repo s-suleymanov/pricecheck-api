@@ -144,6 +144,64 @@
   ]
 },
 {
+  "slug": "sony-wf-1000xm5-vs-airpods-pro-2",
+  "path": "/compare/sony-wf-1000xm5/versus/airpods-pro-2/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Sony WF-1000XM5 vs AirPods Pro 2",
+  "seo_title": "Sony WF-1000XM5 vs AirPods Pro 2 - PriceCheck",
+  "description": "Compare Sony WF-1000XM5 and AirPods Pro 2 by price, ANC, transparency mode, battery life, fit, water resistance, charging case features, codec support, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Sony WF-1000XM5 vs AirPods Pro 2"
+  },
+  "products": [
+    {
+      "slot": "sony_wf_1000xm5",
+      "slug": "sony-wf-1000xm5",
+      "label": "Sony WF-1000XM5",
+      "brand": "Sony",
+      "match": "WF-1000XM5"
+    },
+    {
+      "slot": "airpods_pro_2",
+      "slug": "airpods-pro-2",
+      "label": "AirPods Pro 2",
+      "brand": "Apple",
+      "match": "AirPods Pro 2"
+    }
+  ]
+},
+{
+  "slug": "earfun-air-pro-4-vs-soundcore-liberty-4-nc",
+  "path": "/compare/earfun-air-pro-4/versus/soundcore-liberty-4-nc/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC",
+  "seo_title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC - PriceCheck",
+  "description": "Compare EarFun Air Pro 4 and soundcore Liberty 4 NC by price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "EarFun Air Pro 4 vs Liberty 4 NC"
+  },
+  "products": [
+    {
+      "slot": "earfun_air_pro_4",
+      "slug": "earfun-air-pro-4",
+      "label": "EarFun Air Pro 4",
+      "brand": "EarFun",
+      "match": "Air Pro 4"
+    },
+    {
+      "slot": "liberty_4_nc",
+      "slug": "soundcore-liberty-4-nc",
+      "label": "soundcore Liberty 4 NC",
+      "brand": "soundcore",
+      "match": "Liberty 4 NC"
+    }
+  ]
+},
+{
   "slug": "airpods-4-with-anc-vs-airpods-4-without-anc",
   "path": "/compare/airpods-4-with-anc/versus/airpods-4-without-anc/",
   "type": "comparison",
