@@ -434,9 +434,8 @@ body.h2h-body .nav {
   }
 
   .h2h-column-head {
-    top: 58px;
+    top: 56px;
     margin: 0 -6px;
-    padding: 6px;
   }
 
   .h2h-sticky-grid {
@@ -444,15 +443,19 @@ body.h2h-body .nav {
   }
 
   .h2h-sticky-product {
-    padding: 10px 8px;
+    padding: 0;
+    padding-top: 10px;
   }
 
   .h2h-product-select {
-    min-height: 42px;
-    padding: 4px 28px 4px 0;
-    font-size: 18px;
-    line-height: 1.1;
-  }
+  min-height: 42px;
+  padding: 6px 10px;
+  font-size: 18px;
+  line-height: 1.1;
+  background-image: none;
+  background-position: initial;
+  background-size: initial;
+}
 
   .h2h-section {
     margin-top: 34px;
@@ -510,6 +513,7 @@ body.h2h-body .nav {
   }
 
   .h2h-product-select {
+    padding: 6px 8px;
     font-size: 16px;
   }
 }
