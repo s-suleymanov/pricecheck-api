@@ -31,7 +31,7 @@ body.h2h-body .nav {
 /* Hero */
 
 .h2h-hero {
-  padding: 30px 0 18px;
+  padding: 0 0 18px;
 }
 
 .h2h-eyebrow {
@@ -220,7 +220,7 @@ body.h2h-body .nav {
 .h2h-section__head h2 {
   margin: 0;
   color: var(--h2h-text);
-  margin-top: 72px;
+  margin-top: 50px;
   font-size: clamp(30px, 4vw, 46px);
   line-height: 1.05;
   letter-spacing: -0.035em;
