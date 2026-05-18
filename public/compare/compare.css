@@ -785,3 +785,32 @@ body.h2h-body .nav {
     font-size: 15px;
   }
 }
+
+.h2h-metric-cell--controls {
+  align-items: center;
+  text-align: left;
+}
+
+.h2h-control-list {
+  max-width: 360px;
+  margin: 0 auto;
+  padding-left: 1.1rem;
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 500;
+  color: #374151;
+}
+
+.h2h-control-list li {
+  margin: 0 0 5px;
+}
+
+.h2h-control-list li:last-child {
+  margin-bottom: 0;
+}
+
+.h2h-metric-cell--controls .h2h-metric-label {
+  width: 100%;
+  text-align: center;
+  margin-top: 12px;
+}

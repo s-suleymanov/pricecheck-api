@@ -604,18 +604,57 @@ function wireAllSpecsToggles() {
     return "";
   }
 
-  function metricCell(row, side) {
-  const value = side === "left" ? row.left : row.right;
-  const empty = !isRealValue(value) || value === NOT_LISTED;
-  const better = compareClass(row, side);
+  function isControlsRow(row) {
+    return normalizeKey(row?.key || row?.label) === "controls";
+  }
 
-  return `
-    <div class="h2h-metric-cell${empty ? " is-empty" : ""}${better}">
-      <strong class="h2h-metric-value">${esc(value || NOT_LISTED)}</strong>
-      <span class="h2h-metric-label">${esc(row.label)}</span>
-    </div>
-  `;
-}
+  function controlItems(value) {
+    if (!isRealValue(value) || value === NOT_LISTED) return [];
+
+    if (Array.isArray(value)) {
+      return value.map(item => cleanText(item)).filter(Boolean);
+    }
+
+    const text = cleanText(value);
+    if (!text) return [];
+
+    return text
+      .split(/;\s+|,\s+(?=(?:press|tap|swipe|squeeze|pinch|hold)\b)/i)
+      .map(item => cleanText(item))
+      .filter(Boolean);
+  }
+
+  function controlValueHtml(value) {
+    const items = controlItems(value);
+
+    if (!items.length) {
+      return `<strong class="h2h-metric-value">${esc(value || NOT_LISTED)}</strong>`;
+    }
+
+    return `
+      <ul class="h2h-control-list">
+        ${items.map(item => `<li>${esc(item)}</li>`).join("")}
+      </ul>
+    `;
+  }
+
+  function metricCell(row, side) {
+    const value = side === "left" ? row.left : row.right;
+    const empty = !isRealValue(value) || value === NOT_LISTED;
+    const better = compareClass(row, side);
+    const controls = isControlsRow(row);
+
+    return `
+      <div class="h2h-metric-cell${empty ? " is-empty" : ""}${better}${controls ? " h2h-metric-cell--controls" : ""}">
+        ${
+          controls
+            ? controlValueHtml(value)
+            : `<strong class="h2h-metric-value">${esc(value || NOT_LISTED)}</strong>`
+        }
+        <span class="h2h-metric-label">${esc(row.label)}</span>
+      </div>
+    `;
+  }
 
   function metricRow(row) {
     return `
