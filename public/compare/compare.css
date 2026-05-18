@@ -221,7 +221,7 @@ body.h2h-body .nav {
   margin: 0;
   color: var(--h2h-text);
   margin-top: 60px;
-  font-size: clamp(30px, 4vw, 46px);
+  font-size: clamp(30px, 4vw, 42px);
   line-height: 1.05;
   letter-spacing: -0.035em;
   font-weight: 500;
@@ -267,7 +267,7 @@ body.h2h-body .nav {
   display: block;
   max-width: 100%;
   color: var(--h2h-text);
-  font-size: clamp(30px, 4vw, 48px);
+  font-size: clamp(30px, 3vw, 48px);
   line-height: 1;
   letter-spacing: -0.045em;
   font-weight: 500;
