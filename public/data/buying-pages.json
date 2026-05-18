@@ -6176,6 +6176,93 @@
   ]
 },
 {
+  "slug": "oneplus-buds-3-vs-oneplus-buds-4",
+  "path": "/compare/oneplus-buds-3/versus/oneplus-buds-4/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "OnePlus Buds 3 vs OnePlus Buds 4",
+  "seo_title": "OnePlus Buds 3 vs OnePlus Buds 4 - PriceCheck",
+  "description": "Compare OnePlus Buds 3 and OnePlus Buds 4 by price, ANC, battery life, wireless charging, multipoint, water resistance, codec support, fit, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "OnePlus Buds 3 vs OnePlus Buds 4"
+  },
+  "products": [
+    {
+      "slot": "oneplus_buds_3",
+      "slug": "oneplus-buds-3",
+      "label": "OnePlus Buds 3",
+      "brand": "OnePlus",
+      "match": "Buds 3"
+    },
+    {
+      "slot": "oneplus_buds_4",
+      "slug": "oneplus-buds-4",
+      "label": "OnePlus Buds 4",
+      "brand": "OnePlus",
+      "match": "Buds 4"
+    }
+  ]
+},
+{
+  "slug": "shokz-openfit-2-vs-bose-ultra-open-earbuds",
+  "path": "/compare/shokz-openfit-2/versus/bose-ultra-open-earbuds/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Shokz OpenFit 2 vs Bose Ultra Open Earbuds",
+  "seo_title": "Shokz OpenFit 2 vs Bose Ultra Open Earbuds - PriceCheck",
+  "description": "Compare Shokz OpenFit 2 and Bose Ultra Open Earbuds by price, open-ear fit, battery life, water resistance, controls, charging case features, comfort, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Shokz OpenFit 2 vs Bose Ultra Open Earbuds"
+  },
+  "products": [
+    {
+      "slot": "shokz_openfit_2",
+      "slug": "shokz-openfit-2",
+      "label": "Shokz OpenFit 2",
+      "brand": "Shokz",
+      "match": "OpenFit 2"
+    },
+    {
+      "slot": "bose_ultra_open_earbuds",
+      "slug": "bose-ultra-open-earbuds",
+      "label": "Bose Ultra Open Earbuds",
+      "brand": "Bose",
+      "match": "Ultra Open Earbuds"
+    }
+  ]
+},
+{
+  "slug": "soundcore-space-a40-vs-soundcore-p40i",
+  "path": "/compare/soundcore-space-a40/versus/soundcore-p40i/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Soundcore Space A40 vs Soundcore P40i",
+  "seo_title": "Soundcore Space A40 vs Soundcore P40i - PriceCheck",
+  "description": "Compare Soundcore Space A40 and Soundcore P40i by price, ANC, battery life, wireless charging, multipoint, water resistance, codec support, fit, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Space A40 vs P40i"
+  },
+  "products": [
+    {
+      "slot": "space_a40",
+      "slug": "soundcore-space-a40",
+      "label": "Soundcore Space A40",
+      "brand": "soundcore",
+      "match": "Space A40"
+    },
+    {
+      "slot": "soundcore_p40i",
+      "slug": "soundcore-p40i",
+      "label": "Soundcore P40i",
+      "brand": "soundcore",
+      "match": "P40i"
+    }
+  ]
+},
+{
   "slug": "samsung-galaxy-buds3-fe-worth-it",
   "path": "/guides/earbuds/samsung-galaxy-buds3-fe-worth-it/",
   "type": "worth_it",
