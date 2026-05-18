@@ -1554,6 +1554,10 @@ h1{
   .card-spec-square:nth-child(n + 4){
     display: none;
   }
+
+  .model-year{
+    font-size: 14px;
+  }
 }
 
 @media (max-width: 400px){
