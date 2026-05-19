@@ -917,6 +917,96 @@
     ]
   },
   {
+    "slug": "earfun-air-pro-4-vs-space-a40",
+    "path": "/compare/earfun-air-pro-4-vs-space-a40/",
+    "type": "comparison",
+    "category": "earbuds",
+    "title": "EarFun Air Pro 4 vs Space A40",
+    "seo_title": "EarFun Air Pro 4 vs Space A40 - PriceCheck",
+    "description": "Compare EarFun Air Pro 4 and Space A40 by price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, and buyer fit.",
+    "hero": {
+      "eyebrow": "Comparison",
+      "heading": "EarFun Air Pro 4 vs Space A40",
+      "dek": "A detailed comparison of the EarFun Air Pro 4 and Space A40 earbuds."
+    },
+    "products": [
+      {
+        "slot": "earfun_air_pro_4",
+        "slug": "earfun-air-pro-4",
+        "label": "EarFun Air Pro 4",
+        "brand": "EarFun",
+        "match": "Air Pro 4"
+      },
+      {
+        "slot": "space_a40",
+        "slug": "space-a40",
+        "label": "Space A40",
+        "brand": "Space",
+        "match": "A40"
+      }
+    ]
+  },
+  {
+    "slug": "jbl-endurance-race-2-vs-soundcore-liberty-4-nc",
+    "path": "/compare/jbl-endurance-race-2-vs-soundcore-liberty-4-nc/",
+    "type": "comparison",
+    "category": "earbuds",
+    "title": "JBL Endurance Race 2 vs Soundcore Liberty 4 NC",
+    "seo_title": "JBL Endurance Race 2 vs Soundcore Liberty 4 NC - PriceCheck",
+    "description": "Compare JBL Endurance Race 2 and Soundcore Liberty 4 NC by price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, and buyer fit.",
+    "hero": {
+      "eyebrow": "Comparison",
+      "heading": "JBL Endurance Race 2 vs Soundcore Liberty 4 NC",
+      "dek": "A detailed comparison of the JBL Endurance Race 2 and Soundcore Liberty 4 NC earbuds."
+    },
+    "products": [
+      {
+        "slot": "jbl_endurance_race_2",
+        "slug": "jbl-endurance-race-2",
+        "label": "JBL Endurance Race 2",
+        "brand": "JBL",
+        "match": "Endurance Race 2"
+      },
+      {
+        "slot": "soundcore_liberty_4_nc",
+        "slug": "soundcore-liberty-4-nc",
+        "label": "Soundcore Liberty 4 NC",
+        "brand": "Soundcore",
+        "match": "Liberty 4 NC"
+      }
+    ]
+  },
+  {
+    "slug": "beats-fit-pro-vs-space-a40",
+    "path": "/compare/beats-fit-pro-vs-space-a40/",
+    "type": "comparison",
+    "category": "earbuds",
+    "title": "Beats Fit Pro vs Space A40",
+    "seo_title": "Beats Fit Pro vs Space A40 - PriceCheck",
+    "description": "Compare Beats Fit Pro and Space A40 by price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, and buyer fit.",
+    "hero": {
+      "eyebrow": "Comparison",
+      "heading": "Beats Fit Pro vs Space A40",
+      "dek": "A detailed comparison of the Beats Fit Pro and Space A40 earbuds."
+    },
+    "products": [
+      {
+        "slot": "beats_fit_pro",
+        "slug": "beats-fit-pro",
+        "label": "Beats Fit Pro",
+        "brand": "Beats",
+        "match": "Fit Pro"
+      },
+      {
+        "slot": "space_a40",
+        "slug": "space-a40",
+        "label": "Space A40",
+        "brand": "Space",
+        "match": "A40"
+      }
+    ]
+  },
+  {
     "slug": "which-soundcore-earbuds-should-you-buy",
     "path": "/guides/earbuds/which-soundcore-earbuds-should-you-buy/",
     "type": "brand_guide",
