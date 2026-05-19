@@ -74,7 +74,7 @@
   height: 40px;
   padding: 0 20px;
   border-radius: 999px;
-  border: 1px solid rgba(17,24,39,.18);
+  border: 1px solid #e1e6ee;
   background: rgba(255,255,255,.94);
   color: #111;
   outline: none;
@@ -291,7 +291,7 @@
   width: 40px;
   height: 40px;
   border-radius: 999px;
-  border: 1px solid rgba(17,24,39,.18);
+  border: 1px solid #e1e6ee;
   background: rgba(255,255,255,.94);
   display:inline-flex;
   align-items:center;
@@ -303,7 +303,7 @@
 
 .nav-ai:hover{
   transform: translateY(-1px);
-  border-color: rgba(17,24,39,.26);
+  border-color: #e1e6ee;
   box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
 }
 
@@ -361,7 +361,7 @@ body{
   font-size: 17px;
   cursor: pointer;
   font-weight:500;
-  border: 1px solid rgba(17,24,39,.18);
+  border: 1px solid #e1e6ee;
   color:#111; 
   background:#fff;
 }
