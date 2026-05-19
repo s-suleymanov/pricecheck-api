@@ -173,31 +173,147 @@
   ]
 },
 {
-  "slug": "earfun-air-pro-4-vs-soundcore-liberty-4-nc",
-  "path": "/compare/earfun-air-pro-4/versus/soundcore-liberty-4-nc/",
+  "slug": "samsung-galaxy-buds-fe-vs-samsung-galaxy-buds3-fe",
+  "path": "/compare/samsung-galaxy-buds-fe/versus/samsung-galaxy-buds3-fe/",
   "type": "comparison",
   "category": "earbuds",
-  "title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC",
-  "seo_title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC - PriceCheck",
-  "description": "Compare EarFun Air Pro 4 and soundcore Liberty 4 NC by price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, and buyer fit.",
+  "title": "Samsung Galaxy Buds FE vs Samsung Galaxy Buds3 FE",
+  "seo_title": "Samsung Galaxy Buds FE vs Samsung Galaxy Buds3 FE - PriceCheck",
+  "description": "Compare Samsung Galaxy Buds FE and Samsung Galaxy Buds3 FE by price, ANC, battery life, fit, water resistance, charging case features, codec support, and buyer fit.",
   "hero": {
     "eyebrow": "Comparison",
-    "heading": "EarFun Air Pro 4 vs Liberty 4 NC"
+    "heading": "Samsung Galaxy Buds FE vs Samsung Galaxy Buds3 FE"
   },
   "products": [
     {
-      "slot": "earfun_air_pro_4",
-      "slug": "earfun-air-pro-4",
-      "label": "EarFun Air Pro 4",
-      "brand": "EarFun",
-      "match": "Air Pro 4"
+      "slot": "samsung_galaxy_buds_fe",
+      "slug": "samsung-galaxy-buds-fe",
+      "label": "Samsung Galaxy Buds FE",
+      "brand": "Samsung",
+      "match": "Galaxy Buds FE"
     },
+    {
+      "slot": "samsung_galaxy_buds3_fe",
+      "slug": "samsung-galaxy-buds3-fe",
+      "label": "Samsung Galaxy Buds3 FE",
+      "brand": "Samsung",
+      "match": "Galaxy Buds3 FE"
+    }
+  ]
+},
+{
+ "slug": "samsung-galaxy-buds-fe-vs-samsung-galaxy-buds3-fe/",
+ "path": "/compare/samsung-galaxy-buds-fe/versus/samsung-galaxy-buds3-fe/",
+ "type": "comparison",
+ "category": "earbuds",
+ "title": "Samsung Galaxy Buds FE vs Samsung Galaxy Buds3 FE",
+  "seo_title": "Samsung Galaxy Buds FE vs Samsung Galaxy Buds3 FE - PriceCheck",
+  "description": "Compare Samsung Galaxy Buds FE and Samsung Galaxy Buds3 FE by price, ANC, battery life, fit, water resistance, charging case features, codec support, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Samsung Galaxy Buds FE vs Samsung Galaxy Buds3 FE"
+  },
+ "products": [
+   {
+     "slot": "samsung_galaxy_buds_fe",
+     "slug": "samsung-galaxy-buds-fe",
+     "label": "Samsung Galaxy Buds FE",
+     "brand": "Samsung",
+     "match": "Galaxy Buds FE"
+   },
+   {
+     "slot": "samsung_galaxy_buds3_fe",
+     "slug": "samsung-galaxy-buds3-fe",
+     "label": "Samsung Galaxy Buds3 FE",
+     "brand": "Samsung",
+     "match": "Galaxy Buds3 FE"
+   }
+ ]
+},
+{
+  "slug": "soundcore-liberty-4-nc-vs-soundcore-p40i",
+  "path": "/compare/soundcore-liberty-4-nc/versus/soundcore-p40i/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "soundcore Liberty 4 NC vs soundcore P40i",
+  "seo_title": "soundcore Liberty 4 NC vs soundcore P40i - PriceCheck",
+  "description": "Compare soundcore Liberty 4 NC and soundcore P40i by price, ANC, battery life, fit, water resistance, charging case features, codec support, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "soundcore Liberty 4 NC vs soundcore P40i"
+   },
+  "products": [
     {
       "slot": "liberty_4_nc",
       "slug": "soundcore-liberty-4-nc",
       "label": "soundcore Liberty 4 NC",
       "brand": "soundcore",
       "match": "Liberty 4 NC"
+    },
+    {
+      "slot": "soundcore_p40i",
+      "slug": "soundcore-p40i",
+      "label": "soundcore P40i",
+      "brand": "soundcore",
+      "match": "P40i"
+    }
+ ]
+},
+{
+  "slug": "beats-fit-pro-vs-beats-powerbeats-pro-2",
+  "path": "/compare/beats-fit-pro/versus/beats-powerbeats-pro-2/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Beats Fit Pro vs Beats Powerbeats Pro 2",
+  "seo_title": "Beats Fit Pro vs Beats Powerbeats Pro 2 - PriceCheck",
+  "description": "Compare Beats Fit Pro and Beats Powerbeats Pro 2 by price, ANC, battery life, fit, water resistance, charging case features, codec support, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Beats Fit Pro vs Beats Powerbeats Pro 2"
+  },
+  "products": [
+    {
+      "slot": "beats_fit_pro",
+      "slug": "beats-fit-pro",
+      "label": "Beats Fit Pro",
+      "brand": "Beats",
+      "match": "Fit Pro"
+    },
+    {
+      "slot": "beats_powerbeats_pro_2",
+      "slug": "beats-powerbeats-pro-2",
+      "label": "Beats Powerbeats Pro 2",
+      "brand": "Beats",
+      "match": "Powerbeats Pro 2"
+    }
+  ]
+},
+{
+  "slug": "jbl-endurance-race-2-vs-jbl-endurance-peak-4",
+  "path": "/compare/jbl-endurance-race-2/versus/jbl-endurance-peak-4/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "JBL Endurance Race 2 vs JBL Endurance Peak 4",
+  "seo_title": "JBL Endurance Race 2 vs JBL Endurance Peak 4 - PriceCheck",
+  "description": "Compare JBL Endurance Race 2 and JBL Endurance Peak 4 by price, ANC, battery life, fit, water resistance, charging case features, codec support, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "JBL Endurance Race 2 vs JBL Endurance Peak 4"
+   },
+  "products": [
+    {
+      "slot": "jbl_endurance_race_2",
+      "slug": "jbl-endurance-race-2",
+      "label": "JBL Endurance Race 2",
+      "brand": "JBL",
+      "match": "Endurance Race 2"
+    },
+    {
+      "slot": "jbl_endurance_peak_4",
+      "slug": "jbl-endurance-peak-4",
+      "label": "JBL Endurance Peak 4",
+      "brand": "JBL",
+      "match": "Endurance Peak 4"
     }
   ]
 },
