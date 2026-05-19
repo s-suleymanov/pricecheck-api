@@ -14,7 +14,6 @@ body.h2h-body {
   margin: 0;
   background: rgb(255, 255, 255);
   color: var(--h2h-text);
-  font-family: "Google Sans", Arial, sans-serif;
 }
 
 body.h2h-body .nav {
