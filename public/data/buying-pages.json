@@ -685,12 +685,12 @@
     "path": "/compare/earfun-air-pro-4/versus/soundcore-liberty-4-nc/",
     "type": "comparison",
     "category": "earbuds",
-    "title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC",
-    "seo_title": "EarFun Air Pro 4 vs soundcore Liberty 4 NC - PriceCheck",
-    "description": "Compare EarFun Air Pro 4 and soundcore Liberty 4 NC by price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, and buyer fit.",
+    "title": "EarFun Air Pro 4 vs Soundcore Liberty 4 NC",
+    "seo_title": "EarFun Air Pro 4 vs Soundcore Liberty 4 NC - PriceCheck",
+    "description": "Compare EarFun Air Pro 4 and Soundcore Liberty 4 NC by price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, and buyer fit.",
     "hero": {
       "eyebrow": "Comparison",
-      "heading": "EarFun Air Pro 4 vs Liberty 4 NC"
+      "heading": "EarFun Air Pro 4 vs Soundcore Liberty 4 NC"
     },
     "products": [
       {
@@ -703,8 +703,8 @@
       {
         "slot": "liberty_4_nc",
         "slug": "soundcore-liberty-4-nc",
-        "label": "soundcore Liberty 4 NC",
-        "brand": "soundcore",
+        "label": "Soundcore Liberty 4 NC",
+        "brand": "Soundcore",
         "match": "Liberty 4 NC"
       }
     ]
@@ -941,8 +941,8 @@
         "slot": "space_a40",
         "slug": "space-a40",
         "label": "Space A40",
-        "brand": "Space",
-        "match": "A40"
+        "brand": "Soundcore",
+        "match": "Space A40"
       }
     ]
   },
@@ -1001,8 +1001,8 @@
         "slot": "space_a40",
         "slug": "space-a40",
         "label": "Space A40",
-        "brand": "Space",
-        "match": "A40"
+        "brand": "Soundcore",
+        "match": "Space A40"
       }
     ]
   },
