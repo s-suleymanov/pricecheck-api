@@ -12,7 +12,6 @@ body {
   margin: 0;
   background: var(--buying-bg);
   color: var(--buying-text);
-  font-family: "Google Sans", Arial, sans-serif;
 }
 
 .buying-page {
