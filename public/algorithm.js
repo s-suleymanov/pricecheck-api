@@ -792,6 +792,7 @@ async function loadFirst(sig, opts = {}) {
 
   // ── Trend pills ───────────────────────────────────────────────────────────
     const FALLBACK = [
+    "Earbuds",
     "TV",
     "Laptop",
     "Headphones",
@@ -807,7 +808,6 @@ async function loadFirst(sig, opts = {}) {
     "Router",
     "Keyboard",
     "Mouse",
-    "Earbuds",
     "Soundbar",
     "Desktop",
     "Printer",
