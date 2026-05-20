@@ -709,6 +709,151 @@
       }
     ]
   },
+{
+  "slug": "bose-quietcomfort-ultra-earbuds-2-vs-sony-wf-1000xm5",
+  "path": "/compare/bose-quietcomfort-ultra-earbuds-2/versus/sony-wf-1000xm5/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Bose QuietComfort Ultra Earbuds 2 vs Sony WF-1000XM5",
+  "seo_title": "Bose QuietComfort Ultra Earbuds 2 vs Sony WF-1000XM5 - PriceCheck",
+  "description": "Compare Bose QuietComfort Ultra Earbuds 2 and Sony WF-1000XM5 by price, ANC, battery life, codec support, wireless charging, water resistance, fit, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Bose QuietComfort Ultra Earbuds 2 vs Sony WF-1000XM5"
+  },
+  "products": [
+    {
+      "slot": "bose_quietcomfort_ultra_earbuds_2",
+      "slug": "bose-quietcomfort-ultra-earbuds-2",
+      "label": "Bose QuietComfort Ultra Earbuds 2",
+      "brand": "Bose",
+      "match": "QuietComfort Ultra Earbuds (2nd Gen)"
+    },
+    {
+      "slot": "sony_wf_1000xm5",
+      "slug": "sony-wf-1000xm5",
+      "label": "Sony WF-1000XM5",
+      "brand": "Sony",
+      "match": "WF-1000XM5"
+    }
+  ]
+},
+{
+  "slug": "beats-powerbeats-pro-2-vs-jbl-endurance-race-2",
+  "path": "/compare/beats-powerbeats-pro-2/versus/jbl-endurance-race-2/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Beats Powerbeats Pro 2 vs JBL Endurance Race 2",
+  "seo_title": "Beats Powerbeats Pro 2 vs JBL Endurance Race 2 - PriceCheck",
+  "description": "Compare Beats Powerbeats Pro 2 and JBL Endurance Race 2 by price, workout fit, ANC, battery life, water resistance, charging case features, comfort, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Powerbeats Pro 2 vs JBL Endurance Race 2"
+  },
+  "products": [
+    {
+      "slot": "beats_powerbeats_pro_2",
+      "slug": "beats-powerbeats-pro-2",
+      "label": "Beats Powerbeats Pro 2",
+      "brand": "Beats",
+      "match": "Powerbeats Pro 2"
+    },
+    {
+      "slot": "jbl_endurance_race_2",
+      "slug": "jbl-endurance-race-2",
+      "label": "JBL Endurance Race 2",
+      "brand": "JBL",
+      "match": "Endurance Race 2"
+    }
+  ]
+},
+{
+  "slug": "soundcore-liberty-5-vs-earfun-air-pro-4-plus",
+  "path": "/compare/soundcore-liberty-5/versus/earfun-air-pro-4-plus/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Soundcore Liberty 5 vs EarFun Air Pro 4+",
+  "seo_title": "Soundcore Liberty 5 vs EarFun Air Pro 4+ - PriceCheck",
+  "description": "Compare Soundcore Liberty 5 and EarFun Air Pro 4+ by price, ANC, battery life, codec support, wireless charging, multipoint, water resistance, app features, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Soundcore Liberty 5 vs EarFun Air Pro 4+"
+  },
+  "products": [
+    {
+      "slot": "soundcore_liberty_5",
+      "slug": "soundcore-liberty-5",
+      "label": "Soundcore Liberty 5",
+      "brand": "Soundcore",
+      "match": "Liberty 5"
+    },
+    {
+      "slot": "earfun_air_pro_4_plus",
+      "slug": "earfun-air-pro-4-plus",
+      "label": "EarFun Air Pro 4+",
+      "brand": "EarFun",
+      "match": "Air Pro 4+"
+    }
+  ]
+},
+{
+  "slug": "sony-wf-1000xm6-vs-technics-eah-az100",
+  "path": "/compare/sony-wf-1000xm6/versus/technics-eah-az100/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Sony WF-1000XM6 vs Technics EAH-AZ100",
+  "seo_title": "Sony WF-1000XM6 vs Technics EAH-AZ100 - PriceCheck",
+  "description": "Compare Sony WF-1000XM6 and Technics EAH-AZ100 by price, ANC, sound quality, battery life, codec support, multipoint, wireless charging, fit, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Sony WF-1000XM6 vs Technics EAH-AZ100"
+  },
+  "products": [
+    {
+      "slot": "sony_wf_1000xm6",
+      "slug": "sony-wf-1000xm6",
+      "label": "Sony WF-1000XM6",
+      "brand": "Sony",
+      "match": "WF-1000XM6"
+    },
+    {
+      "slot": "technics_eah_az100",
+      "slug": "technics-eah-az100",
+      "label": "Technics EAH-AZ100",
+      "brand": "Technics",
+      "match": "EAH-AZ100"
+    }
+  ]
+},
+{
+  "slug": "airpods-4-vs-jbl-tune-flex-2",
+  "path": "/compare/airpods-4/versus/jbl-tune-flex-2/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "AirPods 4 Without ANC vs JBL Tune Flex 2",
+  "seo_title": "AirPods 4 Without ANC vs JBL Tune Flex 2 - PriceCheck",
+  "description": "Compare AirPods 4 without ANC and JBL Tune Flex 2 by price, open-fit comfort, ANC differences, battery life, water resistance, app features, ecosystem fit, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "AirPods 4 Without ANC vs JBL Tune Flex 2"
+  },
+  "products": [
+    {
+      "slot": "airpods_4_without_anc",
+      "slug": "airpods-4",
+      "label": "AirPods 4 Without ANC",
+      "brand": "Apple",
+      "match": "AirPods 4 without ANC"
+    },
+    {
+      "slot": "jbl_tune_flex_2",
+      "slug": "jbl-tune-flex-2",
+      "label": "JBL Tune Flex 2",
+      "brand": "JBL",
+      "match": "Tune Flex 2"
+    }
+  ]
+},
   {
     "slug": "best-earbuds-for-work-under-100",
     "path": "/guides/earbuds/best-earbuds-for-work-under-100/",
