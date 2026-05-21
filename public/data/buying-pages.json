@@ -1108,14 +1108,14 @@
       "slug": "nothing-ear",
       "label": "Nothing Ear",
       "brand": "Nothing",
-      "match": "Nothing Ear"
+      "match": "Ear"
     },
     {
       "slot": "nothing_ear_a",
       "slug": "nothing-ear-a",
       "label": "Nothing Ear A",
       "brand": "Nothing",
-      "match": "Nothing Ear A"
+      "match": "Ear A"
     }
   ]
 },
