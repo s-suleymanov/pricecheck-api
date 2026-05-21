@@ -1062,6 +1062,93 @@
     ]
   },
   {
+  "slug": "pixel-buds-pro-2-vs-airpods-pro-2",
+  "path": "/compare/pixel-buds-pro-2/versus/airpods-pro-2/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Pixel Buds Pro 2 vs AirPods Pro 2",
+  "seo_title": "Pixel Buds Pro 2 vs AirPods Pro 2 - PriceCheck",
+  "description": "Compare Pixel Buds Pro 2 and AirPods Pro 2 by price, ANC, transparency mode, battery life, fit, water resistance, app features, ecosystem support, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Pixel Buds Pro 2 vs AirPods Pro 2"
+  },
+  "products": [
+    {
+      "slot": "pixel_buds_pro_2",
+      "slug": "pixel-buds-pro-2",
+      "label": "Pixel Buds Pro 2",
+      "brand": "Google",
+      "match": "Pixel Buds Pro 2"
+    },
+    {
+      "slot": "airpods_pro_2",
+      "slug": "airpods-pro-2",
+      "label": "AirPods Pro 2",
+      "brand": "Apple",
+      "match": "AirPods Pro 2"
+    }
+  ]
+},
+{
+  "slug": "nothing-ear-vs-nothing-ear-a",
+  "path": "/compare/nothing-ear/versus/nothing-ear-a/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Nothing Ear vs Nothing Ear A",
+  "seo_title": "Nothing Ear vs Nothing Ear A - PriceCheck",
+  "description": "Compare Nothing Ear and Nothing Ear A by price, ANC, battery life, fit, codec support, wireless charging, water resistance, app features, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Nothing Ear vs Nothing Ear A"
+  },
+  "products": [
+    {
+      "slot": "nothing_ear",
+      "slug": "nothing-ear",
+      "label": "Nothing Ear",
+      "brand": "Nothing",
+      "match": "Nothing Ear"
+    },
+    {
+      "slot": "nothing_ear_a",
+      "slug": "nothing-ear-a",
+      "label": "Nothing Ear A",
+      "brand": "Nothing",
+      "match": "Nothing Ear A"
+    }
+  ]
+},
+{
+  "slug": "jbl-tour-pro-3-vs-airpods-pro-2",
+  "path": "/compare/jbl-tour-pro-3/versus/airpods-pro-2/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "JBL Tour Pro 3 vs AirPods Pro 2",
+  "seo_title": "JBL Tour Pro 3 vs AirPods Pro 2 - PriceCheck",
+  "description": "Compare JBL Tour Pro 3 and AirPods Pro 2 by price, ANC, battery life, smart case features, wireless charging, water resistance, ecosystem support, fit, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "JBL Tour Pro 3 vs AirPods Pro 2"
+  },
+  "products": [
+    {
+      "slot": "jbl_tour_pro_3",
+      "slug": "jbl-tour-pro-3",
+      "label": "JBL Tour Pro 3",
+      "brand": "JBL",
+      "match": "Tour Pro 3"
+    },
+    {
+      "slot": "airpods_pro_2",
+      "slug": "airpods-pro-2",
+      "label": "AirPods Pro 2",
+      "brand": "Apple",
+      "match": "AirPods Pro 2"
+    }
+  ]
+},
+  {
     "slug": "earfun-air-pro-4-vs-space-a40",
     "path": "/compare/earfun-air-pro-4-vs-space-a40/",
     "type": "comparison",
