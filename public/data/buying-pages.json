@@ -768,6 +768,93 @@
   ]
 },
 {
+  "slug": "sony-wf-c710n-vs-soundcore-liberty-4-nc",
+  "path": "/compare/sony-wf-c710n/versus/soundcore-liberty-4-nc/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Sony WF-C710N vs Soundcore Liberty 4 NC",
+  "seo_title": "Sony WF-C710N vs Soundcore Liberty 4 NC - PriceCheck",
+  "description": "Compare Sony WF-C710N and Soundcore Liberty 4 NC by price, ANC, battery life, water resistance, multipoint, app support, fit, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Sony WF-C710N vs Soundcore Liberty 4 NC"
+  },
+  "products": [
+    {
+      "slot": "sony_wf_c710n",
+      "slug": "sony-wf-c710n",
+      "label": "Sony WF-C710N",
+      "brand": "Sony",
+      "match": "WF-C710N"
+    },
+    {
+      "slot": "liberty_4_nc",
+      "slug": "soundcore-liberty-4-nc",
+      "label": "Soundcore Liberty 4 NC",
+      "brand": "Soundcore",
+      "match": "Liberty 4 NC"
+    }
+  ]
+},
+{
+  "slug": "nothing-ear-a-vs-nothing-ear",
+  "path": "/compare/nothing-ear-a/versus/nothing-ear/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Nothing Ear (a) vs Nothing Ear",
+  "seo_title": "Nothing Ear (a) vs Nothing Ear - PriceCheck",
+  "description": "Compare Nothing Ear (a) and Nothing Ear by price, ANC, battery life, codec support, wireless charging, water resistance, app support, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Nothing Ear (a) vs Nothing Ear"
+  },
+  "products": [
+    {
+      "slot": "nothing_ear_a",
+      "slug": "nothing-ear-a",
+      "label": "Nothing Ear (a)",
+      "brand": "Nothing",
+      "match": "Ear (a)"
+    },
+    {
+      "slot": "nothing_ear",
+      "slug": "nothing-ear",
+      "label": "Nothing Ear",
+      "brand": "Nothing",
+      "match": "Nothing Ear"
+    }
+  ]
+},
+{
+  "slug": "samsung-galaxy-buds3-fe-vs-soundcore-liberty-4-nc",
+  "path": "/compare/samsung-galaxy-buds3-fe/versus/soundcore-liberty-4-nc/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Samsung Galaxy Buds3 FE vs Soundcore Liberty 4 NC",
+  "seo_title": "Samsung Galaxy Buds3 FE vs Soundcore Liberty 4 NC - PriceCheck",
+  "description": "Compare Samsung Galaxy Buds3 FE and Soundcore Liberty 4 NC by price, ANC, battery life, water resistance, multipoint, app support, fit, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Samsung Galaxy Buds3 FE vs Soundcore Liberty 4 NC"
+  },
+  "products": [
+    {
+      "slot": "samsung_galaxy_buds3_fe",
+      "slug": "samsung-galaxy-buds3-fe",
+      "label": "Samsung Galaxy Buds3 FE",
+      "brand": "Samsung",
+      "match": "Galaxy Buds3 FE"
+    },
+    {
+      "slot": "liberty_4_nc",
+      "slug": "soundcore-liberty-4-nc",
+      "label": "Soundcore Liberty 4 NC",
+      "brand": "Soundcore",
+      "match": "Liberty 4 NC"
+    }
+  ]
+},
+{
   "slug": "soundcore-liberty-5-vs-earfun-air-pro-4-plus",
   "path": "/compare/soundcore-liberty-5/versus/earfun-air-pro-4-plus/",
   "type": "comparison",
