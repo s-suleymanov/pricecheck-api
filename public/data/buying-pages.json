@@ -797,6 +797,180 @@
   ]
 },
 {
+  "slug": "airpods-pro-2-vs-bose-quietcomfort-ultra-earbuds-2",
+  "path": "/compare/airpods-pro-2/versus/bose-quietcomfort-ultra-earbuds-2/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "AirPods Pro 2 vs Bose QuietComfort Ultra Earbuds 2",
+  "seo_title": "AirPods Pro 2 vs Bose QuietComfort Ultra Earbuds 2 - PriceCheck",
+  "description": "Compare AirPods Pro 2 and Bose QuietComfort Ultra Earbuds 2 by price, ANC, transparency mode, battery life, fit, water resistance, ecosystem support, app features, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "AirPods Pro 2 vs Bose QuietComfort Ultra Earbuds 2"
+  },
+  "products": [
+    {
+      "slot": "airpods_pro_2",
+      "slug": "airpods-pro-2",
+      "label": "AirPods Pro 2",
+      "brand": "Apple",
+      "match": "AirPods Pro 2"
+    },
+    {
+      "slot": "bose_quietcomfort_ultra_earbuds_2",
+      "slug": "bose-quietcomfort-ultra-earbuds-2",
+      "label": "Bose QuietComfort Ultra Earbuds 2",
+      "brand": "Bose",
+      "match": "QuietComfort Ultra Earbuds (2nd Gen)"
+    }
+  ]
+},
+{
+  "slug": "sony-wf-c710n-vs-earfun-air-pro-4",
+  "path": "/compare/sony-wf-c710n/versus/earfun-air-pro-4/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Sony WF-C710N vs EarFun Air Pro 4",
+  "seo_title": "Sony WF-C710N vs EarFun Air Pro 4 - PriceCheck",
+  "description": "Compare Sony WF-C710N and EarFun Air Pro 4 by price, ANC, battery life, fit, codec support, multipoint, water resistance, app features, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Sony WF-C710N vs EarFun Air Pro 4"
+  },
+  "products": [
+    {
+      "slot": "sony_wf_c710n",
+      "slug": "sony-wf-c710n",
+      "label": "Sony WF-C710N",
+      "brand": "Sony",
+      "match": "WF-C710N"
+    },
+    {
+      "slot": "earfun_air_pro_4",
+      "slug": "earfun-air-pro-4",
+      "label": "EarFun Air Pro 4",
+      "brand": "EarFun",
+      "match": "Air Pro 4"
+    }
+  ]
+},
+{
+  "slug": "soundcore-liberty-5-vs-soundcore-liberty-4-nc",
+  "path": "/compare/soundcore-liberty-5/versus/soundcore-liberty-4-nc/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Soundcore Liberty 5 vs Soundcore Liberty 4 NC",
+  "seo_title": "Soundcore Liberty 5 vs Soundcore Liberty 4 NC - PriceCheck",
+  "description": "Compare Soundcore Liberty 5 and Soundcore Liberty 4 NC by price, ANC, battery life, fit, codec support, wireless charging, multipoint, water resistance, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Soundcore Liberty 5 vs Soundcore Liberty 4 NC"
+  },
+  "products": [
+    {
+      "slot": "soundcore_liberty_5",
+      "slug": "soundcore-liberty-5",
+      "label": "Soundcore Liberty 5",
+      "brand": "Soundcore",
+      "match": "Liberty 5"
+    },
+    {
+      "slot": "soundcore_liberty_4_nc",
+      "slug": "soundcore-liberty-4-nc",
+      "label": "Soundcore Liberty 4 NC",
+      "brand": "Soundcore",
+      "match": "Liberty 4 NC"
+    }
+  ]
+},
+{
+  "slug": "nothing-ear-a-vs-soundcore-p40i",
+  "path": "/compare/nothing-ear-a/versus/soundcore-p40i/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Nothing Ear A vs Soundcore P40i",
+  "seo_title": "Nothing Ear A vs Soundcore P40i - PriceCheck",
+  "description": "Compare Nothing Ear A and Soundcore P40i by price, ANC, battery life, fit, codec support, wireless charging, multipoint, water resistance, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Nothing Ear A vs Soundcore P40i"
+  },
+  "products": [
+    {
+      "slot": "nothing_ear_a",
+      "slug": "nothing-ear-a",
+      "label": "Nothing Ear A",
+      "brand": "Nothing",
+      "match": "Ear A"
+    },
+    {
+      "slot": "soundcore_p40i",
+      "slug": "soundcore-p40i",
+      "label": "Soundcore P40i",
+      "brand": "Soundcore",
+      "match": "P40i"
+    }
+  ]
+},
+{
+  "slug": "jbl-tune-flex-2-vs-earfun-air-pro-4",
+  "path": "/compare/jbl-tune-flex-2/versus/earfun-air-pro-4/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "JBL Tune Flex 2 vs EarFun Air Pro 4",
+  "seo_title": "JBL Tune Flex 2 vs EarFun Air Pro 4 - PriceCheck",
+  "description": "Compare JBL Tune Flex 2 and EarFun Air Pro 4 by price, ANC, battery life, fit, codec support, app features, water resistance, case features, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "JBL Tune Flex 2 vs EarFun Air Pro 4"
+  },
+  "products": [
+    {
+      "slot": "jbl_tune_flex_2",
+      "slug": "jbl-tune-flex-2",
+      "label": "JBL Tune Flex 2",
+      "brand": "JBL",
+      "match": "Tune Flex 2"
+    },
+    {
+      "slot": "earfun_air_pro_4",
+      "slug": "earfun-air-pro-4",
+      "label": "EarFun Air Pro 4",
+      "brand": "EarFun",
+      "match": "Air Pro 4"
+    }
+  ]
+},
+{
+  "slug": "samsung-galaxy-buds3-fe-vs-airpods-4-with-anc",
+  "path": "/compare/samsung-galaxy-buds3-fe/versus/airpods-4-with-anc/",
+  "type": "comparison",
+  "category": "earbuds",
+  "title": "Samsung Galaxy Buds3 FE vs AirPods 4 with ANC",
+  "seo_title": "Samsung Galaxy Buds3 FE vs AirPods 4 with ANC - PriceCheck",
+  "description": "Compare Samsung Galaxy Buds3 FE and AirPods 4 with ANC by price, ANC, transparency mode, battery life, fit, water resistance, ecosystem support, app features, and buyer fit.",
+  "hero": {
+    "eyebrow": "Comparison",
+    "heading": "Samsung Galaxy Buds3 FE vs AirPods 4 with ANC"
+  },
+  "products": [
+    {
+      "slot": "samsung_galaxy_buds3_fe",
+      "slug": "samsung-galaxy-buds3-fe",
+      "label": "Samsung Galaxy Buds3 FE",
+      "brand": "Samsung",
+      "match": "Galaxy Buds3 FE"
+    },
+    {
+      "slot": "airpods_4_with_anc",
+      "slug": "airpods-4-with-anc",
+      "label": "AirPods 4 with ANC",
+      "brand": "Apple",
+      "match": "AirPods 4 with ANC"
+    }
+  ]
+},
+{
   "slug": "nothing-ear-a-vs-nothing-ear",
   "path": "/compare/nothing-ear-a/versus/nothing-ear/",
   "type": "comparison",
@@ -814,14 +988,14 @@
       "slug": "nothing-ear-a",
       "label": "Nothing Ear (a)",
       "brand": "Nothing",
-      "match": "Ear (a)"
+      "match": "Ear A"
     },
     {
       "slot": "nothing_ear",
       "slug": "nothing-ear",
       "label": "Nothing Ear",
       "brand": "Nothing",
-      "match": "Nothing Ear"
+      "match": "Ear"
     }
   ]
 },
